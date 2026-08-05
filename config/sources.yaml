@@ -1,0 +1,75 @@
+# ===========================================
+# AI县域产业研究助手 - 数据源清单
+# ===========================================
+# 说明:
+#   - 定义搜索数据源与政府公开数据白名单
+#   - search/gov_data.py 会读取本文件决定抓取哪些域名
+#   - 新增数据源只需在此追加,无需改代码
+# ===========================================
+
+# ---------- 网络搜索引擎 ----------
+web_search:
+  # 优先级从上到下,前者失败自动降级到后者
+  providers:
+    - name: "tavily"
+      enabled: true
+      # api_key 从 .env 的 TAVILY_API_KEY 读取
+    - name: "serper"
+      enabled: false
+      # api_key 从 .env 的 SERPER_API_KEY 读取
+    - name: "bing"
+      enabled: false
+      # api_key 从 .env 的 BING_API_KEY 读取
+
+  # 搜索查询模板(Jinja2),自动拼接县名+方向
+  query_templates:
+    - "{{ county }} {{ focus }} 产业 发展现状"
+    - "{{ county }} {{ focus }} 产值 企业 龙头"
+    - "{{ county }} {{ focus }} 政策 规划 十四五"
+    - "{{ county }} 产业 园区 招商引资"
+
+# ---------- 政府公开数据源(白名单) ----------
+gov_sources:
+  # 抓取时只命中以下域名的页面,保证权威性
+  domains:
+    - name: "国家统计局"
+      url: "https://www.stats.gov.cn"
+      priority: 1
+    - name: "工信部"
+      url: "https://www.miit.gov.cn"
+      priority: 1
+    - name: "农业农村部"
+      url: "http://www.moa.gov.cn"
+      priority: 2
+    - name: "省统计局(通用)"
+      url_pattern: "*.stats.gov.cn"
+      priority: 2
+    - name: "省政府(通用)"
+      url_pattern: "*.gov.cn"
+      priority: 3
+      # 限定路径关键词,避免抓到无关页面
+      path_keywords:
+        - "tjgb"           # 统计公报
+        - "fzgh"           # 发展规划
+        - "cyfz"           # 产业发展
+        - "zmhd"           # 政民互动
+
+  # 政府数据查询模板
+  query_templates:
+    - "{{ county }} 统计公报 国民经济"
+    - "{{ county }} 十四五 产业 规划"
+    - "{{ county }} 特色产业 优势产业"
+
+# ---------- 数据过滤规则 ----------
+filters:
+  # 时效性:仅保留近 N 年的数据
+  max_age_years: 3
+  # 语言
+  language: "zh"
+  # 内容最低字数(过滤导航页/404页)
+  min_content_chars: 200
+  # 黑名单关键词(命中则丢弃)
+  blacklist_keywords:
+    - "登录后查看"
+    - "页面不存在"
+    - "404"

@@ -1,0 +1,82 @@
+# ===========================================
+# AI县域产业研究助手 - 主配置文件
+# ===========================================
+# 说明:
+#   - 敏感信息(API Key)不在此处,统一放在 .env
+#   - 本文件提供非敏感的默认行为配置
+#   - config.py 会将本文件与 .env 合并,env 优先级更高
+# ===========================================
+
+app:
+  name: "AI县域产业研究助手"
+  version: "0.1.0"
+  # 报告文件命名模板(Jinja2)
+  report_filename_template: "{{ county }}_{{ focus }}_{{ date }}.md"
+
+# ---------- LLM 配置 ----------
+llm:
+  # provider/model/base_url/api_key 从 .env 读取
+  temperature: 0.3          # 分析类任务偏低温度,保证稳定
+  max_tokens: 4096
+  timeout: 60               # 单次请求超时(秒)
+  retry:
+    max_attempts: 3
+    backoff_seconds: 2      # 指数退避起始值
+  # 分析任务拆分(每个子任务独立调用LLM,降低单次prompt长度)
+  tasks:
+    - industry_status       # 产业现状
+    - advantages            # 优势分析
+    - shortcomings          # 短板分析
+    - recommendations       # 发展建议
+
+# ---------- 搜索配置 ----------
+search:
+  # provider/api_key 从 .env 读取
+  max_results: 10
+  timeout: 30
+  concurrency: 3            # 并发采集数
+  retry:
+    max_attempts: 3
+    backoff_seconds: 2
+  # 是否抓取搜索结果详情页(增加数据量但更慢)
+  fetch_detail: true
+  detail_max_chars: 8000    # 单页正文截断长度
+
+# ---------- 存储配置 ----------
+storage:
+  # 留空则使用项目根目录下的 data/ 和 reports/
+  data_dir: ""              # 覆盖 DATA_DIR
+  reports_dir: ""           # 覆盖 REPORTS_DIR
+  raw_subdir: "raw"         # data/raw/
+  processed_subdir: "processed"  # data/processed/
+  # 原始数据归档格式:按 {县名}/{日期}/ 组织
+  archive_layout: "{county}/{date}"
+
+# ---------- 缓存配置 ----------
+cache:
+  enabled: true
+  ttl_hours: 24             # 同一县+方向在此时间内复用数据
+  # 缓存键 = hash(县名 + 方向 + 数据源)
+  key_fields: ["county", "focus", "provider"]
+
+# ---------- Pipeline 配置 ----------
+pipeline:
+  # 单线程顺序执行,MVP阶段保证可调试
+  mode: "sequential"
+  # 任一阶段失败是否终止全流程
+  fail_fast: true
+  # 阶段开关(调试时可单独关闭)
+  stages:
+    search: true
+    process: true
+    analyze: true
+    report: true
+
+# ---------- 日志配置 ----------
+logging:
+  level: "INFO"             # DEBUG / INFO / WARNING / ERROR
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+  # 日志文件(留空则仅输出到控制台)
+  file: ""
+  rotate: false
