@@ -4,13 +4,18 @@
 
 ## 项目概述
 
-AI 县域产业研究助手：用户输入「县名 + 可选研究方向」，系统自动完成 **数据采集 → (可选)产业方向识别 → 结构化处理 → LLM 智能分析 → 报告生成**，输出 Markdown 产业研究报告（含执行摘要、产业现状、优势、短板、建议、数据来源 6 章节）。
+AI 县域产业研究助手：用户输入「县名 + 可选研究方向 + 研究模式」，系统自动完成 **数据采集 → (可选)产业方向识别 → 结构化处理 → LLM 智能分析 → 报告生成**，输出 Markdown 产业研究报告。支持两种研究模式：
+
+- **snapshot 模式**（默认）：产业现状快照，6 章节（执行摘要/产业现状/优势/短板/建议/数据来源）
+- **rise-fall 模式**（`--mode rise-fall`）：县域产业兴衰规律研究，9 节固定结构，回答 7 个核心问题（起家/兴起/壮大/拐点/衰落/人才/兴衰模型）
 
 **核心价值**：
+- 双研究模式共存（snapshot 现状分析 + rise-fall 兴衰规律）
 - 产业方向自动发现（`--focus` 可选，未指定时由 LLM 识别）
 - 零配置 Mock 降级（无 API Key 也能跑通全链路）
 - 可插拔数据源与 LLM
 - 数据三层留存（raw/processed/report）便于复盘
+- 关键结论绑定证据 URL（rise-fall 模式来源按可信度排序）
 
 ## 技术栈
 
@@ -18,8 +23,8 @@ AI 县域产业研究助手：用户输入「县名 + 可选研究方向」，�
 |------|------|------|
 | 语言 | Python 3.10+ | src layout |
 | LLM | openai SDK | 兼容 DeepSeek/Qwen/OpenAI |
-| 数据校验 | Pydantic v2 | 含 DiscoveryResult/DiscoveryCandidate |
-| CLI | Click | `--focus` 可选 |
+| 数据校验 | Pydantic v2 | 含 DiscoveryResult/兴衰规律 6 模型 |
+| CLI | Click | `--focus` 可选 / `--mode` 双模式 |
 | HTTP | httpx | 搜索 API 调用 |
 | 模板 | Jinja2 | 提示词 + 文件名渲染 |
 | 重试 | tenacity | 网络请求容错 |
@@ -31,11 +36,13 @@ AI 县域产业研究助手：用户输入「县名 + 可选研究方向」，�
 
 ```
 src/county_research_ai/
-├── cli.py              # [入口] Click 命令行，--focus 可选，解析参数 + dry-run + 异常处理
-├── pipeline.py         # [编排] 五阶段 Pipeline(含 _stage_discover) + Mock 降级
+├── cli.py              # [入口] Click 命令行，--focus 可选 / --mode 双模式 / --historical 快捷开关
+├── pipeline.py         # [编排] Pipeline + 模式路由(_run_rise_fall) + Mock 降级
 ├── config.py           # [配置] YAML + .env 合并，单例 get_settings/reset_settings
 ├── models.py           # [模型] Pydantic: CountyInfo/RawDoc/ProcessedData/AnalysisResult
 │                       #         DiscoveryCandidate/DiscoveryResult/ResearchReport
+│                       #         [rise-fall] TimelineEvent/RiseFactor/DeclineFactor/
+│                       #                     IndustryLifecycle/HistoricalPattern/CountyRiseFallAnalysis
 ├── exceptions.py       # [异常] 层次: CountyResearchAIError → ConfigError/SearchError/LLMError/PipelineError
 │
 ├── search/             # [采集层]
@@ -43,7 +50,7 @@ src/county_research_ai/
 │   ├── web_search.py   # Tavily/Serper/Bing 三 provider (include_raw_content=True)
 │   ├── gov_data.py     # 政府白名单过滤 + 详情页抓取 (BeautifulSoup)
 │   └── collector.py    # SearchCollector: 多查询并发 + _dedup_and_rank 粗排
-│                       #   collect() 支持空 focus (自动发现阶段)
+│                       #   collect(mode) rise-fall 启用 _HISTORICAL_QUERY_TEMPLATES (10 条)
 │
 ├── storage/            # [存储层]
 │   ├── base.py         # Storage 抽象基类
@@ -53,10 +60,18 @@ src/county_research_ai/
 │   ├── base.py         # LLMClient 抽象基类
 │   ├── client.py       # OpenAICompatibleClient (真实 HTTP 客户端)
 │   ├── prompt_loader.py # PromptLoader: Jinja2 模板加载/渲染
-│   └── analyzer.py     # LLMAnalyzer: 4 任务串行分析 + generate_summary
-│                       #   + discover_focus() 产业方向自动发现
+│   ├── analyzer.py     # [snapshot] LLMAnalyzer: 4 任务分析 + generate_summary + discover_focus
+│   └── rise_fall_analyzer.py # [rise-fall] RiseFallAnalyzer: 7 任务兴衰规律分析
+│                       #   extract_timeline/identify_origin_industry/analyze_rise_factors
+│                       #   /analyze_decline_factors/analyze_talent_loss
+│                       #   /classify_historical_pattern/generate_summary → CountyRiseFallAnalysis
 │
-└── reporting/          # [报告层] 占位模块，渲染逻辑目前在 pipeline._render_markdown
+└── reporting/          # [报告层]
+    ├── renderer.py     # [snapshot] ReportRenderer: render_markdown + render_filename
+    ├── rise_fall_renderer.py # [rise-fall] RiseFallReportRenderer: render(analysis, raw_docs) → 9 节 Markdown
+    └── templates/
+        ├── report.md.j2          # snapshot 模式模板
+        └── rise_fall_report.md.j2 # rise-fall 模式模板 (9 节固定结构)
 
 config/
 ├── settings.yaml       # 应用主配置 (模型参数/超时/并发/缓存 TTL)
@@ -66,18 +81,26 @@ prompts/
 ├── discovery.md        # 产业方向自动识别模板 (输出 JSON: candidates + selected_focus)
 ├── industry_analysis.md # 产业现状分析模板
 ├── recommendations.md   # 发展建议模板
-└── summary.md          # 执行摘要模板
+├── summary.md          # 执行摘要模板
+├── timeline_extraction.md  # [rise-fall] 历史时间线提取 (输出 JSON: events[])
+├── origin_industry.md      # [rise-fall] 起家产业识别 (输出 JSON)
+├── rise_analysis.md        # [rise-fall] 兴起因子分析 (输出 JSON: rise_factors[])
+├── decline_analysis.md     # [rise-fall] 衰落因子分析 (输出 JSON: decline_factors[])
+├── talent_loss.md          # [rise-fall] 人才流失分析 (输出 JSON: talent_loss_reasons[])
+├── historical_pattern.md   # [rise-fall] 兴衰模型归纳 (输出 JSON: pattern_type/summary/confidence)
+└── rise_fall_summary.md    # [rise-fall] 执行摘要 (输出 Markdown)
 
 data/                   # 运行产物 (gitignore)
 ├── raw/{县名}/{日期}/raw_docs.json
 └── processed/{县名}/{方向}.json
 
 reports/                # 生成的报告 (gitignore)
-└── {县名}_{方向}_{日期}.md
+├── {县名}_{方向}_{日期}.md          # snapshot 模式
+└── {县名}_兴衰规律_{日期}.md        # rise-fall 模式
 
-tests/                  # 单元测试 (150 个)
+tests/                  # 单元测试
 ├── conftest.py         # 共享 fixtures: MockLLM 支持 discovery 关键词检测
-├── test_models.py      # 数据模型测试 (含 DiscoveryCandidate/DiscoveryResult)
+├── test_models.py      # 数据模型测试
 ├── test_exceptions.py  # 异常层次测试
 ├── test_config.py      # 配置加载测试
 ├── test_storage.py     # LocalFSStorage 测试
@@ -85,9 +108,9 @@ tests/                  # 单元测试 (150 个)
 ├── test_search_gov.py  # 政府数据 provider 测试
 ├── test_search_collector.py # SearchCollector 测试
 ├── test_llm_prompt_loader.py # PromptLoader 测试
-├── test_llm_analyzer.py # LLMAnalyzer 测试 (含 TestDiscoverFocus 8 个)
-├── test_pipeline.py    # Pipeline 集成测试 (含 TestPipelineDiscovery 4 个)
-└── test_cli.py         # CLI 集成测试 (含 TestCLINoFocus 3 个)
+├── test_llm_analyzer.py # LLMAnalyzer 测试 (含 TestDiscoverFocus)
+├── test_pipeline.py    # Pipeline 集成测试 (含 TestPipelineDiscovery)
+└── test_cli.py         # CLI 集成测试 (含 TestCLINoFocus)
 ```
 
 ## 运行命令
@@ -95,23 +118,30 @@ tests/                  # 单元测试 (150 个)
 ```powershell
 # Windows PowerShell
 $env:PYTHONPATH="src"
-# 如遇代理导致 httpx 失败，清空代理
-$env:ALL_PROXY=""
+# 如遇代理导致 httpx 失败，清空代理；如需代理访问 LLM/搜索 API:
+$env:ALL_PROXY="socks5h://127.0.0.1:7890"
 
-# 方式一：指定研究方向
+# 方式一：指定研究方向（snapshot 模式）
 python -m county_research_ai.cli -c 安吉县 -f 竹产业
 
-# 方式二：自动识别产业方向（推荐用于不熟悉的县）
+# 方式二：自动识别产业方向（推荐用于不熟悉的县，snapshot 模式）
 python -m county_research_ai.cli -c 安吉县
+
+# 方式三：产业兴衰规律研究（rise-fall 模式）
+python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall
+python -m county_research_ai.cli -c 鹤岗市 --historical          # 等价快捷写法
 
 # 完整选项
 python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-level DEBUG
 
 # dry-run (不执行 Pipeline)
 python -m county_research_ai.cli -c 安吉县 --dry-run
+python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall --dry-run
 ```
 
-报告输出路径: `reports/{县名}_{方向}_{日期}.md`
+报告输出路径:
+- snapshot: `reports/{县名}_{方向}_{日期}.md`
+- rise-fall: `reports/{县名}_兴衰规律_{日期}.md`
 
 ## 测试命令
 
@@ -169,7 +199,7 @@ Pipeline 组件按 **三级降级策略** 自动选择实现：
 ## Pipeline 核心流程
 
 ```
-CLI 入口 (--focus 可选)
+CLI 入口 (--focus 可选 / --mode 双模式)
   │
   ├─ dry-run? → 打印预期路径 → exit 0
   │
@@ -177,40 +207,54 @@ CLI 入口 (--focus 可选)
   │
   └─ pipeline.run(request)
        │
-       ├─ Stage1: _stage_search()
-       │   └─ SearchCollector.collect()  (focus 为空时用县名构造查询)
-       │       ├─ Web Provider (Tavily/Serper/Bing)
-       │       └─ Gov Provider (白名单过滤)
-       │       → list[RawDoc]
-       │
-       ├─ Stage1.5: _stage_discover()  (仅当 request.focus 为空)
-       │   └─ LLMAnalyzer.discover_focus()
-       │       ├─ _render_search_results() 渲染搜索摘要
-       │       ├─ LLM chat (discovery.md 模板) → JSON
-       │       └─ _parse_discovery_response() → DiscoveryResult
-       │       → focus = discovery.selected_focus (失败降级 "特色农业")
-       │
-       ├─ Stage2: _stage_process()
-       │   ├─ 缓存命中? → 直接返回
-       │   └─ URL 去重 + 统计 total_chars
-       │       → save_raw() + save_processed()
-       │       → ProcessedData
-       │
-       ├─ Stage3: _stage_analyze()
-       │   └─ LLMAnalyzer.analyze()
-       │       ├─ industry_status → LLM chat
-       │       ├─ advantages     → LLM chat
-       │       ├─ shortcomings   → LLM chat
-       │       └─ recommendations → LLM chat
-       │       → list[AnalysisResult]
-       │
-       ├─ Stage4: _stage_report()
-       │   ├─ generate_summary() → LLM chat (第5次，或第6次如果走了 discovery)
-       │   ├─ 拼装 6 章节 ReportSection
-       │   ├─ _render_markdown() → Markdown 字符串
-       │   └─ save_report() → reports/{县}_{方向}_{日期}.md
+       ├─ request.mode == "rise-fall"? → _run_rise_fall()  ──┐(见下方 rise-fall 流程)
+       │                                                      │
+       │  ┌── snapshot 模式（默认）──────────────────────────┘
+       │  │
+       │  ├─ Stage1: _stage_search()
+       │  │   └─ SearchCollector.collect()  (focus 为空时用县名构造查询)
+       │  │       ├─ Web Provider (Tavily/Serper/Bing)
+       │  │       └─ Gov Provider (白名单过滤)
+       │  │       → list[RawDoc]
+       │  │
+       │  ├─ Stage1.5: _stage_discover()  (仅当 request.focus 为空)
+       │  │   └─ LLMAnalyzer.discover_focus() → focus (失败降级 "特色农业")
+       │  │
+       │  ├─ Stage2: _stage_process()  (缓存命中直接返回)
+       │  │   → save_raw() + save_processed() → ProcessedData
+       │  │
+       │  ├─ Stage3: _stage_analyze()
+       │  │   └─ LLMAnalyzer.analyze()  (4 任务: status/advantages/shortcomings/recommendations)
+       │  │
+       │  └─ Stage4: _stage_report()
+       │      ├─ generate_summary() → LLM chat
+       │      ├─ 拼装 6 章节 ReportSection
+       │      └─ save_report() → reports/{县}_{方向}_{日期}.md
        │
        └─ 返回 (ResearchReport, Path)
+
+rise-fall 流程 (_run_rise_fall):
+  │
+  ├─ Stage1: _stage_search(mode="rise-fall")
+  │   └─ SearchCollector.collect() 启用 _HISTORICAL_QUERY_TEMPLATES (10 条史料查询)
+  │       → list[RawDoc]
+  │
+  ├─ Stage2: _stage_process()  (复用 snapshot 同一逻辑)
+  │   → ProcessedData
+  │
+  ├─ Stage3: RiseFallAnalyzer.analyze()  (7 任务串行)
+  │   ├─ extract_timeline          → list[TimelineEvent]
+  │   ├─ identify_origin_industry  → origin_industry/period/reason
+  │   ├─ analyze_rise_factors      → list[RiseFactor]
+  │   ├─ analyze_decline_factors   → list[DeclineFactor]
+  │   ├─ analyze_talent_loss       → list[str]
+  │   ├─ classify_historical_pattern → HistoricalPattern
+  │   └─ generate_summary          → Markdown 执行摘要
+  │   → CountyRiseFallAnalysis
+  │
+  └─ Stage4: _stage_rise_fall_report()
+      ├─ RiseFallReportRenderer.render(analysis, raw_docs) → 9 节 Markdown
+      └─ save_report() → reports/{县}_兴衰规律_{日期}.md
 ```
 
 ## 关键配置 (.env)
@@ -237,3 +281,39 @@ CLI 入口 (--focus 可选)
 | [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `run()` L117-148 | focus 为空时触发发现 + 兜底逻辑 |
 | [prompts/discovery.md](file:///e:/CountyResearchAI/prompts/discovery.md) | LLM 提示词模板（要求输出 JSON） |
 | [cli.py](file:///e:/CountyResearchAI/src/county_research_ai/cli.py) | `--focus` 改为可选 |
+
+## rise-fall 模式关键代码位置
+
+| 位置 | 职责 |
+|------|------|
+| [models.py](file:///e:/CountyResearchAI/src/county_research_ai/models.py) | 兴衰规律 6 模型: TimelineEvent/RiseFactor/DeclineFactor/IndustryLifecycle/HistoricalPattern/CountyRiseFallAnalysis |
+| [rise_fall_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/rise_fall_analyzer.py) `analyze()` | 总入口: 7 任务串行 → CountyRiseFallAnalysis |
+| [rise_fall_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/rise_fall_analyzer.py) `_parse_json_lenient()` | JSON 容错解析(纯 JSON / ```json 代码块 / 文本嵌入) |
+| [rise_fall_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/rise_fall_analyzer.py) `_run_task()` | 单任务执行 + fail_fast 降级 |
+| [rise_fall_renderer.py](file:///e:/CountyResearchAI/src/county_research_ai/reporting/rise_fall_renderer.py) `render()` | 渲染 9 节报告 + 数据来源按可信度排序 |
+| [collector.py](file:///e:/CountyResearchAI/src/county_research_ai/search/collector.py) `_HISTORICAL_QUERY_TEMPLATES` | 10 条历史维度查询模板(地方志/统计公报/人口流失/衰退等) |
+| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `_run_rise_fall()` | rise-fall 模式流程编排 |
+| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `run()` | 模式路由: `request.mode == "rise-fall"` 分支 |
+| [rise_fall_report.md.j2](file:///e:/CountyResearchAI/src/county_research_ai/reporting/templates/rise_fall_report.md.j2) | 9 节固定结构 Jinja2 模板 |
+| [prompts/timeline_extraction.md](file:///e:/CountyResearchAI/prompts/timeline_extraction.md) 等 7 个 | rise-fall 提示词模板(均要求输出 JSON,summary 除外) |
+| [cli.py](file:///e:/CountyResearchAI/src/county_research_ai/cli.py) | `--mode` / `--historical` 参数 |
+
+### rise-fall 兴衰模型类型 (HistoricalPattern.pattern_type)
+
+| 类型 | 含义 |
+|------|------|
+| `resource_curse` | 资源诅咒型(资源起家→枯竭→衰退) |
+| `policy_driven` | 政策驱动型(红利期繁荣→退坡→转型) |
+| `market_cycle` | 市场周期型(随宏观周期起伏) |
+| `industry_transfer` | 产业转移型(承接→壮大→再转出) |
+| `talent_drain` | 人才流失型(产业基础尚可但人力外流) |
+| `path_lock` | 路径锁定型(单一产业过度依赖) |
+| `diversified_growth` | 多元共生型(多产业协同,韧性较强) |
+| `mixed` | 混合型(多种模型叠加) |
+
+### rise-fall 降级策略
+
+- 单任务 LLM 调用失败 → `fail_fast=False` 时降级为空结果,不阻断整体
+- JSON 解析失败 → 返回空列表/空对象,日志 WARNING
+- 分析整体失败 → 构造空 `CountyRiseFallAnalysis`,渲染器输出"数据不足"占位
+- 搜索无结果 → 复用 snapshot 的 Mock 降级逻辑

@@ -1,0 +1,189 @@
+{# 县域产业兴衰规律研究报告模板 (Jinja2) #}
+# {{ county_display }}县域产业兴衰规律研究报告
+
+> 生成日期: {{ generated_at }}
+> 报告版本: {{ version }}
+> 研究模式: 产业兴衰规律 (rise-fall)
+
+## 执行摘要
+
+{{ summary }}
+
+## 一、县域基本画像
+
+- **县名**: {{ county_display }}
+{% if county_province %}- **所属省份**: {{ county_province }}
+{% endif %}
+- **当前产业阶段**: {{ stage_label }}
+{% if growth_industries %}- **发展壮大期产业**: {{ growth_industries | join("、") }}
+{% endif %}
+{% if current_industries %}- **当前主导产业**: {{ current_industries | join("、") }}
+{% endif %}
+- **关键时间线事件数**: {{ turning_points | length }}
+- **兴起因子数**: {{ rise_factors | length }}
+- **衰落因子数**: {{ decline_factors | length }}
+
+## 二、起家产业
+
+{% if origin_industry %}
+**起家产业**: {{ origin_industry }}
+{% if origin_period %}
+
+**主导时期**: {{ origin_period }}
+{% endif %}
+{% if origin_reason %}
+
+{{ origin_reason }}
+{% endif %}
+{% else %}
+_未识别出明确的起家产业(数据不足,需补充地方志与县志资料)。_
+{% endif %}
+
+## 三、兴起逻辑
+
+{% if rise_factors %}
+该县产业得以兴起的核心驱动因子如下:
+
+{% for f in rise_factors %}
+### {{ loop.index }}. {{ f.name }}
+
+{{ f.description }}
+
+{% if f.evidence %}
+**证据支撑**:
+{% for ev in f.evidence %}
+- {{ ev }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% else %}
+_兴起因子数据不足,需补充产业发展史资料。_
+{% endif %}
+
+## 四、壮大机制
+
+{% if growth_industries %}
+发展壮大期形成规模的产业方向:
+
+{% for ind in growth_industries %}
+- {{ ind }}
+{% endfor %}
+{% endif %}
+
+{% if growth_events %}
+**壮大期关键扩张事件**:
+
+| 年份 | 事件 | 影响 |
+| --- | --- | --- |
+{% for e in growth_events %}
+| {{ e.year }} | {{ e.event }} | {{ e.impact }} |
+{% endfor %}
+{% endif %}
+
+{% if not growth_industries and not growth_events %}
+_壮大机制数据不足,需补充产值与规模历史数据。_
+{% endif %}
+
+## 五、关键拐点
+
+{% if turning_points %}
+该县产业发展的关键转折点时间线:
+
+| 年份 | 类别 | 事件 | 影响 |
+| --- | --- | --- | --- |
+{% for e in turning_points %}
+| {{ e.year }} | {{ e.category }} | {{ e.event }} | {{ e.impact }} |
+{% endfor %}
+
+> 注:类别说明 — origin(起家) / growth(扩张) / turning(拐点) / decline(衰落) / policy(政策) / external(外部冲击)
+{% else %}
+_关键拐点数据不足,需补充产业发展史资料。_
+{% endif %}
+
+## 六、衰落机制
+
+{% if decline_factors %}
+导致该县产业衰落(或面临衰退风险)的核心因子:
+
+{% for f in decline_factors %}
+### {{ loop.index }}. {{ f.name }}（严重程度: {{ "%.0f" | format(f.severity * 100) }}%）
+
+{{ f.description }}
+
+{% if f.evidence %}
+**证据支撑**:
+{% for ev in f.evidence %}
+- {{ ev }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% else %}
+_未识别出明显衰落因子(该县可能尚处成长/成熟期,或数据不足以判断衰退)。_
+{% endif %}
+
+## 七、人才流失分析
+
+{% if talent_loss_reasons %}
+该县人才流失(含青壮年劳动力、技术工人、高校毕业生)的主要成因:
+
+{% for r in talent_loss_reasons %}
+- {{ r }}
+{% endfor %}
+{% else %}
+_人才流失数据不足,需补充人口统计公报与常住人口数据。_
+{% endif %}
+
+## 八、县域兴衰模型归纳
+
+{% if pattern_type and pattern_type != "unknown" %}
+**兴衰模型**: {{ pattern_type }}（{{ pattern_label }}）
+
+**置信度**: {{ "%.0f" | format(confidence * 100) }}%
+
+### 规律总结
+
+{{ pattern_summary }}
+
+{% if pattern_evidence %}
+**支撑证据**:
+{% for ev in pattern_evidence %}
+- {{ ev }}
+{% endfor %}
+{% endif %}
+{% else %}
+_兴衰模型归纳数据不足,需补充更多历史证据。_
+{% endif %}
+
+## 九、结论
+
+本报告对该县产业兴衰规律进行了系统研究。综合上述分析:
+
+{% if pattern_summary %}
+**核心判断**: {{ pattern_summary }}
+{% endif %}
+
+- **起家路径**: {{ origin_line }}
+- **兴起驱动**: {{ rise_line }}
+- **衰落机制**: {{ decline_line }}
+- **当前阶段**: {{ stage_label }}
+- **兴衰模型**: {{ pattern_type if pattern_type and pattern_type != "unknown" else "(未归纳)" }}
+
+{% if pattern_type and pattern_type != "unknown" %}
+**给投资者/创业者的历史规律启示**: 该县呈现典型的 `{{ pattern_type }}` 兴衰路径。请重点关注上述衰落因子的演变趋势与人才流失信号,结合兴衰模型判断当前所处阶段,评估产业转型的窗口期与风险点。本报告聚焦历史规律研究,不构成具体招商建议。
+{% else %}
+**给投资者/创业者的提示**: 当前数据不足以归纳明确兴衰模型,建议补充地方志、统计年鉴与政府工作报告后重新评估。
+{% endif %}
+
+---
+
+## 数据来源
+
+{% if sources %}
+本次研究共引用 {{ sources | length }} 条数据来源,按可信度优先级排序(政府官网/统计公报/地方志 > 发改委/工信局/统计局 > 上市公司公告/论文 > 主流媒体/行业协会 > 自媒体):
+
+{% for s in sources %}
+- [{{ s.title }}]({{ s.url }})
+{% endfor %}
+{% else %}
+_无数据来源。_
+{% endif %}

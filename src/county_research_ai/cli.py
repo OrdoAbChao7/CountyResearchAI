@@ -54,6 +54,18 @@ def _print_banner() -> None:
     help="研究方向,如 '竹产业' / '乡村旅游' / '装备制造'。留空则自动识别该县重点产业",
 )
 @click.option(
+    "--mode", "-m",
+    type=click.Choice(["snapshot", "rise-fall"], case_sensitive=False),
+    default="snapshot",
+    help="研究模式:snapshot(产业现状快照,默认)/ rise-fall(产业兴衰规律研究)",
+)
+@click.option(
+    "--historical",
+    is_flag=True,
+    default=False,
+    help="rise-fall 模式快捷开关(等价于 --mode rise-fall)",
+)
+@click.option(
     "--log-level", "-l",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
     default=None,
@@ -74,6 +86,8 @@ def _print_banner() -> None:
 def main(
     county: str,
     focus: str,
+    mode: str,
+    historical: bool,
     log_level: str | None,
     no_cache: bool,
     dry_run: bool,
@@ -86,8 +100,14 @@ def main(
       county-research -c 安吉县 -f 竹产业 --no-cache
       county-research -c 安吉县 --dry-run
       county-research -c 安吉县    # 自动识别该县重点产业方向
+      county-research -c 鹤岗市 --mode rise-fall      # 产业兴衰规律研究
+      county-research -c 鹤岗市 --historical          # 等价于 --mode rise-fall
     """
     _print_banner()
+
+    # --historical 是 --mode rise-fall 的快捷开关
+    if historical:
+        mode = "rise-fall"
 
     # 强制重载配置(让 --log-level 覆盖生效)
     reset_settings()
@@ -107,6 +127,7 @@ def main(
         click.echo(f"研究方向   : {focus}")
     else:
         click.echo("研究方向   : 自动识别 (--focus 未指定)")
+    click.echo(f"研究模式   : {mode}")
     click.echo(f"缓存策略   : {'跳过缓存(强制刷新)' if no_cache else '启用缓存 TTL=' + str(settings.cache.ttl_hours) + 'h'}")
     click.echo(f"日志级别   : {settings.logging.level}")
     click.echo(f"数据目录   : {settings.data_dir}")
@@ -115,7 +136,7 @@ def main(
 
     # dry-run:仅打印参数
     if dry_run:
-        focus_display = focus or "(自动识别)"
+        focus_display = focus or ("兴衰规律" if mode == "rise-fall" else "(自动识别)")
         click.echo("[dry-run] 请求参数校验通过,未实际执行 pipeline。")
         click.echo(f"[dry-run] 预期输出: {settings.reports_dir / f'{county}_{focus_display}_YYYYMMDD.md'}")
         sys.exit(0)
@@ -124,7 +145,7 @@ def main(
     options: dict[str, object] = {}
     if no_cache:
         options["no_cache"] = True
-    request = ResearchRequest(county=county, focus=focus, options=options)
+    request = ResearchRequest(county=county, focus=focus, mode=mode, options=options)
 
     pipeline = create_default_pipeline()
 

@@ -49,6 +49,22 @@ _DEFAULT_GOV_QUERY_TEMPLATES = [
     "{county} 特色产业 优势产业",
 ]
 
+# rise-fall 模式专用:历史维度查询模板(10 条)
+# 覆盖历史发展、地方志、主导产业变迁、财政人口、人才流失、衰退、资源枯竭、
+# 龙头企业、转型、政府工作报告等维度,用于产业兴衰规律研究
+_HISTORICAL_QUERY_TEMPLATES = [
+    "{county} 历史 产业 发展",
+    "{county} 地方志 工业 农业 商贸",
+    "{county} 主导产业 历史",
+    "{county} 统计公报 财政收入 人口",
+    "{county} 人口流出 人才流失",
+    "{county} 产业衰退 企业倒闭",
+    "{county} 资源枯竭 环保整治",
+    "{county} 龙头企业 产业园区",
+    "{county} 县域经济 转型",
+    "{county} 政府工作报告 产业",
+]
+
 
 class SearchCollector(SearchProvider):
     """多 Provider + 多 Query 并发协调器。
@@ -119,20 +135,36 @@ class SearchCollector(SearchProvider):
 
     # ---- 业务主接口 ----
 
-    def collect(self, county: str, focus: str, max_results: int = 0) -> list[RawDoc]:
+    def collect(
+        self,
+        county: str,
+        focus: str,
+        max_results: int = 0,
+        *,
+        mode: str = "snapshot",
+    ) -> list[RawDoc]:
         """根据县名 + 研究方向构造多查询并发采集。
 
         先把 {county}/{focus} 填进 query_templates,
         再把 Web 查通用、Gov 查政务的查询分别喂给对应 provider,
         最后合并去重粗排。
 
-        focus 可为空(产业方向自动发现阶段),此时仅用县名构造查询。
+        Args:
+            county: 县名(显示名)
+            focus: 研究方向(rise-fall 模式可为空)
+            max_results: 最大结果数,0 表示用 settings.search.max_results
+            mode: 研究模式 snapshot / rise-fall;
+                  rise-fall 使用历史维度查询模板(地方志/财政人口/衰退/转型等)
         """
         n = max_results or self._max_results
         keywords = [kw for kw in [county, focus] if kw]
+        # rise-fall 模式:Web 查询改用历史维度模板,覆盖兴衰规律研究所需史料
+        web_templates = (
+            _HISTORICAL_QUERY_TEMPLATES if mode == "rise-fall" else self._query_templates
+        )
         tasks: list[tuple[SearchProvider, str]] = []
         if self._web is not None:
-            for tpl in self._query_templates:
+            for tpl in web_templates:
                 q = tpl.format(county=county, focus=focus or "")
                 tasks.append((self._web, q))
         if self._gov is not None:

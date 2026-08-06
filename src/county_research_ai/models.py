@@ -194,11 +194,13 @@ class ResearchRequest(BaseModel):
     """研究请求(CLI / Pipeline 输入)。
 
     focus 为可选:未指定时 Pipeline 会自动搜索识别该县重点产业方向。
+    mode 指定研究模式:snapshot(产业现状快照)/ rise-fall(产业兴衰规律)。
     options 预留扩展(如自定义数据源、指定模型、跳过缓存等)。
     """
 
     county: str  # 县名(简单字符串,pipeline 内部转 CountyInfo)
     focus: str | None = None  # 研究方向,如 "竹产业";None 则自动发现
+    mode: str = "snapshot"  # 研究模式:snapshot / rise-fall
     options: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -226,3 +228,133 @@ class ResearchReport(BaseModel):
             if s.title == title:
                 return s
         return None
+
+
+# ===== 兴衰规律研究(rise-fall 模式) =====
+
+
+class TimelineEvent(BaseModel):
+    """历史时间线事件。
+
+    用于描绘县域产业发展的关键节点(起家、扩张、拐点、衰退等)。
+
+    Attributes:
+        year: 年份或时间段,如 "1998" / "2003-2008" / "2010 年代初"
+        event: 事件描述(一句话)
+        category: 事件类别: origin(起家) / growth(扩张) / turning(拐点)
+                  / decline(衰落) / policy(政策) / external(外部冲击)
+        impact: 对县域产业的影响(一句话)
+        source_url: 证据来源 URL(关键事件必须绑定)
+    """
+
+    year: str = ""
+    event: str = ""
+    category: str = "unknown"
+    impact: str = ""
+    source_url: str = ""
+
+
+class RiseFactor(BaseModel):
+    """产业兴起因子。
+
+    Attributes:
+        name: 因子名称,如 "矿产资源禀赋" / "改革开放政策红利"
+        description: 详细说明该因子如何驱动产业兴起
+        evidence: 证据列表(数据/事实/来源 URL 摘要)
+    """
+
+    name: str
+    description: str = ""
+    evidence: list[str] = Field(default_factory=list)
+
+
+class DeclineFactor(BaseModel):
+    """产业衰落因子。
+
+    Attributes:
+        name: 因子名称,如 "资源枯竭" / "环保整治" / "产业转移"
+        description: 详细说明该因子如何导致产业衰落
+        severity: 严重程度 0-1(1 表示致命性衰退)
+        evidence: 证据列表
+    """
+
+    name: str
+    description: str = ""
+    severity: float = 0.5
+    evidence: list[str] = Field(default_factory=list)
+
+
+class IndustryLifecycle(BaseModel):
+    """县域产业生命周期画像。
+
+    Attributes:
+        origin_industry: 起家产业(早期立县之本)
+        origin_period: 起家产业主导时期,如 "1980-2010"
+        origin_reason: 为何以此起家(机制 + 事实说明)
+        growth_industries: 发展壮大期的产业列表
+        current_industries: 当前主导产业列表
+        stage: 当前所处阶段: origin / growth / mature / decline / transition
+        turning_points: 关键转折点时间线
+    """
+
+    origin_industry: str = ""
+    origin_period: str = ""
+    origin_reason: str = ""
+    growth_industries: list[str] = Field(default_factory=list)
+    current_industries: list[str] = Field(default_factory=list)
+    stage: str = "unknown"
+    turning_points: list[TimelineEvent] = Field(default_factory=list)
+
+
+class HistoricalPattern(BaseModel):
+    """县域兴衰历史规律归纳。
+
+    Attributes:
+        pattern_type: 兴衰模型类型,如:
+            - resource_curse       资源诅咒型(资源起家→枯竭→衰退)
+            - policy_driven        政策驱动型(红利期繁荣→政策退坡→转型)
+            - market_cycle         市场周期型(随宏观周期起伏)
+            - industry_transfer    产业转移型(承接→壮大→再转移出)
+            - talent_drain         人才流失型(产业基础尚可但人力流失)
+            - path_lock            路径锁定型(单一产业过度依赖)
+            - diversified_growth   多元共生型(多产业协同,韧性较强)
+        summary: 规律总结(2-3 句话概括兴衰主线)
+        confidence: 置信度 0-1(基于证据充分度)
+        evidence: 支撑该判断的证据列表
+    """
+
+    pattern_type: str = "unknown"
+    summary: str = ""
+    confidence: float = 0.5
+    evidence: list[str] = Field(default_factory=list)
+
+
+class CountyRiseFallAnalysis(BaseModel):
+    """县域产业兴衰规律研究总结果(rise-fall 模式产出)。
+
+    聚合生命周期、兴起因子、衰落因子、人才流失、历史规律等核心维度,
+    供 RiseFallReportRenderer 渲染为兴衰规律研究报告。
+
+    Attributes:
+        county: 县域信息
+        lifecycle: 产业生命周期画像
+        rise_factors: 产业兴起因子列表
+        decline_factors: 产业衰落因子列表
+        talent_loss_reasons: 人才流失原因列表(每条一句话 + 证据)
+        historical_pattern: 兴衰模型归纳
+        summary: 执行摘要(Markdown)
+        model: 使用的 LLM 模型名
+        tokens_used: 总 token 消耗
+        analyzed_at: 分析完成时间(UTC)
+    """
+
+    county: CountyInfo
+    lifecycle: IndustryLifecycle = Field(default_factory=IndustryLifecycle)
+    rise_factors: list[RiseFactor] = Field(default_factory=list)
+    decline_factors: list[DeclineFactor] = Field(default_factory=list)
+    talent_loss_reasons: list[str] = Field(default_factory=list)
+    historical_pattern: HistoricalPattern = Field(default_factory=HistoricalPattern)
+    summary: str = ""
+    model: str = ""
+    tokens_used: int = 0
+    analyzed_at: datetime = Field(default_factory=_utcnow)

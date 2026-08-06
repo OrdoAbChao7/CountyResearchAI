@@ -33,9 +33,11 @@ from .exceptions import LLMError, PipelineError, SearchError
 from .llm.analyzer import LLMAnalyzer
 from .llm.base import LLMClient, LLMResponse
 from .llm.client import OpenAICompatibleClient
+from .llm.rise_fall_analyzer import RiseFallAnalyzer
 from .models import (
     AnalysisResult,
     CountyInfo,
+    CountyRiseFallAnalysis,
     DiscoveryResult,
     ProcessedData,
     RawDoc,
@@ -45,6 +47,7 @@ from .models import (
 )
 from .processor import DocumentProcessor
 from .reporting import ReportRenderer
+from .reporting.rise_fall_renderer import RiseFallReportRenderer
 from .search.base import SearchProvider
 from .search.collector import SearchCollector
 from .storage.base import Storage
@@ -76,6 +79,8 @@ class ResearchPipeline:
         llm: LLMClient,
         analyzer: LLMAnalyzer | None = None,
         renderer: ReportRenderer | None = None,
+        rise_fall_analyzer: RiseFallAnalyzer | None = None,
+        rise_fall_renderer: RiseFallReportRenderer | None = None,
     ) -> None:
         self.search = search
         self.storage = storage
@@ -84,6 +89,9 @@ class ResearchPipeline:
         self.analyzer = analyzer or LLMAnalyzer(llm=llm)
         # renderer 默认使用 ReportRenderer(基于 Jinja2 模板)
         self.renderer = renderer or ReportRenderer()
+        # rise-fall 模式专用分析器与渲染器(按需构造,复用同一 llm 客户端)
+        self.rise_fall_analyzer = rise_fall_analyzer or RiseFallAnalyzer(llm=llm)
+        self.rise_fall_renderer = rise_fall_renderer or RiseFallReportRenderer()
 
     # ---- 公开入口 ----
 
@@ -100,7 +108,15 @@ class ResearchPipeline:
         county_info = CountyInfo.from_name(request.county)
         date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
 
-        logger.info("研究启动 | 县=%s | 方向=%s", county_info.display(), request.focus)
+        logger.info(
+            "研究启动 | 县=%s | 方向=%s | 模式=%s",
+            county_info.display(), request.focus, request.mode,
+        )
+
+        # 模式路由:rise-fall 走独立的兴衰规律研究流程
+        if request.mode == "rise-fall":
+            return self._run_rise_fall(request, county_info, date_str)
+
         logger.info(
             "Pipeline 阶段 | search=%s | process=%s | analyze=%s | report=%s",
             stages.search, stages.process, stages.analyze, stages.report,
@@ -205,14 +221,167 @@ class ResearchPipeline:
         logger.info("研究完成 | 报告已输出: %s", report_path)
         return report, report_path
 
+    # ---- rise-fall 模式流程 ----
+
+    def _run_rise_fall(
+        self,
+        request: ResearchRequest,
+        county_info: CountyInfo,
+        date_str: str,
+    ) -> tuple[ResearchReport, Path]:
+        """rise-fall 模式:县域产业兴衰规律研究。
+
+        流程: search(历史维度) → process → rise_fall_analyzer → render → 落盘
+        报告拼接逻辑委托给 RiseFallReportRenderer,不放在本方法内。
+        """
+        settings = get_settings()
+        stages = settings.pipeline.stages
+        fail_fast = settings.pipeline.fail_fast
+        # rise-fall 模式 focus 可选(研究全县产业兴衰,非单一产业)
+        focus = request.focus or "兴衰规律"
+
+        logger.info(
+            "rise-fall 流程启动 | 县=%s | 方向=%s",
+            county_info.display(), focus,
+        )
+
+        # -------- 阶段 1: 采集(历史维度关键词) --------
+        raw_docs: list[RawDoc] = []
+        if stages.search:
+            try:
+                raw_docs = self._stage_search(
+                    county_info, request.focus or "", mode="rise-fall",
+                )
+                logger.info("阶段搜索完成 | 文档数=%d", len(raw_docs))
+            except Exception as e:
+                self._handle_stage_error("search", e, fail_fast)
+        else:
+            logger.info("阶段搜索已跳过")
+
+        # -------- 阶段 2: 处理(清洗+存盘+缓存读取) --------
+        processed: ProcessedData | None = None
+        if stages.process:
+            try:
+                skip_cache = bool(request.options.get("no_cache"))
+                cache_hours = 0 if skip_cache else (
+                    settings.cache.ttl_hours if settings.cache.enabled else 0
+                )
+                processed = self._stage_process(
+                    county_info, focus, raw_docs,
+                    cache_hours=cache_hours,
+                )
+                logger.info(
+                    "阶段处理完成 | 文档数=%d | 字符数=%d",
+                    len(processed.docs), processed.total_chars,
+                )
+            except Exception as e:
+                self._handle_stage_error("process", e, fail_fast)
+        else:
+            logger.info("阶段处理已跳过")
+
+        # -------- 阶段 3: 兴衰规律分析 --------
+        analysis: CountyRiseFallAnalysis | None = None
+        if stages.analyze and processed is not None:
+            try:
+                analysis = self.rise_fall_analyzer.analyze(
+                    county=county_info, data=processed,
+                )
+                logger.info(
+                    "阶段兴衰分析完成 | 起家=%s | 兴衰模型=%s | tokens=%d",
+                    analysis.lifecycle.origin_industry,
+                    analysis.historical_pattern.pattern_type,
+                    analysis.tokens_used,
+                )
+            except Exception as e:
+                self._handle_stage_error("analyze", e, fail_fast)
+        else:
+            logger.info("阶段分析已跳过")
+
+        # -------- 阶段 4: 报告渲染 + 存盘 --------
+        report_path: Path | None = None
+        if stages.report:
+            try:
+                report_path = self._stage_rise_fall_report(
+                    analysis, county_info, focus, date_str, processed,
+                )
+                logger.info("阶段报告完成 | 路径=%s", report_path)
+            except Exception as e:
+                self._handle_stage_error("report", e, fail_fast)
+        else:
+            logger.info("阶段报告已跳过")
+
+        if report_path is None:
+            raise PipelineError("rise-fall Pipeline 完成但未生成报告", context={
+                "stages_report": stages.report,
+            })
+
+        # 构造一个 ResearchReport 兼容对象(供 CLI 获取章节数等元信息)
+        section_titles = [
+            "执行摘要", "一、县域基本画像", "二、起家产业", "三、兴起逻辑",
+            "四、壮大机制", "五、关键拐点", "六、衰落机制", "七、人才流失分析",
+            "八、县域兴衰模型归纳", "九、结论",
+        ]
+        report = ResearchReport(
+            county=county_info,
+            focus=focus,
+            sections=[
+                ReportSection(title=t, content="", order=i)
+                for i, t in enumerate(section_titles, start=1)
+            ],
+            analyses=[],
+        )
+
+        logger.info("rise-fall 研究完成 | 报告已输出: %s", report_path)
+        return report, report_path
+
+    def _stage_rise_fall_report(
+        self,
+        analysis: CountyRiseFallAnalysis | None,
+        county: CountyInfo,
+        focus: str,
+        date_str: str,
+        processed: ProcessedData | None,
+    ) -> Path:
+        """rise-fall 阶段 4: 渲染兴衰规律报告并落盘。"""
+        settings = get_settings()
+        # 分析失败时构造空 analysis,渲染器会输出"数据不足"占位
+        if analysis is None:
+            analysis = CountyRiseFallAnalysis(county=county)
+
+        raw_docs = processed.docs if processed else []
+        md = self.rise_fall_renderer.render(analysis, raw_docs)
+
+        # 文件名(与 snapshot 区分:加 rise_fall 标识)
+        filename = self.rise_fall_renderer_render_filename(
+            settings.app.report_filename_template,
+            {"county": county.name, "focus": focus, "date": date_str},
+        )
+        return self.storage.save_report(filename, md)
+
+    def rise_fall_renderer_render_filename(
+        self, template: str, context: dict[str, str]
+    ) -> str:
+        """渲染 rise-fall 报告文件名(复用 ReportRenderer 的 render_filename 逻辑)。"""
+        from jinja2 import Template
+        try:
+            return Template(template).render(**context)
+        except Exception as e:
+            raise PipelineError(
+                "rise-fall 报告文件名渲染失败",
+                context={"template": template, "error": str(e)},
+            ) from e
+
     # ---- 各阶段内部方法 ----
 
-    def _stage_search(self, county: CountyInfo, focus: str) -> list[RawDoc]:
+    def _stage_search(
+        self, county: CountyInfo, focus: str, mode: str = "snapshot",
+    ) -> list[RawDoc]:
         """阶段 1: 调用 SearchCollector 采集原始数据(Web + Gov 并发)。
 
-        优先使用 SearchCollector.collect(基于多查询模板并发采集):
-            - 如果 self.search 是 SearchCollector,直接调用 collect;
-            - 否则退化为单 provider 调用 search()(兼容 MockSearchProvider 等兜底场景)。
+        Args:
+            county: 县域信息
+            focus: 研究方向(rise-fall 模式可为空)
+            mode: 研究模式 snapshot / rise-fall(rise-fall 使用历史维度关键词)
         """
         if isinstance(self.search, SearchCollector):
             settings = get_settings()
@@ -221,6 +390,7 @@ class ResearchPipeline:
                     county=county.display(),
                     focus=focus,
                     max_results=settings.search.max_results,
+                    mode=mode,
                 )
             except Exception as e:
                 logger.warning("Collector 采集失败(降级处理) | err=%s", e)
