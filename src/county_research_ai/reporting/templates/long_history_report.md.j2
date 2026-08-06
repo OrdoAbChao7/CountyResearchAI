@@ -1,0 +1,155 @@
+{# 县域长周期兴衰史研究报告模板 (9 节固定) #}
+# {{ county_display }}县域长周期兴衰史研究报告
+
+> 生成日期: {{ generated_at }}
+> 报告版本: 0.3.0
+> 研究模式: 县域长周期兴衰史 (long-history)
+
+## 执行摘要
+
+{{ summary }}
+
+## 一、长周期总论
+
+{% if pattern_type and pattern_type != "unknown" %}
+**长周期模型**: {{ pattern_type }}（{{ pattern_label }}）
+
+**置信度**: {{ "%.0f"|format(confidence * 100) }}%
+{% if dominant_variables %}
+**关键主导变量**: {{ dominant_variables | join(" / ") }}
+{% endif %}
+
+{% if pattern_summary %}
+**历史命运主线**: {{ pattern_summary }}
+{% endif %}
+{% else %}
+_长周期模型归纳数据不足,需补充县志与地方志资料。_
+{% endif %}
+
+## 二、建县与地理逻辑
+
+{% if geo_factors %}
+决定该县形成与长期命运的地理历史深层结构因子:
+
+{% for f in geo_factors %}
+### {{ loop.index }}. {{ f.name }}
+
+**描述**: {{ f.description }}
+
+**长期影响**: {{ f.impact }}
+
+{% if f.evidence %}
+**证据支撑**:
+{% for ev in f.evidence %}
+- {{ ev }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% else %}
+_建县与地理逻辑资料不足(建议优先查阅该县县志《建置志》《地理志》)。_
+{% endif %}
+
+## 三、传统时代生存方式
+
+{% if traditional_economy and not traditional_economy.startswith("_") %}
+{{ traditional_economy }}
+{% else %}
+_{{ traditional_economy | default("传统时代资料不足。") }}_
+{% endif %}
+
+## 四、近代冲击与变迁
+
+{% if modern_shocks and not modern_shocks.startswith("_") %}
+{{ modern_shocks }}
+{% else %}
+_{{ modern_shocks | default("近代冲击与变迁资料不足。") }}_
+{% endif %}
+
+## 五、计划经济时期再组织
+
+{% if state_period_reorganization and not state_period_reorganization.startswith("_") %}
+{{ state_period_reorganization }}
+{% else %}
+_{{ state_period_reorganization | default("计划经济时期资料不足。") }}_
+{% endif %}
+
+## 六、改革开放后的产业重塑
+
+{% if reform_period_transformation and not reform_period_transformation.startswith("_") %}
+{{ reform_period_transformation }}
+{% else %}
+_{{ reform_period_transformation | default("改革开放时期资料不足。") }}_
+{% endif %}
+
+## 七、新世纪以来发展变化
+
+{% if contemporary_status and not contemporary_status.startswith("_") %}
+{{ contemporary_status }}
+{% else %}
+_{{ contemporary_status | default("新世纪以来资料不足。") }}_
+{% endif %}
+
+## 八、长周期兴衰模型
+
+{% if pattern_type and pattern_type != "unknown" %}
+**模型类型**: `{{ pattern_type }}` — {{ pattern_label }}
+
+**历史命运主线**:
+
+{{ pattern_summary }}
+
+**置信度**: {{ "%.0f"|format(confidence * 100) }}%
+{% if dominant_variables %}
+**关键主导变量**:
+{% for v in dominant_variables %}
+- {{ v }}
+{% endfor %}
+{% endif %}
+{% if pattern_evidence %}
+**贯穿性支撑证据**:
+{% for ev in pattern_evidence %}
+- {{ ev }}
+{% endfor %}
+{% endif %}
+{% else %}
+_长周期兴衰模型归纳资料不足(建议补充县志/学术论文后重新评估)。_
+{% endif %}
+
+## 九、历史规律总结
+
+本报告从建县、传统时代、近代、计划经济、改革开放、新世纪六个连续阶段,
+对该县进行了长周期(数百年尺度)兴衰史研究,历史规律总结如下:
+
+- **建县逻辑**: {{ geo_line if geo_line else "(资料不足,需补县志)" }}
+- **传统生存逻辑**: {{ traditional_logic if traditional_logic else "(资料不足)" }}
+- **近代转折变量**: {{ modern_shock_var if modern_shock_var else "(资料不足)" }}
+- **国家嵌入效应**: {{ state_effect if state_effect else "(资料不足)" }}
+- **改革开放关键**: {{ reform_key if reform_key else "(资料不足)" }}
+- **新世纪命运**: {{ contemporary_fate if contemporary_fate else "(资料不足)" }}
+- **长周期模型**: `{{ pattern_type if pattern_type and pattern_type != "unknown" else "未归类" }}`
+{% if dominant_variables %}
+- **决定命运的变量**: {{ dominant_variables | join(" / ") }}
+{% endif %}
+
+{% if pattern_type and pattern_type != "unknown" %}
+**给投资者/决策者的历史规律启示**: 该县呈现典型的 `{{ pattern_type }}` 长周期路径。
+请重点关注上述关键主导变量的演变趋势,结合长周期模型判断当前所处阶段——
+是历史惯性延续、还是进入了再激活窗口期。本报告聚焦历史规律,不构成招商建议。
+{% else %}
+**给投资者/决策者的提示**: 当前史料不足以归纳明确长周期模型,建议补充县志、
+地方志、学术论文与统计年鉴后重新评估。
+{% endif %}
+
+---
+
+## 数据来源
+
+{% if sources %}
+本次研究共引用 {{ sources | length }} 条数据来源(按可信度排序:县志/地方志 > 政府资料/年鉴/统计公报 > 学术论文 > 主流媒体 > 百科仅辅助):
+
+{% for s in sources %}
+- [{{ s.title }}]({{ s.url }})
+{% endfor %}
+{% else %}
+_无数据来源。_
+{% endif %}

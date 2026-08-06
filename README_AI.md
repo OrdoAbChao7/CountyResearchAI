@@ -4,18 +4,19 @@
 
 ## 项目概述
 
-AI 县域产业研究助手：用户输入「县名 + 可选研究方向 + 研究模式」，系统自动完成 **数据采集 → (可选)产业方向识别 → 结构化处理 → LLM 智能分析 → 报告生成**，输出 Markdown 产业研究报告。支持两种研究模式：
+AI 县域产业研究助手：用户输入「县名 + 可选研究方向 + 研究模式」，系统自动完成 **数据采集 → (可选)产业方向识别 → 结构化处理 → LLM 智能分析 → 报告生成**，输出 Markdown 产业研究报告。支持三种研究模式：
 
 - **snapshot 模式**（默认）：产业现状快照，6 章节（执行摘要/产业现状/优势/短板/建议/数据来源）
 - **rise-fall 模式**（`--mode rise-fall`）：县域产业兴衰规律研究，9 节固定结构，回答 7 个核心问题（起家/兴起/壮大/拐点/衰落/人才/兴衰模型）
+- **long-history 模式**（`--mode long-history`）：县域长周期兴衰史分析，9 节固定结构，从数百年尺度回答"为何形成/靠什么存在/如何兴起/为何衰落/能否再激活"
 
 **核心价值**：
-- 双研究模式共存（snapshot 现状分析 + rise-fall 兴衰规律）
+- 三研究模式共存（snapshot 现状分析 + rise-fall 兴衰规律 + long-history 长周期兴衰史）
 - 产业方向自动发现（`--focus` 可选，未指定时由 LLM 识别）
 - 零配置 Mock 降级（无 API Key 也能跑通全链路）
 - 可插拔数据源与 LLM
 - 数据三层留存（raw/processed/report）便于复盘
-- 关键结论绑定证据 URL（rise-fall 模式来源按可信度排序）
+- 关键结论绑定证据 URL（rise-fall / long-history 模式来源按可信度排序）
 
 ## 技术栈
 
@@ -23,8 +24,8 @@ AI 县域产业研究助手：用户输入「县名 + 可选研究方向 + 研�
 |------|------|------|
 | 语言 | Python 3.10+ | src layout |
 | LLM | openai SDK | 兼容 DeepSeek/Qwen/OpenAI |
-| 数据校验 | Pydantic v2 | 含 DiscoveryResult/兴衰规律 6 模型 |
-| CLI | Click | `--focus` 可选 / `--mode` 双模式 |
+| 数据校验 | Pydantic v2 | 含 DiscoveryResult/兴衰规律 6 模型/长周期 4 模型 |
+| CLI | Click | `--focus` 可选 / `--mode` 三模式 / `--historical` / `--long-history` 快捷开关 |
 | HTTP | httpx | 搜索 API 调用 |
 | 模板 | Jinja2 | 提示词 + 文件名渲染 |
 | 重试 | tenacity | 网络请求容错 |
@@ -36,13 +37,15 @@ AI 县域产业研究助手：用户输入「县名 + 可选研究方向 + 研�
 
 ```
 src/county_research_ai/
-├── cli.py              # [入口] Click 命令行，--focus 可选 / --mode 双模式 / --historical 快捷开关
-├── pipeline.py         # [编排] Pipeline + 模式路由(_run_rise_fall) + Mock 降级
+├── cli.py              # [入口] Click 命令行，--focus 可选 / --mode 三模式 / --historical / --long-history 快捷开关
+├── pipeline.py         # [编排] Pipeline + 模式路由(_run_rise_fall/_run_long_history) + Mock 降级
 ├── config.py           # [配置] YAML + .env 合并，单例 get_settings/reset_settings
 ├── models.py           # [模型] Pydantic: CountyInfo/RawDoc/ProcessedData/AnalysisResult
 │                       #         DiscoveryCandidate/DiscoveryResult/ResearchReport
 │                       #         [rise-fall] TimelineEvent/RiseFactor/DeclineFactor/
 │                       #                     IndustryLifecycle/HistoricalPattern/CountyRiseFallAnalysis
+│                       #         [long-history] HistoricalPeriod/GeoHistoricalFactor/
+│                       #                        LongHistoryPattern/CountyLongHistoryAnalysis
 ├── exceptions.py       # [异常] 层次: CountyResearchAIError → ConfigError/SearchError/LLMError/PipelineError
 │
 ├── search/             # [采集层]
@@ -50,7 +53,10 @@ src/county_research_ai/
 │   ├── web_search.py   # Tavily/Serper/Bing 三 provider (include_raw_content=True)
 │   ├── gov_data.py     # 政府白名单过滤 + 详情页抓取 (BeautifulSoup)
 │   └── collector.py    # SearchCollector: 多查询并发 + _dedup_and_rank 粗排
-│                       #   collect(mode) rise-fall 启用 _HISTORICAL_QUERY_TEMPLATES (10 条)
+│                       #   collect(mode) 按模式选择查询模板:
+│                       #     snapshot → 通用产业查询
+│                       #     rise-fall → _HISTORICAL_QUERY_TEMPLATES (10 条,近现代产业兴衰)
+│                       #     long-history → _LONG_HISTORY_QUERY_TEMPLATES (10 条,数百年长周期史料)
 │
 ├── storage/            # [存储层]
 │   ├── base.py         # Storage 抽象基类
@@ -61,17 +67,24 @@ src/county_research_ai/
 │   ├── client.py       # OpenAICompatibleClient (真实 HTTP 客户端)
 │   ├── prompt_loader.py # PromptLoader: Jinja2 模板加载/渲染
 │   ├── analyzer.py     # [snapshot] LLMAnalyzer: 4 任务分析 + generate_summary + discover_focus
-│   └── rise_fall_analyzer.py # [rise-fall] RiseFallAnalyzer: 7 任务兴衰规律分析
-│                       #   extract_timeline/identify_origin_industry/analyze_rise_factors
-│                       #   /analyze_decline_factors/analyze_talent_loss
-│                       #   /classify_historical_pattern/generate_summary → CountyRiseFallAnalysis
+│   ├── rise_fall_analyzer.py # [rise-fall] RiseFallAnalyzer: 7 任务兴衰规律分析
+│   │                       #   extract_timeline/identify_origin_industry/analyze_rise_factors
+│   │                       #   /analyze_decline_factors/analyze_talent_loss
+│   │                       #   /classify_historical_pattern/generate_summary → CountyRiseFallAnalysis
+│   └── long_history_analyzer.py # [long-history] LongHistoryAnalyzer: 9 任务长周期兴衰史分析
+│                       #   extract_periods/analyze_geo_origin/analyze_traditional_economy
+│                       #   /analyze_modern_shocks/analyze_state_period/analyze_reform_period
+│                       #   /analyze_contemporary_status/classify_long_history_pattern
+│                       #   /generate_summary → CountyLongHistoryAnalysis
 │
 └── reporting/          # [报告层]
     ├── renderer.py     # [snapshot] ReportRenderer: render_markdown + render_filename
     ├── rise_fall_renderer.py # [rise-fall] RiseFallReportRenderer: render(analysis, raw_docs) → 9 节 Markdown
+    ├── long_history_renderer.py # [long-history] LongHistoryReportRenderer: render(analysis, raw_docs) → 9 节 Markdown
     └── templates/
         ├── report.md.j2          # snapshot 模式模板
-        └── rise_fall_report.md.j2 # rise-fall 模式模板 (9 节固定结构)
+        ├── rise_fall_report.md.j2 # rise-fall 模式模板 (9 节固定结构)
+        └── long_history_report.md.j2 # long-history 模式模板 (9 节固定结构)
 
 config/
 ├── settings.yaml       # 应用主配置 (模型参数/超时/并发/缓存 TTL)
@@ -88,7 +101,16 @@ prompts/
 ├── decline_analysis.md     # [rise-fall] 衰落因子分析 (输出 JSON: decline_factors[])
 ├── talent_loss.md          # [rise-fall] 人才流失分析 (输出 JSON: talent_loss_reasons[])
 ├── historical_pattern.md   # [rise-fall] 兴衰模型归纳 (输出 JSON: pattern_type/summary/confidence)
-└── rise_fall_summary.md    # [rise-fall] 执行摘要 (输出 Markdown)
+├── rise_fall_summary.md    # [rise-fall] 执行摘要 (输出 Markdown)
+├── long_history_periods.md # [long-history] 历史阶段提取 (输出 JSON: periods[])
+├── geo_origin_analysis.md  # [long-history] 建县与地理逻辑 (输出 JSON: geo_factors[])
+├── traditional_economy.md  # [long-history] 传统时代生存方式 (输出 Markdown)
+├── modern_shocks.md        # [long-history] 近代冲击与变迁 (输出 Markdown)
+├── state_period.md         # [long-history] 计划经济时期再组织 (输出 Markdown)
+├── reform_period.md        # [long-history] 改革开放产业重塑 (输出 Markdown)
+├── contemporary_long_view.md # [long-history] 新世纪长周期视角 (输出 Markdown)
+├── long_history_pattern.md # [long-history] 长周期兴衰模型归纳 (输出 JSON: pattern_type/summary/confidence)
+└── long_history_summary.md # [long-history] 执行摘要 (输出 Markdown)
 
 data/                   # 运行产物 (gitignore)
 ├── raw/{县名}/{日期}/raw_docs.json
@@ -96,7 +118,8 @@ data/                   # 运行产物 (gitignore)
 
 reports/                # 生成的报告 (gitignore)
 ├── {县名}_{方向}_{日期}.md          # snapshot 模式
-└── {县名}_兴衰规律_{日期}.md        # rise-fall 模式
+├── {县名}_兴衰规律_{日期}.md        # rise-fall 模式
+└── {县名}_长周期兴衰史_{日期}.md    # long-history 模式
 
 tests/                  # 单元测试
 ├── conftest.py         # 共享 fixtures: MockLLM 支持 discovery 关键词检测
@@ -131,17 +154,23 @@ python -m county_research_ai.cli -c 安吉县
 python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall
 python -m county_research_ai.cli -c 鹤岗市 --historical          # 等价快捷写法
 
+# 方式四：县域长周期兴衰史分析（long-history 模式）
+python -m county_research_ai.cli -c 信丰县 --mode long-history
+python -m county_research_ai.cli -c 信丰县 --long-history        # 等价快捷写法
+
 # 完整选项
 python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-level DEBUG
 
 # dry-run (不执行 Pipeline)
 python -m county_research_ai.cli -c 安吉县 --dry-run
 python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall --dry-run
+python -m county_research_ai.cli -c 信丰县 --mode long-history --dry-run
 ```
 
 报告输出路径:
 - snapshot: `reports/{县名}_{方向}_{日期}.md`
 - rise-fall: `reports/{县名}_兴衰规律_{日期}.md`
+- long-history: `reports/{县名}_长周期兴衰史_{日期}.md`
 
 ## 测试命令
 
@@ -199,7 +228,7 @@ Pipeline 组件按 **三级降级策略** 自动选择实现：
 ## Pipeline 核心流程
 
 ```
-CLI 入口 (--focus 可选 / --mode 双模式)
+CLI 入口 (--focus 可选 / --mode 三模式)
   │
   ├─ dry-run? → 打印预期路径 → exit 0
   │
@@ -207,9 +236,10 @@ CLI 入口 (--focus 可选 / --mode 双模式)
   │
   └─ pipeline.run(request)
        │
-       ├─ request.mode == "rise-fall"? → _run_rise_fall()  ──┐(见下方 rise-fall 流程)
-       │                                                      │
-       │  ┌── snapshot 模式（默认）──────────────────────────┘
+       ├─ request.mode == "rise-fall"? → _run_rise_fall()      ──┐(见下方 rise-fall 流程)
+       ├─ request.mode == "long-history"? → _run_long_history() ──┐(见下方 long-history 流程)
+       │                                                            │
+       │  ┌── snapshot 模式（默认）────────────────────────────────┘
        │  │
        │  ├─ Stage1: _stage_search()
        │  │   └─ SearchCollector.collect()  (focus 为空时用县名构造查询)
@@ -236,7 +266,7 @@ CLI 入口 (--focus 可选 / --mode 双模式)
 rise-fall 流程 (_run_rise_fall):
   │
   ├─ Stage1: _stage_search(mode="rise-fall")
-  │   └─ SearchCollector.collect() 启用 _HISTORICAL_QUERY_TEMPLATES (10 条史料查询)
+  │   └─ SearchCollector.collect() 启用 _HISTORICAL_QUERY_TEMPLATES (10 条近现代产业兴衰查询)
   │       → list[RawDoc]
   │
   ├─ Stage2: _stage_process()  (复用 snapshot 同一逻辑)
@@ -255,6 +285,31 @@ rise-fall 流程 (_run_rise_fall):
   └─ Stage4: _stage_rise_fall_report()
       ├─ RiseFallReportRenderer.render(analysis, raw_docs) → 9 节 Markdown
       └─ save_report() → reports/{县}_兴衰规律_{日期}.md
+
+long-history 流程 (_run_long_history):
+  │
+  ├─ Stage1: _stage_search(mode="long-history")
+  │   └─ SearchCollector.collect() 启用 _LONG_HISTORY_QUERY_TEMPLATES (10 条长周期史料查询)
+  │       → list[RawDoc]
+  │
+  ├─ Stage2: _stage_process()  (复用 snapshot 同一逻辑)
+  │   → ProcessedData
+  │
+  ├─ Stage3: LongHistoryAnalyzer.analyze()  (9 任务串行)
+  │   ├─ extract_periods               → list[HistoricalPeriod]
+  │   ├─ analyze_geo_origin            → list[GeoHistoricalFactor]
+  │   ├─ analyze_traditional_economy   → Markdown
+  │   ├─ analyze_modern_shocks         → Markdown
+  │   ├─ analyze_state_period          → Markdown
+  │   ├─ analyze_reform_period         → Markdown
+  │   ├─ analyze_contemporary_status   → Markdown
+  │   ├─ classify_long_history_pattern → LongHistoryPattern
+  │   └─ generate_summary              → Markdown 执行摘要
+  │   → CountyLongHistoryAnalysis
+  │
+  └─ Stage4: _stage_long_history_report()
+      ├─ LongHistoryReportRenderer.render(analysis, raw_docs) → 9 节 Markdown
+      └─ save_report() → reports/{县}_长周期兴衰史_{日期}.md
 ```
 
 ## 关键配置 (.env)
@@ -317,3 +372,53 @@ rise-fall 流程 (_run_rise_fall):
 - JSON 解析失败 → 返回空列表/空对象,日志 WARNING
 - 分析整体失败 → 构造空 `CountyRiseFallAnalysis`,渲染器输出"数据不足"占位
 - 搜索无结果 → 复用 snapshot 的 Mock 降级逻辑
+
+## long-history 模式关键代码位置
+
+| 位置 | 职责 |
+|------|------|
+| [models.py](file:///e:/CountyResearchAI/src/county_research_ai/models.py) | 长周期 4 模型: HistoricalPeriod/GeoHistoricalFactor/LongHistoryPattern/CountyLongHistoryAnalysis |
+| [long_history_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/long_history_analyzer.py) `analyze()` | 总入口: 9 任务串行 → CountyLongHistoryAnalysis |
+| [long_history_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/long_history_analyzer.py) `_parse_json_lenient()` | JSON 容错解析(复用 rise-fall 同款逻辑) |
+| [long_history_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/long_history_analyzer.py) `_run_task()` | 单任务执行 + fail_fast 降级 |
+| [long_history_renderer.py](file:///e:/CountyResearchAI/src/county_research_ai/reporting/long_history_renderer.py) `render()` | 渲染 9 节报告 + 数据来源按可信度排序 + 第九节各阶段一句话摘要提取 |
+| [collector.py](file:///e:/CountyResearchAI/src/county_research_ai/search/collector.py) `_LONG_HISTORY_QUERY_TEMPLATES` | 10 条长周期史料查询模板(建县沿革/县志/驿道水运/人口迁徙/国营工厂/行政区划等) |
+| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `_run_long_history()` | long-history 模式流程编排 |
+| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `run()` | 模式路由: `request.mode == "long-history"` 分支 |
+| [long_history_report.md.j2](file:///e:/CountyResearchAI/src/county_research_ai/reporting/templates/long_history_report.md.j2) | 9 节固定结构 Jinja2 模板 |
+| [prompts/long_history_periods.md](file:///e:/CountyResearchAI/prompts/long_history_periods.md) 等 9 个 | long-history 提示词模板(periods/geo/pattern 输出 JSON,其余输出 Markdown) |
+| [cli.py](file:///e:/CountyResearchAI/src/county_research_ai/cli.py) | `--mode` / `--long-history` 参数 |
+
+### long-history 长周期兴衰模型类型 (LongHistoryPattern.pattern_type)
+
+| 类型 | 含义 |
+|------|------|
+| `agricultural_hinterland` | 农业腹地型(农业资源禀赋支撑长期稳定,但上限受限) |
+| `transport_corridor` | 交通通道型(因交通要道而兴衰,随技术迭代重估) |
+| `resource_frontier` | 资源边疆型(资源开发起家,随资源枯竭或替代而衰退) |
+| `administrative_center` | 行政中心型(行政层级稳定性决定县域命运) |
+| `policy_reactivation` | 政策再激活型(国家政策干预在关键节点重塑轨迹) |
+| `border_trade` | 边贸枢纽型(因边境贸易而兴,随政治经济格局变化而衰) |
+| `cultural_industry` | 文化产业型(依托历史文化资源形成特色产业) |
+| `mixed` | 混合型(多种模型叠加) |
+
+### long-history 降级策略
+
+- 单任务 LLM 调用失败 → `fail_fast=False` 时降级为空结果/占位文本,不阻断整体
+- JSON 解析失败 → 返回空列表/空对象,日志 WARNING
+- 分析整体失败 → 构造空 `CountyLongHistoryAnalysis`,渲染器输出"资料不足"占位
+- 搜索无结果 → 复用 snapshot 的 Mock 降级逻辑
+- 各阶段 Markdown 为空 → 渲染器输出"资料不足(建议优先查阅该县县志)"占位
+
+### long-history 报告结构（9 节固定）
+
+1. 执行摘要 — 一句话结论 + 关键发现(建县/传统/近代/计划/改革/当代/模型) + 历史规律启示
+2. 一、长周期总论 — 模型类型 + 置信度 + 关键主导变量 + 历史命运主线
+3. 二、建县与地理逻辑 — 地理历史深层结构因子(描述/长期影响/证据支撑)
+4. 三、传统时代生存方式 — 建县至近代的农业/手工业/商贸经济基础
+5. 四、近代冲击与变迁 — 近代战争/交通变革/市场冲击
+6. 五、计划经济时期再组织 — 1949-1978 国营工厂/集体化/行政重塑
+7. 六、改革开放后的产业重塑 — 1978 后产业转型/市场化/城镇化
+8. 七、新世纪以来发展变化 — 2000 至今人口/交通/产业/边缘化或再激活
+9. 八、长周期兴衰模型 — 模型类型 + 历史命运主线 + 置信度 + 主导变量 + 贯穿性支撑证据
+10. 九、历史规律总结 — 建县/传统/近代/国家嵌入/改革开放/新世纪/模型 各阶段一句话 + 启示

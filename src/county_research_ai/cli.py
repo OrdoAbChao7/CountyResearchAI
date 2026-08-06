@@ -55,15 +55,29 @@ def _print_banner() -> None:
 )
 @click.option(
     "--mode", "-m",
-    type=click.Choice(["snapshot", "rise-fall"], case_sensitive=False),
+    type=click.Choice(
+        ["snapshot", "industry", "rise-fall", "long-history"],
+        case_sensitive=False,
+    ),
     default="snapshot",
-    help="研究模式:snapshot(产业现状快照,默认)/ rise-fall(产业兴衰规律研究)",
+    help=(
+        "研究模式:"
+        " snapshot/industry(产业现状快照,默认)"
+        " / rise-fall(产业兴衰规律研究)"
+        " / long-history(县域长周期兴衰史分析)"
+    ),
 )
 @click.option(
     "--historical",
     is_flag=True,
     default=False,
     help="rise-fall 模式快捷开关(等价于 --mode rise-fall)",
+)
+@click.option(
+    "--long-history",
+    is_flag=True,
+    default=False,
+    help="long-history 模式快捷开关(等价于 --mode long-history)",
 )
 @click.option(
     "--log-level", "-l",
@@ -88,6 +102,7 @@ def main(
     focus: str,
     mode: str,
     historical: bool,
+    long_history: bool,
     log_level: str | None,
     no_cache: bool,
     dry_run: bool,
@@ -99,15 +114,22 @@ def main(
       county-research --county 安吉县 --focus 竹产业
       county-research -c 安吉县 -f 竹产业 --no-cache
       county-research -c 安吉县 --dry-run
-      county-research -c 安吉县    # 自动识别该县重点产业方向
+      county-research -c 安吉县    # 自动识别该县重点产业方向(snapshot/industry)
       county-research -c 鹤岗市 --mode rise-fall      # 产业兴衰规律研究
       county-research -c 鹤岗市 --historical          # 等价于 --mode rise-fall
+      county-research -c 信丰县 --mode long-history   # 县域长周期兴衰史分析
+      county-research -c 信丰县 --long-history        # 等价于 --mode long-history
     """
     _print_banner()
 
-    # --historical 是 --mode rise-fall 的快捷开关
+    # 快捷开关:--historical → rise-fall; --long-history → long-history
     if historical:
         mode = "rise-fall"
+    if long_history:
+        mode = "long-history"
+    # 别名归一:snapshot / industry 均为现状快照模式
+    if mode == "industry":
+        mode = "snapshot"
 
     # 强制重载配置(让 --log-level 覆盖生效)
     reset_settings()
@@ -136,7 +158,12 @@ def main(
 
     # dry-run:仅打印参数
     if dry_run:
-        focus_display = focus or ("兴衰规律" if mode == "rise-fall" else "(自动识别)")
+        if mode == "rise-fall":
+            focus_display = focus or "兴衰规律"
+        elif mode == "long-history":
+            focus_display = focus or "长周期兴衰史"
+        else:
+            focus_display = focus or "(自动识别)"
         click.echo("[dry-run] 请求参数校验通过,未实际执行 pipeline。")
         click.echo(f"[dry-run] 预期输出: {settings.reports_dir / f'{county}_{focus_display}_YYYYMMDD.md'}")
         sys.exit(0)

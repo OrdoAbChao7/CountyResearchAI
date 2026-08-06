@@ -65,6 +65,23 @@ _HISTORICAL_QUERY_TEMPLATES = [
     "{county} 政府工作报告 产业",
 ]
 
+# long-history 模式专用:长周期史料查询模板(10 条)
+# 覆盖建县沿革、县志、地方志、驿道水运、人口迁徙、近代工商业、
+# 计划经济国营工厂、改革开放产业变化、行政区划、兴衰原因等维度,
+# 用于县域长周期兴衰史研究(资料优先级:县志/地方志 > 政府/年鉴/公报/论文 > 媒体 > 百科)
+_LONG_HISTORY_QUERY_TEMPLATES = [
+    "{county} 建县 历史 沿革",
+    "{county} 县志 地方志",
+    "{county} 地方志 商贸 农业",
+    "{county} 历史 交通 驿道 水运",
+    "{county} 人口 迁徙",
+    "{county} 近代 工业 商业",
+    "{county} 计划经济 国营 工厂",
+    "{county} 改革开放 产业变化",
+    "{county} 行政区划 变迁",
+    "{county} 历史 兴衰 原因",
+]
+
 
 class SearchCollector(SearchProvider):
     """多 Provider + 多 Query 并发协调器。
@@ -151,17 +168,23 @@ class SearchCollector(SearchProvider):
 
         Args:
             county: 县名(显示名)
-            focus: 研究方向(rise-fall 模式可为空)
+            focus: 研究方向(rise-fall / long-history 模式可为空)
             max_results: 最大结果数,0 表示用 settings.search.max_results
-            mode: 研究模式 snapshot / rise-fall;
-                  rise-fall 使用历史维度查询模板(地方志/财政人口/衰退/转型等)
+            mode: 研究模式 snapshot(同 industry) / rise-fall / long-history;
+                  long-history 使用建县/县志/驿道/人口迁徙/计划经济等长周期史料模板
         """
         n = max_results or self._max_results
         keywords = [kw for kw in [county, focus] if kw]
-        # rise-fall 模式:Web 查询改用历史维度模板,覆盖兴衰规律研究所需史料
-        web_templates = (
-            _HISTORICAL_QUERY_TEMPLATES if mode == "rise-fall" else self._query_templates
-        )
+        # 模式 → Web 查询模板选择:
+        #   snapshot/industry → 默认 4 条
+        #   rise-fall         → _HISTORICAL_QUERY_TEMPLATES(10 条,近现代产业兴衰)
+        #   long-history      → _LONG_HISTORY_QUERY_TEMPLATES(10 条,数百年长周期史料)
+        if mode == "rise-fall":
+            web_templates = _HISTORICAL_QUERY_TEMPLATES
+        elif mode == "long-history":
+            web_templates = _LONG_HISTORY_QUERY_TEMPLATES
+        else:
+            web_templates = self._query_templates
         tasks: list[tuple[SearchProvider, str]] = []
         if self._web is not None:
             for tpl in web_templates:

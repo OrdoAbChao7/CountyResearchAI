@@ -358,3 +358,102 @@ class CountyRiseFallAnalysis(BaseModel):
     model: str = ""
     tokens_used: int = 0
     analyzed_at: datetime = Field(default_factory=_utcnow)
+
+
+# ===== 长周期兴衰史研究(long-history 模式) =====
+
+
+class HistoricalPeriod(BaseModel):
+    """历史阶段画像。
+
+    将县域历史划分为若干连续阶段(如"传统时代"/"近代"/"计划经济"等),
+    每个阶段有起止时间、生存逻辑、关键事件。
+
+    Attributes:
+        name: 阶段名,如 "建县至清末(传统时代)" / "1949-1978 计划经济时期"
+        start: 起始年份或时间点
+        end: 结束年份或时间点
+        summary: 阶段特征总结(3-5 句话)
+        dominant_logic: 此阶段县域的主导生存逻辑(一句话)
+        key_events: 关键历史事件(年份 + 事件描述)
+        evidence: 支撑证据(县志/地方志/论文等)
+    """
+
+    name: str = ""
+    start: str = ""
+    end: str = ""
+    summary: str = ""
+    dominant_logic: str = ""
+    key_events: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+
+
+class GeoHistoricalFactor(BaseModel):
+    """地理历史因子。
+
+    决定县域形成与长周期命运的地理、资源、交通、行政等深层结构因素。
+
+    Attributes:
+        name: 因子名,如 "赣粤驿道交通枢纽" / "山区耕地匮乏" / "行政边界功能"
+        description: 因子内容描述
+        impact: 对县域长期命运的影响(一句话,说明机制)
+        evidence: 支撑证据
+    """
+
+    name: str = ""
+    description: str = ""
+    impact: str = ""
+    evidence: list[str] = Field(default_factory=list)
+
+
+class LongHistoryPattern(BaseModel):
+    """县域长周期兴衰模型归纳。
+
+    Attributes:
+        pattern_type: 长周期模型类型(10 种典型模型之一或 mixed)
+        summary: 2-3 句话概括该县数百年来的历史命运主线
+        confidence: 置信度 0-1(基于证据充分度)
+        dominant_variables: 决定该县长周期命运的 2-4 个关键变量(如"交通线/资源/行政层级/周边大城市虹吸")
+        evidence: 支撑判断的关键证据
+    """
+
+    pattern_type: str = "unknown"
+    summary: str = ""
+    confidence: float = 0.5
+    dominant_variables: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+
+
+class CountyLongHistoryAnalysis(BaseModel):
+    """县域长周期兴衰史研究总结果(long-history 模式产出)。
+
+    覆盖 9 个核心问题,供 LongHistoryReportRenderer 渲染为 9 节长周期报告。
+    注意:所有关键分析均保留 evidence 列表,便于追溯。
+
+    Attributes:
+        county: 县域信息
+        periods: 历史阶段列表(建议 4-7 个,覆盖建县至今)
+        geo_factors: 地理历史因子(3-6 个,解释"为什么在这里形成一个县")
+        traditional_economy: 传统时代生存方式(农业/商贸/手工业/移民等,Markdown)
+        modern_shocks: 近代冲击与变迁(战争/交通线/市场/行政,Markdown)
+        state_period_reorganization: 计划经济时期再组织(国营/矿山/水利/农垦/供销,Markdown)
+        reform_period_transformation: 改革开放后产业重塑(民营/招商/特色产业/产业转移,Markdown)
+        contemporary_status: 新世纪以来发展变化(人口/交通/地产/产业升级,Markdown)
+        long_history_pattern: 长周期兴衰模型归纳
+        summary: 执行摘要(Markdown)
+        analyzed_at: 分析完成时间(UTC)
+    """
+
+    county: CountyInfo
+    periods: list[HistoricalPeriod] = Field(default_factory=list)
+    geo_factors: list[GeoHistoricalFactor] = Field(default_factory=list)
+
+    traditional_economy: str = ""
+    modern_shocks: str = ""
+    state_period_reorganization: str = ""
+    reform_period_transformation: str = ""
+    contemporary_status: str = ""
+
+    long_history_pattern: LongHistoryPattern = Field(default_factory=LongHistoryPattern)
+    summary: str = ""
+    analyzed_at: datetime = Field(default_factory=_utcnow)

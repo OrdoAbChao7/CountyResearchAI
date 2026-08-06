@@ -33,10 +33,12 @@ from .exceptions import LLMError, PipelineError, SearchError
 from .llm.analyzer import LLMAnalyzer
 from .llm.base import LLMClient, LLMResponse
 from .llm.client import OpenAICompatibleClient
+from .llm.long_history_analyzer import LongHistoryAnalyzer
 from .llm.rise_fall_analyzer import RiseFallAnalyzer
 from .models import (
     AnalysisResult,
     CountyInfo,
+    CountyLongHistoryAnalysis,
     CountyRiseFallAnalysis,
     DiscoveryResult,
     ProcessedData,
@@ -47,6 +49,7 @@ from .models import (
 )
 from .processor import DocumentProcessor
 from .reporting import ReportRenderer
+from .reporting.long_history_renderer import LongHistoryReportRenderer
 from .reporting.rise_fall_renderer import RiseFallReportRenderer
 from .search.base import SearchProvider
 from .search.collector import SearchCollector
@@ -81,6 +84,8 @@ class ResearchPipeline:
         renderer: ReportRenderer | None = None,
         rise_fall_analyzer: RiseFallAnalyzer | None = None,
         rise_fall_renderer: RiseFallReportRenderer | None = None,
+        long_history_analyzer: LongHistoryAnalyzer | None = None,
+        long_history_renderer: LongHistoryReportRenderer | None = None,
     ) -> None:
         self.search = search
         self.storage = storage
@@ -92,6 +97,13 @@ class ResearchPipeline:
         # rise-fall 模式专用分析器与渲染器(按需构造,复用同一 llm 客户端)
         self.rise_fall_analyzer = rise_fall_analyzer or RiseFallAnalyzer(llm=llm)
         self.rise_fall_renderer = rise_fall_renderer or RiseFallReportRenderer()
+        # long-history 模式专用分析器与渲染器(复用同一 llm 客户端)
+        self.long_history_analyzer = (
+            long_history_analyzer or LongHistoryAnalyzer(llm=llm)
+        )
+        self.long_history_renderer = (
+            long_history_renderer or LongHistoryReportRenderer()
+        )
 
     # ---- 公开入口 ----
 
@@ -108,14 +120,22 @@ class ResearchPipeline:
         county_info = CountyInfo.from_name(request.county)
         date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
 
+        # 模式归一化:industry 是 snapshot 的别名(规格要求保留 --mode industry)
+        mode_normalized = request.mode
+        if mode_normalized == "industry":
+            mode_normalized = "snapshot"
+        request.mode = mode_normalized
+
         logger.info(
             "研究启动 | 县=%s | 方向=%s | 模式=%s",
             county_info.display(), request.focus, request.mode,
         )
 
-        # 模式路由:rise-fall 走独立的兴衰规律研究流程
+        # 模式路由:long-history / rise-fall / snapshot(含 industry)
         if request.mode == "rise-fall":
             return self._run_rise_fall(request, county_info, date_str)
+        if request.mode == "long-history":
+            return self._run_long_history(request, county_info, date_str)
 
         logger.info(
             "Pipeline 阶段 | search=%s | process=%s | analyze=%s | report=%s",
@@ -352,22 +372,154 @@ class ResearchPipeline:
         md = self.rise_fall_renderer.render(analysis, raw_docs)
 
         # 文件名(与 snapshot 区分:加 rise_fall 标识)
-        filename = self.rise_fall_renderer_render_filename(
+        filename = self._render_filename(
             settings.app.report_filename_template,
             {"county": county.name, "focus": focus, "date": date_str},
         )
         return self.storage.save_report(filename, md)
 
-    def rise_fall_renderer_render_filename(
-        self, template: str, context: dict[str, str]
-    ) -> str:
-        """渲染 rise-fall 报告文件名(复用 ReportRenderer 的 render_filename 逻辑)。"""
+    # ---- long-history 模式流程 ----
+
+    def _run_long_history(
+        self,
+        request: ResearchRequest,
+        county_info: CountyInfo,
+        date_str: str,
+    ) -> tuple[ResearchReport, Path]:
+        """long-history 模式:县域长周期兴衰史研究(数百年尺度)。
+
+        流程: search(长周期史料查询) → process → periods → geo_origin
+              → traditional → modern → state → reform → contemporary
+              → pattern → report
+        """
+        settings = get_settings()
+        stages = settings.pipeline.stages
+        fail_fast = settings.pipeline.fail_fast
+        focus = request.focus or "长周期兴衰史"
+
+        logger.info(
+            "long-history 流程启动 | 县=%s | 方向=%s",
+            county_info.display(), focus,
+        )
+
+        # -------- 阶段 1: 采集(长周期史料维度) --------
+        raw_docs: list[RawDoc] = []
+        if stages.search:
+            try:
+                raw_docs = self._stage_search(
+                    county_info, request.focus or "", mode="long-history",
+                )
+                logger.info("阶段搜索完成 | 文档数=%d", len(raw_docs))
+            except Exception as e:
+                self._handle_stage_error("search", e, fail_fast)
+        else:
+            logger.info("阶段搜索已跳过")
+
+        # -------- 阶段 2: 处理 --------
+        processed: ProcessedData | None = None
+        if stages.process:
+            try:
+                skip_cache = bool(request.options.get("no_cache"))
+                cache_hours = 0 if skip_cache else (
+                    settings.cache.ttl_hours if settings.cache.enabled else 0
+                )
+                processed = self._stage_process(
+                    county_info, focus, raw_docs, cache_hours=cache_hours,
+                )
+                logger.info(
+                    "阶段处理完成 | 文档数=%d | 字符数=%d",
+                    len(processed.docs), processed.total_chars,
+                )
+            except Exception as e:
+                self._handle_stage_error("process", e, fail_fast)
+        else:
+            logger.info("阶段处理已跳过")
+
+        # -------- 阶段 3: 长周期分析(9 子任务) --------
+        analysis: CountyLongHistoryAnalysis | None = None
+        if stages.analyze and processed is not None:
+            try:
+                analysis = self.long_history_analyzer.analyze(
+                    county=county_info, data=processed,
+                )
+                logger.info(
+                    "长周期分析完成 | 阶段数=%d | 模型=%s",
+                    len(analysis.periods),
+                    analysis.long_history_pattern.pattern_type,
+                )
+            except Exception as e:
+                self._handle_stage_error("analyze", e, fail_fast)
+        else:
+            logger.info("阶段分析已跳过")
+
+        # -------- 阶段 4: 报告渲染 + 存盘 --------
+        report_path: Path | None = None
+        if stages.report:
+            try:
+                report_path = self._stage_long_history_report(
+                    analysis, county_info, focus, date_str, processed,
+                )
+                logger.info("阶段报告完成 | 路径=%s", report_path)
+            except Exception as e:
+                self._handle_stage_error("report", e, fail_fast)
+        else:
+            logger.info("阶段报告已跳过")
+
+        if report_path is None:
+            raise PipelineError("long-history Pipeline 完成但未生成报告", context={
+                "stages_report": stages.report,
+            })
+
+        section_titles = [
+            "执行摘要", "一、长周期总论", "二、建县与地理逻辑",
+            "三、传统时代生存方式", "四、近代冲击与变迁",
+            "五、计划经济时期再组织", "六、改革开放后的产业重塑",
+            "七、新世纪以来发展变化", "八、长周期兴衰模型", "九、历史规律总结",
+        ]
+        report = ResearchReport(
+            county=county_info,
+            focus=focus,
+            sections=[
+                ReportSection(title=t, content="", order=i)
+                for i, t in enumerate(section_titles, start=1)
+            ],
+            analyses=[],
+        )
+
+        logger.info("long-history 研究完成 | 报告已输出: %s", report_path)
+        return report, report_path
+
+    def _stage_long_history_report(
+        self,
+        analysis: CountyLongHistoryAnalysis | None,
+        county: CountyInfo,
+        focus: str,
+        date_str: str,
+        processed: ProcessedData | None,
+    ) -> Path:
+        """long-history 阶段 4:渲染 9 节长周期报告并落盘。"""
+        settings = get_settings()
+        if analysis is None:
+            analysis = CountyLongHistoryAnalysis(county=county)
+        raw_docs = processed.docs if processed else []
+        md = self.long_history_renderer.render(analysis, raw_docs)
+
+        # 文件名(复用 rise-fall 的文件名渲染逻辑,加 long_history 标识)
+        filename = self._render_filename(
+            settings.app.report_filename_template,
+            {"county": county.name, "focus": focus, "date": date_str},
+        )
+        return self.storage.save_report(filename, md)
+
+    @staticmethod
+    def _render_filename(template: str, context: dict[str, str]) -> str:
+        """通用文件名渲染(Jinja2)。"""
         from jinja2 import Template
         try:
             return Template(template).render(**context)
         except Exception as e:
             raise PipelineError(
-                "rise-fall 报告文件名渲染失败",
+                "报告文件名渲染失败",
                 context={"template": template, "error": str(e)},
             ) from e
 
