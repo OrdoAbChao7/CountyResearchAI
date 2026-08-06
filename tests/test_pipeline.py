@@ -104,3 +104,40 @@ class TestPipelineRun:
         assert path1 != path2
         assert "安吉县" in str(path1)
         assert "德清县" in str(path2)
+
+
+class TestPipelineDiscovery:
+    def test_run_without_focus_auto_discovers(self, isolated_env):
+        """不传 --focus 时，pipeline 应自动发现产业方向。"""
+        pipeline = create_default_pipeline()
+        request = ResearchRequest(county="安吉县", focus=None)
+        report, report_path = pipeline.run(request)
+        assert report is not None
+        assert report_path is not None
+        # 报告标题应包含自动发现的方向
+        assert report.focus != ""
+
+    def test_discovered_focus_appears_in_report(self, isolated_env):
+        """自动发现的方向应出现在报告内容中。"""
+        pipeline = create_default_pipeline()
+        request = ResearchRequest(county="安吉县", focus=None)
+        report, report_path = pipeline.run(request)
+        content = report_path.read_text(encoding="utf-8")
+        # Mock 发现默认返回 "特色农业"
+        assert report.focus == "特色农业"
+        assert "特色农业" in content
+
+    def test_discovered_focus_processed_data_saved(self, isolated_env):
+        """自动发现的方向应有对应的 processed 数据落盘。"""
+        pipeline = create_default_pipeline()
+        request = ResearchRequest(county="安吉县", focus=None)
+        pipeline.run(request)
+        processed_file = isolated_env / "data" / "processed" / "安吉县" / "特色农业.json"
+        assert processed_file.exists()
+
+    def test_empty_focus_string_triggers_discovery(self, isolated_env):
+        """空字符串 focus 也应触发自动发现。"""
+        pipeline = create_default_pipeline()
+        request = ResearchRequest(county="安吉县", focus="")
+        report, _ = pipeline.run(request)
+        assert report.focus == "特色农业"

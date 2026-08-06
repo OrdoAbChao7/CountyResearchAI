@@ -117,6 +117,16 @@ class CacheConfig(BaseModel):
     )
 
 
+class QualityConfig(BaseModel):
+    """质量控制配置(数据处理与分析的质量门槛)。"""
+
+    minimum_sources: int = 5  # 最低来源数量(低于此数警告,但不阻断)
+    government_source_weight: float = 2.0  # 政府来源排序权重
+    max_evidence_length: int = 8000  # 单文档最大证据长度(字符)
+    min_credibility_score: float = 0.3  # 最低可信度(低于此值过滤)
+    min_content_length: int = 50  # 最低正文长度(字符,低于此值视为无效文档)
+
+
 class PipelineStages(BaseModel):
     """Pipeline 阶段开关(调试时可单独关闭某阶段)。"""
 
@@ -166,6 +176,7 @@ class Settings(BaseModel):
     storage: StorageConfig = Field(default_factory=StorageConfig)
     cache: CacheConfig = Field(default_factory=CacheConfig)
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
+    quality: QualityConfig = Field(default_factory=QualityConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
     # 路径常量(运行时计算,不从配置文件读取)

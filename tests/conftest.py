@@ -130,7 +130,27 @@ class MockLLM(LLMClient):
         user_msg = messages[-1].get("content", "") if messages else ""
         self.calls.append(user_msg)
 
-        if "优势" in user_msg:
+        if "产业方向" in user_msg and "识别" in user_msg:
+            content = (
+                '{"candidates": ['
+                '{"industry": "特色农业", "confidence": 0.85, '
+                '"reason": "搜索结果显示该县农业占GDP 30%,规上企业80家", '
+                '"evidence_urls": ["https://example.gov.cn/tjgb-1", "https://example.gov.cn/fzgh-2"], '
+                '"related_keywords": ["年产值", "规上企业", "产业链"], '
+                '"supporting_documents": ["某县2025年统计公报", "十四五产业发展规划"]}, '
+                '{"industry": "乡村旅游", "confidence": 0.7, '
+                '"reason": "多个政府规划提到乡村旅游", '
+                '"evidence_urls": ["https://example.gov.cn/fzgh-2"], '
+                '"related_keywords": ["文旅", "乡村", "民宿"], '
+                '"supporting_documents": ["十四五产业发展规划"]}, '
+                '{"industry": "先进制造业", "confidence": 0.55, '
+                '"reason": "有省级工业园区", '
+                '"evidence_urls": ["https://example.com/news/1"], '
+                '"related_keywords": ["工业园区", "制造业"], '
+                '"supporting_documents": ["龙头XX股份带动产业升级"]}'
+                '], "selected_focus": "特色农业"}'
+            )
+        elif "优势" in user_msg:
             content = "## 核心优势\n1. 资源禀赋突出\n2. 产业基础扎实"
         elif "短板" in user_msg or "风险" in user_msg:
             content = "## 主要短板\n1. 精深加工不足\n2. 品牌辨识度弱"

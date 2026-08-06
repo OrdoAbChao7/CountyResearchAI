@@ -48,9 +48,10 @@ def _print_banner() -> None:
 )
 @click.option(
     "--focus", "-f",
-    required=True,
+    required=False,
     type=str,
-    help="研究方向,如 '竹产业' / '乡村旅游' / '装备制造'",
+    default=None,
+    help="研究方向,如 '竹产业' / '乡村旅游' / '装备制造'。留空则自动识别该县重点产业",
 )
 @click.option(
     "--log-level", "-l",
@@ -83,7 +84,8 @@ def main(
     示例:
       county-research --county 安吉县 --focus 竹产业
       county-research -c 安吉县 -f 竹产业 --no-cache
-      county-research -c 安吉县 -f 竹产业 --dry-run
+      county-research -c 安吉县 --dry-run
+      county-research -c 安吉县    # 自动识别该县重点产业方向
     """
     _print_banner()
 
@@ -101,7 +103,10 @@ def main(
     settings = get_settings()
 
     click.echo(f"县名       : {county}")
-    click.echo(f"研究方向   : {focus}")
+    if focus:
+        click.echo(f"研究方向   : {focus}")
+    else:
+        click.echo("研究方向   : 自动识别 (--focus 未指定)")
     click.echo(f"缓存策略   : {'跳过缓存(强制刷新)' if no_cache else '启用缓存 TTL=' + str(settings.cache.ttl_hours) + 'h'}")
     click.echo(f"日志级别   : {settings.logging.level}")
     click.echo(f"数据目录   : {settings.data_dir}")
@@ -110,8 +115,9 @@ def main(
 
     # dry-run:仅打印参数
     if dry_run:
+        focus_display = focus or "(自动识别)"
         click.echo("[dry-run] 请求参数校验通过,未实际执行 pipeline。")
-        click.echo(f"[dry-run] 预期输出: {settings.reports_dir / f'{county}_{focus}_YYYYMMDD.md'}")
+        click.echo(f"[dry-run] 预期输出: {settings.reports_dir / f'{county}_{focus_display}_YYYYMMDD.md'}")
         sys.exit(0)
 
     # 构造请求 + pipeline(路径A Mock 兜底)

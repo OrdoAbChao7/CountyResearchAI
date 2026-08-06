@@ -58,6 +58,20 @@ class RawDoc(BaseModel):
 
     一条搜索结果对应一个 RawDoc;
     content 字段在 fetch_detail=True 时抓取详情页正文填充。
+
+    Attributes:
+        title: 文档标题
+        url: 文档链接
+        snippet: 搜索引擎返回的摘要
+        content: 详情页正文(截断到 detail_max_chars)
+        source: 数据源标识:tavily/serper/bing/gov
+        fetched_at: 采集时间(UTC)
+        metadata: 额外元信息(相关度评分、语言等,因 provider 而异)
+        published_at: 发布时间(若可解析,否则 None)
+        domain_type: 来源类型: government / news / company / research / social / unknown
+        credibility_score: 来源可信度评分 0-1(政府/研报高,社交低)
+        evidence_type: 证据类型: fact(事实) / opinion(观点) / prediction(预测) / unknown
+        source_summary: 来源摘要(一句话概括,供 LLM 快速判断)
     """
 
     title: str
@@ -68,6 +82,13 @@ class RawDoc(BaseModel):
     fetched_at: datetime = Field(default_factory=_utcnow)
     # 额外元信息(相关度评分、语言、发布时间等,因 provider 而异)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    # ---- 质量评估字段(向后兼容,全部有默认值) ----
+    published_at: datetime | None = None
+    domain_type: str = "unknown"
+    credibility_score: float = 0.5
+    evidence_type: str = "unknown"
+    source_summary: str = ""
 
 
 # ===== 流程中间产物 =====
@@ -119,6 +140,41 @@ class AnalysisResult(BaseModel):
     tokens_used: int = 0  # token 消耗(便于成本追踪)
 
 
+class DiscoveryCandidate(BaseModel):
+    """产业方向候选(自动发现阶段的单个候选)。
+
+    Attributes:
+        industry: 产业方向名称,如 "竹产业"
+        confidence: 置信度 0-1
+        reason: 判断依据(基于搜索结果的哪篇文章/什么数据)
+        evidence_urls: 支撑证据的 URL 列表(完整决策轨迹)
+        related_keywords: 相关关键词(用于后续搜索扩展)
+        supporting_documents: 支撑文档标题列表(可追溯数据来源)
+    """
+
+    industry: str
+    confidence: float = 0.5
+    reason: str = ""
+
+    # ---- 证据链字段(完整决策轨迹) ----
+    evidence_urls: list[str] = Field(default_factory=list)
+    related_keywords: list[str] = Field(default_factory=list)
+    supporting_documents: list[str] = Field(default_factory=list)
+
+
+class DiscoveryResult(BaseModel):
+    """产业方向自动发现的结果。
+
+    当用户未指定 --focus 时,系统通过搜索+LLM 分析自动识别重点产业方向。
+    """
+
+    candidates: list[DiscoveryCandidate] = Field(default_factory=list)
+    selected_focus: str = ""  # 自动选定的产业方向(取置信度最高的)
+    model: str = ""
+    tokens_used: int = 0
+    discovered_at: datetime = Field(default_factory=_utcnow)
+
+
 # ===== 报告相关 =====
 
 
@@ -137,12 +193,12 @@ class ReportSection(BaseModel):
 class ResearchRequest(BaseModel):
     """研究请求(CLI / Pipeline 输入)。
 
-    最小输入仅需 county + focus;options 预留扩展
-    (如自定义数据源、指定模型、跳过缓存等)。
+    focus 为可选:未指定时 Pipeline 会自动搜索识别该县重点产业方向。
+    options 预留扩展(如自定义数据源、指定模型、跳过缓存等)。
     """
 
     county: str  # 县名(简单字符串,pipeline 内部转 CountyInfo)
-    focus: str  # 研究方向,如 "竹产业"
+    focus: str | None = None  # 研究方向,如 "竹产业";None 则自动发现
     options: dict[str, Any] = Field(default_factory=dict)
 
 

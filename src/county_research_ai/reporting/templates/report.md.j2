@@ -1,0 +1,15 @@
+{# Markdown 报告模板 (Jinja2) #}
+# {{ county_display }} {{ focus }}产业研究报告
+
+> 生成日期: {{ generated_at }}  
+> 报告版本: {{ version }}
+
+{% for section in sections %}
+## {{ section.title }}
+
+{{ section.content }}
+
+{% if section.sources and section.title != "数据来源" %}
+> 数据参考来源数: {{ section.sources | length }}
+{% endif %}
+{% endfor %}

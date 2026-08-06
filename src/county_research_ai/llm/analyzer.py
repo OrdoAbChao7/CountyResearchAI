@@ -24,12 +24,26 @@ from datetime import datetime, timezone
 
 from ..config import Settings, get_settings
 from ..exceptions import LLMError
-from ..models import AnalysisResult, CountyInfo, ProcessedData
+from ..models import AnalysisResult, CountyInfo, DiscoveryCandidate, DiscoveryResult, ProcessedData
 from .base import LLMClient
 from .client import OpenAICompatibleClient
 from .prompt_loader import PromptLoader
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_str_list(value) -> list[str]:
+    """将任意值安全转换为 list[str]。
+
+    用于解析 LLM 返回的 JSON 字段,容忍 None / 单值 / 列表 等多种格式。
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value] if value else []
+    if isinstance(value, list):
+        return [str(v) for v in value if v]
+    return [str(value)]
 
 
 @dataclass(frozen=True)
@@ -112,6 +126,19 @@ class LLMAnalyzer:
             "面向决策者,结论先行,总字数 400-600。"
         ),
         description="执行摘要",
+    )
+
+    # 产业方向发现任务(用户未指定 --focus 时调用)
+    DISCOVER_CONFIG = TaskConfig(
+        template_name="discovery",
+        fallback_prompt=(
+            "## 研究对象\n- 县名: {{ county }}\n- 日期: {{ date }}\n\n"
+            "## 参考数据\n```\n{{ search_results }}\n```\n\n"
+            "## 任务\n请识别该县最具代表性的 3-5 个重点产业方向,"
+            "输出 JSON 格式: {candidates: [{industry, confidence, reason}], selected_focus}。"
+            "每个候选要有数据支撑(产值/企业数/政府规划)。"
+        ),
+        description="产业方向自动发现",
     )
 
     def __init__(
@@ -209,6 +236,181 @@ class LLMAnalyzer:
                 raise
             # 降级:从首个分析抽取首段
             return self._fallback_summary(county, focus, analyses)
+
+    def discover_focus(
+        self,
+        county: CountyInfo,
+        raw_docs: list,
+    ) -> DiscoveryResult:
+        """从搜索结果中自动识别该县的重点产业方向。
+
+        Args:
+            county: 县域信息
+            raw_docs: 搜索阶段产出的 RawDoc 列表
+
+        Returns:
+            DiscoveryResult 包含候选产业方向列表与选定的 focus
+        """
+        # 将搜索结果渲染为文本
+        search_text = self._render_search_results(raw_docs)
+        if not search_text.strip():
+            logger.warning("产业方向发现:搜索结果为空,降级为通用推断")
+            return self._fallback_discovery(county)
+
+        prompt = self._build_prompt_from_config(
+            config=self.DISCOVER_CONFIG,
+            county=county.display(),
+            date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            search_results=search_text,
+        )
+
+        logger.info("开始产业方向自动发现 | 县=%s | 搜索结果数=%d",
+                    county.display(), len(raw_docs))
+        try:
+            resp = self._llm.chat(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=self._settings.llm.temperature,
+                max_tokens=self._settings.llm.max_tokens,
+            )
+            logger.info(
+                "产业方向发现完成 | model=%s | tokens=%d",
+                resp.model, resp.total_tokens,
+            )
+
+            result = self._parse_discovery_response(
+                resp.content,
+                model=resp.model,
+                tokens_used=resp.total_tokens,
+            )
+            logger.info(
+                "产业方向发现结果 | 选定=%s | 候选数=%d",
+                result.selected_focus, len(result.candidates),
+            )
+            return result
+        except Exception as e:
+            logger.warning(
+                "产业方向发现失败(降级为通用推断) | err=%s", e, exc_info=True,
+            )
+            if self._settings.pipeline.fail_fast:
+                raise
+            return self._fallback_discovery(county)
+
+    @staticmethod
+    def _render_search_results(raw_docs: list) -> str:
+        """将 RawDoc 列表渲染为 LLM 可读文本。
+
+        格式:每条文档带编号 [N],便于 LLM 在 evidence_urls/supporting_documents 中引用。
+        """
+        blocks: list[str] = []
+        for i, doc in enumerate(raw_docs, start=1):
+            content = doc.content or doc.snippet or ""
+            if not content:
+                content = "(无摘要)"
+            # 截断到 500 字符/文档,避免超出 token
+            if len(content) > 500:
+                content = content[:497] + "..."
+            block = (
+                f"[{i}] 标题: {doc.title}\n"
+                f"    URL: {doc.url}\n"
+                f"    内容: {content}"
+            )
+            blocks.append(block)
+        return "\n\n---\n\n".join(blocks)
+
+    @staticmethod
+    def _parse_discovery_response(
+        content: str,
+        *,
+        model: str = "",
+        tokens_used: int = 0,
+    ) -> DiscoveryResult:
+        """解析 LLM 返回的 JSON,构造 DiscoveryResult(含证据链字段)。"""
+        import json
+        import re
+
+        # 尝试直接解析
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            # 尝试从文本中提取 JSON 块
+            match = re.search(r"\{[\s\S]*\}", content)
+            if match:
+                try:
+                    data = json.loads(match.group())
+                except json.JSONDecodeError:
+                    return DiscoveryResult(
+                        candidates=[],
+                        selected_focus="",
+                        model=model,
+                        tokens_used=tokens_used,
+                    )
+            else:
+                return DiscoveryResult(
+                    candidates=[],
+                    selected_focus="",
+                    model=model,
+                    tokens_used=tokens_used,
+                )
+
+        candidates_data = data.get("candidates", [])
+        candidates = [
+            DiscoveryCandidate(
+                industry=c.get("industry", ""),
+                confidence=float(c.get("confidence", 0.5)),
+                reason=c.get("reason", ""),
+                evidence_urls=_safe_str_list(c.get("evidence_urls", [])),
+                related_keywords=_safe_str_list(c.get("related_keywords", [])),
+                supporting_documents=_safe_str_list(c.get("supporting_documents", [])),
+            )
+            for c in candidates_data
+        ]
+        selected_focus = data.get("selected_focus", "")
+        if not selected_focus and candidates:
+            # 取置信度最高的
+            best = max(candidates, key=lambda c: c.confidence)
+            selected_focus = best.industry
+
+        return DiscoveryResult(
+            candidates=candidates,
+            selected_focus=selected_focus,
+            model=model,
+            tokens_used=tokens_used,
+        )
+
+    @staticmethod
+    def _fallback_discovery(county: CountyInfo) -> DiscoveryResult:
+        """发现失败时的降级:返回通用候选(无证据链,需用户手动确认)。"""
+        return DiscoveryResult(
+            candidates=[
+                DiscoveryCandidate(
+                    industry="特色农业",
+                    confidence=0.4,
+                    reason="县域经济通常以农业为基础(降级推断,无具体数据支撑)",
+                    evidence_urls=[],
+                    related_keywords=["农业", "特色", "县域"],
+                    supporting_documents=[],
+                ),
+                DiscoveryCandidate(
+                    industry="乡村旅游",
+                    confidence=0.4,
+                    reason="县域常见产业方向(降级推断,无具体数据支撑)",
+                    evidence_urls=[],
+                    related_keywords=["旅游", "乡村", "文旅"],
+                    supporting_documents=[],
+                ),
+                DiscoveryCandidate(
+                    industry="先进制造业",
+                    confidence=0.3,
+                    reason="需根据具体县情判断(降级推断,无具体数据支撑)",
+                    evidence_urls=[],
+                    related_keywords=["制造业", "工业园区"],
+                    supporting_documents=[],
+                ),
+            ],
+            selected_focus="",
+            model="fallback",
+            tokens_used=0,
+        )
 
     # ---- 内部方法 ----
 

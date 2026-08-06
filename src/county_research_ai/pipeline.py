@@ -28,22 +28,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from jinja2 import Template
-
 from .config import get_settings
-from .exceptions import ConfigError, LLMError, PipelineError, SearchError
+from .exceptions import LLMError, PipelineError, SearchError
 from .llm.analyzer import LLMAnalyzer
 from .llm.base import LLMClient, LLMResponse
 from .llm.client import OpenAICompatibleClient
 from .models import (
     AnalysisResult,
     CountyInfo,
+    DiscoveryResult,
     ProcessedData,
     RawDoc,
     ReportSection,
     ResearchReport,
     ResearchRequest,
 )
+from .processor import DocumentProcessor
+from .reporting import ReportRenderer
 from .search.base import SearchProvider
 from .search.collector import SearchCollector
 from .storage.base import Storage
@@ -74,12 +75,15 @@ class ResearchPipeline:
         storage: Storage,
         llm: LLMClient,
         analyzer: LLMAnalyzer | None = None,
+        renderer: ReportRenderer | None = None,
     ) -> None:
         self.search = search
         self.storage = storage
         self.llm = llm
         # analyzer 默认基于传入的 llm 客户端构造
         self.analyzer = analyzer or LLMAnalyzer(llm=llm)
+        # renderer 默认使用 ReportRenderer(基于 Jinja2 模板)
+        self.renderer = renderer or ReportRenderer()
 
     # ---- 公开入口 ----
 
@@ -106,12 +110,45 @@ class ResearchPipeline:
         raw_docs: list[RawDoc] = []
         if stages.search:
             try:
-                raw_docs = self._stage_search(county_info, request.focus)
+                raw_docs = self._stage_search(county_info, request.focus or "")
                 logger.info("阶段搜索完成 | 文档数=%d", len(raw_docs))
             except Exception as e:
                 self._handle_stage_error("search", e, fail_fast)
         else:
             logger.info("阶段搜索已跳过")
+
+        # -------- 阶段 1.5: 产业方向自动发现(仅当用户未指定 --focus) --------
+        focus = request.focus
+        if not focus and raw_docs:
+            logger.info("未指定产业方向,开始自动发现...")
+            try:
+                discovery = self._stage_discover(county_info, raw_docs)
+                if discovery.selected_focus:
+                    focus = discovery.selected_focus
+                    logger.info(
+                        "产业方向自动发现完成 | 选定方向=%s | 候选数=%d",
+                        focus, len(discovery.candidates),
+                    )
+                    if discovery.candidates:
+                        top3 = ", ".join(
+                            f"{c.industry}(置信度{c.confidence:.0%})"
+                            for c in discovery.candidates[:3]
+                        )
+                        logger.info("候选产业方向: %s", top3)
+                else:
+                    logger.warning(
+                        "产业方向发现未能选出结果(降级为特色农业) | 候选数=%d",
+                        len(discovery.candidates),
+                    )
+                    focus = "特色农业"
+            except Exception as e:
+                logger.warning(
+                    "产业方向发现失败(降级为特色农业) | err=%s", e,
+                )
+                focus = "特色农业"
+        elif not focus:
+            logger.warning("搜索结果为空且未指定产业方向,降级为特色农业")
+            focus = "特色农业"
 
         # -------- 阶段 2: 处理(清洗+存盘+缓存读取) --------
         processed: ProcessedData | None = None
@@ -123,7 +160,7 @@ class ResearchPipeline:
                     settings.cache.ttl_hours if settings.cache.enabled else 0
                 )
                 processed = self._stage_process(
-                    county_info, request.focus, raw_docs,
+                    county_info, focus, raw_docs,
                     cache_hours=cache_hours,
                 )
                 logger.info("阶段处理完成 | 文档数=%d | 字符数=%d",
@@ -137,7 +174,7 @@ class ResearchPipeline:
         analyses: list[AnalysisResult] = []
         if stages.analyze and processed is not None:
             try:
-                analyses = self._stage_analyze(county_info, request.focus, processed)
+                analyses = self._stage_analyze(county_info, focus, processed)
                 logger.info("阶段分析完成 | 任务数=%d", len(analyses))
             except Exception as e:
                 self._handle_stage_error("analyze", e, fail_fast)
@@ -150,7 +187,7 @@ class ResearchPipeline:
         if stages.report:
             try:
                 report, report_path = self._stage_report(
-                    county_info, request.focus, date_str, analyses, processed,
+                    county_info, focus, date_str, analyses, processed,
                 )
                 logger.info("阶段报告完成 | 章节数=%d | 路径=%s",
                             report.section_count, report_path)
@@ -211,6 +248,15 @@ class ResearchPipeline:
                     raise
         return list(all_docs.values())
 
+    def _stage_discover(
+        self, county: CountyInfo, raw_docs: list[RawDoc]
+    ) -> DiscoveryResult:
+        """阶段 1.5: 从搜索结果中自动识别该县重点产业方向。
+
+        委托给 LLMAnalyzer.discover_focus() 执行。
+        """
+        return self.analyzer.discover_focus(county=county, raw_docs=raw_docs)
+
     def _stage_process(
         self,
         county: CountyInfo,
@@ -219,32 +265,20 @@ class ResearchPipeline:
         *,
         cache_hours: int,
     ) -> ProcessedData:
-        """阶段 2: 先尝试读取缓存;未命中则构造 ProcessedData 并落盘。"""
+        """阶段 2: 先尝试读取缓存;未命中则委托 DocumentProcessor 处理并落盘。"""
         if cache_hours > 0:
             cached = self.storage.load_processed(county.name, focus, max_age_hours=cache_hours)
             if cached is not None:
                 logger.info("处理阶段命中缓存 | 县=%s | 方向=%s", county.name, focus)
                 return cached
 
-        # 无缓存 → 构造 ProcessedData(MVP:仅做长度统计与简单去重)
-        seen_urls: set[str] = set()
-        unique: list[RawDoc] = []
-        total = 0
-        for doc in raw_docs:
-            if doc.url in seen_urls:
-                continue
-            seen_urls.add(doc.url)
-            unique.append(doc)
-            total += len(doc.content) + len(doc.snippet)
+        # 无缓存 → DocumentProcessor 处理
+        processor = DocumentProcessor(quality_config=get_settings().quality)
+        processed = processor.process(raw_docs, county=county, focus=focus)
 
-        processed = ProcessedData(
-            county=county,
-            focus=focus,
-            docs=unique,
-            total_chars=total,
-        )
+        # 落盘(Pipeline 负责,Processor 不直接调用 Storage)
         self.storage.save_processed(county.name, focus, processed)
-        self.storage.save_raw(county.name, unique)
+        self.storage.save_raw(county.name, processed.docs)
         return processed
 
     def _stage_analyze(
@@ -313,15 +347,14 @@ class ResearchPipeline:
             analyses=analyses,
         )
 
-        # 渲染 Markdown
-        md = self._render_markdown(report)
+        # 渲染 Markdown(委托给 ReportRenderer)
+        md = self.renderer.render_markdown(report)
 
         # 文件名 + 存盘
-        filename = self._render_filename(settings.app.report_filename_template, {
-            "county": county.name,
-            "focus": focus,
-            "date": date_str,
-        })
+        filename = self.renderer.render_filename(
+            settings.app.report_filename_template,
+            {"county": county.name, "focus": focus, "date": date_str},
+        )
         report_path = self.storage.save_report(filename, md)
         return report, report_path
 
@@ -337,275 +370,10 @@ class ResearchPipeline:
                 context={"stage": stage, "error": str(err)},
             ) from err
 
-    @staticmethod
-    def _build_analysis_prompt(
-        task: str, county: CountyInfo, focus: str, date: str, data_text: str
-    ) -> str:
-        """MVP 简易 prompt 构造;真实实现替换为 prompts/ 模板渲染。"""
-        task_prompt = {
-            "industry_status": "请分析该县该产业的现状、规模、产业链结构与市场主体。",
-            "advantages": "请分析该县在该产业上的核心优势(区位/资源/政策/龙头企业等)。",
-            "shortcomings": "请分析该县在该产业上的短板与风险。",
-            "recommendations": "请给出可落地的发展建议(问题→对策→路径)。",
-        }.get(task, f"请分析该县{focus}产业的{task}。")
 
-        return (
-            f"## 研究对象\n- 县名: {county.display()}\n- 方向: {focus}\n- 日期: {date}\n\n"
-            f"## 参考数据\n```\n{data_text or '(暂无数据,使用示例数据)'}\n```\n\n"
-            f"## 任务\n{task_prompt}\n\n"
-            "请用中文 Markdown 输出,每条结论有数据或事实支撑,字数 500-800。"
-        )
+# ===== Mock 实现(从 mocks/ 重导出,保持向后兼容) =====
 
-    @staticmethod
-    def _build_summary(county: CountyInfo, focus: str, analyses: list[AnalysisResult]) -> str:
-        """简易摘要:从 analyses 首段抽取 2-3 句,若无则输出占位。"""
-        if not analyses:
-            return f"本报告针对 {county.display()} {focus} 产业开展初步研究。"
-        head = analyses[0].content.splitlines()[:5]
-        head_clean = [ln for ln in head if ln.strip() and not ln.strip().startswith("#")]
-        text = " ".join(head_clean[:2]) if head_clean else analyses[0].content[:200]
-        return f"本报告基于自动采集与分析,对 {county.display()} {focus} 产业进行了研究。\n\n{text}"
-
-    @staticmethod
-    def _render_markdown(report: ResearchReport) -> str:
-        """简易 Markdown 渲染器。"""
-        title = f"# {report.county.display()} {report.focus}产业研究报告"
-        date_line = f"\n> 生成日期: {report.generated_at.strftime('%Y-%m-%d %H:%M UTC')}  "
-        version_line = f"> 报告版本: {report.version}  \n"
-
-        parts = [title, date_line, version_line]
-        for sec in report.sections:
-            parts.append(f"\n## {sec.title}\n")
-            parts.append(sec.content.rstrip())
-            if sec.sources and sec.title != "数据来源":
-                parts.append(f"\n> 数据参考来源数: {len(sec.sources)}")
-        parts.append("")
-        return "\n".join(parts)
-
-    @staticmethod
-    def _render_filename(template: str, context: dict[str, str]) -> str:
-        """用 Jinja2 渲染报告文件名。"""
-        try:
-            return Template(template).render(**context)
-        except Exception as e:
-            raise ConfigError("报告文件名模板渲染失败", context={
-                "template": template, "context": context, "error": str(e),
-            }) from e
-
-
-# ===== 默认工厂(路径A Mock 兜底) =====
-
-
-class MockSearchProvider(SearchProvider):
-    """Mock 搜索:返回构造的示例 RawDoc,链路可跑不需要真实 API。"""
-
-    name = "mock"
-
-    def search(self, query: str, max_results: int = 10) -> list[RawDoc]:
-        logger.debug("MockSearch.search | query=%s", query)
-        county_hint = query.split()[0] if query else "某县"
-        focus_hint = query.split()[1] if len(query.split()) > 1 else "产业"
-        now = datetime.now(timezone.utc)
-        return [
-            RawDoc(
-                title=f"{county_hint}{focus_hint}产业年产值突破百亿",
-                url=f"https://example.gov.cn/{county_hint}/tjgb-1",
-                snippet="近年该县特色产业快速发展,规上企业超过80家,从业人员超3万人。",
-                content=(
-                    f"据{county_hint}2025年统计公报,{focus_hint}产业规上企业达到82家,"
-                    f"实现产值120亿元,同比增长15%。产业园区占地约2000亩,"
-                    f"入驻企业56家,形成了上游种植、中游加工、下游销售的完整链条。"
-                ),
-                source="mock-gov",
-                fetched_at=now,
-            ),
-            RawDoc(
-                title=f"{county_hint}十四五{focus_hint}产业发展规划",
-                url=f"https://example.gov.cn/{county_hint}/fzgh-2",
-                snippet="该县十四五规划明确提出重点打造百亿级特色产业集群。",
-                content=(
-                    f"《{county_hint}十四五{focus_hint}产业发展规划》提出:"
-                    f"到2027年实现产值200亿元,培育龙头企业10家,"
-                    f"建成省级产业园区1个,公共服务平台3个。"
-                    f"重点方向:品牌建设、精深加工、冷链物流、电子商务。"
-                ),
-                source="mock-gov",
-                fetched_at=now,
-            ),
-            RawDoc(
-                title=f"龙头XX股份带动{focus_hint}产业升级",
-                url=f"https://example.com/news/{county_hint}-top-enterprise",
-                snippet=f"本地龙头XX股份{focus_hint}精深加工线投产,年新增产值20亿。",
-                content=(
-                    f"本地龙头企业XX股份2024年投产国内首条智能化{focus_hint}精深加工线,"
-                    f"年产能达12万吨,新增产值约20亿元。该企业通过'公司+合作社+农户'模式,"
-                    f"带动全县6000余农户增收,户均年增收约1.5万元。"
-                ),
-                source="mock-news",
-                fetched_at=now,
-            ),
-        ]
-
-
-class MockStorage(Storage):
-    """已弃用 — 早期路径 A 阶段的简易存储实现。
-
-    保留此类的目的:
-        1. 作为单元测试中 LocalFSStorage 的轻量替代(不依赖磁盘)
-        2. 与 LocalFSStorage 的行为对照参考
-
-    正式生产链路请使用 LocalFSStorage(见 storage/local_fs.py)。
-    本类不再被 create_default_pipeline 使用。
-    """
-
-    name = "mock-storage"
-
-    def __init__(self) -> None:
-        settings = get_settings()
-        self._raw_dir = settings.data_dir / settings.storage.raw_subdir
-        self._proc_dir = settings.data_dir / settings.storage.processed_subdir
-        self._reports_dir = settings.reports_dir
-        self._raw_dir.mkdir(parents=True, exist_ok=True)
-        self._proc_dir.mkdir(parents=True, exist_ok=True)
-        self._reports_dir.mkdir(parents=True, exist_ok=True)
-        self._mem: dict[str, Any] = {}
-
-    def save_raw(self, county: str, docs: list[RawDoc]) -> Path:
-        date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-        layout = get_settings().storage.archive_layout
-        sub = layout.format(county=county, date=date_str)
-        p = self._raw_dir / sub
-        p.mkdir(parents=True, exist_ok=True)
-        f = p / "raw_docs.json"
-        f.write_text(
-            "[" + ",".join(d.model_dump_json(indent=2) for d in docs) + "]",
-            encoding="utf-8",
-        )
-        return p
-
-    def load_raw(self, county: str) -> list[RawDoc]:
-        sub = self._raw_dir / county
-        if not sub.exists():
-            return []
-        latest = sorted(sub.glob("*/raw_docs.json"), reverse=True)
-        if not latest:
-            return []
-        import json
-        data = json.loads(latest[0].read_text(encoding="utf-8"))
-        return [RawDoc(**d) for d in data]
-
-    def save_processed(self, county: str, focus: str, data: ProcessedData) -> Path:
-        p = self._proc_dir / county
-        p.mkdir(parents=True, exist_ok=True)
-        f = p / f"{focus}.json"
-        f.write_text(data.model_dump_json(indent=2), encoding="utf-8")
-        self._mem[f"{county}:{focus}"] = f
-        return f
-
-    def load_processed(
-        self, county: str, focus: str, max_age_hours: int = 0
-    ) -> ProcessedData | None:
-        p = self._proc_dir / county / f"{focus}.json"
-        if not p.exists():
-            return None
-        if max_age_hours > 0:
-            import time
-            age_h = (time.time() - p.stat().st_mtime) / 3600
-            if age_h > max_age_hours:
-                logger.info("processed 缓存已过期 | 县=%s | 方向=%s | 年龄=%.1fh",
-                            county, focus, age_h)
-                return None
-        import json
-        data = json.loads(p.read_text(encoding="utf-8"))
-        return ProcessedData(**data)
-
-    def save_report(self, filename: str, content: str) -> Path:
-        p = self._reports_dir / filename
-        p.write_text(content, encoding="utf-8")
-        logger.info("报告已写入: %s", p)
-        return p
-
-
-class MockLLMClient(LLMClient):
-    """Mock LLM:根据 task 返回构造的分析文本,无需真实 API。"""
-
-    name = "mock-llm"
-
-    def chat(
-        self,
-        messages: list[dict[str, str]],
-        *,
-        temperature: float | None = None,
-        max_tokens: int | None = None,
-        **kwargs: Any,
-    ) -> LLMResponse:
-        # 从 messages 中解析 task 关键词
-        user_msg = "\n".join(m.get("content", "") for m in messages)
-        task = "industry_status"
-        if "优势" in user_msg:
-            task = "advantages"
-        elif "短板" in user_msg or "风险" in user_msg:
-            task = "shortcomings"
-        elif "建议" in user_msg or "对策" in user_msg:
-            task = "recommendations"
-
-        content = {
-            "industry_status": (
-                "## 产业概况\n"
-                "该县该产业已形成'种植(上游)—加工(中游)—销售(下游)'完整产业链,"
-                "规上企业80余家,2025年产值约120亿元,占全县GDP约18%,是县域经济第一支柱产业。\n\n"
-                "## 产业链结构\n"
-                "- 上游:种源培育与规模化种植,全县种植面积约50万亩\n"
-                "- 中游:82家规上加工企业,主要产品为初加工原料、食品、保健品三大类\n"
-                "- 下游:覆盖全国的线下经销网络 + 电商渠道占比已达35%\n\n"
-                "## 市场主体\n"
-                "1家主板上市龙头,3家省级专精特新企业,产业园区1个(省级),入驻企业56家。\n\n"
-                "## 发展阶段判断\n"
-                "处于**成长期后期向成熟期过渡**阶段——规模基本形成,但精深加工与品牌溢价仍有提升空间。"
-            ),
-            "advantages": (
-                "## 核心优势\n"
-                "1. **资源禀赋** — 县域气候土壤适配度全国Top3,原料品质稳定,具备产地差异化基础\n"
-                "2. **产业基础** — 60年种植传统,熟练工人充足,配套加工产能集中\n"
-                "3. **龙头带动** — XX股份上市后具备全国品牌影响力,精深加工技术领先\n"
-                "4. **政策支持** — 纳入省级特色产业集群,十四五规划明确百亿级目标与配套资金"
-            ),
-            "shortcomings": (
-                "## 主要短板\n"
-                "1. **精深加工占比偏低** — 初加工占产值70%,利润率仅为精深加工的1/5,附加值挖掘不足\n"
-                "2. **区域品牌辨识度弱** — 企业品牌强、区域品牌弱,消费者对该县与该产业的关联度认知低\n"
-                "3. **数字化水平滞后** — 中小企业信息化覆盖率不足40%,供应链协同效率偏低\n"
-                "4. **人才供给不足** — 食品加工、电商运营、品牌营销等中高端岗位招聘困难"
-            ),
-            "recommendations": (
-                "## 建议一:补精深加工短板(1年内见成效)\n"
-                "- **问题**:初加工占比过高,价值链中高端环节缺失\n"
-                "- **对策**:通过专项技改补贴 + 龙头示范线带动,引导企业向功能食品、生物提取延伸\n"
-                "- **路径**:"
-                "  短期(6个月):出台精深加工技改补贴(设备投入补贴30%,上限500万);"
-                "  中期(1-2年):龙头XX股份开放工艺合作,建设共享中试车间;"
-                "  长期(3年):打造精深加工产业集聚区\n"
-                "- **责任主体**:县工信局+龙头企业+产业园区管委会\n"
-                "- **预期成效**:2027年精深加工占比提升至40%,产业利润率提升3-5个百分点\n\n"
-                "## 建议二:区域品牌建设(1年启动,3年见规模)\n"
-                "- **问题**:消费者对该县与该产业关联度低,产品溢价难以实现\n"
-                "- **对策**:打造地理标志证明商标 + 统一区域公共品牌 + 电商矩阵运营\n"
-                "- **路径**:"
-                "  短期:完成地理标志申报,统一区域品牌VI;"
-                "  中期:入驻头部电商公共品牌专区,对接MCN资源;"
-                "  长期:进入国家级特色农产品优势区\n"
-                "- **责任主体**:县农业农村局+商务局+市场监管局\n"
-                "- **预期成效**:2028年区域品牌知名度进入全国Top10,产品溢价空间提升15%+"
-            ),
-        }[task]
-
-        return LLMResponse(
-            content=content,
-            model="mock-llm-v1",
-            prompt_tokens=800,
-            completion_tokens=1200,
-            total_tokens=2000,
-        )
+from .mocks import MockLLMClient, MockSearchProvider, MockStorage  # noqa: F401,E402
 
 
 # ===== 模块级工厂 =====

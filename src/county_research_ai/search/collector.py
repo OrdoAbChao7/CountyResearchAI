@@ -125,17 +125,19 @@ class SearchCollector(SearchProvider):
         先把 {county}/{focus} 填进 query_templates,
         再把 Web 查通用、Gov 查政务的查询分别喂给对应 provider,
         最后合并去重粗排。
+
+        focus 可为空(产业方向自动发现阶段),此时仅用县名构造查询。
         """
         n = max_results or self._max_results
-        keywords = [county, focus]
+        keywords = [kw for kw in [county, focus] if kw]
         tasks: list[tuple[SearchProvider, str]] = []
         if self._web is not None:
             for tpl in self._query_templates:
-                q = tpl.format(county=county, focus=focus)
+                q = tpl.format(county=county, focus=focus or "")
                 tasks.append((self._web, q))
         if self._gov is not None:
             for tpl in self._gov_query_templates:
-                q = tpl.format(county=county, focus=focus)
+                q = tpl.format(county=county, focus=focus or "")
                 tasks.append((self._gov, q))
 
         if not tasks:

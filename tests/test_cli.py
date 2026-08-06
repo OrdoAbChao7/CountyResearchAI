@@ -82,3 +82,36 @@ class TestCLIFullRun:
             "-c", "安吉县", "-f", "竹产业", "--dry-run",
         ])
         assert result.exit_code == 0
+
+
+class TestCLINoFocus:
+    def test_no_flag_shows_auto_discover(self, cli_env):
+        """不传 --focus 时，应显示自动识别提示。"""
+        runner = CliRunner()
+        result = runner.invoke(main, [
+            "-c", "安吉县", "--dry-run",
+        ])
+        assert result.exit_code == 0
+        assert "自动识别" in result.output
+
+    def test_no_flag_full_run(self, cli_env):
+        """不传 --focus 时，应自动发现产业方向并生成报告。"""
+        runner = CliRunner()
+        result = runner.invoke(main, [
+            "-c", "安吉县",
+        ])
+        assert result.exit_code == 0
+        assert "成功" in result.output
+        # 报告应使用自动发现的方向
+        reports = list((cli_env / "reports").glob("安吉县_特色农业_*.md"))
+        assert len(reports) == 1
+
+    def test_no_flag_report_contains_discovered_focus(self, cli_env):
+        """自动发现的报告应包含发现的产业方向内容。"""
+        runner = CliRunner()
+        result = runner.invoke(main, [
+            "-c", "安吉县",
+        ])
+        report_path = list((cli_env / "reports").glob("安吉县_特色农业_*.md"))[0]
+        content = report_path.read_text(encoding="utf-8")
+        assert "特色农业" in content

@@ -109,7 +109,7 @@ class TavilySearchProvider(SearchProvider):
             "search_depth": self._search_depth,
             "max_results": n,
             "include_answer": False,
-            "include_raw_content": False,
+            "include_raw_content": True,
         }
 
         @retry(
@@ -159,11 +159,13 @@ class TavilySearchProvider(SearchProvider):
         docs: list[RawDoc] = []
         for item in results:
             raw = item.get("raw_content") or ""
-            content = _truncate(raw or item.get("snippet", ""), self._detail_max_chars) if self._fetch_detail else ""
+            snippet = item.get("snippet", "")
+            # 优先用 raw_content(Tavily 全文),退化用 snippet
+            content = _truncate(raw or snippet, self._detail_max_chars)
             docs.append(RawDoc(
                 title=item.get("title", ""),
                 url=item.get("url", ""),
-                snippet=item.get("snippet", ""),
+                snippet=snippet,
                 content=content,
                 source=self.name,
                 fetched_at=_utcnow(),

@@ -1,9 +1,10 @@
 # AI县域产业研究助手 (CountyResearchAI)
 
-> 基于 LLM 的自动化县域产业研究工具：输入县名 + 研究方向，自动完成「数据采集 → 结构化处理 → 智能分析 → 报告生成」全流程，产出可读的 Markdown 产业研究报告。
+> 基于 LLM 的自动化县域产业研究工具：输入县名（可选研究方向），自动完成「数据采集 → 产业方向识别 → 结构化处理 → 智能分析 → 报告生成」全流程，产出可读的 Markdown 产业研究报告。
 
 ## 核心特性
 
+- **产业方向自动发现** — 只给县名也能跑：先搜索该县相关资料，由 LLM 识别 3-5 个候选重点产业并选出置信度最高的方向
 - **多源数据采集** — 网络搜索 (Tavily/Serper/Bing) + 政府公开数据白名单过滤，可插拔数据源架构
 - **LLM 智能分析** — 基于提示词工程，产出产业现状/优势/短板/建议四维结构化洞察 + 执行摘要
 - **报告自动生成** — 标准化章节模板，一键输出 Markdown 报告
@@ -15,16 +16,25 @@
 ## 架构概览
 
 ```
-[用户输入: 县名 + 方向]
+[用户输入: 县名] + (可选) 研究方向
         ↓
-[search]    多源采集 (Web + Gov 并发)  → data/raw/
+[search]    多源采集 (Web + Gov 并发)            → data/raw/
         ↓
-[storage]   清洗去重 + 缓存复用          → data/processed/
+[discover]  产业方向自动识别 (仅当未指定 --focus)   → DiscoveryResult
         ↓
-[llm]       4 任务分析 + 摘要生成        (调用 prompts/ 模板)
+[storage]   清洗去重 + 缓存复用                   → data/processed/
         ↓
-[reporting] 章节拼装 + Markdown 渲染     → reports/{县}_{方向}_{日期}.md
+[llm]       4 任务分析 + 摘要生成  (调用 prompts/ 模板)
+        ↓
+[reporting] 章节拼装 + Markdown 渲染              → reports/{县}_{方向}_{日期}.md
 ```
+
+**两种使用方式**：
+
+| 模式 | 命令 | 适用场景 |
+|------|------|---------|
+| 指定方向 | `cli -c 安吉县 -f 竹产业` | 已知研究方向，直接深入分析 |
+| 自动发现 | `cli -c 安吉县` | 不熟悉该县，由系统识别重点产业 |
 
 ## 项目结构
 
@@ -33,20 +43,25 @@ CountyResearchAI/
 ├── src/county_research_ai/     # 核心源码
 │   ├── search/                 # 数据采集层 (web_search / gov_data / collector)
 │   ├── llm/                    # LLM 分析层 (client / analyzer / prompt_loader)
+│   │                           #   analyzer.discover_focus() 实现产业方向识别
 │   ├── storage/                # 存储层 (local_fs)
 │   ├── reporting/              # 报告生成层
-│   ├── pipeline.py             # 流程编排 + Mock 兜底
+│   ├── pipeline.py             # 流程编排 + Mock 兜底 + 发现阶段
 │   ├── cli.py                  # 命令行入口 (Click)
 │   ├── config.py               # 配置加载 (YAML + .env)
-│   ├── models.py               # Pydantic 数据模型
+│   ├── models.py               # Pydantic 数据模型 (含 DiscoveryResult)
 │   └── exceptions.py           # 异常层次
 ├── config/                     # YAML 配置
 │   ├── settings.yaml           # 应用主配置
 │   └── sources.yaml            # 政府数据源白名单
 ├── prompts/                    # LLM 提示词模板 (Jinja2)
+│   ├── discovery.md            # 产业方向自动识别模板
+│   ├── industry_analysis.md    # 产业现状分析模板
+│   ├── recommendations.md      # 发展建议模板
+│   └── summary.md              # 执行摘要模板
 ├── data/                       # 运行产物 (raw / processed)
 ├── reports/                    # 生成的报告
-├── tests/                      # 单元测试 (130 个，覆盖率 77%)
+├── tests/                      # 单元测试 (150 个，覆盖率 77%)
 ├── scripts/                    # 验证脚本
 └── pyproject.toml
 ```
@@ -110,8 +125,12 @@ TAVILY_API_KEY=tvly-your-tavily-key     # 必填
 $env:PYTHONPATH="src"          # Windows PowerShell
 # export PYTHONPATH=src        # macOS/Linux
 
-# 基础用法
+# 方式一：指定研究方向（快速深入分析）
 python -m county_research_ai.cli -c 安吉县 -f 竹产业
+
+# 方式二：自动识别产业方向（不熟悉该县时推荐）
+python -m county_research_ai.cli -c 安吉县
+# 系统会先搜索该县资料 → LLM 识别 3-5 个候选产业 → 选定置信度最高的方向
 
 # 完整选项示例
 python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-level INFO
@@ -121,13 +140,27 @@ python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-leve
 
 ### CLI 选项
 
-| 选项 | 简写 | 说明 |
-|------|------|------|
-| `--county` | `-c` | 县名（必填），如 `安吉县` |
-| `--focus` | `-f` | 研究方向（必填），如 `竹产业` |
-| `--no-cache` | | 跳过缓存，强制重新采集与分析 |
-| `--dry-run` | | 仅校验参数并打印预期输出，不执行 Pipeline |
-| `--log-level` | | 日志级别：DEBUG / INFO / WARNING / ERROR |
+| 选项 | 简写 | 必填 | 说明 |
+|------|------|------|------|
+| `--county` | `-c` | 是 | 县名，如 `安吉县` |
+| `--focus` | `-f` | 否 | 研究方向，如 `竹产业`。**留空则自动识别该县重点产业** |
+| `--no-cache` | | | 跳过缓存，强制重新采集与分析 |
+| `--dry-run` | | | 仅校验参数并打印预期输出，不执行 Pipeline |
+| `--log-level` | | | 日志级别：DEBUG / INFO / WARNING / ERROR |
+
+### 自动发现工作原理
+
+当 `--focus` 未指定时，系统会执行以下流程：
+
+1. 用县名构造通用搜索查询（如"安吉县 产业 发展现状"），多源采集文档
+2. 将搜索结果摘要喂给 LLM，配合 [prompts/discovery.md](file:///e:/CountyResearchAI/prompts/discovery.md) 模板
+3. LLM 返回 JSON：3-5 个候选产业 + 置信度 + 判断依据 + 选定方向
+4. 用选定的方向继续后续 Process → Analyze → Report 流程
+
+**降级策略**：
+- LLM 调用失败 → 返回通用候选（特色农业/乡村旅游/先进制造业）
+- 搜索结果为空 → 降级为"特色农业"
+- 解析失败 → 兜底"特色农业"
 
 ## 配置说明
 
@@ -155,7 +188,7 @@ python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-leve
 ## 测试
 
 ```bash
-# 运行全部 130 个单元测试（Mock 外部 API，无需真实 Key）
+# 运行全部 150 个单元测试（Mock 外部 API，无需真实 Key）
 $env:PYTHONPATH="src"
 python -m pytest --no-cov -q
 
