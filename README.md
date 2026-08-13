@@ -373,3 +373,8 @@ reports/{县名}_长周期兴衰史_{日期}.md      # long-history 模式研究
 ## License
 
 MIT
+
+
+---
+
+[English documentation](README.en.md)
