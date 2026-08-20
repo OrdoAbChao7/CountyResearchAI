@@ -1,6 +1,6 @@
 <div align="center">
   <h1>CountyResearchAI</h1>
-  **English** | [**中文**](./README_zh-CN.md)
+  <b>English</b> | <a href="./README_zh-CN.md"><b>中文</b></a>
 </div>
 <br>
 
