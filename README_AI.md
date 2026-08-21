@@ -328,30 +328,30 @@ long-history 流程 (_run_long_history):
 
 | 位置 | 职责 |
 |------|------|
-| [models.py](file:///e:/CountyResearchAI/src/county_research_ai/models.py) | `DiscoveryCandidate`、`DiscoveryResult` 数据模型 |
-| [analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/analyzer.py) `discover_focus()` | 主入口：渲染搜索结果 → 调 LLM → 解析 JSON |
-| [analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/analyzer.py) `_parse_discovery_response()` | JSON 解析（含正则提取 + 容错） |
-| [analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/analyzer.py) `_fallback_discovery()` | 降级：返回通用候选 |
-| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `_stage_discover()` | Pipeline 阶段 1.5 |
-| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `run()` L117-148 | focus 为空时触发发现 + 兜底逻辑 |
-| [prompts/discovery.md](file:///e:/CountyResearchAI/prompts/discovery.md) | LLM 提示词模板（要求输出 JSON） |
-| [cli.py](file:///e:/CountyResearchAI/src/county_research_ai/cli.py) | `--focus` 改为可选 |
+| [models.py](./src/county_research_ai/models.py) | `DiscoveryCandidate`、`DiscoveryResult` 数据模型 |
+| [analyzer.py](./src/county_research_ai/llm/analyzer.py) `discover_focus()` | 主入口：渲染搜索结果 → 调 LLM → 解析 JSON |
+| [analyzer.py](./src/county_research_ai/llm/analyzer.py) `_parse_discovery_response()` | JSON 解析（含正则提取 + 容错） |
+| [analyzer.py](./src/county_research_ai/llm/analyzer.py) `_fallback_discovery()` | 降级：返回通用候选 |
+| [pipeline.py](./src/county_research_ai/pipeline.py) `_stage_discover()` | Pipeline 阶段 1.5 |
+| [pipeline.py](./src/county_research_ai/pipeline.py) `run()` L117-148 | focus 为空时触发发现 + 兜底逻辑 |
+| [prompts/discovery.md](./prompts/discovery.md) | LLM 提示词模板（要求输出 JSON） |
+| [cli.py](./src/county_research_ai/cli.py) | `--focus` 改为可选 |
 
 ## rise-fall 模式关键代码位置
 
 | 位置 | 职责 |
 |------|------|
-| [models.py](file:///e:/CountyResearchAI/src/county_research_ai/models.py) | 兴衰规律 6 模型: TimelineEvent/RiseFactor/DeclineFactor/IndustryLifecycle/HistoricalPattern/CountyRiseFallAnalysis |
-| [rise_fall_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/rise_fall_analyzer.py) `analyze()` | 总入口: 7 任务串行 → CountyRiseFallAnalysis |
-| [rise_fall_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/rise_fall_analyzer.py) `_parse_json_lenient()` | JSON 容错解析(纯 JSON / ```json 代码块 / 文本嵌入) |
-| [rise_fall_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/rise_fall_analyzer.py) `_run_task()` | 单任务执行 + fail_fast 降级 |
-| [rise_fall_renderer.py](file:///e:/CountyResearchAI/src/county_research_ai/reporting/rise_fall_renderer.py) `render()` | 渲染 9 节报告 + 数据来源按可信度排序 |
-| [collector.py](file:///e:/CountyResearchAI/src/county_research_ai/search/collector.py) `_HISTORICAL_QUERY_TEMPLATES` | 10 条历史维度查询模板(地方志/统计公报/人口流失/衰退等) |
-| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `_run_rise_fall()` | rise-fall 模式流程编排 |
-| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `run()` | 模式路由: `request.mode == "rise-fall"` 分支 |
-| [rise_fall_report.md.j2](file:///e:/CountyResearchAI/src/county_research_ai/reporting/templates/rise_fall_report.md.j2) | 9 节固定结构 Jinja2 模板 |
-| [prompts/timeline_extraction.md](file:///e:/CountyResearchAI/prompts/timeline_extraction.md) 等 7 个 | rise-fall 提示词模板(均要求输出 JSON,summary 除外) |
-| [cli.py](file:///e:/CountyResearchAI/src/county_research_ai/cli.py) | `--mode` / `--historical` 参数 |
+| [models.py](./src/county_research_ai/models.py) | 兴衰规律 6 模型: TimelineEvent/RiseFactor/DeclineFactor/IndustryLifecycle/HistoricalPattern/CountyRiseFallAnalysis |
+| [rise_fall_analyzer.py](./src/county_research_ai/llm/rise_fall_analyzer.py) `analyze()` | 总入口: 7 任务串行 → CountyRiseFallAnalysis |
+| [rise_fall_analyzer.py](./src/county_research_ai/llm/rise_fall_analyzer.py) `_parse_json_lenient()` | JSON 容错解析(纯 JSON / ```json 代码块 / 文本嵌入) |
+| [rise_fall_analyzer.py](./src/county_research_ai/llm/rise_fall_analyzer.py) `_run_task()` | 单任务执行 + fail_fast 降级 |
+| [rise_fall_renderer.py](./src/county_research_ai/reporting/rise_fall_renderer.py) `render()` | 渲染 9 节报告 + 数据来源按可信度排序 |
+| [collector.py](./src/county_research_ai/search/collector.py) `_HISTORICAL_QUERY_TEMPLATES` | 10 条历史维度查询模板(地方志/统计公报/人口流失/衰退等) |
+| [pipeline.py](./src/county_research_ai/pipeline.py) `_run_rise_fall()` | rise-fall 模式流程编排 |
+| [pipeline.py](./src/county_research_ai/pipeline.py) `run()` | 模式路由: `request.mode == "rise-fall"` 分支 |
+| [rise_fall_report.md.j2](./src/county_research_ai/reporting/templates/rise_fall_report.md.j2) | 9 节固定结构 Jinja2 模板 |
+| [prompts/timeline_extraction.md](./prompts/timeline_extraction.md) 等 7 个 | rise-fall 提示词模板(均要求输出 JSON,summary 除外) |
+| [cli.py](./src/county_research_ai/cli.py) | `--mode` / `--historical` 参数 |
 
 ### rise-fall 兴衰模型类型 (HistoricalPattern.pattern_type)
 
@@ -377,17 +377,17 @@ long-history 流程 (_run_long_history):
 
 | 位置 | 职责 |
 |------|------|
-| [models.py](file:///e:/CountyResearchAI/src/county_research_ai/models.py) | 长周期 4 模型: HistoricalPeriod/GeoHistoricalFactor/LongHistoryPattern/CountyLongHistoryAnalysis |
-| [long_history_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/long_history_analyzer.py) `analyze()` | 总入口: 9 任务串行 → CountyLongHistoryAnalysis |
-| [long_history_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/long_history_analyzer.py) `_parse_json_lenient()` | JSON 容错解析(复用 rise-fall 同款逻辑) |
-| [long_history_analyzer.py](file:///e:/CountyResearchAI/src/county_research_ai/llm/long_history_analyzer.py) `_run_task()` | 单任务执行 + fail_fast 降级 |
-| [long_history_renderer.py](file:///e:/CountyResearchAI/src/county_research_ai/reporting/long_history_renderer.py) `render()` | 渲染 9 节报告 + 数据来源按可信度排序 + 第九节各阶段一句话摘要提取 |
-| [collector.py](file:///e:/CountyResearchAI/src/county_research_ai/search/collector.py) `_LONG_HISTORY_QUERY_TEMPLATES` | 10 条长周期史料查询模板(建县沿革/县志/驿道水运/人口迁徙/国营工厂/行政区划等) |
-| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `_run_long_history()` | long-history 模式流程编排 |
-| [pipeline.py](file:///e:/CountyResearchAI/src/county_research_ai/pipeline.py) `run()` | 模式路由: `request.mode == "long-history"` 分支 |
-| [long_history_report.md.j2](file:///e:/CountyResearchAI/src/county_research_ai/reporting/templates/long_history_report.md.j2) | 9 节固定结构 Jinja2 模板 |
-| [prompts/long_history_periods.md](file:///e:/CountyResearchAI/prompts/long_history_periods.md) 等 9 个 | long-history 提示词模板(periods/geo/pattern 输出 JSON,其余输出 Markdown) |
-| [cli.py](file:///e:/CountyResearchAI/src/county_research_ai/cli.py) | `--mode` / `--long-history` 参数 |
+| [models.py](./src/county_research_ai/models.py) | 长周期 4 模型: HistoricalPeriod/GeoHistoricalFactor/LongHistoryPattern/CountyLongHistoryAnalysis |
+| [long_history_analyzer.py](./src/county_research_ai/llm/long_history_analyzer.py) `analyze()` | 总入口: 9 任务串行 → CountyLongHistoryAnalysis |
+| [long_history_analyzer.py](./src/county_research_ai/llm/long_history_analyzer.py) `_parse_json_lenient()` | JSON 容错解析(复用 rise-fall 同款逻辑) |
+| [long_history_analyzer.py](./src/county_research_ai/llm/long_history_analyzer.py) `_run_task()` | 单任务执行 + fail_fast 降级 |
+| [long_history_renderer.py](./src/county_research_ai/reporting/long_history_renderer.py) `render()` | 渲染 9 节报告 + 数据来源按可信度排序 + 第九节各阶段一句话摘要提取 |
+| [collector.py](./src/county_research_ai/search/collector.py) `_LONG_HISTORY_QUERY_TEMPLATES` | 10 条长周期史料查询模板(建县沿革/县志/驿道水运/人口迁徙/国营工厂/行政区划等) |
+| [pipeline.py](./src/county_research_ai/pipeline.py) `_run_long_history()` | long-history 模式流程编排 |
+| [pipeline.py](./src/county_research_ai/pipeline.py) `run()` | 模式路由: `request.mode == "long-history"` 分支 |
+| [long_history_report.md.j2](./src/county_research_ai/reporting/templates/long_history_report.md.j2) | 9 节固定结构 Jinja2 模板 |
+| [prompts/long_history_periods.md](./prompts/long_history_periods.md) 等 9 个 | long-history 提示词模板(periods/geo/pattern 输出 JSON,其余输出 Markdown) |
+| [cli.py](./src/county_research_ai/cli.py) | `--mode` / `--long-history` 参数 |
 
 ### long-history 长周期兴衰模型类型 (LongHistoryPattern.pattern_type)
 

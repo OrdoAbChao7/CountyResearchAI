@@ -4,6 +4,20 @@
 </div>
 <br>
 
+
+
+<!-- portfolio-authenticity:start -->
+## Project status
+
+**Stage:** Research prototype.
+
+**Why I built it:** I built this to make the first pass of county-level industry desk research reproducible: collect public material, preserve evidence links, and turn the material into a reviewable Markdown draft.
+
+**Boundary:** The generated report is a research draft, not a factual finding or policy recommendation. Search coverage varies by county and provider; LLM synthesis can omit context or make unsupported inferences. Mock mode verifies control flow only and must not be read as evidence.
+
+See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for the evidence still needed and the maintenance rule.
+<!-- portfolio-authenticity:end -->
+
 > LLM-powered automated county-level industry research tool: provide a county name (optional focus) and it completes the full pipeline "data collection → industry focus discovery → structuring → intelligent analysis → report generation," producing a readable Markdown industry research report. Supports three research modes: **snapshot** (current industry snapshot), **rise-fall** (industry boom-and-bust analysis), and **long-history** (century-scale county trajectory analysis).
 
 ## Key Features
@@ -293,7 +307,7 @@ These three modes are independent and non-intrusive—pick based on your researc
 When `--focus` is not specified, the system runs:
 
 1. Build general search queries with the county name (e.g., "安吉县 产业 发展现状"); collect from multiple sources
-2. Feed search snippets to the LLM with the [prompts/discovery.md](file:///e:/CountyResearchAI/prompts/discovery.md) template
+2. Feed search snippets to the LLM with the [prompts/discovery.md](./prompts/discovery.md) template
 3. LLM returns JSON: 3–5 candidate industries + confidence + rationale + selected focus
 4. Continue with Process → Analyze → Report using the selected focus
 

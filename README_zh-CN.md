@@ -4,6 +4,20 @@
 </div>
 <br>
 
+
+
+<!-- portfolio-authenticity:start -->
+## 项目状态
+
+**当前阶段：**研究原型。
+
+**为什么做这个项目：**我写这个项目是为了把县域产业案头研究的第一轮工作变得可复现：收集公开材料、保留证据链接，并生成可人工审阅的 Markdown 草稿。
+
+**适用边界：**生成报告只是研究草稿，不是事实结论或政策建议。不同县域和数据源的检索覆盖不同；LLM 综合可能遗漏背景或产生缺乏支撑的推断。Mock 模式只验证控制流，不能被视为证据。
+
+关于仍需补充的验证证据和维护约定，请参阅 [PROJECT_STATUS.md](./PROJECT_STATUS.md)。
+<!-- portfolio-authenticity:end -->
+
 # AI县域产业研究助手 (CountyResearchAI)
 
 > 基于 LLM 的自动化县域产业研究工具：输入县名（可选研究方向），自动完成「数据采集 → 产业方向识别 → 结构化处理 → 智能分析 → 报告生成」全流程，产出可读的 Markdown 产业研究报告。支持三种研究模式：**snapshot**（产业现状快照）、**rise-fall**（产业兴衰规律研究）、**long-history**（县域长周期兴衰史分析）。
@@ -295,7 +309,7 @@ python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-leve
 当 `--focus` 未指定时，系统会执行以下流程：
 
 1. 用县名构造通用搜索查询（如"安吉县 产业 发展现状"），多源采集文档
-2. 将搜索结果摘要喂给 LLM，配合 [prompts/discovery.md](file:///e:/CountyResearchAI/prompts/discovery.md) 模板
+2. 将搜索结果摘要喂给 LLM，配合 [prompts/discovery.md](./prompts/discovery.md) 模板
 3. LLM 返回 JSON：3-5 个候选产业 + 置信度 + 判断依据 + 选定方向
 4. 用选定的方向继续后续 Process → Analyze → Report 流程
 
