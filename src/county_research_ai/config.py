@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv
@@ -271,7 +271,7 @@ def _resolve_paths(settings: Settings) -> Settings:
     return settings
 
 
-def load_settings(config_path: Optional[Path] = None) -> Settings:
+def load_settings(config_path: Path | None = None) -> Settings:
     """加载配置:settings.yaml + .env 合并,env 优先。
 
     Args:
@@ -303,7 +303,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
 # ===== 全局单例 =====
 
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:

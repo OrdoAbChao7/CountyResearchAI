@@ -11,14 +11,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 
-from ..config import PROJECT_ROOT
 from ..exceptions import ConfigError
-from ..models import ReportSection, ResearchReport
+from ..models import ResearchReport
 
 logger = logging.getLogger(__name__)
 

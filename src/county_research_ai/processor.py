@@ -12,7 +12,6 @@ import hashlib
 import logging
 import re
 from difflib import SequenceMatcher
-from typing import Iterable
 
 from .config import QualityConfig
 from .models import CountyInfo, ProcessedData, RawDoc

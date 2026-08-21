@@ -21,7 +21,7 @@
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class CountyResearchAIError(Exception):
@@ -36,7 +36,7 @@ class CountyResearchAIError(Exception):
         self,
         message: str,
         *,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message

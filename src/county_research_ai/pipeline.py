@@ -26,12 +26,11 @@ import logging
 import logging.config
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from .config import get_settings
 from .exceptions import LLMError, PipelineError, SearchError
 from .llm.analyzer import LLMAnalyzer
-from .llm.base import LLMClient, LLMResponse
+from .llm.base import LLMClient
 from .llm.client import OpenAICompatibleClient
 from .llm.long_history_analyzer import LongHistoryAnalyzer
 from .llm.rise_fall_analyzer import RiseFallAnalyzer
@@ -696,7 +695,6 @@ class ResearchPipeline:
 # ===== Mock 实现(从 mocks/ 重导出,保持向后兼容) =====
 
 from .mocks import MockLLMClient, MockSearchProvider, MockStorage  # noqa: F401,E402
-
 
 # ===== 模块级工厂 =====
 

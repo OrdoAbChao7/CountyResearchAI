@@ -23,7 +23,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from ..config import Settings, get_settings
-from ..exceptions import LLMError
 from ..models import AnalysisResult, CountyInfo, DiscoveryCandidate, DiscoveryResult, ProcessedData
 from .base import LLMClient
 from .client import OpenAICompatibleClient

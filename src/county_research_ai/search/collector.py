@@ -20,10 +20,9 @@ from __future__ import annotations
 
 import logging
 import re
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as _TimeoutError
-from datetime import datetime, timezone
-from typing import Iterable
-from urllib.parse import urlparse
+from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as _TimeoutError
 
 from ..config import Settings, get_settings
 from ..exceptions import SearchError
@@ -129,7 +128,7 @@ class SearchCollector(SearchProvider):
     @classmethod
     def from_settings(
         cls, settings: Settings | None = None
-    ) -> "SearchCollector":
+    ) -> SearchCollector:
         """从 settings 构造;如果 Web Provider 缺少 Key,抛 SearchError 由上层处理。"""
         return cls(settings=settings)
 

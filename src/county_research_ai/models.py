@@ -48,7 +48,7 @@ class CountyInfo(BaseModel):
         return self.full_name or self.name
 
     @classmethod
-    def from_name(cls, name: str) -> "CountyInfo":
+    def from_name(cls, name: str) -> CountyInfo:
         """仅凭县名构造(province 等留空,后续可补全)。"""
         return cls(name=name)
 
