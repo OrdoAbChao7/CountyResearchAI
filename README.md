@@ -18,19 +18,19 @@
 See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for the evidence still needed and the maintenance rule.
 <!-- portfolio-authenticity:end -->
 
-> LLM-powered automated county-level industry research tool: provide a county name (optional focus) and it completes the full pipeline "data collection → industry focus discovery → structuring → intelligent analysis → report generation," producing a readable Markdown industry research report. Supports three research modes: **snapshot** (current industry snapshot), **rise-fall** (industry boom-and-bust analysis), and **long-history** (century-scale county trajectory analysis).
+> An LLM-assisted county-industry research prototype. Given a county name and an optional focus, it collects configured public material, preserves source links, and produces a Markdown **research draft** for review. The three modes cover a current snapshot, a modern rise/fall timeline, and a long-cycle county trajectory.
 
 ## Key Features
 
 - Three research modes — `snapshot`: four-dimensional current-state analysis (status/strengths/weaknesses/recommendations); `rise-fall`: county industry boom-and-bust study (origin → expansion → decline → pattern synthesis), answering 7 core questions; `long-history`: century-scale county trajectory (founding → geography → traditional economy → modern shocks → planned economy → reform era → contemporary), answering: why did this county form, what sustains it, how did it rise, why did it decline, can it be reactivated?
-- Automatic industry focus discovery — Just give the county name: the system first searches for materials about the county, then the LLM identifies 3–5 candidate key industries and selects the highest-confidence focus.
+- Candidate focus discovery — If no focus is provided, the system asks the configured LLM to rank candidates from retrieved material. Treat the chosen focus as a starting hypothesis and review it before relying on the draft.
 - Multi-source data collection — Web search (Tavily/Serper/Bing) + whitelisted government open data with a pluggable data-source architecture; rise-fall mode issues 10 queries on modern industry booms/declines; long-history mode issues 10 long-cycle historical queries (county founding records/gazetteers/post roads and waterways/migration/state-owned factories/administrative divisions, etc.).
-- LLM intelligent analysis — Prompt-engineered: snapshot outputs four-angled structured insights + executive summary; rise-fall outputs timeline/origin industry/rise factors/talent drain/model synthesis; long-history outputs historical periods/geographic logic/traditional economy/modern shocks/planned economy/reform era/contemporary view/long-cycle model synthesis.
+- LLM-assisted synthesis — Prompt templates structure the draft into mode-specific sections. Each section remains subject to source checking and human revision.
 - Automatic report generation — Standardized chapter templates, one-click Markdown output (snapshot: 6 chapters / rise-fall: 9 sections / long-history: 9 sections fixed structure).
 - Data traceability — Three-layer retention: raw / processed / report. Key conclusions are bound to evidence URLs for easy review and debugging.
 - Externalized configuration — YAML config + environment variables; change config without touching code.
-- Abstracted interfaces — Abstract base classes at each layer; swap LLM/data sources at near-zero cost.
-- Mock fallback — When API keys are missing, automatically degrades to mock data so the pipeline always runs.
+- Separated provider interfaces — LLM, search, storage, and reporting implementations are isolated so that a provider change has a bounded code surface; compatibility still requires configuration and regression checks.
+- Mock path — When API keys are missing, the project can exercise its control flow with synthetic inputs. Mock output is for local development and tests only.
 
 ## Architecture Overview
 
