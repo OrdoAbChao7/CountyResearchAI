@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import pytest
-
 from county_research_ai.models import (
     AnalysisResult,
     CountyInfo,
@@ -16,7 +14,6 @@ from county_research_ai.models import (
     ResearchReport,
     ResearchRequest,
 )
-
 
 # ===== CountyInfo =====
 

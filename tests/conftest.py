@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+# ruff: noqa: E402  # src/ is inserted before importing the package under test.
 import sys
 from pathlib import Path
 from typing import Any
@@ -34,7 +35,6 @@ from county_research_ai.config import (
 )
 from county_research_ai.llm.base import LLMClient, LLMResponse
 from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
-
 
 # ===== autouse: 每个测试前后重置全局 Settings =====
 

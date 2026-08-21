@@ -7,14 +7,12 @@ from __future__ import annotations
 
 import os
 import time
-from pathlib import Path
 
 import pytest
 
 from county_research_ai.exceptions import StorageError
-from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+from county_research_ai.models import ProcessedData, RawDoc
 from county_research_ai.storage.local_fs import LocalFSStorage
-
 
 # ===== fixtures =====
 

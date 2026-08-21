@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
-from pydantic import SecretStr
 
-from county_research_ai.config import SearchConfig, SearchRetryConfig
 from county_research_ai.exceptions import SearchError
 from county_research_ai.search.web_search import (
     PROVIDER_CLASSES,
@@ -18,7 +16,6 @@ from county_research_ai.search.web_search import (
     TavilySearchProvider,
     create_provider,
 )
-
 
 # ===== Mock httpx.Client 工厂 =====
 

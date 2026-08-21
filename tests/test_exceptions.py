@@ -4,8 +4,8 @@ from __future__ import annotations
 import pytest
 
 from county_research_ai.exceptions import (
-    CountyResearchAIError,
     ConfigError,
+    CountyResearchAIError,
     LLMError,
     PipelineError,
     ReportError,

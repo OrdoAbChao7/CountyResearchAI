@@ -5,15 +5,12 @@
 """
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from county_research_ai.llm.analyzer import LLMAnalyzer
 from county_research_ai.llm.prompt_loader import PromptLoader
 from county_research_ai.models import (
     AnalysisResult,
-    CountyInfo,
     DiscoveryResult,
     ProcessedData,
     RawDoc,

@@ -70,11 +70,11 @@ class PromptLoader:
         filename = name if name.endswith(".md") else f"{name}.md"
         try:
             tpl = self._env.get_template(filename)
-        except TemplateNotFound:
+        except TemplateNotFound as err:
             raise LLMError(
                 f"提示词模板不存在: {filename}",
                 context={"name": name, "filename": filename, "prompts_dir": str(self._prompts_dir)},
-            )
+            ) from err
         self._cache[name] = tpl
         return tpl
 

@@ -112,6 +112,7 @@ class TestCLINoFocus:
         result = runner.invoke(main, [
             "-c", "安吉县",
         ])
+        assert result.exit_code == 0, result.output
         report_path = list((cli_env / "reports").glob("安吉县_特色农业_*.md"))[0]
         content = report_path.read_text(encoding="utf-8")
         assert "特色农业" in content

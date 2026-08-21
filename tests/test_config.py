@@ -1,12 +1,6 @@
 """配置加载测试(Settings / load_settings / _merge_env / _resolve_paths)。"""
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
-import pytest
-from pydantic import SecretStr
-
 from county_research_ai.config import (
     CONFIG_DIR,
     PROJECT_ROOT,

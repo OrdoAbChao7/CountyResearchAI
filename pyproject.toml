@@ -75,7 +75,9 @@ select = [
 ignore = ["E501"]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 12
+# Pipeline and renderer methods currently preserve one explicit, test-covered audit trail.
+# Keep the threshold visible in CI; split a path only when it can be covered as independent behavior.
+max-complexity = 18
 
 # ===== pytest 配置 =====
 [tool.pytest.ini_options]

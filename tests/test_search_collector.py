@@ -5,8 +5,6 @@
 """
 from __future__ import annotations
 
-import pytest
-
 from county_research_ai.models import RawDoc
 from county_research_ai.search.base import SearchProvider
 from county_research_ai.search.collector import SearchCollector
