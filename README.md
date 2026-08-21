@@ -152,13 +152,13 @@ Edit `.env` and fill in your API keys (the file is gitignored and will not be co
 ```dotenv
 # ---------- LLM configuration ----------
 LLM_PROVIDER=deepseek
-LLM_API_KEY=sk-your-deepseek-key        # Required
+LLM_API_KEY=YOUR_LLM_API_KEY             # Required
 LLM_BASE_URL=https://api.deepseek.com/v1
 LLM_MODEL=deepseek-chat
 
 # ---------- Search API configuration ----------
 SEARCH_PROVIDER=tavily
-TAVILY_API_KEY=tvly-your-tavily-key     # Required
+TAVILY_API_KEY=YOUR_TAVILY_API_KEY       # Required
 ```
 
 API key portals:

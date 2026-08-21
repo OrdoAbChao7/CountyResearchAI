@@ -62,10 +62,16 @@ desktop.ini
 
 # ===== 项目敏感文件 =====
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.template
 *.secret
+*.secrets
 credentials.json
+credentials*.json
+*.pem
+*.p12
+*.pfx
 
 # ===== 项目运行产物(保留目录结构,忽略内容) =====
 data/raw/*

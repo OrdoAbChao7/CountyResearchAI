@@ -154,13 +154,13 @@ cp .env.example .env
 ```dotenv
 # ---------- LLM 大模型配置 ----------
 LLM_PROVIDER=deepseek
-LLM_API_KEY=sk-your-deepseek-key        # 必填
+LLM_API_KEY=YOUR_LLM_API_KEY             # 必填
 LLM_BASE_URL=https://api.deepseek.com/v1
 LLM_MODEL=deepseek-chat
 
 # ---------- 搜索 API 配置 ----------
 SEARCH_PROVIDER=tavily
-TAVILY_API_KEY=tvly-your-tavily-key     # 必填
+TAVILY_API_KEY=YOUR_TAVILY_API_KEY       # 必填
 ```
 
 **API Key 获取地址**：
