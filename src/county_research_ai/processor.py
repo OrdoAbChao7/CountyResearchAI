@@ -100,6 +100,7 @@ class DocumentProcessor:
                 url_deduped.append(doc)
 
         # Pass 2: 标题相似度去重(相似度 > 0.85 视为重复)
+        # 优化: 复用 SequenceMatcher 对象，并通过 (real_)quick_ratio 进行前置快速拦截
         seen_titles: list[str] = []
         title_deduped: list[RawDoc] = []
         for doc in url_deduped:
@@ -107,8 +108,10 @@ class DocumentProcessor:
             if not title:
                 continue
             is_dup = False
+            matcher = SequenceMatcher(None, title)
             for seen in seen_titles:
-                if SequenceMatcher(None, title, seen).ratio() > 0.85:
+                matcher.set_seq2(seen)
+                if matcher.real_quick_ratio() > 0.85 and matcher.quick_ratio() > 0.85 and matcher.ratio() > 0.85:
                     is_dup = True
                     break
             if not is_dup:
