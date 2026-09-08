@@ -105,10 +105,15 @@ class DocumentProcessor:
         for doc in url_deduped:
             title = doc.title.strip()
             if not title:
+                title_deduped.append(doc)
                 continue
             is_dup = False
+
+            # 性能优化: 复用 SequenceMatcher 并通过 real_quick_ratio 快速剪枝 O(N^2) 耗时
+            matcher = SequenceMatcher(b=title)
             for seen in seen_titles:
-                if SequenceMatcher(None, title, seen).ratio() > 0.85:
+                matcher.set_seq1(seen)
+                if matcher.real_quick_ratio() > 0.85 and matcher.quick_ratio() > 0.85 and matcher.ratio() > 0.85:
                     is_dup = True
                     break
             if not is_dup:
