@@ -1,10 +1,20 @@
 <div align="center">
   <h1>CountyResearchAI</h1>
-  <b>English</b> | <a href="./README_zh-CN.md"><b>中文</b></a>
+
+  <p><b>An LLM-assisted research pipeline that turns a county name into a reviewable, evidence-linked industry draft.</b></p>
+  <p><b>输入县名，自动完成采集 → 识别 → 分析 → 报告的县域产业研究流水线，产出可审查、证据可溯的研究初稿。</b></p>
+
+  <p>
+    <a href="#overview"><b>English</b></a> · <a href="#中文"><b>中文</b></a>
+  </p>
+
+  <p>
+    <a href="https://github.com/OrdoAbChao7/CountyResearchAI/actions/workflows/ci.yml"><img src="https://github.com/OrdoAbChao7/CountyResearchAI/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
+    <img src="https://img.shields.io/badge/LLM-DeepSeek%20%2F%20Qwen%20%2F%20OpenAI-4D6BFF?style=for-the-badge" alt="LLM providers">
+    <img src="https://img.shields.io/badge/License-MIT-3DA639?style=for-the-badge" alt="License: MIT">
+  </p>
 </div>
-<br>
-
-
 
 <!-- portfolio-authenticity:start -->
 ## Project status
@@ -18,131 +28,41 @@
 See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for the evidence still needed and the maintenance rule.
 <!-- portfolio-authenticity:end -->
 
-> An LLM-assisted county-industry research prototype. Given a county name and an optional focus, it collects configured public material, preserves source links, and produces a Markdown **research draft** for review. The three modes cover a current snapshot, a modern rise/fall timeline, and a long-cycle county trajectory.
+## Overview
+
+CountyResearchAI makes the first pass of county-industry desk research reproducible. Given a county name and an optional focus, it collects configured public material, preserves source links, and produces a structured Markdown **research draft**. Three modes cover a current snapshot, a modern rise/fall timeline, and a long-cycle county trajectory.
 
 ## Key Features
 
-- Three research modes — `snapshot`: four-dimensional current-state analysis (status/strengths/weaknesses/recommendations); `rise-fall`: county industry boom-and-bust study (origin → expansion → decline → pattern synthesis), answering 7 core questions; `long-history`: century-scale county trajectory (founding → geography → traditional economy → modern shocks → planned economy → reform era → contemporary), answering: why did this county form, what sustains it, how did it rise, why did it decline, can it be reactivated?
-- Candidate focus discovery — If no focus is provided, the system asks the configured LLM to rank candidates from retrieved material. Treat the chosen focus as a starting hypothesis and review it before relying on the draft.
-- Multi-source data collection — Web search (Tavily/Serper/Bing) + whitelisted government open data with a pluggable data-source architecture; rise-fall mode issues 10 queries on modern industry booms/declines; long-history mode issues 10 long-cycle historical queries (county founding records/gazetteers/post roads and waterways/migration/state-owned factories/administrative divisions, etc.).
-- LLM-assisted synthesis — Prompt templates structure the draft into mode-specific sections. Each section remains subject to source checking and human revision.
-- Automatic report generation — Standardized chapter templates, one-click Markdown output (snapshot: 6 chapters / rise-fall: 9 sections / long-history: 9 sections fixed structure).
-- Data traceability — Three-layer retention: raw / processed / report. Key conclusions are bound to evidence URLs for easy review and debugging.
-- Externalized configuration — YAML config + environment variables; change config without touching code.
-- Separated provider interfaces — LLM, search, storage, and reporting implementations are isolated so that a provider change has a bounded code surface; compatibility still requires configuration and regression checks.
-- Mock path — When API keys are missing, the project can exercise its control flow with synthetic inputs. Mock output is for local development and tests only.
+- **Three research modes** — `snapshot`: four-dimensional current-state analysis (status/strengths/weaknesses/recommendations); `rise-fall`: industry boom-and-bust study (origin → expansion → decline → pattern synthesis), 8 lifecycle models; `long-history`: century-scale county trajectory from founding to today, 8 long-cycle models
+- **Candidate focus discovery** — no focus given, the LLM ranks 3–5 candidate industries from retrieved material; treat the result as a hypothesis to review
+- **Multi-source collection** — Tavily / Serper / Bing search + whitelisted gov.cn open data, with mode-specific query templates (10 for rise-fall, 10 for long-history)
+- **Evidence traceability** — raw / processed / report three-layer retention; conclusions bound to source URLs
+- **Externalized configuration** — YAML + `.env`; provider interfaces isolated so swaps have a bounded code surface
+- **Mock path** — without API keys the chain still runs on synthetic inputs (control-flow demonstration only, not evidence)
 
-## Architecture Overview
+## How It Works
 
-```
-[User input: County] + (optional) Focus + Research Mode (--mode)
-        ↓
-        ├──── snapshot mode (default) ─────────────────────┐
-        │                                                  ↓
-        │  [search]    Multi-source collection (Web + Gov concurrent) → data/raw/
-        │       ↓
-        │  [discover]  Auto industry focus discovery (only if --focus not specified)
-        │       ↓
-        │  [storage]   Cleaning + de-dup + cache reuse                 → data/processed/
-        │       ↓
-        │  [llm]       4-task analysis + summary generation
-        │       ↓
-        │  [reporting] Chapter assembly + Markdown render              → reports/{County}_{Focus}_{Date}.md
-        │
-        ├──── rise-fall mode (--mode rise-fall) ────────────┐
-        │                                                   ↓
-        │  [search]    Modern boom-and-bust queries (10)    → data/raw/
-        │       ↓
-        │  [storage]   Cleaning + de-dup + cache reuse       → data/processed/
-        │       ↓
-        │  [rise-fall] Timeline → origin → rise → decline → talent → model → summary (7 tasks)
-        │       ↓
-        │  [reporting] 9-section boom-and-bust report render → reports/{County}_BoomBust_{Date}.md
-        │
-        └──── long-history mode (--mode long-history) ──────┐
-                                                            ↓
-           [search]    Long-cycle historical queries (10 for founding/gazetteer/post road/migration/SOE/admin div.) → data/raw/
-                ↓
-           [storage]   Cleaning + de-dup + cache reuse                              → data/processed/
-                ↓
-           [long-history] Periods → geography → traditional → modern → planned → reform → contemporary → model → summary (9 tasks)
-                ↓
-           [reporting] 9-section long-cycle trajectory report render                 → reports/{County}_LongCycle_{Date}.md
-```
+```mermaid
+flowchart LR
+    CLI(["CLI<br/>--county --focus --mode"]) --> MR{"Mode router"}
 
-Three ways to use:
+    MR --> S["Search<br/>Tavily / Serper / Bing<br/>+ gov.cn whitelist"]
+    S --> D["Focus discovery<br/>only when --focus omitted"]
+    D --> P["Process + cache<br/>data/processed/"]
+    P --> L["LLM analysis<br/>4 / 7 / 9 prompt tasks"]
+    L --> R["Markdown draft<br/>reports/"]
 
-| Mode | Command | Use case |
-|------|---------|----------|
-| Specify focus | `cli -c 安吉县 -f 竹产业` | You already know the focus; dive right in (snapshot) |
-| Automatic discovery | `cli -c 安吉县` | Unfamiliar with the county; let the system detect key industries (snapshot) |
-| Rise-fall | `cli -c 鹤岗市 --mode rise-fall` | Study county industry boom-and-bust patterns (rise-fall) |
-| Long-history | `cli -c 信丰县 --mode long-history` | Study century-scale rise/decline patterns (long-history) |
+    classDef io fill:#1F6FEB,stroke:#1F6FEB,color:#fff
+    classDef llm fill:#8250DF,stroke:#8250DF,color:#fff
+    classDef out fill:#1A7F37,stroke:#1A7F37,color:#fff
 
-## Project Structure
-
-```
-CountyResearchAI/
-├── src/county_research_ai/     # Core source code
-│   ├── search/                 # Data collection layer (web_search / gov_data / collector)
-│   │                           #   collector supports mode param; enables different query templates
-│   ├── llm/                    # LLM analysis layer
-│   │   ├── analyzer.py         #   snapshot: 4-task analysis + discover_focus
-│   │   ├── rise_fall_analyzer.py # rise-fall: 7-task boom-bust analysis
-│   │   ├── long_history_analyzer.py # long-history: 9-task long-cycle analysis
-│   │   ├── client.py           #   OpenAI-compatible client
-│   │   └── prompt_loader.py    #   Jinja2 template loader
-│   ├── storage/                # Storage layer (local_fs)
-│   ├── reporting/              # Report generation layer
-│   │   ├── renderer.py         #   snapshot renderer
-│   │   ├── rise_fall_renderer.py # rise-fall renderer (9 fixed sections)
-│   │   ├── long_history_renderer.py # long-history renderer (9 fixed sections)
-│   │   └── templates/          #   report / rise_fall / long_history templates
-│   ├── pipeline.py             # Orchestration + mock fallback + mode routing
-│   ├── cli.py                  # CLI entry (Click, --mode)
-│   ├── config.py               # Config loading (YAML + .env)
-│   ├── models.py               # Pydantic models (6 for rise-fall + 4 for long-history)
-│   └── exceptions.py           # Exception hierarchy
-├── config/                     # YAML configs
-│   ├── settings.yaml           # App settings
-│   └── sources.yaml            # Whitelisted government data sources
-├── prompts/                    # LLM prompt templates (Jinja2)
-│   ├── discovery.md            # Industry focus discovery
-│   ├── industry_analysis.md    # Current-state analysis
-│   ├── recommendations.md      # Recommendations
-│   ├── summary.md              # Executive summary
-│   ├── timeline_extraction.md  # [rise-fall] Historical timeline extraction
-│   ├── origin_industry.md      # [rise-fall] Origin industry identification
-│   ├── rise_analysis.md        # [rise-fall] Rise factor analysis
-│   ├── decline_analysis.md     # [rise-fall] Decline factor analysis
-│   ├── talent_loss.md          # [rise-fall] Talent drain analysis
-│   ├── historical_pattern.md   # [rise-fall] Boom-bust model synthesis
-│   ├── rise_fall_summary.md    # [rise-fall] Executive summary
-│   ├── long_history_periods.md # [long-history] Historical period extraction
-│   ├── geo_origin_analysis.md  # [long-history] Founding & geographic logic
-│   ├── traditional_economy.md  # [long-history] Traditional era economy
-│   ├── modern_shocks.md        # [long-history] Modern shocks & changes
-│   ├── state_period.md         # [long-history] Planned economy re-organization
-│   ├── reform_period.md        # [long-history] Reform-era industrial reshaping
-│   ├── contemporary_long_view.md # [long-history] 21st-century long view
-│   ├── long_history_pattern.md # [long-history] Long-cycle model synthesis
-│   └── long_history_summary.md # [long-history] Executive summary
-├── data/                       # Runtime artifacts (raw / processed)
-├── reports/                    # Generated reports
-├── tests/                      # Unit tests
-├── scripts/                    # Verification scripts
-└── pyproject.toml
+    class CLI io
+    class L llm
+    class R out
 ```
 
 ## Quick Start
-
-### 1. Environment
-
-- Python ≥ 3.10
-- Any LLM API key (DeepSeek recommended: stable and cost-effective in China)
-- Any search API key (Tavily recommended: AI-optimized)
-
-### 2. Installation
 
 ```bash
 git clone https://github.com/OrdoAbChao7/CountyResearchAI.git
@@ -153,240 +73,132 @@ python -m venv .venv
 # source .venv/bin/activate   # macOS/Linux
 
 pip install -e ".[dev]"
+cp .env.example .env          # fill in LLM_API_KEY + one search key
 ```
-
-### 3. Configure API Keys
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and fill in your API keys (the file is gitignored and will not be committed):
 
 ```dotenv
-# ---------- LLM configuration ----------
 LLM_PROVIDER=deepseek
-LLM_API_KEY=YOUR_LLM_API_KEY             # Required
+LLM_API_KEY=YOUR_LLM_API_KEY              # Required
 LLM_BASE_URL=https://api.deepseek.com/v1
 LLM_MODEL=deepseek-chat
 
-# ---------- Search API configuration ----------
 SEARCH_PROVIDER=tavily
-TAVILY_API_KEY=YOUR_TAVILY_API_KEY       # Required
+TAVILY_API_KEY=YOUR_TAVILY_API_KEY        # Required
 ```
 
-API key portals:
+Key portals: [DeepSeek](https://platform.deepseek.com/api_keys) · [Tavily](https://app.tavily.com/dashboard/api-key) · [Serper](https://serper.dev) · [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api)
 
-| Service | URL | Notes |
-|---------|-----|-------|
-| DeepSeek | https://platform.deepseek.com/api_keys | Stable in China, cost-effective |
-| Tavily | https://app.tavily.com/dashboard/api-key | Search API optimized for AI |
-| Serper | https://serper.dev | Google-based search API |
-| Bing | https://www.microsoft.com/en-us/bing/apis/bing-web-search-api | Microsoft Search API |
+### Run
 
-> Mock fallback: If no API keys are configured, the pipeline automatically falls back to Mock data + Mock LLM. The full chain still runs (report content is synthetic for demonstration, not real analysis).
+```powershell
+$env:PYTHONPATH = "src"       # only needed when not pip-installed
 
-### 4. Run
-
-```bash
-# Set PYTHONPATH (needed if you didn't pip install -e .)
-$env:PYTHONPATH="src"          # Windows PowerShell
-# export PYTHONPATH=src        # macOS/Linux
-
-# Option 1: Specify research focus (fast deep-dive, snapshot mode)
-python -m county_research_ai.cli -c 安吉县 -f 竹产业
-
-# Option 2: Auto-detect industry focus (recommended when unfamiliar with the county, snapshot mode)
-python -m county_research_ai.cli -c 安吉县
-# The system will first search for county materials → LLM identifies 3–5 candidate industries → selects the highest-confidence focus
-
-# Option 3: Boom-and-bust study (rise-fall mode)
-python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall
-# Study the county's origin → expansion → decline → patterns; outputs a 9-section boom-bust report
-# Equivalent shortcut:
-python -m county_research_ai.cli -c 鹤岗市 --historical
-
-# Option 4: Century-scale trajectory analysis (long-history mode)
-python -m county_research_ai.cli -c 信丰县 --mode long-history
-# Study founding → geography → traditional → modern → planned → reform → contemporary; outputs a 9-section long-cycle report
-# Equivalent shortcut:
-python -m county_research_ai.cli -c 信丰县 --long-history
-
-# Full options example
-python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-level INFO
+python -m county_research_ai.cli -c 安吉县 -f 竹产业          # snapshot, explicit focus
+python -m county_research_ai.cli -c 安吉县                      # snapshot, auto discovery
+python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall    # boom-and-bust study
+python -m county_research_ai.cli -c 信丰县 --mode long-history  # century-scale trajectory
+python -m county_research_ai.cli -c 安吉县 --dry-run            # validate params only
 ```
 
-Reports will be generated under `reports/`:
-- snapshot: `{County}_{Focus}_{Date}.md`
-- rise-fall: `{County}_BoomBust_{Date}.md`
-- long-history: `{County}_LongCycle_{Date}.md`
+Reports land in `reports/`:
+
+```text
+{County}_{Focus}_{Date}.md        # snapshot
+{County}_BoomBust_{Date}.md       # rise-fall
+{County}_LongCycle_{Date}.md      # long-history
+```
 
 ### CLI Options
 
-| Option | Short | Required | Description |
-|--------|-------|----------|-------------|
-| `--county` | `-c` | Yes | County name, e.g., `安吉县` |
-| `--focus` | `-f` | No | Research focus, e.g., `竹产业`. If empty, auto-detect key industries (snapshot mode) |
-| `--mode` | `-m` | No | Research mode: `snapshot` (default, current snapshot) / `rise-fall` (boom-bust study) / `long-history` (century-scale county trajectory) |
-| `--historical` | | | Shortcut for `rise-fall` (equivalent to `--mode rise-fall`) |
-| `--long-history` | | | Shortcut for `long-history` (equivalent to `--mode long-history`) |
-| `--no-cache` | | | Skip cache; force re-collection and re-analysis |
-| `--dry-run` | | | Validate params and print expected output only; do not run the pipeline |
-| `--log-level` | | | Log level: DEBUG / INFO / WARNING / ERROR |
+| Option | Short | Description |
+|---|---|---|
+| `--county` | `-c` | County name, e.g. `安吉县` (required) |
+| `--focus` | `-f` | Research focus; omitted → auto discovery |
+| `--mode` | `-m` | `snapshot` (default) / `rise-fall` / `long-history` |
+| `--historical` | | Shortcut for `--mode rise-fall` |
+| `--long-history` | | Shortcut for `--mode long-history` |
+| `--no-cache` | | Skip the processed-data cache |
+| `--dry-run` | | Validate parameters only |
+| `--log-level` | | DEBUG / INFO / WARNING / ERROR |
 
-### rise-fall Mode Explained
+## Research Modes
 
-The `rise-fall` mode studies a county's industry boom-bust patterns, answering 7 core questions:
-
-1. County profile — Current stage, expansion-era industries, count of key events
-2. How did it start — Foundational origin (origin industry + dominant period + mechanisms)
-3. Why did it grow — 3–6 rise factors (resource endowment/policy/positioning/labor/market, etc.)
-4. What drove expansion — Expansion events + industries that achieved scale
-5. When were the turning points — 5–15 timeline events (origin/expansion/inflection/decline/policy/external shocks)
-6. Why did it decline — 2–5 decline factors (with severity scores 0–1)
-7. Which boom-bust model — Classify into one of 8 typical models (resource curse/policy-driven/market cycle/industry transfer/talent drain/path lock/diversified growth/mixed)
-
-Report structure (9 fixed sections): Executive Summary / I. County Profile / II. Origin Industry / III. Rise Logic / IV. Expansion Mechanism / V. Key Turning Points / VI. Decline Mechanism / VII. Talent Drain Analysis / VIII. Boom-Bust Model Synthesis / IX. Conclusion
-
-Boom-bust model types:
-
-| Model | Description |
-|-------|-------------|
-| `resource_curse` | Resource-curse (resource-led rise → depletion → decline; e.g., Hegang, Yumen) |
-| `policy_driven` | Policy-driven (prosperity during policy dividend → tapering → transition) |
-| `market_cycle` | Market-cycle (rises and falls with macro and price cycles) |
-| `industry_transfer` | Industry-transfer (inbound transfer → scaling → outbound transfer) |
-| `talent_drain` | Talent-drain (decent base but persistent human-capital outflow) |
-| `path_lock` | Path-lock (overreliance on a single industry; hard to pivot) |
-| `diversified_growth` | Diversified co-evolution (multi-industry synergy; more resilient) |
-| `mixed` | Mixed (combinations of the above) |
-
-### long-history Mode Explained
-
-The `long-history` mode studies century-scale county trajectories, answering core questions such as: why did this county form, what sustains it, how did it rise, why did it decline, and can it be reactivated in the future?
-
-Research dimensions (6 consecutive historical stages):
-
-1. Founding & geographic logic — Founding drivers, geographic structure, transport position, resources, and other deep structural factors
-2. Traditional-era economy — Agricultural/handicraft/trade foundations from founding to modern era
-3. Modern shocks & changes — Impacts of wars, transport revolutions, and market shocks
-4. Planned economy re-organization — 1949–1978 SOEs, collectivization, administrative reshaping
-5. Reform-era industrial reshaping — Post-1978 industrial transition, marketization, urbanization
-6. Since 2000 — Migration, transport upgrades, industrial upgrading, marginalization or reactivation
-
-Report structure (9 fixed sections): Executive Summary / I. Long-Cycle Overview / II. Founding & Geographic Logic / III. Traditional-Era Economy / IV. Modern Shocks & Changes / V. Planned Economy Re-organization / VI. Reform-Era Industrial Reshaping / VII. Since 2000 / VIII. Long-Cycle Model / IX. Historical Pattern Synthesis
-
-Long-cycle model types:
-
-| Model | Description |
-|-------|-------------|
-| `agricultural_hinterland` | Agricultural hinterland (long-term stability from agri endowment; limited upper bound) |
-| `transport_corridor` | Transport-corridor (rises/falls with strategic routes and tech shifts) |
-| `resource_frontier` | Resource frontier (resource-led rise; decline with depletion/substitution) |
-| `administrative_center` | Administrative center (administrative stability shapes destiny) |
-| `policy_reactivation` | Policy reactivation (state interventions reshape trajectory at key nodes) |
-| `border_trade` | Border-trade hub (rises on border commerce; declines with geopolitical-economic shifts) |
-| `cultural_industry` | Cultural industry (leverages historical-cultural assets) |
-| `mixed` | Mixed (combinations of the above) |
-
-### Boundaries between snapshot, rise-fall, and long-history
-
-| Dimension | snapshot | rise-fall | long-history |
-|-----------|----------|-----------|--------------|
-| Focus | Current industry | Modern industry cycle | County's centuries-long fate |
-| Time scale | Present | Last 30–50 years | Centuries (founding to present) |
-| Core questions | Status/strengths/weaknesses/recommendations | Origin → expansion → decline → patterns | Why formed/what sustains/how it rose/why it declined/can it be reactivated |
-| Search queries | General industry queries | 10 modern boom-bust queries | 10 founding/gazetteer/post road/migration/SOE/admin-division queries |
-| Report sections | 6 | 9 | 9 |
-| Model synthesis | None | 8 boom-bust models | 8 long-cycle models |
-
-These three modes are independent and non-intrusive—pick based on your research goal.
-
-### How Automatic Discovery Works
-
-When `--focus` is not specified, the system runs:
-
-1. Build general search queries with the county name (e.g., "安吉县 产业 发展现状"); collect from multiple sources
-2. Feed search snippets to the LLM with the [prompts/discovery.md](./prompts/discovery.md) template
-3. LLM returns JSON: 3–5 candidate industries + confidence + rationale + selected focus
-4. Continue with Process → Analyze → Report using the selected focus
-
-Fallback strategies:
-- LLM call fails → return generic candidates (specialty agriculture/rural tourism/advanced manufacturing)
-- No search results → fall back to "specialty agriculture"
-- Parse error → default to "specialty agriculture"
+| | snapshot | rise-fall | long-history |
+|---|---|---|---|
+| **Focus** | Current industry | Modern industry cycle | County's centuries-long fate |
+| **Time scale** | Present | Last 30–50 years | Founding → present |
+| **Core questions** | Status / strengths / weaknesses / recommendations | Origin → expansion → decline → patterns | Why formed / sustained / rose / declined / can it reactivate |
+| **Search queries** | General industry | 10 modern boom-bust queries | 10 founding/gazetteer/route/migration/SOE queries |
+| **Report** | 6 chapters | 9 sections + 8 models | 9 sections + 8 models |
 
 ## Configuration
 
-| File | Purpose |
-|------|---------|
-| `.env` | Secrets (API keys), excluded from VCS |
-| `config/settings.yaml` | App config (model params, timeouts, concurrency, cache TTL, etc.) |
-| `config/sources.yaml` | Whitelist of government data source domains and path keywords |
-
-### Key .env Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LLM_PROVIDER` | `deepseek` | LLM provider |
-| `LLM_API_KEY` | (empty) | LLM API key; empty → MockLLM fallback |
-| `LLM_MODEL` | `deepseek-chat` | Model name |
-| `LLM_TEMPERATURE` | `0.3` | Generation temperature |
-| `LLM_MAX_TOKENS` | `4096` | Max tokens per call |
-| `SEARCH_PROVIDER` | `tavily` | Search engine |
-| `TAVILY_API_KEY` | (empty) | Search API key; empty → MockSearch fallback |
-| `SEARCH_MAX_RESULTS` | `10` | Results per search |
-| `CACHE_TTL_HOURS` | `24` | Cache TTL (hours) |
-| `LOG_LEVEL` | `INFO` | Log level |
+| Item | Default | Purpose |
+|---|---|---|
+| `LLM_PROVIDER` | `deepseek` | `deepseek` / `qwen` / `openai` |
+| `LLM_API_KEY` | *(empty → Mock)* | LLM key |
+| `LLM_TEMPERATURE` / `LLM_MAX_TOKENS` | `0.3` / `4096` | Generation params |
+| `SEARCH_PROVIDER` | `tavily` | `tavily` / `serper` / `bing` |
+| `TAVILY_API_KEY` | *(empty → Mock)* | Search key |
+| `CACHE_TTL_HOURS` | `24` | Cache TTL |
+| `config/settings.yaml` | — | Retries, concurrency, pipeline stages |
+| `config/sources.yaml` | — | Query templates + gov.cn domain whitelist |
 
 ## Testing
 
-```bash
-# Run all unit tests (external APIs mocked; real keys not required)
-$env:PYTHONPATH="src"
+```powershell
+$env:PYTHONPATH = "src"
 python -m pytest --no-cov -q
 
-# View coverage details
+# coverage → htmlcov/index.html
 python -m pytest --cov=county_research_ai --cov-report=term-missing --cov-report=html:htmlcov
-```
-
-HTML coverage report is generated at `htmlcov/index.html`.
-
-## Runtime Artifacts
-
-```
-data/raw/{County}/{Date}/raw_docs.json      # Raw collected documents
-data/processed/{County}/{Focus}.json        # Cleaned and structured data
-reports/{County}_{Focus}_{Date}.md           # snapshot report
-reports/{County}_BoomBust_{Date}.md          # rise-fall report
-reports/{County}_LongCycle_{Date}.md         # long-history report
 ```
 
 ## Tech Stack
 
 | Category | Choice |
-|----------|--------|
+|---|---|
 | Language | Python 3.10+ |
-| LLM client | openai SDK (compatible with DeepSeek / Qwen / OpenAI) |
+| LLM client | openai SDK (DeepSeek / Qwen / OpenAI compatible) |
 | Data validation | Pydantic v2 |
-| CLI | Click |
-| HTTP | httpx |
-| Templating | Jinja2 |
-| Retries | tenacity |
-| HTML parsing | beautifulsoup4 |
-| Testing | pytest + pytest-cov |
+| CLI / HTTP / Templating | Click · httpx · Jinja2 · tenacity · beautifulsoup4 |
+| Quality | pytest + pytest-cov · Ruff · GitHub Actions CI |
 
-## MVP Scope
+## Scope (v0.3)
 
-Current version (v0.3) intentionally keeps scope tight:
+Deliberately minimal: single-county runs, Markdown output only, local filesystem storage, CLI interaction, single-threaded pipeline. Provider interfaces (search / LLM / storage / reporting) are isolated so any of these boundaries can move without rewriting the pipeline.
 
-- Single-county, single-run research (no multi-county comparisons yet)
-- Markdown output only (no PDF/HTML export yet)
-- Local filesystem storage (no DB yet)
-- CLI interaction (no Web UI yet)
-- Single-threaded pipeline (no multi-agent yet)
+## 中文
 
-> v0.3 adds the `long-history` mode: century-scale county trajectory analysis (founding → geography → traditional → modern → planned economy → reform era → contemporary → long-cycle model synthesis), coexisting with `rise-fall` from v0.2 and `snapshot` from v0.1.
+### 简介
+
+CountyResearchAI 是一个 LLM 辅助的县域产业研究原型：给定县名与（可选的）研究方向，自动采集公开资料、保留证据链接，产出结构化的 Markdown **研究初稿**。生成的报告是研究初稿而非事实结论或政策建议——搜索覆盖范围因县和供应商而异，LLM 综合可能遗漏上下文或做出无依据推断，Mock 模式仅验证控制流。
+
+### 三种研究模式
+
+| 模式 | 焦点 | 时间尺度 | 报告 |
+|---|---|---|---|
+| `snapshot` | 产业现状四维分析 | 当下 | 6 章节 |
+| `rise-fall` | 近现代产业兴衰规律 | 近 30–50 年 | 9 节 + 8 种兴衰模型 |
+| `long-history` | 县域数百年命运（建县→地理→传统→近代→计划经济→改革开放→当代） | 建县至今 | 9 节 + 8 种长周期模型 |
+
+### 核心特性
+
+- 产业方向自动发现 — 不指定焦点时由 LLM 从检索材料中给出 3–5 个候选方向，作为待审查的假设
+- 多源采集 — Tavily / Serper / Bing + 政府白名单数据，模式化查询模板
+- 证据可溯 — raw / processed / report 三层留存，结论绑定证据 URL
+- Mock 降级 — 不配 Key 可完整跑通链路（仅演示用）
+
+### 快速开始
+
+```powershell
+pip install -e ".[dev]"
+cp .env.example .env        # 填入 LLM_API_KEY + TAVILY_API_KEY
+$env:PYTHONPATH = "src"
+python -m county_research_ai.cli -c 安吉县 -f 竹产业
+```
+
+完整 CLI 选项、模式对比、配置表与输出路径见英文部分。
 
 ## License
 
