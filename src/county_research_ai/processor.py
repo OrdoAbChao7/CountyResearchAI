@@ -108,7 +108,9 @@ class DocumentProcessor:
                 continue
             is_dup = False
             for seen in seen_titles:
-                if SequenceMatcher(None, title, seen).ratio() > 0.85:
+                matcher = SequenceMatcher(None, title, seen)
+                # ⚡ Bolt: Fast-path ratio checks to avoid expensive ratio() computation on dissimilar strings
+                if matcher.real_quick_ratio() > 0.85 and matcher.quick_ratio() > 0.85 and matcher.ratio() > 0.85:
                     is_dup = True
                     break
             if not is_dup:
