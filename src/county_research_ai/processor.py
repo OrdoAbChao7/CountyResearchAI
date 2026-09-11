@@ -107,7 +107,15 @@ class DocumentProcessor:
             if not title:
                 continue
             is_dup = False
+            len_title = len(title)
             for seen in seen_titles:
+                # Fast path length check to avoid expensive SequenceMatcher calculation:
+                # Maximum possible matches is min(len(title), len(seen))
+                # Maximum possible ratio is 2 * matches / (len(title) + len(seen))
+                len_seen = len(seen)
+                max_possible_ratio = 2.0 * min(len_title, len_seen) / (len_title + len_seen)
+                if max_possible_ratio <= 0.85:
+                    continue
                 if SequenceMatcher(None, title, seen).ratio() > 0.85:
                     is_dup = True
                     break

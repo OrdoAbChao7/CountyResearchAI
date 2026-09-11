@@ -1,0 +1,3 @@
+## 2024-03-24 - Document Deduplication Fast-Path Check Optimization
+**Learning:** In string-heavy processing tasks, particularly deduplication, using `difflib.SequenceMatcher.ratio()` without constraints results in an O(n²) comparison bottleneck because the algorithm has quadratic time complexity relative to the lengths of the strings being compared.
+**Action:** When applying fuzzy matching like `SequenceMatcher.ratio()`, implement an initial length-based boundary check (e.g., maximum possible match `2 * min(L1, L2) / (L1 + L2)`) to short-circuit the expensive computation when the threshold (like 0.85) is theoretically unreachable.
