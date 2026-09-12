@@ -107,7 +107,19 @@ class DocumentProcessor:
             if not title:
                 continue
             is_dup = False
+            len_t = len(title)
             for seen in seen_titles:
+                # ⚡ Bolt: Fast exact match check
+                if title == seen:
+                    is_dup = True
+                    break
+                # ⚡ Bolt: Mathematical bound check before expensive SequenceMatcher
+                # The maximum possible ratio is 2.0 * min(len(a), len(b)) / (len(a) + len(b))
+                # If the max possible ratio <= 0.85, we can safely skip SequenceMatcher
+                len_s = len(seen)
+                max_ratio = 2.0 * min(len_t, len_s) / (len_t + len_s) if (len_t + len_s) > 0 else 0
+                if max_ratio <= 0.85:
+                    continue
                 if SequenceMatcher(None, title, seen).ratio() > 0.85:
                     is_dup = True
                     break
