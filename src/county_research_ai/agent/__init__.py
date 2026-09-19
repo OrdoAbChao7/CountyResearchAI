@@ -10,6 +10,9 @@ from .models import (
     AgentTrace,
     ToolStatus,
 )
+from .factory import create_default_agent
+from .runtime import AgentRuntime
+from .trace import JsonTraceStore, TraceStore
 
 __all__ = [
     "AgentError",
@@ -19,5 +22,9 @@ __all__ = [
     "AgentState",
     "AgentStatus",
     "AgentTrace",
+    "AgentRuntime",
+    "JsonTraceStore",
+    "TraceStore",
     "ToolStatus",
+    "create_default_agent",
 ]
