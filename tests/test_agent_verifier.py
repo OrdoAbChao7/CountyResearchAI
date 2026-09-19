@@ -33,3 +33,22 @@ def test_verifier_accepts_report_with_source(tmp_path):
     result = AgentVerifier().verify_final(state)
 
     assert result.ok is True
+
+
+def test_verifier_allows_empty_search_result_to_continue():
+    from county_research_ai.agent.base import ToolResult
+    from county_research_ai.agent.models import AgentPlanStep, ToolStatus
+    from county_research_ai.agent.verifier import AgentVerifier
+
+    state = AgentState.from_request(ResearchRequest(county="安吉县"))
+    result = AgentVerifier().verify_step(
+        state,
+        AgentPlanStep(tool="search_materials", reason="collect evidence"),
+        ToolResult(
+            tool_name="search_materials",
+            status=ToolStatus.SUCCESS,
+            observation="collected 0 raw documents",
+        ),
+    )
+
+    assert result.ok is True

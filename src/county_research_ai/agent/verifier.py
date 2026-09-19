@@ -35,7 +35,11 @@ class AgentVerifier:
             )
 
         requirements = {
-            "search_materials": bool(state.raw_docs) or "empty" in result.observation.lower(),
+            "search_materials": bool(state.raw_docs)
+            or any(
+                marker in result.observation.lower()
+                for marker in ("empty", "0 raw documents", "no documents")
+            ),
             "discover_focus": bool(state.request.focus),
             "build_evidence_pack": state.processed is not None,
             "analyze_research": self._has_analysis(state),

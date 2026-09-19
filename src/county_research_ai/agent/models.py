@@ -94,6 +94,7 @@ class AgentState(BaseModel):
     def apply_patch(self, patch: dict[str, Any]) -> None:
         """应用工具返回的受控状态更新。"""
         allowed = {
+            "request",
             "raw_docs",
             "discovery",
             "processed",
@@ -109,6 +110,8 @@ class AgentState(BaseModel):
             names = ", ".join(sorted(unknown))
             raise ValueError(f"unknown agent state patch fields: {names}")
         for field, value in patch.items():
+            if field == "request" and not isinstance(value, ResearchRequest):
+                raise ValueError("agent state request patch must be ResearchRequest")
             setattr(self, field, value)
 
 
