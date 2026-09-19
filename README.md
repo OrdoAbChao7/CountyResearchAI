@@ -62,6 +62,32 @@ flowchart LR
     class R out
 ```
 
+## Agent Mode
+
+项目还提供一个经典、可控的 **Plan-and-Execute research Agent**。Planner 每轮只输出一个结构化动作，`ToolRegistry` 只允许注册工具，Runtime 只应用工具返回的类型化状态 patch，不执行任意代码。
+
+```mermaid
+flowchart LR
+    C["CLI: agent"] --> RT["AgentRuntime\nmax steps"]
+    RT --> PL["Planner\nLLM or fallback"]
+    PL --> RG["ToolRegistry\nallow-list"]
+    RG --> T["search · discover\nevidence · analyze · report"]
+    T --> S["AgentState\nobservations"]
+    S --> V["Verifier\nstep + final checks"]
+    V -->|pass| O["Markdown report\n+ JSON Trace"]
+    V -->|fail / retry| RT
+```
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m county_research_ai.cli agent -c 安吉县 -f 竹产业 --mode snapshot
+python -m county_research_ai.cli agent -c 安吉县 --max-steps 8 --dry-run
+```
+
+五个工具是对现有能力的适配：`search_materials` 复用搜索 provider，`discover_focus` 复用 `LLMAnalyzer`，`build_evidence_pack` 复用 `DocumentProcessor` 和 storage，`analyze_research` 路由到三种模式分析器，`render_report` 复用现有 renderer。这样 Agent 是编排层，不复制业务逻辑。
+
+面试解释可以概括为：县域研究有明确前置依赖和阶段产物，所以用 Plan-and-Execute 比自由 ReAct 更容易控制顺序、重试和终止；`AgentState` 保存可序列化中间状态，Observation 记录工具、理由、摘要、状态和耗时；Verifier 检查状态转换及最终报告的县名、方向、文件和来源；`max_steps`、未知工具拒绝、异常捕获和 JSON Trace 防止静默失败。Mock 只证明控制流，不证明事实正确性；多 Agent、任意代码执行和内容生产保持在当前研究 Agent 边界之外。
+
 ## Quick Start
 
 ```bash
@@ -98,6 +124,7 @@ python -m county_research_ai.cli -c 安吉县                      # snapshot, a
 python -m county_research_ai.cli -c 鹤岗市 --mode rise-fall    # boom-and-bust study
 python -m county_research_ai.cli -c 信丰县 --mode long-history  # century-scale trajectory
 python -m county_research_ai.cli -c 安吉县 --dry-run            # validate params only
+python -m county_research_ai.cli agent -c 安吉县 -f 竹产业    # bounded Agent mode
 ```
 
 Reports land in `reports/`:
@@ -120,6 +147,8 @@ Reports land in `reports/`:
 | `--no-cache` | | Skip the processed-data cache |
 | `--dry-run` | | Validate parameters only |
 | `--log-level` | | DEBUG / INFO / WARNING / ERROR |
+
+Agent 子命令额外支持 `--max-steps`、`--no-trace` 和 `--dry-run`；默认 Trace 写入 `agent_traces/{县名}/{日期}/`。
 
 ## Research Modes
 
@@ -196,9 +225,10 @@ pip install -e ".[dev]"
 cp .env.example .env        # 填入 LLM_API_KEY + TAVILY_API_KEY
 $env:PYTHONPATH = "src"
 python -m county_research_ai.cli -c 安吉县 -f 竹产业
+python -m county_research_ai.cli agent -c 安吉县 -f 竹产业 --mode snapshot
 ```
 
-完整 CLI 选项、模式对比、配置表与输出路径见英文部分。
+Agent 模式采用 Plan-and-Execute：Planner 输出结构化动作，ToolRegistry 限制工具范围，Runtime 维护 AgentState，Verifier 检查每一步和最终报告，Trace 保存执行摘要。它负责流程控制，不替代人工事实核验。完整 CLI 选项、模式对比、配置表与输出路径见英文部分。
 
 ## License
 

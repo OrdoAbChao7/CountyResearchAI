@@ -18,6 +18,26 @@ AI 县域产业研究助手：用户输入「县名 + 可选研究方向 + 研�
 - 数据三层留存（raw/processed/report）便于复盘
 - 关键结论绑定证据 URL（rise-fall / long-history 模式来源按可信度排序）
 
+## Agent 架构（简历/面试主线）
+
+在原有确定性 `ResearchPipeline` 之上，项目增加了一个经典的 **Plan-and-Execute Agent**，只负责研究流程编排，不复制搜索、分析和渲染业务逻辑。
+
+```mermaid
+flowchart LR
+    CLI[agent 子命令] --> Runtime[AgentRuntime]
+    Runtime --> Planner[Planner: LLM / Fallback]
+    Planner --> Registry[ToolRegistry]
+    Registry --> Tools[5 个研究 Tools]
+    Tools --> State[AgentState + Observations]
+    State --> Verifier[AgentVerifier]
+    Verifier --> Output[Report + JSON Trace]
+    Verifier --> Runtime
+```
+
+一次运行的经典链路是：`search_materials → discover_focus（仅无 focus 时）→ build_evidence_pack → analyze_research → render_report → finish`。Planner 每轮只选择一个动作；Runtime 负责有界循环、状态 patch、异常记录和停止；Verifier 检查中间状态，以及最终报告是否存在县名、研究方向和来源 URL/资料不足标记。
+
+面试时要能说明：Plan-and-Execute 适合有明确前置依赖的研究工作，比自由 ReAct 更容易控制顺序、重试和终止；ToolRegistry 让 Planner 只能调用 allow-list 工具；`AgentState` 是 Pydantic 类型化状态，工具只返回 `ToolResult.state_patch`；每一步的 tool、reason、输入/输出摘要、耗时和错误会进入 JSON Trace；`max_steps`、未知工具拒绝、异常捕获和最终 Verifier 防止死循环和假成功。Mock 只证明控制流，不证明事实正确性；多 Agent、任意代码执行和内容生产不是当前研究 Agent 的目标。
+
 ## 技术栈
 
 | 类别 | 选型 | 备注 |
@@ -77,7 +97,7 @@ src/county_research_ai/
 │                       #   /analyze_contemporary_status/classify_long_history_pattern
 │                       #   /generate_summary → CountyLongHistoryAnalysis
 │
-└── reporting/          # [报告层]
+├── reporting/          # [报告层]
     ├── renderer.py     # [snapshot] ReportRenderer: render_markdown + render_filename
     ├── rise_fall_renderer.py # [rise-fall] RiseFallReportRenderer: render(analysis, raw_docs) → 9 节 Markdown
     ├── long_history_renderer.py # [long-history] LongHistoryReportRenderer: render(analysis, raw_docs) → 9 节 Markdown
@@ -85,6 +105,17 @@ src/county_research_ai/
         ├── report.md.j2          # snapshot 模式模板
         ├── rise_fall_report.md.j2 # rise-fall 模式模板 (9 节固定结构)
         └── long_history_report.md.j2 # long-history 模式模板 (9 节固定结构)
+
+├── agent/              # [Agent 编排层] 不复制 Pipeline 业务逻辑
+│   ├── models.py       # AgentState / PlanStep / Observation / Trace / RunResult
+│   ├── base.py         # AgentTool / ToolSpec / ToolResult 协议
+│   ├── registry.py     # allow-list 工具注册与描述
+│   ├── planner.py      # LLMPlanner + FallbackPlanner
+│   ├── tools.py        # 5 个研究工具适配器
+│   ├── verifier.py     # 步骤校验和最终报告校验
+│   ├── runtime.py      # 有界 Plan-and-Execute 主循环
+│   ├── trace.py        # JSON TraceStore
+│   └── factory.py      # 复用默认 Pipeline 的装配入口
 
 config/
 ├── settings.yaml       # 应用主配置 (模型参数/超时/并发/缓存 TTL)
@@ -157,6 +188,11 @@ python -m county_research_ai.cli -c 鹤岗市 --historical          # 等价快�
 # 方式四：县域长周期兴衰史分析（long-history 模式）
 python -m county_research_ai.cli -c 信丰县 --mode long-history
 python -m county_research_ai.cli -c 信丰县 --long-history        # 等价快捷写法
+
+# Agent 模式：有界规划 + 工具注册 + 最终校验 + JSON Trace
+python -m county_research_ai.cli agent -c 安吉县 -f 竹产业 --mode snapshot
+python -m county_research_ai.cli agent -c 安吉县 --max-steps 8 --dry-run
+python -m county_research_ai.cli agent -c 安吉县 --no-trace
 
 # 完整选项
 python -m county_research_ai.cli -c 安吉县 -f 竹产业 --no-cache --log-level DEBUG
