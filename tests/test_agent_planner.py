@@ -33,6 +33,23 @@ def test_fallback_planner_inserts_discovery_without_focus():
     assert FallbackPlanner().next_step(state, []).tool == "discover_focus"
 
 
+def test_fallback_planner_does_not_repeat_an_empty_search():
+    from county_research_ai.agent.models import AgentObservation, ToolStatus
+    from county_research_ai.agent.planner import FallbackPlanner
+
+    state = AgentState.from_request(ResearchRequest(county="安吉县"))
+    state.observations.append(
+        AgentObservation(
+            step_index=1,
+            tool_name="search_materials",
+            status=ToolStatus.SUCCESS,
+            output_summary="collected 0 raw documents",
+        )
+    )
+
+    assert FallbackPlanner().next_step(state, []).tool == "discover_focus"
+
+
 def test_fallback_planner_moves_from_processing_to_analysis():
     from county_research_ai.agent.planner import FallbackPlanner
 

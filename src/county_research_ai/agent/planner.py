@@ -50,7 +50,16 @@ class FallbackPlanner:
             )
 
         request = state.request
-        if not state.raw_docs:
+        search_empty = any(
+            observation.tool_name == "search_materials"
+            and observation.status.value == "success"
+            and any(
+                marker in observation.output_summary.lower()
+                for marker in ("0 raw documents", "empty", "no documents")
+            )
+            for observation in state.observations
+        )
+        if not state.raw_docs and not search_empty:
             return action(
                 "search_materials",
                 "当前没有原始材料，需要先收集县域研究资料",

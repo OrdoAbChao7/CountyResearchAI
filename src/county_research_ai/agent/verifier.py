@@ -80,7 +80,7 @@ class AgentVerifier:
                 ok=False, code="focus_missing", message="报告不包含研究方向"
             )
         if not re.search(r"https?://", content) and not any(
-            marker in content for marker in ("资料不足", "数据不足", "无来源")
+            marker in content for marker in ("资料不足", "数据不足", "无来源", "_无来源_")
         ):
             return VerificationResult(
                 ok=False,
