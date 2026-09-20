@@ -457,3 +457,199 @@ class CountyLongHistoryAnalysis(BaseModel):
     long_history_pattern: LongHistoryPattern = Field(default_factory=LongHistoryPattern)
     summary: str = ""
     analyzed_at: datetime = Field(default_factory=_utcnow)
+
+
+# ===== 内容生产(短视频脚本流水线) =====
+
+
+class ContentAngle(BaseModel):
+    """短视频选题角度。
+
+    由 director 基于研究报告生成,作为脚本撰写的输入。
+    每个角度代表一种切入短视频的视角(冲突/反差/数据/人物锚点等)。
+
+    Attributes:
+        angle_id: 角度唯一标识(slug 风格,如 'resource-curse-coal-collapse')
+        title: 视频标题(15-25 字,带钩子,不含标题党)
+        hook: 开场 1 句话钩子(冲突/反差/疑问)
+        perspective: 切入视角描述(40-80 字,说明该角度如何切入该县产业兴衰)
+        target_audience: 目标受众(如"关注下沉市场的创业者"/"产业研究爱好者")
+        key_points: 该角度要传达的 3-5 个核心要点
+        tone: 叙事基调(如"冷静叙事"/"反讽"/"科普向")
+        source_refs: 引用的研究结论来源(对应研究报告中的章节/数据点)
+    """
+
+    angle_id: str = ""
+    title: str = ""
+    hook: str = ""
+    perspective: str = ""
+    target_audience: str = ""
+    key_points: list[str] = Field(default_factory=list)
+    tone: str = ""
+    source_refs: list[str] = Field(default_factory=list)
+
+
+class ScriptSegment(BaseModel):
+    """短视频脚本单段。
+
+    60 秒短视频按时间轴切分为 5 段:
+        0-5s   冲突钩子
+        5-20s  过去如何兴起
+        20-40s 产业如何发展
+        40-55s 出现什么问题
+        55-60s 历史规律总结
+
+    Attributes:
+        segment_id: 段落标识(如 'hook'/'origin'/'growth'/'decline'/'takeaway')
+        time_range: 时间区间字符串(如 '0-5s')
+        narration: 旁白文案(口播用,口语化)
+        on_screen: 屏幕文字(关键字幕/数据贴片)
+        visual_hint: 画面建议(素材方向,不涉及具体剪辑)
+        source_refs: 该段引用的研究证据(对应研究报告中的章节/数据点 URL)
+    """
+
+    segment_id: str = ""
+    time_range: str = ""
+    narration: str = ""
+    on_screen: str = ""
+    visual_hint: str = ""
+    source_refs: list[str] = Field(default_factory=list)
+
+
+class VideoScript(BaseModel):
+    """完整短视频脚本(基于某个 ContentAngle 生成)。
+
+    Attributes:
+        angle_id: 对应的选题角度 ID
+        title: 视频标题(沿用 ContentAngle.title 或微调)
+        duration_seconds: 预计时长(秒,默认 60)
+        segments: 5 段脚本(按时间轴)
+        total_word_count: 旁白总字数(便于评估口播节奏)
+        generated_at: 生成时间(UTC)
+    """
+
+    angle_id: str = ""
+    title: str = ""
+    duration_seconds: int = 60
+    segments: list[ScriptSegment] = Field(default_factory=list)
+    total_word_count: int = 0
+    generated_at: datetime = Field(default_factory=_utcnow)
+
+
+class FactCheckItem(BaseModel):
+    """单条事实核查项。
+
+    Attributes:
+        claim: 脚本中需要核查的事实声明(原句或概括)
+        segment_id: 该声明所属的脚本段落 ID
+        evidence: 核查依据(引用研究报告/外部资料中的数据点)
+        verdict: 核查结论(supported / unsupported / needs_revision)
+        note: 备注(如"数据未找到"/"年份需修正为 2014")
+    """
+
+    claim: str = ""
+    segment_id: str = ""
+    evidence: str = ""
+    verdict: str = "needs_revision"  # supported / unsupported / needs_revision
+    note: str = ""
+
+
+class FactCheckResult(BaseModel):
+    """脚本事实核查结果。
+
+    Attributes:
+        angle_id: 对应的选题角度 ID
+        items: 各事实核查项列表
+        overall_status: 整体状态(ok / needs_revision / unsupported)
+            - ok: 全部 supported
+            - needs_revision: 至少一项 needs_revision 但无 unsupported
+            - unsupported: 至少一项 unsupported(必须返修)
+        checked_at: 核查完成时间(UTC)
+    """
+
+    angle_id: str = ""
+    items: list[FactCheckItem] = Field(default_factory=list)
+    overall_status: str = "needs_revision"  # ok / needs_revision / unsupported
+    checked_at: datetime = Field(default_factory=_utcnow)
+
+
+class StoryLine(BaseModel):
+    """故事线(从研究报告中提炼的"值得讲述的故事")。
+
+    由 StoryMiner 从研究报告中提取,用于指导 ContentDirector 选择传播角度。
+    严禁编造人物、企业、年份、数据,所有内容必须来源于研究报告。
+
+    Attributes:
+        main_story: 主线故事梗概(100-200 字,冲突清晰、因果链完整)
+        characters: 关键人物/群体(如"早期煤老板""返乡创业者""留守老人")
+        enterprises: 关键企业/机构(如"某煤矿集团""某农业合作社")
+        events: 关键事件(如"2008 年矿难""2015 年产业转型")
+        data_points: 关键数据点(如"产量峰值 500 万吨""人口流失 40%")
+        time_span: 时间跨度(如"1990-2020")
+        conflict_type: 冲突类型(如"资源枯竭 vs 产业转型""区位优势 vs 人口外流")
+        evidence_refs: 证据来源(对应研究报告中的章节/数据点 URL)
+        mined_at: 提取时间(UTC)
+    """
+
+    main_story: str = ""
+    characters: list[str] = Field(default_factory=list)
+    enterprises: list[str] = Field(default_factory=list)
+    events: list[str] = Field(default_factory=list)
+    data_points: list[str] = Field(default_factory=list)
+    time_span: str = ""
+    conflict_type: str = ""
+    evidence_refs: list[str] = Field(default_factory=list)
+    mined_at: datetime = Field(default_factory=_utcnow)
+
+
+class TopicCandidate(BaseModel):
+    """选题候选(从本地研究数据库中发现的有传播价值的研究案例)。
+
+    由 TopicAgent 从本地 reports/ 目录扫描生成,用于帮助创作者发现值得研究的县城。
+    第一版不联网,仅基于已有研究报告数据库。
+
+    Attributes:
+        county: 县名
+        core_industry: 核心产业(如"煤炭""脐橙""电子信息")
+        historical_contrast: 历史反差(如"从矿都到空心镇""从贫困县到全国示范")
+        rise_fall_pattern: 兴衰模式(如"resource_curse""policy_driven")
+        key_data: 关键数据亮点(如"产值从 30 亿跌至 3 亿""人口流失 60%")
+        report_path: 对应的研究报告路径
+        score: 综合评分(基于历史反差度/产业代表性/数据丰富度)
+        reason: 推荐理由(简述为何该县值得研究/传播)
+        created_at: 创建时间(UTC)
+    """
+
+    county: str = ""
+    core_industry: str = ""
+    historical_contrast: str = ""
+    rise_fall_pattern: str = ""
+    key_data: list[str] = Field(default_factory=list)
+    report_path: str = ""
+    score: float = 0.0
+    reason: str = ""
+    created_at: datetime = Field(default_factory=_utcnow)
+
+
+class ContentPackage(BaseModel):
+    """短视频内容包(最终交付物)。
+
+    将故事线/选题/脚本/核查结果打包,便于公众号、小红书等渠道扩展。
+
+    Attributes:
+        county: 县名
+        report_path: 来源研究报告路径
+        story_line: 故事线(可选,第二阶段新增)
+        angle: 选题角度
+        script: 短视频脚本
+        fact_check: 事实核查结果
+        produced_at: 内容包生成时间(UTC)
+    """
+
+    county: str = ""
+    report_path: str = ""
+    story_line: StoryLine | None = None  # 第二阶段新增,可选
+    angle: ContentAngle = Field(default_factory=ContentAngle)
+    script: VideoScript = Field(default_factory=VideoScript)
+    fact_check: FactCheckResult = Field(default_factory=FactCheckResult)
+    produced_at: datetime = Field(default_factory=_utcnow)

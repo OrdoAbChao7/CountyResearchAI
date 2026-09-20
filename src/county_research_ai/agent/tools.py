@@ -204,7 +204,12 @@ class ResearchAnalysisTool(_BaseResearchTool):
     description = "根据研究模式调用对应分析器生成结构化研究结果"
 
     def spec(self) -> ToolSpec:
-        return self._spec({"mode": {"type": "string"}})
+        return self._spec({
+            "mode": {
+                "type": "string",
+                "enum": ["snapshot", "industry", "rise-fall", "long-history"],
+            },
+        })
 
     def execute(self, state: AgentState, arguments: dict[str, Any]) -> ToolResult:
         if state.processed is None:
@@ -214,7 +219,7 @@ class ResearchAnalysisTool(_BaseResearchTool):
                 observation="processed evidence is missing",
                 error="build_evidence_pack must run first",
             )
-        mode = str(arguments.get("mode") or state.request.mode)
+        mode = _requested_mode(state, arguments.get("mode"))
         county = CountyInfo.from_name(state.request.county)
         focus = state.request.focus or self._default_focus(mode)
         try:
@@ -254,10 +259,15 @@ class ReportTool(_BaseResearchTool):
     description = "将研究分析结果渲染为带来源的 Markdown 报告并落盘"
 
     def spec(self) -> ToolSpec:
-        return self._spec({"mode": {"type": "string"}})
+        return self._spec({
+            "mode": {
+                "type": "string",
+                "enum": ["snapshot", "industry", "rise-fall", "long-history"],
+            },
+        })
 
     def execute(self, state: AgentState, arguments: dict[str, Any]) -> ToolResult:
-        mode = str(arguments.get("mode") or state.request.mode)
+        mode = _requested_mode(state, arguments.get("mode"))
         county = CountyInfo.from_name(state.request.county)
         focus = state.request.focus or ResearchAnalysisTool._default_focus(mode)
         try:
@@ -357,6 +367,35 @@ def _compatibility_report(
             for index, title in enumerate(titles, start=1)
         ],
     )
+
+
+def _requested_mode(state: AgentState, raw_mode: Any) -> str:
+    """Normalize LLM aliases while keeping the user's requested mode authoritative."""
+    aliases = {
+        "snapshot": "snapshot",
+        "industry": "snapshot",
+        "rise-fall": "rise-fall",
+        "rise_fall": "rise-fall",
+        "rise-fall-analysis": "rise-fall",
+        "rise_fall_analysis": "rise-fall",
+        "long-history": "long-history",
+        "long_history": "long-history",
+        "long-history-analysis": "long-history",
+        "long_history_analysis": "long-history",
+    }
+    requested = aliases.get(state.request.mode, state.request.mode)
+    supplied = str(raw_mode).strip().lower() if raw_mode else ""
+    if supplied:
+        normalized = aliases.get(supplied)
+        if normalized is None:
+            raise ValueError(f"unsupported research mode: {supplied}")
+        if normalized != requested:
+            logger.warning(
+                "Agent mode overridden by request | requested=%s | supplied=%s",
+                requested,
+                supplied,
+            )
+    return requested
 
 
 def build_research_tools(context: ResearchToolContext) -> list[AgentTool]:

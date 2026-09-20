@@ -5,14 +5,17 @@
 注册方式:pyproject.toml 中 [project.scripts]
     county-research = "county_research_ai.cli:main"
 
-调用方式(两种):
+调用方式:
 
-1. 产业研究(不指定子命令,等价于原 county-research 单命令行为):
+1. 固定流程 Workflow(显式或兼容旧入口):
+    county-research workflow --county 安吉县 --focus 竹产业
     county-research --county 安吉县 --focus 竹产业
     county-research -c 鹤岗市 --mode rise-fall
-    python -m county_research_ai --county 安吉县
 
-2. 短视频内容生产(基于已有研究报告):
+2. 可解释、可追踪的 Agent:
+    county-research agent -c 安吉县 -f 竹产业 --mode snapshot
+
+3. 短视频内容生产(基于已有研究报告):
     county-research content -c 安吉县 -r reports/安吉县_竹产业_20260806.md
     county-research content -c 安吉县 -r <报告路径> --type short-video --dry-run
 
@@ -26,10 +29,10 @@ from pathlib import Path
 
 import click
 
+from .agent.factory import create_default_agent
 from .config import reset_settings
 from .exceptions import CountyResearchAIError
 from .models import ResearchRequest
-from .agent.factory import create_default_agent
 from .pipeline import create_default_pipeline, setup_logging
 
 
@@ -122,17 +125,25 @@ def main(
 
     \b
     子命令:
+      workflow  按固定顺序执行搜索、处理、分析和报告
+      agent     由 Agent 动态规划研究步骤并保存执行轨迹
       content   基于研究报告生成短视频脚本内容包
+      video     基于内容包或研究报告渲染 1080P MP4 视频
+      story     从研究报告提炼故事线
+      topic     从本地报告数据库发现选题
 
     \b
     不指定子命令时,默认执行产业研究:
       county-research --county 安吉县 --focus 竹产业
+      county-research workflow --county 安吉县 --focus 竹产业
       county-research -c 鹤岗市 --mode rise-fall
       county-research -c 信丰县 --long-history
 
     \b
-    生成短视频脚本:
+    生成短视频脚本与渲染视频:
       county-research content -c 安吉县 -r reports/安吉县_竹产业_20260806.md
+      county-research video -p content_outputs/信丰县/20260806/package.json
+      county-research video -c 信丰县 -r reports/信丰县_长周期兴衰史_20260806.md
     """
     # 全局环境初始化(研究模式与 content 子命令共用)
     reset_settings()
@@ -148,6 +159,42 @@ def main(
             historical=historical, long_history=long_history,
             no_cache=no_cache, dry_run=dry_run,
         )
+
+
+@main.command("workflow")
+@click.option("--county", "-c", required=True, type=str, help="县名,如 '安吉县'")
+@click.option("--focus", "-f", required=False, type=str, default=None, help="研究方向,留空则自动发现")
+@click.option(
+    "--mode",
+    type=click.Choice(["snapshot", "industry", "rise-fall", "long-history"], case_sensitive=False),
+    default="snapshot",
+    show_default=True,
+    help="Workflow 研究模式",
+)
+@click.option("--historical", is_flag=True, default=False, help="等价于 --mode rise-fall")
+@click.option("--long-history", is_flag=True, default=False, help="等价于 --mode long-history")
+@click.option("--no-cache", is_flag=True, default=False, help="跳过缓存,强制重新采集与分析")
+@click.option("--dry-run", is_flag=True, default=False, help="只校验参数,不实际执行 Workflow")
+def workflow_command(
+    county: str,
+    focus: str | None,
+    mode: str,
+    historical: bool,
+    long_history: bool,
+    no_cache: bool,
+    dry_run: bool,
+) -> None:
+    """运行固定顺序的研究 Workflow。"""
+    click.echo("Workflow 执行方式")
+    _run_research(
+        county=county,
+        focus=focus,
+        mode=mode,
+        historical=historical,
+        long_history=long_history,
+        no_cache=no_cache,
+        dry_run=dry_run,
+    )
 
 
 @main.command("agent")
@@ -306,6 +353,112 @@ def content(
         click.echo(f"(预览失败: {e})")
 
 
+@main.command("video")
+@click.option(
+    "--package", "-p",
+    "package_path",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="分镜内容包路径 (package.json)",
+)
+@click.option(
+    "--county", "-c",
+    type=str,
+    default=None,
+    help="县名,如 '信丰县'",
+)
+@click.option(
+    "--report", "-r",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="研究报告路径(Markdown)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="仅打印参数,不实际执行渲染",
+)
+def video(
+    package_path: str | None,
+    county: str | None,
+    report: str | None,
+    dry_run: bool,
+) -> None:
+    """基于分镜内容包或研究报告渲染 1080P MP4 视频。
+
+    \b
+    流程: 脚本与分镜 (package.json) → Edge-TTS 语音合成 → Remotion 无头渲染 → MP4 视频
+    \b
+    失败自动回退: 若无头渲染失败,自动生成剪映草稿工程 (draft/) 供人工在剪映中打开导出。
+
+    \b
+    示例:
+      county-research video -p content_outputs/信丰县/20260806/package.json
+      county-research video -c 信丰县 -r reports/信丰县_长周期兴衰史_20260806.md
+      county-research video -p content_outputs/信丰县/20260806/package.json --dry-run
+    """
+    _print_banner()
+    click.echo("视频渲染模式: Remotion 自动剪辑生成")
+    if package_path:
+        click.echo(f"分镜内容包  : {package_path}")
+    if county:
+        click.echo(f"县名        : {county}")
+    if report:
+        click.echo(f"研究报告    : {report}")
+    click.echo()
+
+    if not package_path and not (county and report):
+        click.echo("❌ 必须指定 --package / -p, 或同时指定 --county / -c 与 --report / -r", err=True)
+        click.echo("   示例: county-research video -p content_outputs/信丰县/20260806/package.json", err=True)
+        click.echo("   或:   county-research video -c 信丰县 -r reports/信丰县_长周期兴衰史_20260806.md", err=True)
+        sys.exit(2)
+
+    if dry_run:
+        click.echo("[dry-run] 请求参数校验通过,未实际执行视频流水线。")
+        target_display = f"{Path(package_path).parent}/" if package_path else f"content_outputs/{county}/YYYYMMDD/"
+        click.echo(f"[dry-run] 预期输出: {target_display}video/video.mp4")
+        return
+
+    from .video import VideoPipeline
+
+    pipe = VideoPipeline()
+    try:
+        if package_path:
+            result = pipe.produce_from_package(package_path=package_path)
+        else:
+            result = pipe.produce_from_report(county=county, report_path=report)  # type: ignore
+    except FileNotFoundError as e:
+        click.echo(f"❌ 文件不存在: {e}", err=True)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        click.echo("\n⚠  已被用户中断。", err=True)
+        sys.exit(130)
+    except Exception as e:  # noqa: BLE001
+        click.echo(f"❌ 视频生产异常: {e}", err=True)
+        sys.exit(2)
+
+    # 成功或降级输出
+    click.echo()
+    click.echo("=" * 56)
+    if result.status == "success":
+        click.echo("[OK] 视频渲染成功!")
+        click.echo(f"   县名     : {result.county}")
+        click.echo(f"   视频路径 : {result.video_path}")
+        click.echo(f"   视频时长 : {result.duration_seconds:.2f} 秒")
+        click.echo(f"   分辨率   : {result.resolution} @ {result.fps}fps")
+    elif result.status == "fallback_draft":
+        click.echo("[WARN] 视频无头渲染降级: 已自动生成剪映草稿工程!")
+        click.echo(f"   县名     : {result.county}")
+        click.echo(f"   草稿路径 : {result.draft_path}")
+        click.echo("   说明     : 可直接在剪映中打开该草稿目录一键导出视频。")
+    else:
+        click.echo(f"[ERROR] 视频生成失败: {result.error_message}")
+        sys.exit(1)
+    click.echo("=" * 56)
+    click.echo()
+
+
 @main.command("story")
 @click.option(
     "--county", "-c",
@@ -338,7 +491,6 @@ def story(county: str, report: str) -> None:
     click.echo()
 
     from .content.story_miner import StoryMiner
-    from pathlib import Path
 
     miner = StoryMiner()
     try:
