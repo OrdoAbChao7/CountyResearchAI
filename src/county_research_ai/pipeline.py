@@ -28,6 +28,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import get_settings
+from .application.config import ResearchApplicationConfig
+from .application.context import ResearchContext
+from .application.research import ResearchApplication
+from .application.workflow import WorkflowRunner
 from .domain.modes import normalize_request
 from .exceptions import LLMError, PipelineError, SearchError
 from .llm.analyzer import LLMAnalyzer
@@ -35,6 +39,10 @@ from .llm.base import LLMClient
 from .llm.client import OpenAICompatibleClient
 from .llm.long_history_analyzer import LongHistoryAnalyzer
 from .llm.rise_fall_analyzer import RiseFallAnalyzer
+from .modes.long_history import LongHistoryModeHandler
+from .modes.registry import ModeRegistry
+from .modes.rise_fall import RiseFallModeHandler
+from .modes.snapshot import SnapshotModeHandler
 from .models import (
     AnalysisResult,
     CountyInfo,
@@ -57,6 +65,20 @@ from .storage.base import Storage
 from .storage.local_fs import LocalFSStorage
 
 logger = logging.getLogger(__name__)
+
+
+class _PipelineSearchAdapter:
+    """Compatibility adapter for legacy SearchProvider implementations."""
+
+    def __init__(self, provider: SearchProvider) -> None:
+        self.provider = provider
+
+    def collect(self, county: str, focus: str, max_results: int, *, mode: str):
+        collect = getattr(self.provider, "collect", None)
+        if callable(collect):
+            return collect(county, focus, max_results, mode=mode)
+        query = f"{county} {focus or '产业'}"
+        return self.provider.search(query, max_results=max_results)
 
 
 # ===== Pipeline 主类 =====
@@ -104,6 +126,32 @@ class ResearchPipeline:
         self.long_history_renderer = (
             long_history_renderer or LongHistoryReportRenderer()
         )
+        settings = get_settings()
+        self.application = ResearchApplication(
+            search=_PipelineSearchAdapter(search),
+            storage=storage,
+            processor=DocumentProcessor(quality_config=settings.quality),
+            discovery=self.analyzer,
+            modes=ModeRegistry([
+                SnapshotModeHandler(self.analyzer, self.renderer),
+                RiseFallModeHandler(self.rise_fall_analyzer, self.rise_fall_renderer),
+                LongHistoryModeHandler(
+                    self.long_history_analyzer, self.long_history_renderer
+                ),
+            ]),
+            config=ResearchApplicationConfig(
+                max_search_results=settings.search.max_results,
+                cache_enabled=settings.cache.enabled,
+                cache_ttl_hours=settings.cache.ttl_hours,
+                report_filename_template=settings.app.report_filename_template,
+            ),
+            render_filename=self.renderer.render_filename,
+        )
+        self.workflow_runner = WorkflowRunner(
+            application=self.application,
+            stages=settings.pipeline.stages,
+            fail_fast=settings.pipeline.fail_fast,
+        )
 
     # ---- 公开入口 ----
 
@@ -113,6 +161,9 @@ class ResearchPipeline:
         Raises:
             PipelineError: 任一阶段失败且 fail_fast=True
         """
+        result = self.workflow_runner.run(request)
+        return result.report, result.report_path
+
         settings = get_settings()
         stages = settings.pipeline.stages
         fail_fast = settings.pipeline.fail_fast
