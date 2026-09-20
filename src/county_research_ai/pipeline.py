@@ -108,8 +108,11 @@ class ResearchPipeline:
         rise_fall_renderer: RiseFallReportRenderer | None = None,
         long_history_analyzer: LongHistoryAnalyzer | None = None,
         long_history_renderer: LongHistoryReportRenderer | None = None,
+        workflow_runner: WorkflowRunner | None = None,
     ) -> None:
-        self.search = search
+        # Keep the historical public attribute while the application consumes
+        # the typed adapter supplied by the bootstrap container.
+        self.search = getattr(search, "provider", getattr(search, "collector", search))
         self.storage = storage
         self.llm = llm
         # analyzer 默认基于传入的 llm 客户端构造
@@ -152,6 +155,9 @@ class ResearchPipeline:
             stages=settings.pipeline.stages,
             fail_fast=settings.pipeline.fail_fast,
         )
+        if workflow_runner is not None:
+            self.workflow_runner = workflow_runner
+            self.application = workflow_runner.application
 
     # ---- 公开入口 ----
 
@@ -758,6 +764,10 @@ def create_default_pipeline() -> ResearchPipeline:
         - search:  有搜索 API Key → SearchCollector(Web + Gov 并发)
                    否则 → MockSearchProvider(3 条构造的示例文档)
     """
+    from .bootstrap.container import create_app_container
+
+    return create_app_container(get_settings()).pipeline()
+
     settings = get_settings()
 
     # ---- search 选择 ----
