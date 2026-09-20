@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..config import get_settings
 from ..bootstrap.container import AppContainer, create_app_container
+from ..config import get_settings
 from .planner import FallbackPlanner, LLMPlanner
 from .registry import ToolRegistry
 from .runtime import AgentRuntime

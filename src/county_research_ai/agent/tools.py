@@ -10,12 +10,12 @@ from ..application.context import ResearchContext
 from ..application.research import ResearchApplication
 from ..config import Settings, get_settings
 from ..domain.modes import normalize_mode
-from ..pipeline import ResearchPipeline
-from ..processor import DocumentProcessor
 from ..modes.long_history import LongHistoryModeHandler
 from ..modes.registry import ModeRegistry
 from ..modes.rise_fall import RiseFallModeHandler
 from ..modes.snapshot import SnapshotModeHandler
+from ..pipeline import ResearchPipeline
+from ..processor import DocumentProcessor
 from ..search.base import SearchProvider
 from .base import AgentTool, ToolResult, ToolSpec
 from .models import AgentState, ToolStatus

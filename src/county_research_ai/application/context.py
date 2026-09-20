@@ -14,7 +14,6 @@ from ..models import (
     DiscoveryResult,
     ProcessedData,
     RawDoc,
-    ReportSection,
     ResearchReport,
     ResearchRequest,
 )

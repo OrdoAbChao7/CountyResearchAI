@@ -13,23 +13,23 @@ from .application.config import ResearchApplicationConfig
 from .application.research import ResearchApplication
 from .application.workflow import WorkflowRunner
 from .config import get_settings
+from .infrastructure.search_adapter import CollectorSearchAdapter, ProviderSearchAdapter
 from .llm.analyzer import LLMAnalyzer
 from .llm.base import LLMClient
 from .llm.long_history_analyzer import LongHistoryAnalyzer
 from .llm.rise_fall_analyzer import RiseFallAnalyzer
+from .mocks import MockLLMClient, MockSearchProvider, MockStorage
 from .models import ResearchReport, ResearchRequest
 from .modes.long_history import LongHistoryModeHandler
 from .modes.registry import ModeRegistry
 from .modes.rise_fall import RiseFallModeHandler
 from .modes.snapshot import SnapshotModeHandler
-from .mocks import MockLLMClient, MockSearchProvider, MockStorage
 from .processor import DocumentProcessor
 from .reporting import ReportRenderer
 from .reporting.long_history_renderer import LongHistoryReportRenderer
 from .reporting.rise_fall_renderer import RiseFallReportRenderer
 from .search.base import SearchProvider
 from .storage.base import Storage
-from .infrastructure.search_adapter import CollectorSearchAdapter, ProviderSearchAdapter
 
 logger = logging.getLogger(__name__)
 

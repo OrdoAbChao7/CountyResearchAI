@@ -10,7 +10,6 @@ from county_research_ai.application.research import ResearchApplication
 from county_research_ai.exceptions import ResearchStageError
 from county_research_ai.models import (
     AnalysisResult,
-    CountyInfo,
     DiscoveryResult,
     ProcessedData,
     RawDoc,
