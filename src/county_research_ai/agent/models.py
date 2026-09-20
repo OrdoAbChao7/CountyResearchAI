@@ -53,6 +53,7 @@ class AgentError(BaseModel):
     message: str
     tool_name: str = ""
     step_index: int | None = None
+    retryable: bool = False
 
 
 class AgentObservation(BaseModel):

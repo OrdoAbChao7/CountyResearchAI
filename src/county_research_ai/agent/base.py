@@ -24,6 +24,8 @@ class ToolResult(BaseModel):
     observation: str = ""
     state_patch: dict[str, Any] = Field(default_factory=dict)
     error: str = ""
+    error_code: str = ""
+    retryable: bool = False
 
 
 @runtime_checkable

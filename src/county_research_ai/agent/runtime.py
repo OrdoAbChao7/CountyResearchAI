@@ -126,13 +126,16 @@ class AgentRuntime:
                     status=ToolStatus.ERROR,
                     observation="tool raised an exception",
                     error=str(exc),
+                    error_code=getattr(exc, "code", "tool_exception"),
+                    retryable=bool(getattr(exc, "retryable", False)),
                 )
                 self._record_error(
                     state,
-                    code="tool_exception",
+                    code=result.error_code or "tool_exception",
                     message=str(exc),
                     tool_name=step.tool,
                     step_index=step_index,
+                    retryable=result.retryable,
                 )
 
             if result.status == ToolStatus.SUCCESS:
@@ -185,10 +188,11 @@ class AgentRuntime:
             if result.status != ToolStatus.SUCCESS and not result.error:
                 self._record_error(
                     state,
-                    code="tool_error",
+                    code=result.error_code or "tool_error",
                     message=result.observation,
                     tool_name=step.tool,
                     step_index=step_index,
+                    retryable=result.retryable,
                 )
             self._record_observation(
                 state,
@@ -246,6 +250,7 @@ class AgentRuntime:
         message: str,
         tool_name: str = "",
         step_index: int | None = None,
+        retryable: bool = False,
     ) -> None:
         state.errors.append(
             AgentError(
@@ -253,6 +258,7 @@ class AgentRuntime:
                 message=message,
                 tool_name=tool_name,
                 step_index=step_index,
+                retryable=retryable,
             )
         )
 
