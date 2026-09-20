@@ -6,7 +6,15 @@ from county_research_ai.agent.base import ToolResult, ToolSpec
 from county_research_ai.agent.models import AgentPlanStep, AgentState, AgentStatus, ToolStatus
 from county_research_ai.agent.planner import FallbackPlanner
 from county_research_ai.agent.registry import ToolRegistry
-from county_research_ai.models import AnalysisResult, CountyInfo, ProcessedData, RawDoc, ReportSection, ResearchReport, ResearchRequest
+from county_research_ai.models import (
+    AnalysisResult,
+    CountyInfo,
+    ProcessedData,
+    RawDoc,
+    ReportSection,
+    ResearchReport,
+    ResearchRequest,
+)
 
 
 class RuntimeTool:

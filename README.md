@@ -32,6 +32,8 @@ See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for the evidence still needed and t
 
 CountyResearchAI makes the first pass of county-industry desk research reproducible. Given a county name and an optional focus, it collects configured public material, preserves source links, and produces a structured Markdown **research draft**. Three modes cover a current snapshot, a modern rise/fall timeline, and a long-cycle county trajectory.
 
+短视频内容与视频渲染扩展维护在 `codex/video-content` 分支，不属于默认研究产品。
+
 ## Key Features
 
 - **Three research modes** — `snapshot`: four-dimensional current-state analysis (status/strengths/weaknesses/recommendations); `rise-fall`: industry boom-and-bust study (origin → expansion → decline → pattern synthesis), 8 lifecycle models; `long-history`: century-scale county trajectory from founding to today, 8 long-cycle models
