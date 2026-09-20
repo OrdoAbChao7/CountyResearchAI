@@ -42,6 +42,17 @@ class TestCLIDryRun:
         assert reports == []
 
 
+def test_default_cli_only_exposes_research_commands():
+    result = CliRunner().invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    assert "workflow" in result.output
+    assert "agent" in result.output
+    command_section = result.output.split("Commands:", 1)[1]
+    for command in ("content", "story", "topic", "video"):
+        assert f"\n  {command} " not in command_section
+
+
 class TestCLIFullRun:
     def test_full_run_exits_zero(self, cli_env):
         runner = CliRunner()

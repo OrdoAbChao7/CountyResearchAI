@@ -15,10 +15,6 @@
 2. 可解释、可追踪的 Agent:
     county-research agent -c 安吉县 -f 竹产业 --mode snapshot
 
-3. 短视频内容生产(基于已有研究报告):
-    county-research content -c 安吉县 -r reports/安吉县_竹产业_20260806.md
-    county-research content -c 安吉县 -r <报告路径> --type short-video --dry-run
-
 MVP 阶段使用 create_default_pipeline() 构造带 Mock 的 pipeline,
 保证不填 API Key 也能完整跑通输入→报告链路。
 """
@@ -121,16 +117,12 @@ def main(
     no_cache: bool,
     dry_run: bool,
 ) -> None:
-    """AI 县域产业研究助手 — 产业研究 + 短视频内容生产。
+    """AI 县域产业研究助手 — 县域产业研究。
 
     \b
     子命令:
       workflow  按固定顺序执行搜索、处理、分析和报告
       agent     由 Agent 动态规划研究步骤并保存执行轨迹
-      content   基于研究报告生成短视频脚本内容包
-      video     基于内容包或研究报告渲染 1080P MP4 视频
-      story     从研究报告提炼故事线
-      topic     从本地报告数据库发现选题
 
     \b
     不指定子命令时,默认执行产业研究:
@@ -139,13 +131,8 @@ def main(
       county-research -c 鹤岗市 --mode rise-fall
       county-research -c 信丰县 --long-history
 
-    \b
-    生成短视频脚本与渲染视频:
-      county-research content -c 安吉县 -r reports/安吉县_竹产业_20260806.md
-      county-research video -p content_outputs/信丰县/20260806/package.json
-      county-research video -c 信丰县 -r reports/信丰县_长周期兴衰史_20260806.md
     """
-    # 全局环境初始化(研究模式与 content 子命令共用)
+    # 全局环境初始化
     reset_settings()
     if log_level:
         import os
@@ -246,349 +233,6 @@ def agent_command(
         click.echo(f"   Trace 路径: {result.trace_path}")
 
 
-@main.command("content")
-@click.option(
-    "--county", "-c",
-    required=True,
-    type=str,
-    help="县名,如 '安吉县'",
-)
-@click.option(
-    "--report", "-r",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    help="研究报告路径(Markdown)",
-)
-@click.option(
-    "--type", "content_type",
-    type=click.Choice(["short-video"], case_sensitive=False),
-    default="short-video",
-    help="内容类型(第一阶段仅支持 short-video)",
-)
-@click.option(
-    "--dry-run",
-    is_flag=True,
-    default=False,
-    help="仅打印参数,不实际执行内容流水线",
-)
-def content(
-    county: str,
-    report: str,
-    content_type: str,
-    dry_run: bool,
-) -> None:
-    """基于研究报告生成短视频脚本内容包。
-
-    \b
-    流程: 选题角度 → 60 秒脚本 → 事实核查 → 内容包(落盘)
-    \b
-    输出: content_outputs/{县名}/{日期}/{angle.json, script.md, fact_check.json, package.json}
-
-    \b
-    示例:
-      county-research content -c 安吉县 -r reports/安吉县_竹产业_20260806.md
-      county-research content -c 鹤岗市 -r reports/鹤岗市_兴衰规律_20260806.md --dry-run
-    """
-    _print_banner()
-    click.echo("内容模式   : 短视频脚本生成")
-    click.echo(f"县名       : {county}")
-    click.echo(f"研究报告   : {report}")
-    click.echo(f"内容类型   : {content_type}")
-    click.echo()
-
-    if dry_run:
-        click.echo("[dry-run] 请求参数校验通过,未实际执行内容流水线。")
-        click.echo(
-            f"[dry-run] 预期输出: content_outputs/{county}/YYYYMMDD/"
-            f"{{angle.json, script.md, fact_check.json, package.json}}"
-        )
-        return
-
-    from .content import ContentPipeline
-
-    pipe = ContentPipeline()
-    try:
-        package = pipe.produce(county=county, report_path=report)
-    except FileNotFoundError as e:
-        click.echo(f"❌ 研究报告不存在: {e}", err=True)
-        sys.exit(1)
-    except CountyResearchAIError as e:
-        click.echo(f"❌ 内容生产失败: {e}", err=True)
-        sys.exit(1)
-    except KeyboardInterrupt:
-        click.echo("\n⚠  已被用户中断。", err=True)
-        sys.exit(130)
-    except Exception as e:  # noqa: BLE001
-        click.echo(f"❌ 未预期错误: {e}", err=True)
-        sys.exit(2)
-
-    # 成功输出
-    click.echo()
-    click.echo("=" * 56)
-    click.echo("✅ 短视频内容包生成成功!")
-    click.echo(f"   角度 ID  : {package.angle.angle_id}")
-    click.echo(f"   视频标题 : {package.script.title}")
-    click.echo(f"   脚本段数 : {len(package.script.segments)}")
-    click.echo(f"   旁白字数 : {package.script.total_word_count}")
-    click.echo(f"   核查状态 : {package.fact_check.overall_status}")
-    click.echo(f"   输出根目录: {pipe.output_root}")
-    click.echo("=" * 56)
-    click.echo()
-
-    # 打印脚本预览(首 8 行)
-    try:
-        out_dir = pipe.output_root / package.county
-        # 取最新日期目录
-        date_dirs = sorted([d for d in out_dir.iterdir() if d.is_dir()], reverse=True)
-        if date_dirs:
-            script_path = date_dirs[0] / "script.md"
-            if script_path.exists():
-                preview_lines = script_path.read_text(encoding="utf-8").splitlines()[:8]
-                click.echo("📄 脚本预览(前8行):")
-                click.echo("---")
-                for ln in preview_lines:
-                    click.echo(ln)
-                click.echo("---")
-    except Exception as e:  # noqa: BLE001
-        click.echo(f"(预览失败: {e})")
-
-
-@main.command("video")
-@click.option(
-    "--package", "-p",
-    "package_path",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    default=None,
-    help="分镜内容包路径 (package.json)",
-)
-@click.option(
-    "--county", "-c",
-    type=str,
-    default=None,
-    help="县名,如 '信丰县'",
-)
-@click.option(
-    "--report", "-r",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    default=None,
-    help="研究报告路径(Markdown)",
-)
-@click.option(
-    "--dry-run",
-    is_flag=True,
-    default=False,
-    help="仅打印参数,不实际执行渲染",
-)
-def video(
-    package_path: str | None,
-    county: str | None,
-    report: str | None,
-    dry_run: bool,
-) -> None:
-    """基于分镜内容包或研究报告渲染 1080P MP4 视频。
-
-    \b
-    流程: 脚本与分镜 (package.json) → Edge-TTS 语音合成 → Remotion 无头渲染 → MP4 视频
-    \b
-    失败自动回退: 若无头渲染失败,自动生成剪映草稿工程 (draft/) 供人工在剪映中打开导出。
-
-    \b
-    示例:
-      county-research video -p content_outputs/信丰县/20260806/package.json
-      county-research video -c 信丰县 -r reports/信丰县_长周期兴衰史_20260806.md
-      county-research video -p content_outputs/信丰县/20260806/package.json --dry-run
-    """
-    _print_banner()
-    click.echo("视频渲染模式: Remotion 自动剪辑生成")
-    if package_path:
-        click.echo(f"分镜内容包  : {package_path}")
-    if county:
-        click.echo(f"县名        : {county}")
-    if report:
-        click.echo(f"研究报告    : {report}")
-    click.echo()
-
-    if not package_path and not (county and report):
-        click.echo("❌ 必须指定 --package / -p, 或同时指定 --county / -c 与 --report / -r", err=True)
-        click.echo("   示例: county-research video -p content_outputs/信丰县/20260806/package.json", err=True)
-        click.echo("   或:   county-research video -c 信丰县 -r reports/信丰县_长周期兴衰史_20260806.md", err=True)
-        sys.exit(2)
-
-    if dry_run:
-        click.echo("[dry-run] 请求参数校验通过,未实际执行视频流水线。")
-        target_display = f"{Path(package_path).parent}/" if package_path else f"content_outputs/{county}/YYYYMMDD/"
-        click.echo(f"[dry-run] 预期输出: {target_display}video/video.mp4")
-        return
-
-    from .video import VideoPipeline
-
-    pipe = VideoPipeline()
-    try:
-        if package_path:
-            result = pipe.produce_from_package(package_path=package_path)
-        else:
-            result = pipe.produce_from_report(county=county, report_path=report)  # type: ignore
-    except FileNotFoundError as e:
-        click.echo(f"❌ 文件不存在: {e}", err=True)
-        sys.exit(1)
-    except KeyboardInterrupt:
-        click.echo("\n⚠  已被用户中断。", err=True)
-        sys.exit(130)
-    except Exception as e:  # noqa: BLE001
-        click.echo(f"❌ 视频生产异常: {e}", err=True)
-        sys.exit(2)
-
-    # 成功或降级输出
-    click.echo()
-    click.echo("=" * 56)
-    if result.status == "success":
-        click.echo("[OK] 视频渲染成功!")
-        click.echo(f"   县名     : {result.county}")
-        click.echo(f"   视频路径 : {result.video_path}")
-        click.echo(f"   视频时长 : {result.duration_seconds:.2f} 秒")
-        click.echo(f"   分辨率   : {result.resolution} @ {result.fps}fps")
-    elif result.status == "fallback_draft":
-        click.echo("[WARN] 视频无头渲染降级: 已自动生成剪映草稿工程!")
-        click.echo(f"   县名     : {result.county}")
-        click.echo(f"   草稿路径 : {result.draft_path}")
-        click.echo("   说明     : 可直接在剪映中打开该草稿目录一键导出视频。")
-    else:
-        click.echo(f"[ERROR] 视频生成失败: {result.error_message}")
-        sys.exit(1)
-    click.echo("=" * 56)
-    click.echo()
-
-
-@main.command("story")
-@click.option(
-    "--county", "-c",
-    required=True,
-    type=str,
-    help="县名,如 '信丰县'",
-)
-@click.option(
-    "--report", "-r",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    help="研究报告路径(Markdown)",
-)
-def story(county: str, report: str) -> None:
-    """从研究报告提炼故事线。
-
-    \b
-    流程: 研究报告 → StoryMiner → StoryLine(故事线)
-    \b
-    要求: 严禁编造人物、企业、年份、数据,所有内容必须来源于报告。
-
-    \b
-    示例:
-      county-research story -c 信丰县 -r reports/信丰县_兴衰规律_20260806.md
-    """
-    _print_banner()
-    click.echo("故事线提取模式")
-    click.echo(f"县名       : {county}")
-    click.echo(f"研究报告   : {report}")
-    click.echo()
-
-    from .content.story_miner import StoryMiner
-
-    miner = StoryMiner()
-    try:
-        # 读取报告
-        report_content = Path(report).read_text(encoding="utf-8")
-        # 提取故事线
-        story_line = miner.mine(county=county, report_content=report_content)
-    except FileNotFoundError as e:
-        click.echo(f"❌ 研究报告不存在: {e}", err=True)
-        sys.exit(1)
-    except CountyResearchAIError as e:
-        click.echo(f"❌ 故事线提取失败: {e}", err=True)
-        sys.exit(1)
-    except KeyboardInterrupt:
-        click.echo("\n⚠  已被用户中断。", err=True)
-        sys.exit(130)
-    except Exception as e:  # noqa: BLE001
-        click.echo(f"❌ 未预期错误: {e}", err=True)
-        sys.exit(2)
-
-    # 成功输出
-    click.echo()
-    click.echo("=" * 56)
-    click.echo("✅ 故事线提取成功!")
-    click.echo(f"   主线故事   : {story_line.main_story[:100]}...")
-    click.echo(f"   时间跨度   : {story_line.time_span}")
-    click.echo(f"   冲突类型   : {story_line.conflict_type}")
-    click.echo(f"   关键人物   : {len(story_line.characters)} 个")
-    click.echo(f"   关键企业   : {len(story_line.enterprises)} 个")
-    click.echo(f"   关键事件   : {len(story_line.events)} 个")
-    click.echo(f"   关键数据   : {len(story_line.data_points)} 个")
-    click.echo("=" * 56)
-    click.echo()
-
-    # 输出 JSON(便于保存)
-    click.echo("📄 StoryLine JSON:")
-    click.echo("---")
-    click.echo(story_line.model_dump_json(indent=2))
-    click.echo("---")
-
-
-@main.command("topic")
-@click.option(
-    "--top", "top_n",
-    default=10,
-    type=int,
-    help="返回前 N 个选题候选(默认 10)",
-)
-def topic(top_n: int) -> None:
-    """从本地研究数据库发现选题候选。
-
-    \b
-    流程: 扫描 reports/ → TopicAgent → Top N 候选
-    \b
-    要求: 第一版不联网,仅基于已有研究报告数据库。
-
-    \b
-    示例:
-      county-research topic --top 10
-    """
-    _print_banner()
-    click.echo("选题发现模式")
-    click.echo(f"Top N      : {top_n}")
-    click.echo()
-
-    from .content.topic_agent import TopicAgent
-
-    agent = TopicAgent()
-    try:
-        candidates = agent.discover(top_n=top_n)
-    except CountyResearchAIError as e:
-        click.echo(f"❌ 选题发现失败: {e}", err=True)
-        sys.exit(1)
-    except KeyboardInterrupt:
-        click.echo("\n⚠  已被用户中断。", err=True)
-        sys.exit(130)
-    except Exception as e:  # noqa: BLE001
-        click.echo(f"❌ 未预期错误: {e}", err=True)
-        sys.exit(2)
-
-    # 成功输出
-    click.echo()
-    click.echo("=" * 56)
-    click.echo(f"✅ 发现 {len(candidates)} 个选题候选!")
-    click.echo("=" * 56)
-    click.echo()
-
-    # 打印候选列表
-    for i, candidate in enumerate(candidates, 1):
-        click.echo(f"{i}. {candidate.county} - {candidate.core_industry}")
-        click.echo(f"   评分: {candidate.score:.1f}")
-        click.echo(f"   历史反差: {candidate.historical_contrast}")
-        click.echo(f"   兴衰模式: {candidate.rise_fall_pattern}")
-        click.echo(f"   推荐理由: {candidate.reason}")
-        click.echo(f"   报告路径: {candidate.report_path}")
-        click.echo()
-
-
 def _run_research(
     *,
     county: str | None,
@@ -604,7 +248,6 @@ def _run_research(
     if not county:
         click.echo("❌ 研究模式必须指定 --county / -c", err=True)
         click.echo("   示例: county-research --county 安吉县 --focus 竹产业", err=True)
-        click.echo("   或生成短视频: county-research content -c 安吉县 -r <报告路径>", err=True)
         sys.exit(2)
 
     _print_banner()
