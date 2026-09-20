@@ -28,6 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import get_settings
+from .domain.modes import normalize_request
 from .exceptions import LLMError, PipelineError, SearchError
 from .llm.analyzer import LLMAnalyzer
 from .llm.base import LLMClient
@@ -119,11 +120,8 @@ class ResearchPipeline:
         county_info = CountyInfo.from_name(request.county)
         date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
 
-        # 模式归一化:industry 是 snapshot 的别名(规格要求保留 --mode industry)
-        mode_normalized = request.mode
-        if mode_normalized == "industry":
-            mode_normalized = "snapshot"
-        request.mode = mode_normalized
+        # 模式归一化返回副本,不修改调用方持有的请求对象。
+        request = normalize_request(request)
 
         logger.info(
             "研究启动 | 县=%s | 方向=%s | 模式=%s",
