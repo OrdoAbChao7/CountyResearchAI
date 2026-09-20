@@ -1,6 +1,6 @@
-from county_research_ai.cli import app as legacy_app
-from county_research_ai.interfaces.cli import app
+from county_research_ai.cli import main as legacy_main
+from county_research_ai.interfaces.cli import main
 
 
 def test_cli_interface_preserves_public_app_identity() -> None:
-    assert app is legacy_app
+    assert main is legacy_main

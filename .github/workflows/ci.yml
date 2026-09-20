@@ -28,7 +28,7 @@ jobs:
         run: ruff check src tests
 
       - name: Type-check report renderers
-        run: python -m mypy src/county_research_ai/reporting
+        run: python -m mypy src/county_research_ai/domain src/county_research_ai/ports src/county_research_ai/application src/county_research_ai/modes src/county_research_ai/infrastructure src/county_research_ai/reporting
 
       - name: Run tests
         run: pytest -q

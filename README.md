@@ -47,13 +47,13 @@ CountyResearchAI makes the first pass of county-industry desk research reproduci
 
 ```mermaid
 flowchart LR
-    CLI(["CLI<br/>--county --focus --mode"]) --> MR{"Mode router"}
-
-    MR --> S["Search<br/>Tavily / Serper / Bing<br/>+ gov.cn whitelist"]
-    S --> D["Focus discovery<br/>only when --focus omitted"]
-    D --> P["Process + cache<br/>data/processed/"]
-    P --> L["LLM analysis<br/>4 / 7 / 9 prompt tasks"]
-    L --> R["Markdown draft<br/>reports/"]
+    CLI(["CLI<br/>--county --focus --mode"]) --> C["AppContainer<br/>依赖装配"]
+    C --> W["WorkflowRunner<br/>或 AgentRuntime"]
+    W --> A["ResearchApplication<br/>五阶段用例"]
+    A --> M["ModeRegistry<br/>snapshot / rise-fall / long-history"]
+    M --> P["Ports<br/>search · process · analysis · report"]
+    P --> I["Infrastructure<br/>搜索 / LLM / 存储"]
+    I --> R["Markdown draft<br/>reports/"]
 
     classDef io fill:#1F6FEB,stroke:#1F6FEB,color:#fff
     classDef llm fill:#8250DF,stroke:#8250DF,color:#fff
@@ -193,11 +193,11 @@ python -m pytest --cov=county_research_ai --cov-report=term-missing --cov-report
 | LLM client | openai SDK (DeepSeek / Qwen / OpenAI compatible) |
 | Data validation | Pydantic v2 |
 | CLI / HTTP / Templating | Click · httpx · Jinja2 · tenacity · beautifulsoup4 |
-| Quality | pytest + pytest-cov · Ruff · GitHub Actions CI |
+| Quality | pytest + pytest-cov · Ruff · mypy · GitHub Actions CI |
 
 ## Scope (v0.3)
 
-Deliberately minimal: single-county runs, Markdown output only, local filesystem storage, CLI interaction, single-threaded pipeline. Provider interfaces (search / LLM / storage / reporting) are isolated so any of these boundaries can move without rewriting the pipeline.
+默认分支聚焦县域产业研究：CLI 与 Agent 通过 AppContainer 进入同一个 ResearchApplication，WorkflowRunner 负责固定阶段编排，ModeRegistry 负责模式扩展，Ports 隔离搜索、分析、报告与存储基础设施。视频内容生产保留在 `codex/video-content` 分支。
 
 ## 中文
 
