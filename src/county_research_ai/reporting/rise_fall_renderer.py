@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import TypedDict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -59,6 +60,15 @@ _SOURCE_TYPE_PRIORITY: dict[str, int] = {
     "social": 4,
     "unknown": 5,
 }
+
+
+class _SourceItem(TypedDict):
+    """报告来源条目的固定字段类型。"""
+
+    title: str
+    url: str
+    domain_type: str
+    credibility: float
 
 
 class RiseFallReportRenderer:
@@ -112,11 +122,11 @@ class RiseFallReportRenderer:
         origin_line = lc.origin_industry or "(未识别)"
         if lc.origin_period:
             origin_line += f"(主导期: {lc.origin_period})"
-        rise_names = "、".join(f.name for f in analysis.rise_factors)
+        rise_names = "、".join(factor.name for factor in analysis.rise_factors)
         rise_line = f"{len(analysis.rise_factors)} 项核心因子"
         if rise_names:
             rise_line += f"({rise_names})"
-        decline_names = "、".join(f.name for f in analysis.decline_factors)
+        decline_names = "、".join(factor.name for factor in analysis.decline_factors)
         decline_line = f"{len(analysis.decline_factors)} 项核心因子"
         if decline_names:
             decline_line += f"({decline_names})"
@@ -132,8 +142,8 @@ class RiseFallReportRenderer:
             "growth_industries": lc.growth_industries,
             "current_industries": lc.current_industries,
             "turning_points": [e.model_dump() for e in lc.turning_points],
-            "rise_factors": [f.model_dump() for f in analysis.rise_factors],
-            "decline_factors": [f.model_dump() for f in analysis.decline_factors],
+            "rise_factors": [factor.model_dump() for factor in analysis.rise_factors],
+            "decline_factors": [factor.model_dump() for factor in analysis.decline_factors],
             # 二、起家产业
             "origin_industry": lc.origin_industry,
             "origin_period": lc.origin_period,
@@ -170,13 +180,13 @@ class RiseFallReportRenderer:
         return md
 
     @staticmethod
-    def _build_sources(raw_docs: list[RawDoc]) -> list[dict[str, str]]:
+    def _build_sources(raw_docs: list[RawDoc]) -> list[_SourceItem]:
         """从 RawDoc 列表构建数据来源(去重 + 按可信度优先级排序)。
 
         来源优先级:政府官网/统计公报/地方志 > 发改委/工信局/统计局
                    > 上市公司公告/论文 > 主流媒体/行业协会 > 自媒体(仅弱参考)
         """
-        seen: dict[str, dict[str, str]] = {}
+        seen: dict[str, _SourceItem] = {}
         for doc in raw_docs:
             if not doc.url or doc.url in seen:
                 continue

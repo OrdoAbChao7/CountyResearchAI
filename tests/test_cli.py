@@ -83,6 +83,17 @@ class TestCLIFullRun:
         ])
         assert result.exit_code == 0
 
+    def test_workflow_subcommand_exposes_explicit_execution_mode(self, cli_env):
+        runner = CliRunner()
+        result = runner.invoke(main, [
+            "workflow", "-c", "安吉县", "-f", "竹产业",
+            "--mode", "snapshot", "--dry-run",
+        ])
+
+        assert result.exit_code == 0
+        assert "Workflow" in result.output
+        assert "dry-run" in result.output
+
 
 class TestCLINoFocus:
     def test_no_flag_shows_auto_discover(self, cli_env):

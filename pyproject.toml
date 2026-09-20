@@ -71,6 +71,7 @@ select = [
     "B",   # bugbear
     "UP",  # pyupgrade
     "C90", # mccabe complexity
+    "PLW2901", # 循环变量不得在循环体内被覆盖
 ]
 ignore = ["E501"]
 

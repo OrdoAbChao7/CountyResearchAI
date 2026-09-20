@@ -106,6 +106,12 @@ class LLMPlanner:
             names = {spec.name for spec in tool_specs}
             if step.tool != "finish" and names and step.tool not in names:
                 raise ValueError(f"unknown planner tool: {step.tool}")
+            if _step_is_stale(step.tool, state):
+                logger.warning(
+                    "Agent Planner 计划已过时，使用 fallback | tool=%s",
+                    step.tool,
+                )
+                return self._fallback.next_step(state, tool_specs)
             return step.model_copy(update={"planner_source": "llm"})
         except Exception as exc:  # noqa: BLE001
             logger.warning("Agent Planner 失败，使用 fallback | err=%s", exc)
@@ -142,3 +148,23 @@ def _state_summary(state: AgentState) -> dict[str, Any]:
         "report_path": state.report_path,
         "steps_used": state.steps_used,
     }
+
+
+def _step_is_stale(tool: str, state: AgentState) -> bool:
+    """Prevent a valid-looking LLM action from repeating completed work."""
+    if tool == "search_materials":
+        return bool(state.raw_docs)
+    if tool == "discover_focus":
+        return bool(state.request.focus or state.discovery)
+    if tool == "build_evidence_pack":
+        return state.processed is not None
+    if tool == "analyze_research":
+        if state.request.mode in {"snapshot", "industry"}:
+            return bool(state.snapshot_analyses)
+        if state.request.mode == "rise-fall":
+            return state.rise_fall_analysis is not None
+        if state.request.mode == "long-history":
+            return state.long_history_analysis is not None
+    if tool == "render_report":
+        return bool(state.report_path)
+    return False

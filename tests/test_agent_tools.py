@@ -106,6 +106,26 @@ def test_analysis_tool_dispatches_all_modes(tool_context, sample_county, sample_
         assert result.state_patch[field] is not None
 
 
+def test_analysis_tool_keeps_requested_mode_when_llm_supplies_alias(
+    tool_context, sample_county, sample_processed_data,
+):
+    from county_research_ai.agent.models import AgentState, ToolStatus
+    from county_research_ai.agent.tools import ResearchAnalysisTool
+
+    state = AgentState.from_request(
+        ResearchRequest(county=sample_county.name, focus="竹产业", mode="snapshot")
+    )
+    state.processed = sample_processed_data
+
+    result = ResearchAnalysisTool(tool_context).execute(
+        state, {"mode": "rise_fall_analysis"},
+    )
+
+    assert result.status == ToolStatus.SUCCESS
+    assert result.state_patch["snapshot_analyses"]
+    assert "rise_fall_analysis" not in result.state_patch
+
+
 def test_report_tool_persists_snapshot_report(tool_context, sample_county, sample_processed_data):
     from county_research_ai.agent.models import AgentState, ToolStatus
     from county_research_ai.agent.tools import ReportTool

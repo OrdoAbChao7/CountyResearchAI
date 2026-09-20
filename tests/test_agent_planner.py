@@ -84,3 +84,32 @@ def test_llm_planner_uses_fallback_for_malformed_response():
 
     assert step.tool == "search_materials"
     assert step.planner_source == "fallback"
+
+
+def test_llm_planner_falls_back_when_analysis_is_already_complete():
+    from county_research_ai.agent.planner import LLMPlanner
+    from county_research_ai.llm.base import LLMClient, LLMResponse
+    from county_research_ai.models import AnalysisResult, ProcessedData
+
+    class RepeatingLLM(LLMClient):
+        @property
+        def name(self) -> str:
+            return "repeating"
+
+        def chat(self, messages, **kwargs):
+            return LLMResponse(
+                content='{"tool":"analyze_research","reason":"再分析","arguments":{}}',
+                model="repeating",
+            )
+
+    state = AgentState.from_request(
+        ResearchRequest(county="安吉县", focus="竹产业", mode="snapshot")
+    )
+    state.raw_docs = [RawDoc(title="产业资料", url="https://example.com/a")]
+    state.processed = ProcessedData(county=CountyInfo(name="安吉县"), focus="竹产业")
+    state.snapshot_analyses = [AnalysisResult(task="industry_status", content="已完成")]
+
+    step = LLMPlanner(llm=RepeatingLLM()).next_step(state, [])
+
+    assert step.tool == "render_report"
+    assert step.planner_source == "fallback"

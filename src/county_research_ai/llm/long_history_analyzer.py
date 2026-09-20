@@ -308,15 +308,15 @@ class LongHistoryAnalyzer:
             return []
         raw_periods = data.get("periods", []) if isinstance(data, dict) else []
         periods: list[HistoricalPeriod] = []
-        for p in raw_periods:
+        for raw_period in raw_periods:
             periods.append(HistoricalPeriod(
-                name=str(p.get("name", "")),
-                start=str(p.get("start", "")),
-                end=str(p.get("end", "")),
-                summary=str(p.get("summary", "")),
-                dominant_logic=str(p.get("dominant_logic", "")),
-                key_events=_safe_str_list(p.get("key_events", [])),
-                evidence=_safe_str_list(p.get("evidence", [])),
+                name=str(raw_period.get("name", "")),
+                start=str(raw_period.get("start", "")),
+                end=str(raw_period.get("end", "")),
+                summary=str(raw_period.get("summary", "")),
+                dominant_logic=str(raw_period.get("dominant_logic", "")),
+                key_events=_safe_str_list(raw_period.get("key_events", [])),
+                evidence=_safe_str_list(raw_period.get("evidence", [])),
             ))
         logger.info("历史阶段划分完成 | 阶段数=%d", len(periods))
         return periods
@@ -335,12 +335,12 @@ class LongHistoryAnalyzer:
             return []
         raw_factors = data.get("geo_factors", [])
         factors: list[GeoHistoricalFactor] = []
-        for f in raw_factors:
+        for raw_factor in raw_factors:
             factors.append(GeoHistoricalFactor(
-                name=str(f.get("name", "")),
-                description=str(f.get("description", "")),
-                impact=str(f.get("impact", "")),
-                evidence=_safe_str_list(f.get("evidence", [])),
+                name=str(raw_factor.get("name", "")),
+                description=str(raw_factor.get("description", "")),
+                impact=str(raw_factor.get("impact", "")),
+                evidence=_safe_str_list(raw_factor.get("evidence", [])),
             ))
         logger.info("建县与地理逻辑完成 | 因子数=%d", len(factors))
         return factors
@@ -471,13 +471,13 @@ class LongHistoryAnalyzer:
         blocks: list[str] = []
         if periods:
             p_lines = []
-            for p in periods:
-                rng = f"{p.start}–{p.end}" if (p.start or p.end) else "(时间不详)"
-                logic = f" | 逻辑:{p.dominant_logic}" if p.dominant_logic else ""
-                p_lines.append(f"- **{p.name}** ({rng}){logic}\n  {p.summary}")
+            for period in periods:
+                rng = f"{period.start}–{period.end}" if (period.start or period.end) else "(时间不详)"
+                logic = f" | 逻辑:{period.dominant_logic}" if period.dominant_logic else ""
+                p_lines.append(f"- **{period.name}** ({rng}){logic}\n  {period.summary}")
             blocks.append("## 历史阶段\n" + "\n".join(p_lines))
         if geo_factors:
-            g_lines = [f"- {f.name}: {f.impact}" for f in geo_factors]
+            g_lines = [f"- {factor.name}: {factor.impact}" for factor in geo_factors]
             blocks.append("## 地理历史因子\n" + "\n".join(g_lines))
         if traditional:
             blocks.append(f"## 传统时代生存方式\n{traditional[:800]}")
@@ -504,10 +504,14 @@ class LongHistoryAnalyzer:
         if long_pattern.dominant_variables:
             blocks.append(f"**主导变量**: {', '.join(long_pattern.dominant_variables)}")
         if periods:
-            p_lines = [f"- {p.name}({p.start}–{p.end}): {p.dominant_logic or p.summary[:40]}" for p in periods]
+            p_lines = [
+                f"- {period.name}({period.start}–{period.end}): "
+                f"{period.dominant_logic or period.summary[:40]}"
+                for period in periods
+            ]
             blocks.append("## 历史阶段\n" + "\n".join(p_lines))
         if geo_factors:
-            g_lines = [f"- {f.name}: {f.impact}" for f in geo_factors]
+            g_lines = [f"- {factor.name}: {factor.impact}" for factor in geo_factors]
             blocks.append("## 地理因子\n" + "\n".join(g_lines))
         sections = [
             ("传统时代", traditional),

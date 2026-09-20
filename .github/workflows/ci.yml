@@ -27,5 +27,8 @@ jobs:
       - name: Run lint checks
         run: ruff check src tests
 
+      - name: Type-check report renderers
+        run: python -m mypy src/county_research_ai/reporting
+
       - name: Run tests
         run: pytest -q
