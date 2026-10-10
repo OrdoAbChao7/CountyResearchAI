@@ -144,6 +144,20 @@ _KNOWN_REGIONS: dict[str, dict[str, str]] = {
         "admin_level": "prefecture_level_city",
         "hint": "湖北省地级市，东风商用车发源地、中国商用车之都、南水北调中线核心水源区",
     },
+    "赣州经开区": {
+        "clean_name": "赣州经开区",
+        "province": "江西省",
+        "prefecture": "赣州市",
+        "admin_level": "district",
+        "hint": "江西省赣州市国家级经济技术开发区，聚焦新能源汽车及关键零部件（孚能科技等）、电子信息、稀土新材料与智能制造",
+    },
+    "赣州经济技术开发区": {
+        "clean_name": "赣州经开区",
+        "province": "江西省",
+        "prefecture": "赣州市",
+        "admin_level": "district",
+        "hint": "江西省赣州市国家级经济技术开发区，聚焦新能源汽车及关键零部件、电子信息与稀土新材料",
+    },
 }
 
 _ADMIN_SUFFIXES = ("自治县", "自治旗", "特区", "林区", "旗", "县", "市", "区")
