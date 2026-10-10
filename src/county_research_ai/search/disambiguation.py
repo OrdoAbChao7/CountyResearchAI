@@ -130,6 +130,20 @@ _KNOWN_REGIONS: dict[str, dict[str, str]] = {
         "admin_level": "county",
         "hint": "河北省石家庄市辖县",
     },
+    "十堰": {
+        "clean_name": "十堰市",
+        "province": "湖北省",
+        "prefecture": "十堰市",
+        "admin_level": "prefecture_level_city",
+        "hint": "湖北省地级市，东风商用车发源地、中国商用车之都、南水北调中线核心水源区",
+    },
+    "十堰市": {
+        "clean_name": "十堰市",
+        "province": "湖北省",
+        "prefecture": "十堰市",
+        "admin_level": "prefecture_level_city",
+        "hint": "湖北省地级市，东风商用车发源地、中国商用车之都、南水北调中线核心水源区",
+    },
 }
 
 _ADMIN_SUFFIXES = ("自治县", "自治旗", "特区", "林区", "旗", "县", "市", "区")
@@ -151,7 +165,10 @@ def disambiguate_region(name: str) -> DisambiguationResult:
     # 1. 检查精确内置库
     if raw_name in _KNOWN_REGIONS:
         info = _KNOWN_REGIONS[raw_name]
-        full_name = f"{info['province']}{info['prefecture']}{info['clean_name']}"
+        if info["prefecture"] and info["prefecture"] == info["clean_name"]:
+            full_name = f"{info['province']}{info['clean_name']}"
+        else:
+            full_name = f"{info['province']}{info['prefecture']}{info['clean_name']}"
         return DisambiguationResult(
             raw_name=raw_name,
             clean_name=info["clean_name"],
