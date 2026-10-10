@@ -263,8 +263,11 @@ class SearchCollector(SearchProvider):
             # 规范化 URL 与提取时间
             if d.url:
                 norm_u = normalize_url(d.url)
+                d.url = norm_u
                 if not d.published_at:
-                    d.published_at = extract_publish_date(f"{d.title} {d.snippet}", norm_u)
+                    d.published_at = extract_publish_date(
+                        f"{d.title} {d.snippet} {d.content[:500]}", norm_u
+                    )
                 key = norm_u
             else:
                 key = f"__no_url__{d.title or d.content[:20]}"

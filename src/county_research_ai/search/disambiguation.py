@@ -187,11 +187,13 @@ def disambiguate_region(name: str) -> DisambiguationResult:
 
             clean_name = county
             # 检查 clean_name 是否在库中
+            hint = ""
             if clean_name in _KNOWN_REGIONS:
                 info = _KNOWN_REGIONS[clean_name]
                 prov = prov or info["province"]
                 pref = pref or info["prefecture"]
                 level = info["admin_level"]
+                hint = info.get("hint", "")
 
             full = f"{prov}{pref}{clean_name}"
             return DisambiguationResult(
@@ -203,6 +205,30 @@ def disambiguate_region(name: str) -> DisambiguationResult:
                 full_name=full,
                 aliases=[raw_name, clean_name],
                 search_qualifiers=[clean_name, f"{prov} {clean_name}".strip()],
+                disambiguation_hint=hint,
+            )
+        elif pref:
+            # 输入为包含省份的地级市（如“黑龙江省鹤岗市”）
+            clean_name = pref
+            level = "prefecture_level_city"
+            hint = ""
+            if clean_name in _KNOWN_REGIONS:
+                info = _KNOWN_REGIONS[clean_name]
+                prov = prov or info["province"]
+                level = info["admin_level"]
+                hint = info.get("hint", "")
+
+            full = f"{prov}{clean_name}"
+            return DisambiguationResult(
+                raw_name=raw_name,
+                clean_name=clean_name,
+                province=prov,
+                prefecture=pref,
+                admin_level=level,
+                full_name=full,
+                aliases=[raw_name, clean_name],
+                search_qualifiers=[clean_name, f"{prov} {clean_name}".strip()],
+                disambiguation_hint=hint,
             )
 
     # 3. 基础归一化（如果没有后缀，尝试补充“县”或原样输出）

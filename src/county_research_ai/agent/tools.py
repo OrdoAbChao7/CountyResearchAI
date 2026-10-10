@@ -331,26 +331,55 @@ class DeepMultiAgentAnalysisTool(_BaseResearchTool):
             store = EvidenceStore()
             store.ingest_documents(state.raw_docs, county=state.request.county, focus=f_name)
 
-            econ = EconomicResearchAgent().analyze(state.request.county, f_name, store)
-            pol = PolicyResearchAgent().analyze(state.request.county, f_name, store)
-            ind = IndustryResearchAgent().analyze(state.request.county, f_name, store)
+            if state.request.mode in {"snapshot", "industry"}:
+                econ = EconomicResearchAgent().analyze(state.request.county, f_name, store)
+                pol = PolicyResearchAgent().analyze(state.request.county, f_name, store)
+                ind = IndustryResearchAgent().analyze(state.request.county, f_name, store)
 
-            gaps = state.reflection_results[-1].gaps if state.reflection_results else []
-            analyses = ResearchSynthesizer().synthesize(
-                county=c_info,
-                focus=f_name,
-                economic_out=econ,
-                policy_out=pol,
-                industry_out=ind,
-                evidence_store=store,
-                gaps=gaps,
-            )
-            return ToolResult(
-                tool_name=self.name,
-                status=ToolStatus.SUCCESS,
-                observation=f"multi-agent analysis completed with {len(analyses)} sections",
-                state_patch={"snapshot_analyses": analyses},
-            )
+                gaps = state.reflection_results[-1].gaps if state.reflection_results else []
+                analyses = ResearchSynthesizer().synthesize(
+                    county=c_info,
+                    focus=f_name,
+                    economic_out=econ,
+                    policy_out=pol,
+                    industry_out=ind,
+                    evidence_store=store,
+                    gaps=gaps,
+                )
+                return ToolResult(
+                    tool_name=self.name,
+                    status=ToolStatus.SUCCESS,
+                    observation=f"multi-agent analysis completed with {len(analyses)} sections",
+                    state_patch={"snapshot_analyses": analyses},
+                )
+            elif state.request.mode == "rise-fall":
+                from ..llm.rise_fall_analyzer import RiseFallAnalyzer
+                from ..processor import DocumentProcessor
+                proc_data = state.processed or DocumentProcessor().process(state.raw_docs, county=c_info, focus=f_name)
+                modes_reg = getattr(self.context.application, "modes", None)
+                rf_handler = modes_reg.get("rise-fall") if modes_reg else None
+                analyzer = getattr(rf_handler, "analyzer", None) or RiseFallAnalyzer()
+                analysis = analyzer.analyze(county=c_info, data=proc_data)
+                return ToolResult(
+                    tool_name=self.name,
+                    status=ToolStatus.SUCCESS,
+                    observation=f"multi-agent rise-fall analysis completed for {state.request.county}",
+                    state_patch={"rise_fall_analysis": analysis},
+                )
+            else:
+                from ..llm.long_history_analyzer import LongHistoryAnalyzer
+                from ..processor import DocumentProcessor
+                proc_data = state.processed or DocumentProcessor().process(state.raw_docs, county=c_info, focus=f_name)
+                modes_reg = getattr(self.context.application, "modes", None)
+                lh_handler = modes_reg.get("long-history") if modes_reg else None
+                analyzer = getattr(lh_handler, "analyzer", None) or LongHistoryAnalyzer()
+                analysis = analyzer.analyze(county=c_info, data=proc_data)
+                return ToolResult(
+                    tool_name=self.name,
+                    status=ToolStatus.SUCCESS,
+                    observation=f"multi-agent long-history analysis completed for {state.request.county}",
+                    state_patch={"long_history_analysis": analysis},
+                )
         except Exception as exc:  # noqa: BLE001
             return self._error(exc)
 

@@ -114,3 +114,41 @@ def test_rerank_documents_boosts_official_and_accurate_titles():
     ranked = rerank_documents(docs, keywords=["安吉县", "竹产业"], county="安吉县")
     assert ranked[0].url.startswith("https://www.anji.gov.cn")
     assert ranked[0].credibility_score >= 0.9
+
+
+def test_disambiguation_for_prefecture_with_province():
+    res = disambiguate_region("黑龙江省鹤岗市")
+    assert res.clean_name == "鹤岗市"
+    assert res.province == "黑龙江省"
+    assert res.prefecture == "鹤岗市"
+    assert res.admin_level == "prefecture_level_city"
+    assert "百年煤城" in res.disambiguation_hint or "资源枯竭" in res.disambiguation_hint
+
+
+def test_create_provider_with_settings_positional(tmp_settings):
+    from county_research_ai.search.web_search import create_provider
+    # 验证将 Settings 实例作为首个位置参数传入不会引发 AttributeError
+    provider = create_provider(tmp_settings)
+    assert provider is not None
+    assert provider.name in {"tavily", "serper", "bing"}
+
+
+def test_collector_normalizes_doc_urls(tmp_settings):
+    from county_research_ai.mocks.search import MockSearchProvider
+    from county_research_ai.search.collector import SearchCollector
+
+    collector = SearchCollector(web_provider=MockSearchProvider(), settings=tmp_settings)
+    docs = [
+        RawDoc(
+            title="测试新闻",
+            url="https://www.anji.gov.cn/news.html?spm=123&utm_source=baidu#hash",
+            snippet="安吉竹产业总产值280亿元",
+            content="2023年安吉竹林面积达101万亩",
+        )
+    ]
+    ranked = collector._dedup_and_rank(docs, top=5, keywords=["安吉"])
+    assert len(ranked) == 1
+    assert ranked[0].url == "https://anji.gov.cn/news.html"
+    assert ranked[0].published_at is not None
+    assert ranked[0].published_at.year == 2023
+

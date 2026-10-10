@@ -415,6 +415,9 @@ def create_provider(
     Raises:
         SearchError: provider 名称无效或 API Key 未配置
     """
+    if isinstance(provider, Settings):
+        settings = provider
+        provider = None
     s = settings or get_settings()
     name = (provider or s.search.provider).lower()
     if name not in PROVIDER_CLASSES:

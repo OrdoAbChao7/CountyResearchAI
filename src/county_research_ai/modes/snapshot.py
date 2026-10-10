@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from ..application.context import ResearchContext
 from ..models import ReportSection, ResearchReport
 from ..ports.analysis import SnapshotAnalyzerPort
@@ -15,36 +17,37 @@ class SnapshotModeHandler:
         self,
         analyzer: SnapshotAnalyzerPort,
         renderer: SnapshotRendererPort,
+        search: Any = None,
     ) -> None:
         self.analyzer = analyzer
         self.renderer = renderer
+        self.search = search
 
     def analyze(self, context: ResearchContext) -> ResearchContext:
         if context.processed is None:
             raise ValueError("processed evidence is required before analysis")
         focus = context.focus or self.default_focus
         if context.request.options.get("deep_research"):
-            from ..evidence.store import EvidenceStore
-            from ..research_agent.specialized import (
-                EconomicResearchAgent,
-                IndustryResearchAgent,
-                PolicyResearchAgent,
-                ResearchSynthesizer,
-            )
+            from ..research_agent.coordinator import DeepResearchCoordinator
 
-            store = EvidenceStore()
+            collector = getattr(self.search, "collector", getattr(self.search, "provider", self.search))
+            coordinator = DeepResearchCoordinator(
+                search_collector=collector,
+                analyzer=self.analyzer,
+            )
             docs = context.processed.docs if context.processed else context.raw_docs
-            store.ingest_documents(docs, county=context.county.name, focus=focus)
-            econ = EconomicResearchAgent().analyze(context.county.name, focus, store)
-            pol = PolicyResearchAgent().analyze(context.county.name, focus, store)
-            ind = IndustryResearchAgent().analyze(context.county.name, focus, store)
-            analyses = ResearchSynthesizer().synthesize(
-                county=context.county,
+            result = coordinator.run_deep_research(
+                county=context.county.name,
                 focus=focus,
-                economic_out=econ,
-                policy_out=pol,
-                industry_out=ind,
-                evidence_store=store,
+                mode="snapshot",
+                existing_docs=docs,
+            )
+            return context.model_copy(
+                update={
+                    "focus": focus,
+                    "snapshot_analyses": result.analyses,
+                    "raw_docs": result.all_raw_docs,
+                }
             )
         else:
             analyses = self.analyzer.analyze(
@@ -59,11 +62,19 @@ class SnapshotModeHandler:
     def render(self, context: ResearchContext) -> RenderedReport:
         focus = context.focus or self.default_focus
         analyses = context.snapshot_analyses
-        summary = self.analyzer.generate_summary(
-            county=context.county,
-            focus=focus,
-            analyses=analyses,
-        )
+        if context.request.options.get("deep_research"):
+            from ..research_agent.specialized import ResearchSynthesizer
+            summary = ResearchSynthesizer().generate_executive_summary(
+                county=context.county,
+                focus=focus,
+                analyses=analyses,
+            )
+        else:
+            summary = self.analyzer.generate_summary(
+                county=context.county,
+                focus=focus,
+                analyses=analyses,
+            )
         title_map = {
             "industry_status": "一、产业现状分析",
             "advantages": "二、优势分析",

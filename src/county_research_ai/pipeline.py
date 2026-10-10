@@ -68,9 +68,9 @@ class ResearchPipeline:
         elif not isinstance(search_port, (CollectorSearchAdapter, ProviderSearchAdapter)):
             search_port = CollectorSearchAdapter(search_port)
         modes = ModeRegistry([
-            SnapshotModeHandler(self.analyzer, self.renderer),
-            RiseFallModeHandler(self.rise_fall_analyzer, self.rise_fall_renderer),
-            LongHistoryModeHandler(self.long_history_analyzer, self.long_history_renderer),
+            SnapshotModeHandler(self.analyzer, self.renderer, search=search_port),
+            RiseFallModeHandler(self.rise_fall_analyzer, self.rise_fall_renderer, search=search_port),
+            LongHistoryModeHandler(self.long_history_analyzer, self.long_history_renderer, search=search_port),
         ])
         self.application = ResearchApplication(
             search=search_port,

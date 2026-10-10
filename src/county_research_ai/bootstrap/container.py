@@ -87,9 +87,9 @@ def create_app_container(settings: Settings | None = None) -> AppContainer:
     history_analyzer = LongHistoryAnalyzer(llm=llm, settings=settings)
     history_renderer = LongHistoryReportRenderer()
     modes = ModeRegistry([
-        SnapshotModeHandler(analyzer, renderer),
-        RiseFallModeHandler(rise_analyzer, rise_renderer),
-        LongHistoryModeHandler(history_analyzer, history_renderer),
+        SnapshotModeHandler(analyzer, renderer, search=search),
+        RiseFallModeHandler(rise_analyzer, rise_renderer, search=search),
+        LongHistoryModeHandler(history_analyzer, history_renderer, search=search),
     ])
     application = ResearchApplication(
         search=search,

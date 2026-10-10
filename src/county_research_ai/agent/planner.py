@@ -76,8 +76,8 @@ class FallbackPlanner:
                 return action("reflect_and_supplement", "深度模式：审视证据充分度并执行定向补充检索")
             if state.processed is None:
                 return action("build_evidence_pack", "深度模式：清洗去重并构造标准证据包")
-            if not state.snapshot_analyses:
-                return action("deep_multi_agent_analyze", "深度模式：调度经济、政策与产业链专业智能体联合分析")
+            if not self._has_analysis_for_mode(state, request.mode):
+                return action("deep_multi_agent_analyze", "深度模式：调度专业智能体联合分析与事实核验")
             if not state.report_path:
                 return action("render_report", "深度模式：渲染带来源核验的 Markdown 报告")
             return action("finish", "报告已生成，可以进行最终校验", {"is_final": True})
@@ -93,6 +93,14 @@ class FallbackPlanner:
         if not state.report_path:
             return action("render_report", "研究结果已具备，需要生成可审查报告")
         return action("finish", "报告已生成，可以进行最终校验", {"is_final": True})
+
+    @staticmethod
+    def _has_analysis_for_mode(state: AgentState, mode: str) -> bool:
+        if mode in {"snapshot", "industry"}:
+            return bool(state.snapshot_analyses)
+        if mode == "rise-fall":
+            return state.rise_fall_analysis is not None
+        return state.long_history_analysis is not None
 
 
 class LLMPlanner:

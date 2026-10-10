@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from ..application.context import ResearchContext
 from ..models import CountyRiseFallAnalysis, ReportSection, ResearchReport
 from ..ports.analysis import RiseFallAnalyzerPort
@@ -21,21 +23,46 @@ class RiseFallModeHandler:
         self,
         analyzer: RiseFallAnalyzerPort,
         renderer: RiseFallRendererPort,
+        search: Any = None,
     ) -> None:
         self.analyzer = analyzer
         self.renderer = renderer
+        self.search = search
 
     def analyze(self, context: ResearchContext) -> ResearchContext:
         if context.processed is None:
             raise ValueError("processed evidence is required before analysis")
         focus = context.focus or self.default_focus
-        analysis = self.analyzer.analyze(
-            county=context.county,
-            data=context.processed,
-        )
-        return context.model_copy(
-            update={"focus": focus, "rise_fall_analysis": analysis}
-        )
+        if context.request.options.get("deep_research"):
+            from ..research_agent.coordinator import DeepResearchCoordinator
+
+            collector = getattr(self.search, "collector", getattr(self.search, "provider", self.search))
+            coordinator = DeepResearchCoordinator(
+                search_collector=collector,
+                rise_fall_analyzer=self.analyzer,
+            )
+            docs = context.processed.docs if context.processed else context.raw_docs
+            result = coordinator.run_deep_research(
+                county=context.county.name,
+                focus=focus,
+                mode="rise-fall",
+                existing_docs=docs,
+            )
+            return context.model_copy(
+                update={
+                    "focus": focus,
+                    "rise_fall_analysis": result.rise_fall_analysis,
+                    "raw_docs": result.all_raw_docs,
+                }
+            )
+        else:
+            analysis = self.analyzer.analyze(
+                county=context.county,
+                data=context.processed,
+            )
+            return context.model_copy(
+                update={"focus": focus, "rise_fall_analysis": analysis}
+            )
 
     def render(self, context: ResearchContext) -> RenderedReport:
         focus = context.focus or self.default_focus
@@ -44,9 +71,20 @@ class RiseFallModeHandler:
         )
         docs = context.processed.docs if context.processed else context.raw_docs
         report = _compatibility_report(context.county, focus, _TITLES)
+        rendered_md = self.renderer.render(analysis, docs)
+        if context.request.options.get("deep_research"):
+            from ..evidence.store import EvidenceStore
+            store = EvidenceStore()
+            store.ingest_documents(docs, county=context.county.name, focus=focus)
+            appendix = (
+                f"\n\n---\n### 附录：研究证据链与可信度审计记录\n\n"
+                f"{store.render_conflicts_section()}\n\n"
+                f"#### 核心参考文献与证据溯源表\n{store.render_citations_table()}\n"
+            )
+            rendered_md = f"{rendered_md}{appendix}"
         return RenderedReport(
             report=report,
-            markdown=self.renderer.render(analysis, docs),
+            markdown=rendered_md,
         )
 
 

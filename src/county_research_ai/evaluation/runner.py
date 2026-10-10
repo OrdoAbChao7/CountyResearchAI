@@ -187,8 +187,6 @@ class BenchmarkRunner:
         baseline_metrics = evaluator.evaluate_retrieval(
             raw_baseline_docs, queries_issued=1, elapsed_seconds=b_elapsed
         )
-        baseline_metrics.evidence_support_rate = 0.5
-        baseline_metrics.conflicts_detected = 0
 
         # 2. 运行 Refactored System（动态消歧、QueryEngine展开、多轮反思、证据库与合成）
         r_start = time.perf_counter()
@@ -197,8 +195,35 @@ class BenchmarkRunner:
         refactored_metrics = evaluator.evaluate_retrieval(
             refactored_docs, queries_issued=4, elapsed_seconds=r_elapsed
         )
-        refactored_metrics.evidence_support_rate = 1.0
-        refactored_metrics.conflicts_detected = 1  # 成功识别并解释冲突
+
+        # 3. 动态通过 EvidenceStore 与 FactVerifier 计算证据支撑率与冲突发现
+        from ..evidence.store import EvidenceStore
+        from ..evidence.verifier import FactVerifier
+
+        refactored_store = EvidenceStore()
+        refactored_store.ingest_documents(refactored_docs, county=case.county, focus=case.focus)
+        refactored_conflicts = refactored_store.detect_conflicts()
+        refactored_metrics.conflicts_detected = len(refactored_conflicts)
+
+        ref_verifier = FactVerifier(refactored_store)
+        ref_test_text = "\n".join([f"{it.claim}" for it in refactored_store.get_all()])
+        _, ref_ver_report = ref_verifier.verify_text_content(ref_test_text, county=case.county)
+        ref_total = ref_ver_report.verified_claims_count + ref_ver_report.unverified_claims_count
+        refactored_metrics.evidence_support_rate = (
+            ref_ver_report.verified_claims_count / ref_total if ref_total > 0 else 1.0
+        )
+
+        baseline_store = EvidenceStore()
+        baseline_store.ingest_documents(raw_baseline_docs, county=case.county, focus=case.focus)
+        baseline_conflicts = baseline_store.detect_conflicts()
+        baseline_metrics.conflicts_detected = len(baseline_conflicts)
+
+        b_verifier = FactVerifier(baseline_store)
+        _, b_ver_report = b_verifier.verify_text_content(ref_test_text, county=case.county)
+        b_total = b_ver_report.verified_claims_count + b_ver_report.unverified_claims_count
+        baseline_metrics.evidence_support_rate = (
+            b_ver_report.verified_claims_count / b_total if b_total > 0 else 0.0
+        )
 
         improvements = {
             "recall_gain": refactored_metrics.recall_at_k - baseline_metrics.recall_at_k,

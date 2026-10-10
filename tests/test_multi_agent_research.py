@@ -174,3 +174,106 @@ def test_agent_tools_support_deep_research_lifecycle(tool_context):
     assert res_ana.status == ToolStatus.SUCCESS
     state.apply_patch(res_ana.state_patch)
     assert len(state.snapshot_analyses) == 4
+
+
+def test_deep_research_coordinator_rise_fall_and_long_history(tmp_settings):
+    from county_research_ai.mocks.search import MockSearchProvider
+
+    collector = SearchCollector(
+        web_provider=MockSearchProvider(),
+        settings=tmp_settings,
+    )
+    coord = DeepResearchCoordinator(search_collector=collector, max_turns=2)
+
+    # 1. rise-fall 模式
+    res_rf = coord.run_deep_research("鹤岗市", focus="产业转型", mode="rise-fall")
+    assert res_rf.mode == "rise-fall"
+    assert res_rf.rise_fall_analysis is not None
+    assert res_rf.rise_fall_analysis.county.name == "鹤岗市"
+
+    # 2. long-history 模式
+    res_lh = coord.run_deep_research("信丰县", focus="长周期兴衰史", mode="long-history")
+    assert res_lh.mode == "long-history"
+    assert res_lh.long_history_analysis is not None
+    assert res_lh.long_history_analysis.county.name == "信丰县"
+
+
+def test_pipeline_executes_deep_research_all_modes(tmp_settings, mock_llm, sample_docs):
+    from county_research_ai.mocks.search import MockSearchProvider
+    from county_research_ai.pipeline import ResearchPipeline
+    from county_research_ai.storage.local_fs import LocalFSStorage
+
+    pipeline = ResearchPipeline(
+        search=MockSearchProvider(),
+        storage=LocalFSStorage(settings=tmp_settings),
+        llm=mock_llm,
+    )
+
+    # 1. snapshot deep
+    req_snap = ResearchRequest(
+        county="安吉县", focus="竹产业", mode="snapshot", options={"deep_research": True}
+    )
+    rep_snap, path_snap = pipeline.run(req_snap)
+    assert path_snap.is_file()
+    snap_text = path_snap.read_text(encoding="utf-8")
+    assert "安吉县" in snap_text
+    assert "竹产业" in snap_text
+
+    # 2. rise-fall deep
+    req_rf = ResearchRequest(
+        county="鹤岗市", mode="rise-fall", options={"deep_research": True}
+    )
+    rep_rf, path_rf = pipeline.run(req_rf)
+    assert path_rf.is_file()
+    rf_text = path_rf.read_text(encoding="utf-8")
+    assert "鹤岗市" in rf_text
+    assert "附录：研究证据链与可信度审计记录" in rf_text
+
+    # 3. long-history deep
+    req_lh = ResearchRequest(
+        county="信丰县", mode="long-history", options={"deep_research": True}
+    )
+    rep_lh, path_lh = pipeline.run(req_lh)
+    assert path_lh.is_file()
+    lh_text = path_lh.read_text(encoding="utf-8")
+    assert "信丰县" in lh_text
+    assert "附录：研究证据链与可信度审计记录" in lh_text
+
+
+def test_agent_tools_deep_research_for_rise_fall(tool_context):
+    from county_research_ai.agent.tools import ReportTool
+    from county_research_ai.agent.verifier import AgentVerifier
+
+    state = AgentState.from_request(
+        ResearchRequest(
+            county="鹤岗市",
+            mode="rise-fall",
+            options={"deep_research": True},
+        )
+    )
+    state.raw_docs = [
+        RawDoc(
+            title="鹤岗百年煤城史志",
+            url="https://hegang.gov.cn/history",
+            snippet="1917年发现煤田，2011年列入资源枯竭型城市",
+            content="1917年发现煤田，2011年列入第三批资源枯竭型城市名单，常住人口89.1万人",
+            domain_type="government",
+            credibility_score=0.95,
+        )
+    ]
+    ana_tool = DeepMultiAgentAnalysisTool(tool_context)
+    res_ana = ana_tool.execute(state, {})
+    assert res_ana.status == ToolStatus.SUCCESS
+    state.apply_patch(res_ana.state_patch)
+    assert state.rise_fall_analysis is not None
+
+    rep_tool = ReportTool(tool_context)
+    res_rep = rep_tool.execute(state, {})
+    assert res_rep.status == ToolStatus.SUCCESS
+    state.apply_patch(res_rep.state_patch)
+    assert state.report_path is not None
+
+    verifier = AgentVerifier()
+    vf = verifier.verify_final(state)
+    assert vf.ok is True
+

@@ -15,6 +15,20 @@ class CollectorSearchAdapter:
     ) -> list[RawDoc]:
         return self.collector.collect(county, focus, max_results, mode=mode)
 
+    def collect_supplemental(
+        self, queries: list[str], max_results: int = 10
+    ) -> list[RawDoc]:
+        if hasattr(self.collector, "collect_supplemental"):
+            return self.collector.collect_supplemental(queries, max_results=max_results)
+        by_url: dict[str, RawDoc] = {}
+        for q in queries:
+            if hasattr(self.collector, "search"):
+                for doc in self.collector.search(q, max_results=max_results):
+                    key = doc.url or doc.title
+                    if key and key not in by_url:
+                        by_url[key] = doc
+        return list(by_url.values())[:max_results]
+
 
 class ProviderSearchAdapter:
     """将旧的单查询 SearchProvider 兼容为统一采集端口。"""
@@ -39,3 +53,17 @@ class ProviderSearchAdapter:
                 elif doc.url not in by_url:
                     by_url[doc.url] = doc
         return (list(by_url.values()) + without_url)[:max_results]
+
+    def collect_supplemental(
+        self, queries: list[str], max_results: int = 10
+    ) -> list[RawDoc]:
+        by_url: dict[str, RawDoc] = {}
+        without_url: list[RawDoc] = []
+        for query in queries:
+            for doc in self.provider.search(query, max_results=max_results):
+                if not doc.url:
+                    without_url.append(doc)
+                elif doc.url not in by_url:
+                    by_url[doc.url] = doc
+        return (list(by_url.values()) + without_url)[:max_results]
+
