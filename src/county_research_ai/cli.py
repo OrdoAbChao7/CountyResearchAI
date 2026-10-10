@@ -100,6 +100,12 @@ def _print_banner() -> None:
     help="跳过缓存,强制重新采集与分析",
 )
 @click.option(
+    "--deep",
+    is_flag=True,
+    default=False,
+    help="启动多智能体深度研究模式(动态问题树、反思补充检索与事实核验)",
+)
+@click.option(
     "--dry-run",
     is_flag=True,
     default=False,
@@ -115,6 +121,7 @@ def main(
     long_history: bool,
     log_level: str | None,
     no_cache: bool,
+    deep: bool,
     dry_run: bool,
 ) -> None:
     """AI 县域产业研究助手 — 县域产业研究。
@@ -144,7 +151,7 @@ def main(
         _run_research(
             county=county, focus=focus, mode=mode,
             historical=historical, long_history=long_history,
-            no_cache=no_cache, dry_run=dry_run,
+            no_cache=no_cache, deep=deep, dry_run=dry_run,
         )
 
 
@@ -161,6 +168,7 @@ def main(
 @click.option("--historical", is_flag=True, default=False, help="等价于 --mode rise-fall")
 @click.option("--long-history", is_flag=True, default=False, help="等价于 --mode long-history")
 @click.option("--no-cache", is_flag=True, default=False, help="跳过缓存,强制重新采集与分析")
+@click.option("--deep", is_flag=True, default=False, help="启动多智能体深度研究模式")
 @click.option("--dry-run", is_flag=True, default=False, help="只校验参数,不实际执行 Workflow")
 def workflow_command(
     county: str,
@@ -169,6 +177,7 @@ def workflow_command(
     historical: bool,
     long_history: bool,
     no_cache: bool,
+    deep: bool,
     dry_run: bool,
 ) -> None:
     """运行固定顺序的研究 Workflow。"""
@@ -180,6 +189,7 @@ def workflow_command(
         historical=historical,
         long_history=long_history,
         no_cache=no_cache,
+        deep=deep,
         dry_run=dry_run,
     )
 
@@ -195,6 +205,7 @@ def workflow_command(
     help="Agent 研究模式",
 )
 @click.option("--max-steps", type=click.IntRange(min=1), default=8, show_default=True, help="单次运行最大步骤数")
+@click.option("--deep", is_flag=True, default=False, help="启动多智能体深度研究模式(包含动态规划、反思补充与事实核验)")
 @click.option("--no-trace", is_flag=True, default=False, help="不保存 Agent 执行轨迹")
 @click.option("--dry-run", is_flag=True, default=False, help="只校验参数,不构造或运行 Agent")
 def agent_command(
@@ -202,6 +213,7 @@ def agent_command(
     focus: str | None,
     mode: str,
     max_steps: int,
+    deep: bool,
     no_trace: bool,
     dry_run: bool,
 ) -> None:
@@ -211,11 +223,13 @@ def agent_command(
     click.echo(f"Agent 方向   : {focus or '(自动发现)'}")
     click.echo(f"Agent 模式   : {mode}")
     click.echo(f"最大步骤数   : {max_steps}")
+    click.echo(f"深度研究模式 : {'已开启' if deep else '标准模式'}")
     if dry_run:
         click.echo("[dry-run] Agent 参数校验通过,未构造或运行 Agent。")
         return
 
-    request = ResearchRequest(county=county, focus=focus, mode=mode)
+    options = {"deep_research": True} if deep else {}
+    request = ResearchRequest(county=county, focus=focus, mode=mode, options=options)
     runtime = create_default_agent(max_steps=max_steps, save_trace=not no_trace)
     result = runtime.run(request)
     if result.state.status != result.trace.status or result.state.status.value != "completed":
@@ -241,6 +255,7 @@ def _run_research(
     historical: bool,
     long_history: bool,
     no_cache: bool,
+    deep: bool = False,
     dry_run: bool,
 ) -> None:
     """执行产业研究(原 county-research 单命令逻辑)。"""
@@ -270,6 +285,7 @@ def _run_research(
     else:
         click.echo("研究方向   : 自动识别 (--focus 未指定)")
     click.echo(f"研究模式   : {mode}")
+    click.echo(f"深度模式   : {'多智能体深度研究模式(反思+事实核验)' if deep else '标准模式'}")
     click.echo(f"缓存策略   : {'跳过缓存(强制刷新)' if no_cache else '启用缓存 TTL=' + str(settings.cache.ttl_hours) + 'h'}")
     click.echo(f"日志级别   : {settings.logging.level}")
     click.echo(f"数据目录   : {settings.data_dir}")
@@ -292,6 +308,8 @@ def _run_research(
     options: dict[str, object] = {}
     if no_cache:
         options["no_cache"] = True
+    if deep:
+        options["deep_research"] = True
     request = ResearchRequest(county=county, focus=focus, mode=mode, options=options)
 
     pipeline = create_default_pipeline()

@@ -91,6 +91,83 @@ class RawDoc(BaseModel):
     source_summary: str = ""
 
 
+# ===== 结构化证据与反思模型 =====
+
+
+class EvidenceItem(BaseModel):
+    """单条结构化证据项，承载 Claim → Evidence → Source 映射。"""
+
+    id: str = ""
+    claim: str = ""  # 事实陈述或提取的统计指标
+    snippet: str = ""  # 原文片段（确凿出处）
+    url: str = ""  # 来源 URL
+    title: str = ""  # 来源文档标题
+    source_name: str = ""  # 采集渠道（gov / web 等）
+    domain_type: str = "unknown"  # government / research / news / company / social / unknown
+    credibility_score: float = 0.5  # 0.0 - 1.0
+    year: str | None = None  # 统计年份或发布年份
+    administrative_scope: str = ""  # 县域本级 / 地级市全市 / 全省
+    indicator_caliber: str = ""  # 口径（如“规上工业总产值”、“全产业链产值”）
+    verification_status: str = "unverified"  # verified / conflicting / unverified / insufficient
+    corroborating_sources: list[str] = Field(default_factory=list)  # 交叉佐证的其它 URL
+    topic: str = "general"  # economic / policy / industry / history / risk / general
+
+
+class EvidenceConflict(BaseModel):
+    """多来源事实或数据冲突记录。"""
+
+    topic: str = ""
+    indicator: str = ""
+    claims: list[dict[str, Any]] = Field(default_factory=list)
+    conflict_type: str = "discrepancy"  # year_discrepancy / caliber_discrepancy / contradiction
+    description: str = ""
+    resolution_suggestion: str = ""
+
+
+class EvidenceGap(BaseModel):
+    """研究盲点或证据缺口。"""
+
+    question_id: str = ""
+    description: str = ""
+    missing_aspect: str = ""  # missing_recent_stats / missing_core_enterprises / etc.
+    severity: str = "medium"  # high / medium / low
+
+
+class ResearchQuestion(BaseModel):
+    """研究问题树中的单个子问题。"""
+
+    id: str
+    title: str
+    category: str = "general"  # economic / policy / industry / history / risk
+    description: str = ""
+    required_indicators: list[str] = Field(default_factory=list)
+    evidence_ids: list[str] = Field(default_factory=list)
+    is_satisfied: bool = False
+
+
+class QuestionTree(BaseModel):
+    """针对具体县域与研究方向动态生成的研究问题树。"""
+
+    county: str
+    focus: str = ""
+    mode: str = "snapshot"
+    questions: list[ResearchQuestion] = Field(default_factory=list)
+
+    def get_unsatisfied_questions(self) -> list[ResearchQuestion]:
+        return [q for q in self.questions if not q.is_satisfied]
+
+
+class ReflectionResult(BaseModel):
+    """Critic 反思评估与补充检索计划产物。"""
+
+    turn: int = 1
+    is_sufficient: bool = False
+    gaps: list[EvidenceGap] = Field(default_factory=list)
+    conflicts: list[EvidenceConflict] = Field(default_factory=list)
+    followup_queries: list[str] = Field(default_factory=list)
+    reasoning: str = ""
+
+
 # ===== 流程中间产物 =====
 
 

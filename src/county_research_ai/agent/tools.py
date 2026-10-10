@@ -219,6 +219,150 @@ class ReportTool(_BaseResearchTool):
             return self._error(exc)
 
 
+class PlanResearchTreeTool(_BaseResearchTool):
+    name = "plan_research_questions"
+    description = "根据县域、研究方向和模式动态生成多层次研究问题树"
+
+    def spec(self) -> ToolSpec:
+        return self._spec({"county": {"type": "string"}, "focus": {"type": "string"}, "mode": {"type": "string"}})
+
+    def execute(self, state: AgentState, arguments: dict[str, Any]) -> ToolResult:
+        try:
+            from ..research_agent.tree import build_question_tree
+
+            county = str(arguments.get("county") or state.request.county)
+            focus = str(arguments.get("focus") or state.request.focus or "")
+            mode = str(arguments.get("mode") or state.request.mode)
+            qtree = build_question_tree(county=county, focus=focus, mode=mode)
+            return ToolResult(
+                tool_name=self.name,
+                status=ToolStatus.SUCCESS,
+                observation=f"generated question tree with {len(qtree.questions)} research questions",
+                state_patch={"question_tree": qtree},
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._error(exc)
+
+
+class ReflectAndSupplementTool(_BaseResearchTool):
+    name = "reflect_and_supplement"
+    description = "审视当前证据充分度，发现资料缺口并执行定向补充检索"
+
+    def spec(self) -> ToolSpec:
+        return self._spec({"max_turns": {"type": "integer"}})
+
+    def execute(self, state: AgentState, arguments: dict[str, Any]) -> ToolResult:
+        try:
+            from ..evidence.store import EvidenceStore
+            from ..research_agent.critic import ResearchCritic
+            from ..research_agent.tree import build_question_tree
+
+            qtree = state.question_tree or build_question_tree(
+                county=state.request.county,
+                focus=state.request.focus or "",
+                mode=state.request.mode,
+            )
+            store = EvidenceStore()
+            store.ingest_documents(
+                state.raw_docs, county=state.request.county, focus=state.request.focus or ""
+            )
+
+            critic = ResearchCritic()
+            current_turn = len(state.reflection_results) + 1
+            reflection = critic.reflect(store, qtree, current_turn=current_turn)
+
+            new_docs = list(state.raw_docs)
+            if not reflection.is_sufficient and reflection.followup_queries:
+                search_port = self.context.application.search
+                # 如果底层搜索支持 collect_supplemental
+                collector = getattr(search_port, "provider", getattr(search_port, "collector", search_port))
+                supp_func = getattr(collector, "collect_supplemental", None)
+                if callable(supp_func):
+                    supp_results = supp_func(reflection.followup_queries, max_results=6)
+                    new_docs.extend(supp_results)
+                else:
+                    # 退化为单查询调用
+                    for q in reflection.followup_queries[:2]:
+                        try:
+                            res = collector.search(q, max_results=3)
+                            new_docs.extend(res)
+                        except Exception:  # noqa: BLE001
+                            pass
+
+            ref_history = list(state.reflection_results) + [reflection]
+            obs = (
+                f"reflection turn {current_turn}: sufficient={reflection.is_sufficient}, "
+                f"gaps={len(reflection.gaps)}, total_raw_docs={len(new_docs)}"
+            )
+            return ToolResult(
+                tool_name=self.name,
+                status=ToolStatus.SUCCESS,
+                observation=obs,
+                state_patch={
+                    "question_tree": qtree,
+                    "reflection_results": ref_history,
+                    "raw_docs": new_docs,
+                },
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._error(exc)
+
+
+class DeepMultiAgentAnalysisTool(_BaseResearchTool):
+    name = "deep_multi_agent_analyze"
+    description = "调度经济、政策与产业链专业智能体开展综合深度分析与事实核验"
+
+    def spec(self) -> ToolSpec:
+        return self._spec({})
+
+    def execute(self, state: AgentState, arguments: dict[str, Any]) -> ToolResult:
+        try:
+            from ..evidence.store import EvidenceStore
+            from ..models import CountyInfo
+            from ..research_agent.specialized import (
+                EconomicResearchAgent,
+                IndustryResearchAgent,
+                PolicyResearchAgent,
+                ResearchSynthesizer,
+            )
+
+            c_info = CountyInfo.from_name(state.request.county)
+            f_name = state.request.focus or "特色产业"
+            store = EvidenceStore()
+            store.ingest_documents(state.raw_docs, county=state.request.county, focus=f_name)
+
+            econ = EconomicResearchAgent().analyze(state.request.county, f_name, store)
+            pol = PolicyResearchAgent().analyze(state.request.county, f_name, store)
+            ind = IndustryResearchAgent().analyze(state.request.county, f_name, store)
+
+            gaps = state.reflection_results[-1].gaps if state.reflection_results else []
+            analyses = ResearchSynthesizer().synthesize(
+                county=c_info,
+                focus=f_name,
+                economic_out=econ,
+                policy_out=pol,
+                industry_out=ind,
+                evidence_store=store,
+                gaps=gaps,
+            )
+            return ToolResult(
+                tool_name=self.name,
+                status=ToolStatus.SUCCESS,
+                observation=f"multi-agent analysis completed with {len(analyses)} sections",
+                state_patch={"snapshot_analyses": analyses},
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._error(exc)
+
+
 def build_research_tools(context: ResearchToolContext) -> list[AgentTool]:
-    return [SearchMaterialsTool(context), FocusDiscoveryTool(context), EvidencePackTool(context),
-            ResearchAnalysisTool(context), ReportTool(context)]
+    return [
+        SearchMaterialsTool(context),
+        FocusDiscoveryTool(context),
+        EvidencePackTool(context),
+        ResearchAnalysisTool(context),
+        ReportTool(context),
+        PlanResearchTreeTool(context),
+        ReflectAndSupplementTool(context),
+        DeepMultiAgentAnalysisTool(context),
+    ]

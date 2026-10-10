@@ -41,6 +41,9 @@ class AgentVerifier:
                 for marker in ("empty", "0 raw documents", "no documents")
             ),
             "discover_focus": bool(state.request.focus),
+            "plan_research_questions": state.question_tree is not None,
+            "reflect_and_supplement": bool(state.reflection_results),
+            "deep_multi_agent_analyze": self._has_analysis(state),
             "build_evidence_pack": state.processed is not None,
             "analyze_research": self._has_analysis(state),
             "render_report": bool(state.report_path),

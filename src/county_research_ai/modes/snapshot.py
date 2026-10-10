@@ -23,11 +23,35 @@ class SnapshotModeHandler:
         if context.processed is None:
             raise ValueError("processed evidence is required before analysis")
         focus = context.focus or self.default_focus
-        analyses = self.analyzer.analyze(
-            county=context.county,
-            focus=focus,
-            data=context.processed,
-        )
+        if context.request.options.get("deep_research"):
+            from ..evidence.store import EvidenceStore
+            from ..research_agent.specialized import (
+                EconomicResearchAgent,
+                IndustryResearchAgent,
+                PolicyResearchAgent,
+                ResearchSynthesizer,
+            )
+
+            store = EvidenceStore()
+            docs = context.processed.docs if context.processed else context.raw_docs
+            store.ingest_documents(docs, county=context.county.name, focus=focus)
+            econ = EconomicResearchAgent().analyze(context.county.name, focus, store)
+            pol = PolicyResearchAgent().analyze(context.county.name, focus, store)
+            ind = IndustryResearchAgent().analyze(context.county.name, focus, store)
+            analyses = ResearchSynthesizer().synthesize(
+                county=context.county,
+                focus=focus,
+                economic_out=econ,
+                policy_out=pol,
+                industry_out=ind,
+                evidence_store=store,
+            )
+        else:
+            analyses = self.analyzer.analyze(
+                county=context.county,
+                focus=focus,
+                data=context.processed,
+            )
         return context.model_copy(
             update={"focus": focus, "snapshot_analyses": analyses}
         )

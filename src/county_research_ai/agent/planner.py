@@ -67,6 +67,21 @@ class FallbackPlanner:
             )
         if not request.focus and state.discovery is None:
             return action("discover_focus", "请求未指定研究方向，需要从搜索材料中发现焦点")
+
+        # 深度研究模式分支：规划问题树与反思补充
+        if request.options.get("deep_research"):
+            if state.question_tree is None:
+                return action("plan_research_questions", "深度模式：根据目标拆解多层次研究问题树")
+            if not state.reflection_results:
+                return action("reflect_and_supplement", "深度模式：审视证据充分度并执行定向补充检索")
+            if state.processed is None:
+                return action("build_evidence_pack", "深度模式：清洗去重并构造标准证据包")
+            if not state.snapshot_analyses:
+                return action("deep_multi_agent_analyze", "深度模式：调度经济、政策与产业链专业智能体联合分析")
+            if not state.report_path:
+                return action("render_report", "深度模式：渲染带来源核验的 Markdown 报告")
+            return action("finish", "报告已生成，可以进行最终校验", {"is_final": True})
+
         if state.processed is None:
             return action("build_evidence_pack", "需要清洗、去重并构造证据包")
         if request.mode in {"snapshot", "industry"} and not state.snapshot_analyses:
@@ -156,6 +171,12 @@ def _step_is_stale(tool: str, state: AgentState) -> bool:
         return bool(state.raw_docs)
     if tool == "discover_focus":
         return bool(state.request.focus or state.discovery)
+    if tool == "plan_research_questions":
+        return state.question_tree is not None
+    if tool == "reflect_and_supplement":
+        return bool(state.reflection_results)
+    if tool == "deep_multi_agent_analyze":
+        return bool(state.snapshot_analyses)
     if tool == "build_evidence_pack":
         return state.processed is not None
     if tool == "analyze_research":

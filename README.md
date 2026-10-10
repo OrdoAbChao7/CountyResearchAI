@@ -17,11 +17,16 @@
 不指定 `--focus` 时，程序会根据检索材料推荐候选产业方向；推荐结果仍需人工确认。固定流程由 Workflow 执行，Agent 模式则在限定步骤内规划工具调用，并可保存 JSON 执行轨迹。两者共用搜索、分析和报告能力。
 
 ```mermaid
-flowchart LR
-    A[县名、方向与模式] --> B[搜索公开资料]
-    B --> C[整理材料与来源]
-    C --> D[分析]
-    D --> E[Markdown 研究初稿]
+flowchart TD
+    A[县名、方向与模式] --> B[问题树规划 (Question Tree)]
+    B --> C[动态多意图检索 (QueryEngine + 消歧)]
+    C --> D[结构化事实库 (EvidenceStore)]
+    D --> E[反思评价与证据缺口 (ResearchCritic)]
+    E -- 存在关键缺口 --> F[定向补充检索 (Supplemental Search)]
+    F --> D
+    E -- 证据充足 --> G[专业智能体协同分析 (经济/政策/产业)]
+    G --> H[事实核验与冲突消解 (FactVerifier)]
+    H --> I[Markdown 深度研究报告 (带可信溯源角标)]
 ```
 
 ## 快速开始
@@ -50,6 +55,7 @@ county-research -c 安吉县 -f 竹产业
 ```powershell
 county-research -c 安吉县                         # 自动发现产业方向
 county-research workflow -c 安吉县 -f 竹产业      # 显式使用固定流程
+county-research -c 安吉县 -f 竹产业 --deep         # 启用深度多智能体与证据核验研究
 county-research -c 鹤岗市 --mode rise-fall
 county-research -c 信丰县 --mode long-history
 county-research agent -c 安吉县 -f 竹产业 --mode snapshot
@@ -61,11 +67,25 @@ county-research agent -c 安吉县 --max-steps 8 --dry-run
 | `-c, --county` | 县名，运行研究时必填 |
 | `-f, --focus` | 产业方向；省略时自动发现 |
 | `-m, --mode` | 研究模式；默认 `snapshot` |
+| `--deep` | 启用深度多智能体协同研究（问题树拆解、Critic反思补检、经济/政策/产业分工及事实核验） |
 | `--historical` / `--long-history` | 固定流程中选择对应模式的快捷开关 |
 | `--no-cache` | 固定流程中跳过缓存 |
 | `--dry-run` | 只检查参数，不运行研究 |
 
 `agent` 另支持 `--max-steps` 和 `--no-trace`。执行轨迹默认保存在 `agent_traces/`。完整参数以 `county-research --help`、`county-research workflow --help` 和 `county-research agent --help` 为准。
+
+## 基准评测 (Benchmark)
+
+项目内置了针对县域产业研究真实质量的客观基准评测系统（`src/county_research_ai/evaluation/`），涵盖安吉县竹产业、信丰县脐橙产业、鹤岗市产业转型三个基准案例。
+
+评测指标涵盖：
+- **检索质量**：Precision@K、Recall@K（核心事实覆盖率）、官方权威来源占比、内容去重率；
+- **研究深度与可靠性**：关键事实支持率（Claim-Evidence 闭环）、冲突与口径差异检出率。
+
+完整评测报告与数据详见 [docs/BENCHMARK_REPORT.md](docs/BENCHMARK_REPORT.md)。评测复现命令：
+```powershell
+python -c "from county_research_ai.evaluation.runner import BenchmarkRunner; runner = BenchmarkRunner(); reports = runner.run_all_cases(); [print(r.to_markdown()) for r in reports.values()]"
+```
 
 ## 代码与验证
 

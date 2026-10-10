@@ -15,7 +15,9 @@ from ..models import (
     CountyRiseFallAnalysis,
     DiscoveryResult,
     ProcessedData,
+    QuestionTree,
     RawDoc,
+    ReflectionResult,
     ResearchReport,
     ResearchRequest,
 )
@@ -85,6 +87,8 @@ class AgentState(BaseModel):
     long_history_analysis: CountyLongHistoryAnalysis | None = None
     report: ResearchReport | None = None
     report_path: str = ""
+    question_tree: QuestionTree | None = None
+    reflection_results: list[ReflectionResult] = Field(default_factory=list)
     observations: list[AgentObservation] = Field(default_factory=list)
     errors: list[AgentError] = Field(default_factory=list)
 
@@ -105,6 +109,8 @@ class AgentState(BaseModel):
             "report",
             "report_path",
             "status",
+            "question_tree",
+            "reflection_results",
         }
         unknown = set(patch) - allowed
         if unknown:
