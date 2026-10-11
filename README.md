@@ -103,3 +103,4 @@ python -m pytest --no-cov -q
 ## 协作与贡献
 
 欢迎提交 Issue 与 Pull Request 共同完善县域产业研报生成工具。
+本项目欢迎学术研究人员与开发者参与贡献。讨论交流请前往 [Discussions](https://github.com/OrdoAbChao7/CountyResearchAI/discussions)。
