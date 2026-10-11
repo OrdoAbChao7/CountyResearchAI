@@ -99,3 +99,7 @@ python -m pytest --no-cov -q
 示例初稿见 [`reports/`](reports/)。这些文件展示输出形式，不代表其事实内容已经逐条核实。项目采用 Python、Click、Pydantic、httpx、Jinja2 和兼容 OpenAI API 的模型客户端；依赖清单以 [`pyproject.toml`](pyproject.toml) 为准。
 
 短视频内容与渲染扩展维护在 `codex/video-content` 分支，不属于默认研究流程。
+
+## 协作与贡献
+
+欢迎提交 Issue 与 Pull Request 共同完善县域产业研报生成工具。
