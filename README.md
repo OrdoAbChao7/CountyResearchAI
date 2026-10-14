@@ -9,7 +9,7 @@
 ## 能做什么
 
 | 模式 | 命令参数 | 研究内容 |
-| --- | --- | --- |
+| :--- | :--- | :--- |
 | 产业现状 | `snapshot`（默认，`industry` 为别名） | 产业现状、优势、短板和建议 |
 | 产业兴衰 | `rise-fall` | 产业起源、扩张、衰退及规律 |
 | 长周期历史 | `long-history` | 从县域形成到当代的发展脉络 |
@@ -18,15 +18,15 @@
 
 ```mermaid
 flowchart TD
-    A[县名、方向与模式] --> B[问题树规划 (Question Tree)]
-    B --> C[动态多意图检索 (QueryEngine + 消歧)]
-    C --> D[结构化事实库 (EvidenceStore)]
-    D --> E[反思评价与证据缺口 (ResearchCritic)]
-    E -- 存在关键缺口 --> F[定向补充检索 (Supplemental Search)]
+    A["县名、方向与模式"] --> B["问题树规划 (Question Tree)"]
+    B --> C["动态多意图检索 (QueryEngine + 消歧)"]
+    C --> D["结构化事实库 (EvidenceStore)"]
+    D --> E["反思评价与证据缺口 (ResearchCritic)"]
+    E -->|存在关键缺口| F["定向补充检索 (Supplemental Search)"]
     F --> D
-    E -- 证据充足 --> G[专业智能体协同分析 (经济/政策/产业)]
-    G --> H[事实核验与冲突消解 (FactVerifier)]
-    H --> I[Markdown 深度研究报告 (带可信溯源角标)]
+    E -->|证据充足| G["专业智能体协同分析 (经济/政策/产业)"]
+    G --> H["事实核验与冲突消解 (FactVerifier)"]
+    H --> I["Markdown 深度研究报告 (带可信溯源角标)"]
 ```
 
 ## 快速开始
@@ -53,17 +53,17 @@ county-research -c 安吉县 -f 竹产业
 ## 常用命令
 
 ```powershell
-county-research -c 安吉县                         # 自动发现产业方向
-county-research workflow -c 安吉县 -f 竹产业      # 显式使用固定流程
-county-research -c 安吉县 -f 竹产业 --deep         # 启用深度多智能体与证据核验研究
-county-research -c 鹤岗市 --mode rise-fall
-county-research -c 信丰县 --mode long-history
-county-research agent -c 安吉县 -f 竹产业 --mode snapshot
-county-research agent -c 安吉县 --max-steps 8 --dry-run
+county-research -c 安吉县                         # 自动发现产业方向 (snapshot)
+county-research workflow -c 安吉县 -f 竹产业      # 显式使用固定工作流
+county-research -c 安吉县 -f 竹产业 --deep        # 启用深度多智能体与证据核验研究
+county-research -c 鹤岗市 --mode rise-fall        # 产业兴衰规律研究
+county-research -c 信丰县 --mode long-history     # 县域长周期兴衰史研究
+county-research agent -c 安吉县 -f 竹产业 --mode snapshot  # 运行 Plan-and-Execute Agent
+county-research agent -c 安吉县 --max-steps 8 --dry-run   # 校验 Agent 参数与步数限制
 ```
 
 | 选项 | 用途 |
-| --- | --- |
+| :--- | :--- |
 | `-c, --county` | 县名，运行研究时必填 |
 | `-f, --focus` | 产业方向；省略时自动发现 |
 | `-m, --mode` | 研究模式；默认 `snapshot` |
@@ -79,10 +79,12 @@ county-research agent -c 安吉县 --max-steps 8 --dry-run
 项目内置了针对县域产业研究真实质量的客观基准评测系统（`src/county_research_ai/evaluation/`），涵盖安吉县竹产业、信丰县脐橙产业、鹤岗市产业转型三个基准案例。
 
 评测指标涵盖：
+
 - **检索质量**：Precision@K、Recall@K（核心事实覆盖率）、官方权威来源占比、内容去重率；
 - **研究深度与可靠性**：关键事实支持率（Claim-Evidence 闭环）、冲突与口径差异检出率。
 
 完整评测报告与数据详见 [docs/BENCHMARK_REPORT.md](docs/BENCHMARK_REPORT.md)。评测复现命令：
+
 ```powershell
 python -c "from county_research_ai.evaluation.runner import BenchmarkRunner; runner = BenchmarkRunner(); reports = runner.run_all_cases(); [print(r.to_markdown()) for r in reports.values()]"
 ```
@@ -103,4 +105,5 @@ python -m pytest --no-cov -q
 ## 协作与贡献
 
 欢迎提交 Issue 与 Pull Request 共同完善县域产业研报生成工具。
+
 本项目欢迎学术研究人员与开发者参与贡献。讨论交流请前往 [Discussions](https://github.com/OrdoAbChao7/CountyResearchAI/discussions)。

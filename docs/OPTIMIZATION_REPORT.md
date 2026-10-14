@@ -28,28 +28,28 @@
 
 ```mermaid
 flowchart TD
-    subgraph 原系统架构 (Legacy Baseline)
-        A1[用户输入] --> A2[单次单一关键词搜索]
-        A2 --> A3[抓取前N条泛化网页]
-        A3 --> A4[LLM 直接拼装报告]
-        A4 --> A5[输出 Markdown (常出现地级市/县级混淆、数据无从查证)]
+    subgraph legacy ["原系统架构 (Legacy Baseline)"]
+        A1["用户输入"] --> A2["单次单一关键词搜索"]
+        A2 --> A3["抓取前N条泛化网页"]
+        A3 --> A4["LLM 直接拼装报告"]
+        A4 --> A5["输出 Markdown (常出现地级市/县级混淆、数据无从查证)"]
     end
 
-    subgraph 重构后架构 (Deep Multi-Agent & Evidence Loop)
-        B1[用户输入] --> B2[行政区划精准消歧 (disambiguate_region)]
-        B2 --> B3[动态研究问题树规划 (QuestionTree + QueryEngine)]
-        B3 --> B4[定向多源检索 (公报/统计年鉴/规划/产业链)]
-        B4 --> B5[细粒度结构化证据库 (EvidenceStore: 指标/单位/口径/年份)]
-        B5 --> B6[反思评价与证据缺口识别 (ResearchCritic)]
-        B6 -- 发现数据陈旧/缺口/冲突 --> B7[自适应定向补充检索 (Supplemental Loop)]
+    subgraph deep ["重构后架构 (Deep Multi-Agent & Evidence Loop)"]
+        B1["用户输入"] --> B2["行政区划精准消歧 (disambiguate_region)"]
+        B2 --> B3["动态研究问题树规划 (QuestionTree + QueryEngine)"]
+        B3 --> B4["定向多源检索 (公报/统计年鉴/规划/产业链)"]
+        B4 --> B5["细粒度结构化证据库 (EvidenceStore: 指标/单位/口径/年份)"]
+        B5 --> B6["反思评价与证据缺口识别 (ResearchCritic)"]
+        B6 -->|发现数据陈旧/缺口/冲突| B7["自适应定向补充检索 (Supplemental Loop)"]
         B7 --> B5
-        B6 -- 证据达标/预算用尽 --> B8[专业智能体协同研判矩阵]
-        B8 --> B8A[经济研究员 (EconomicResearchAgent)]
-        B8 --> B8B[政策研究员 (PolicyResearchAgent)]
-        B8 --> B8C[产业研究员 (IndustryResearchAgent)]
-        B8A & B8B & B8C --> B9[综合报告员结构化整合 (ResearchSynthesizer)]
-        B9 --> B10[双向严格事实核验 (FactVerifier)]
-        B10 --> B11[输出专业研究报告 (附录带完整溯源审计与口径对照表)]
+        B6 -->|证据达标/预算用尽| B8["专业智能体协同研判矩阵"]
+        B8 --> B8A["经济研究员 (EconomicResearchAgent)"]
+        B8 --> B8B["政策研究员 (PolicyResearchAgent)"]
+        B8 --> B8C["产业研究员 (IndustryResearchAgent)"]
+        B8A & B8B & B8C --> B9["综合报告员结构化整合 (ResearchSynthesizer)"]
+        B9 --> B10["双向严格事实核验 (FactVerifier)"]
+        B10 --> B11["输出专业研究报告 (附录带完整溯源审计与口径对照表)"]
     end
 ```
 
