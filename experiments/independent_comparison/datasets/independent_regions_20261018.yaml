@@ -1,0 +1,35 @@
+schema_version: "continuation-v1"
+status: DRAFT_HOLDOUT_REGIONS
+freeze_scope: independent_regions_and_task_quotas_only
+claim_quota:
+  min: 15
+  max: 20
+tasks:
+  snapshot: 5
+  rise-fall: 5
+  long-history: 5
+regions:
+  - id: region_01
+    name: 德清县
+    province: 浙江省
+    level: county
+  - id: region_02
+    name: 长汀县
+    province: 福建省
+    level: county
+  - id: region_03
+    name: 于都县
+    province: 江西省
+    level: county
+  - id: region_04
+    name: 攀枝花市
+    province: 四川省
+    level: prefecture_city
+  - id: region_05
+    name: 白山市
+    province: 吉林省
+    level: prefecture_city
+  - id: region_06
+    name: 临泽县
+    province: 甘肃省
+    level: county

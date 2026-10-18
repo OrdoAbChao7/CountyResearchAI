@@ -11,6 +11,7 @@ from scripts.run_independent_judges import JudgeCandidate, collect_judge_candida
 from county_research_ai.config import load_settings
 from county_research_ai.evaluation.claim_verification import (
     build_claim_verification_prompt,
+    deterministic_claim_check,
     parse_claim_verification,
 )
 from county_research_ai.evaluation.gate import require_formal_api_gate
@@ -21,10 +22,12 @@ from county_research_ai.evaluation.resource_manager import ResourceLimit, Resour
 from county_research_ai.llm.client import OpenAICompatibleClient
 
 FORMAL_ROOT = Path(__file__).resolve().parents[1] / "experiments" / "independent_comparison"
-FORMAL_GATE_PATH = FORMAL_ROOT / "manifests" / "formal_target_gate_20261018.json"
-FORMAL_GROUND_TRUTH_PATH = FORMAL_ROOT / "ground_truth" / "formal_ground_truth_20261018.jsonl"
-FORMAL_GROUND_TRUTH_MANIFEST_PATH = (
-    FORMAL_ROOT / "ground_truth" / "formal_ground_truth_20261018_manifest.json"
+FORMAL_GATE_PATH = FORMAL_ROOT / "manifests" / "continuation_resource_gate_20261018.json"
+CONTINUATION_GROUND_TRUTH_PATH = (
+    FORMAL_ROOT / "ground_truth" / "continuation_ground_truth_20261018.jsonl"
+)
+CONTINUATION_GROUND_TRUTH_MANIFEST_PATH = (
+    FORMAL_ROOT / "ground_truth" / "continuation_ground_truth_20261018_manifest.json"
 )
 
 
@@ -53,10 +56,10 @@ def run_claim_batch(
     max_runs: int | None = None,
     run_id_prefixes: tuple[str, ...] | None = None,
 ) -> dict[str, Any]:
-    claims = GroundTruthStore.freeze_verified(
-        FORMAL_GROUND_TRUTH_PATH,
-        FORMAL_GROUND_TRUTH_MANIFEST_PATH,
-        require_cross_verification=True,
+    require_formal_api_gate(FORMAL_GATE_PATH)
+    claims = GroundTruthStore.freeze_continuation_verified(
+        CONTINUATION_GROUND_TRUTH_PATH,
+        CONTINUATION_GROUND_TRUTH_MANIFEST_PATH,
     ).claims
     by_region = {claim.region: claim for claim in claims}
     candidates = [
@@ -76,7 +79,6 @@ def run_claim_batch(
         )
         return summary
 
-    require_formal_api_gate(FORMAL_GATE_PATH)
     output_dir.mkdir(parents=True, exist_ok=False)
     settings = load_settings()
     manager = ResourceManager(
@@ -84,11 +86,7 @@ def run_claim_batch(
         limits={
             (settings.llm.provider, settings.llm.model, "claim_verifier"): ResourceLimit(
                 len(candidates) * 8192,
-                billing_class=(
-                    "paid_authorized"
-                    if settings.llm.provider == "deepseek"
-                    else "free_confirmed"
-                ),
+                billing_class="free_confirmed",
             )
         },
     )
@@ -115,6 +113,43 @@ def run_claim_batch(
                 }
             )
             continue
+        source_material = _source_material(candidate)
+        deterministic = deterministic_claim_check(
+            report=candidate.anonymous_report.text,
+            source_material=source_material,
+            claim=claim,
+        )
+        if deterministic is not None:
+            evaluation = deterministic.evaluation
+            rows.append(
+                {
+                    "status": "VALID",
+                    "run_id": candidate.run_id,
+                    "group": candidate.group,
+                    "region": candidate.county,
+                    "task_id": candidate.task_id,
+                    "repeat": candidate.repeat,
+                    "duration_seconds": candidate.duration_seconds,
+                    "resource_usage": candidate.research_resource_usage or {},
+                    "claim_id": claim.claim_id,
+                    "claim_evaluation": {
+                        "claim_id": evaluation.claim_id,
+                        "status": evaluation.status.value,
+                        "evidence_supported": evaluation.evidence_supported,
+                        "error_types": list(evaluation.error_types),
+                        "reason": deterministic.reason,
+                        "checks": deterministic.checks,
+                    },
+                    "metrics": MetricsCalculator.calculate(
+                        [claim.claim_id], [evaluation]
+                    ).to_dict(),
+                    "verifier_resource_usage": {},
+                    "raw_response": "",
+                    "parse_error": None,
+                    "verification_method": "deterministic_offline",
+                }
+            )
+            continue
         verifier_run_id = f"{batch_id}_{candidate.anonymous_report.report_hash}_{claim.claim_id}"
         client = ResourceManagedLLMClient(
             OpenAICompatibleClient(settings=settings),
@@ -130,7 +165,7 @@ def run_claim_batch(
                 "role": "user",
                 "content": build_claim_verification_prompt(
                     report=candidate.anonymous_report.text,
-                    source_material=_source_material(candidate),
+                    source_material=source_material,
                     claim=claim,
                 ),
             }],
@@ -180,6 +215,7 @@ def run_claim_batch(
                 "verifier_resource_usage": _resource_usage(manager, verifier_run_id),
                 "raw_response": response.content,
                 "parse_error": parse_error,
+                "verification_method": "llm_semantic_review",
             }
         )
     (output_dir / "claim_observations.jsonl").write_text(

@@ -1,0 +1,23 @@
+{
+  "gate_id": "continuation_resource_gate_20261018",
+  "status": "CLOSED_BILLING_UNCONFIRMED",
+  "created_at": "2026-10-18T00:00:00+08:00",
+  "experiment_id": "goal-continuation-validity",
+  "business_api_calls_allowed": false,
+  "allow_paid_authorized": false,
+  "llm_billing_boundary": "UNKNOWN",
+  "search_fetch_billing_boundary": "UNKNOWN",
+  "reason": "The current continuation instruction withdraws the prior interpretation of USER_AUTHORIZED_PAID. Historical usage and local ledgers are retained as evidence, but no account-level billing or free-quota evidence is available.",
+  "historical_evidence": [
+    "experiments/independent_comparison/manifests/formal_target_gate_20261018.json",
+    "experiments/independent_comparison/manifests/resource_precheck_20261018_deepseek.json",
+    "experiments/independent_comparison/manifests/formal_launch_manifest_20261018.json",
+    "experiments/independent_comparison/reports/CONTINUATION_P0_AUDIT_20261018.md"
+  ],
+  "unlock_requires": [
+    "current explicit authorization or provider/account billing evidence scoped separately to LLM and Search/Fetch",
+    "fresh precheck with no business call",
+    "offline benchmark and judge calibration passing",
+    "frozen continuation protocol and independent Ground Truth manifest"
+  ]
+}

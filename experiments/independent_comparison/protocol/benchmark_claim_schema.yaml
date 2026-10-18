@@ -1,0 +1,47 @@
+schema_version: "continuation-v1"
+status: DRAFT_FOR_CONTINUATION_FREEZE
+description: >-
+  每条声明必须能映射到一个冻结任务、一个版本化的权威答案和两个独立核验上下文。
+required_fields:
+  - claim_id
+  - claim
+  - region
+  - research_mode
+  - expected_answer
+  - source_title
+  - source_date
+  - metric_year
+  - administrative_scope
+  - verification_sources
+  - verification_contexts
+allowed_research_modes:
+  - snapshot
+  - rise-fall
+  - long-history
+verification:
+  status_required: VERIFIED
+  minimum_distinct_sources: 2
+  minimum_distinct_contexts: 2
+  accepted_context_pairs:
+    - primary_official_publication_plus_independent_official_table
+    - official_publication_plus_official_revision_or_archive
+  no_first_round_selection: true
+examples:
+  - research_mode: snapshot
+    expected_answer: "2024 年县域本级地区生产总值为 X 亿元"
+    source_title: "2024 年国民经济和社会发展统计公报"
+    source_date: "2025-03-01"
+    metric_year: "2024"
+    administrative_scope: 县域本级
+  - research_mode: rise-fall
+    expected_answer: "2019—2024 年工业增加值经历先升后降，转折点为 2022 年"
+    source_title: "历年统计年鉴与年度公报"
+    source_date: "2025-03-01"
+    metric_year: "2019-2024"
+    administrative_scope: 县域本级
+  - research_mode: long-history
+    expected_answer: "1990—2024 年行政区划和主导产业经历三个阶段"
+    source_title: "地方志与历年统计年鉴"
+    source_date: "2025-03-01"
+    metric_year: "1990-2024"
+    administrative_scope: 县域本级

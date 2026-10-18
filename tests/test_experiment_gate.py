@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -140,14 +141,30 @@ def test_deepseek_gate_requires_separate_free_evidence_for_llm_and_search_fetch(
     assert result["precheck"]["deepseek"]["provider"] == "deepseek"
 
 
-def test_deepseek_gate_accepts_explicit_user_authorized_paid_boundary(tmp_path):
+def test_deepseek_gate_rejects_historical_user_authorized_paid_boundary(tmp_path):
     gate_path, precheck_path = _write_deepseek_gate(
         tmp_path,
         llm_boundary="USER_AUTHORIZED_PAID",
         search_fetch_boundary="USER_AUTHORIZED_PAID",
     )
 
-    require_formal_api_gate(gate_path, precheck_path)
+    with pytest.raises(FormalGateError, match="billing boundary"):
+        require_formal_api_gate(gate_path, precheck_path)
+
+
+def test_continuation_gate_manifest_is_closed_before_business_calls():
+    path = (
+        Path(__file__).parents[1]
+        / "experiments"
+        / "independent_comparison"
+        / "manifests"
+        / "continuation_resource_gate_20261018.json"
+    )
+    gate = json.loads(path.read_text(encoding="utf-8"))
+
+    assert gate["status"] == "CLOSED_BILLING_UNCONFIRMED"
+    assert gate["business_api_calls_allowed"] is False
+    assert gate["allow_paid_authorized"] is False
 
 
 def test_deepseek_gate_rejects_llm_free_when_search_fetch_billing_is_unknown(tmp_path):
