@@ -61,7 +61,7 @@
 | P5 Smoke Test | 至少一轮真实 A/B/C，运行无 Mock 污染且来源可核验 | COMPLETE（DeepSeek retry Stage A 18/18 VALID，来源与资源账本审计通过） |
 | P6 正式实验 | 在确认配额内执行冻结批次并保留所有成功/失败样本 | COMPLETE（Stage A 18/18、Stage B Natural 54/54、Matched Budget 54/54 计划运行均已完成；6 个 C 长历史运行明确记录为 `BUDGET_EXHAUSTED`） |
 | P7 审计与报告 | 独立审计、统计、图表和 `FINAL_REPORT.md` 完成 | COMPLETE（Stage A、Stage B Natural、Matched Budget 均完成 Hash/任务匹配/资源审计；第二轮报告已更新） |
-| P8 最终验收 | Engineering/Research Success 逐项有证据，Goal 才可完成 | REOPENED（第一轮工程完成，但 Benchmark 有效性审计发现分母、Ground Truth 与授权边界问题） |
+| P8 最终验收 | Engineering/Research Success 逐项有证据，Goal 才可完成 | COMPLETE_WITH_NEGATIVE_RESULT（第二轮 Natural/Matched 已审计；证据不支持 C 优于 A/B，局限与失败机制已记录） |
 | P9 续作 Ground Truth 冻结 | 六地区 × 三模式 × 每模式 5 条；双 URL、双上下文、逐条原文证据；source hash 固定 | COMPLETE（90/90 条，`FROZEN_CONTINUATION_BENCHMARK`） |
 
 ## Task Breakdown
@@ -169,7 +169,7 @@
 - Benchmark Validity：`FROZEN_CONTINUATION_BENCHMARK`；六地区 × snapshot/rise-fall/long-history，每地区 15 条、每模式 5 条，共 90 条 rich claims，均通过双 URL、双上下文和逐条原文摘录校验。
 - Research Evidence：`INCONCLUSIVE`；第一轮事实指标不能解释为完整研究能力。
 - Efficiency Performance：`REGRESSION_OBSERVED`；C 的时间和 token 成本明显高于 A/B。
-- Overall Goal Completion：`IN_PROGRESS`；第二轮实验与审计已完成，但研究结论为 `AUDITED_WITH_NEGATIVE_RESULT_FOR_C`，尚不能宣称 CountyResearchAI 优于基线；P8 仍需最终验收记录。
+- Overall Goal Completion：`COMPLETE`；第二轮实验与审计完成，研究结论为 `AUDITED_WITH_NEGATIVE_RESULT_FOR_C`。这表示本 Goal 的验证任务完成，不表示 CountyResearchAI 已被证明优于基线。
 
 ### 续作优先级
 
