@@ -1,0 +1,35 @@
+{
+  "state_id": "continuation_resource_manager_state_20261019",
+  "status": "CIRCUIT_OPEN_FOR_GEMINI",
+  "updated_at": "2026-10-19T01:18:18.607508+08:00",
+  "authorization_manifest": "resource_authorization_20261019.json",
+  "precheck_manifest": "resource_precheck_20261019.json",
+  "gate_manifest": "continuation_resource_gate_20261018.json",
+  "resource_db": "../runs/continuation_resource_manager_20261019.sqlite",
+  "providers": {
+    "gemini": {
+      "status": "STOPPED_PROVIDER_CONFIGURATION",
+      "billing_boundary": "FREE_CONFIRMED_BY_USER",
+      "business_calls_allowed": false,
+      "reason": "Stage A first LLM call returned HTTP 400 INVALID_ARGUMENT: valid API key required.",
+      "requests": 1,
+      "reserved_units": 2048,
+      "settled_units": 2048
+    },
+    "tavily": {
+      "status": "ELIGIBLE_BUT_BATCH_PAUSED",
+      "billing_boundary": "FREE_CONFIRMED_BY_USER",
+      "business_calls_allowed": false,
+      "reason": "A/B/C requires the same LLM as Gemini; isolated Tavily calls are not started.",
+      "requests": 3,
+      "settled_units": 3,
+      "precheck_remaining_credits": 770,
+      "paygo_usage_credits": 0
+    }
+  },
+  "active_leases": 0,
+  "unsettled_leases": 0,
+  "next_action": "configure a valid Gemini API key, refresh precheck, then reopen only this continuation gate",
+  "paid_overage_allowed": false,
+  "auto_switch_paid": false
+}

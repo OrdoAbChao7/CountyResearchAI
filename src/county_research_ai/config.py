@@ -232,7 +232,12 @@ def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:
     llm = settings_dict.setdefault("llm", {})
     if os.getenv("LLM_PROVIDER"):
         llm["provider"] = os.getenv("LLM_PROVIDER")
-    if os.getenv("LLM_API_KEY"):
+    if (
+        str(llm.get("provider", "")).lower() == "gemini"
+        and os.getenv("GEMINI_API_KEY")
+    ):
+        llm["api_key"] = os.getenv("GEMINI_API_KEY")
+    elif os.getenv("LLM_API_KEY"):
         llm["api_key"] = os.getenv("LLM_API_KEY")
     if os.getenv("LLM_BASE_URL"):
         llm["base_url"] = os.getenv("LLM_BASE_URL")

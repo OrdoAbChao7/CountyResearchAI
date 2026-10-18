@@ -1,0 +1,105 @@
+{
+  "check_id": "resource_precheck",
+  "checked_at": "2026-10-18T17:15:08.792745+00:00",
+  "deepseek": {
+    "provider": "deepseek",
+    "model": null,
+    "configured": false,
+    "enabled": false,
+    "llm_billing_boundary": "UNKNOWN",
+    "search_fetch_billing_boundary": "UNKNOWN",
+    "status": "DISABLED_BY_POLICY"
+  },
+  "gemini": {
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-lite",
+    "account_quota_fields_returned": false,
+    "billing_boundary": "FREE_CONFIRMED",
+    "models_list_http_status": 400,
+    "target_model_visible": false,
+    "status": "HTTP_ERROR",
+    "billing_basis": "user_attested_free_only",
+    "billing_evidence": {
+      "source": "current user instruction",
+      "method": "manual_user_confirmation",
+      "account_scope": "current_api_account",
+      "evidence_ref": "user-message-2026-10-19-free-quota",
+      "verified_at": "2026-10-19T01:13:10.246003+08:00"
+    },
+    "free_only": true,
+    "paid_overage_allowed": false,
+    "auto_switch_paid": false,
+    "authorization_ref": "free_only_user_confirmation_20261019",
+    "model_validation": "LIVE_CALL_REQUIRED"
+  },
+  "tavily": {
+    "usage_http_status": 200,
+    "current_plan": "Researcher",
+    "plan_usage_credits": 230,
+    "plan_limit_credits": 1000,
+    "conservative_remaining_credits": 770,
+    "paygo_usage_credits": 0,
+    "status": "FREE_PLAN_USAGE_VISIBLE",
+    "billing_boundary": "FREE_CONFIRMED",
+    "billing_basis": "user_attested_free_only",
+    "billing_evidence": {
+      "source": "current user instruction",
+      "method": "manual_user_confirmation",
+      "account_scope": "current_api_account",
+      "evidence_ref": "user-message-2026-10-19-free-quota",
+      "verified_at": "2026-10-19T01:13:10.246003+08:00"
+    },
+    "free_only": true,
+    "paid_overage_allowed": false,
+    "auto_switch_paid": false,
+    "authorization_ref": "free_only_user_confirmation_20261019"
+  },
+  "formal_gate": "READY_FOR_PREFLIGHT",
+  "business_model_calls_made": false,
+  "api_keys_logged": false,
+  "authorization": {
+    "authorization_id": "free_only_user_confirmation_20261019",
+    "status": "ACTIVE_FREE_ONLY",
+    "authorization": {
+      "source": "current user instruction",
+      "method": "manual_user_confirmation",
+      "account_scope": "current_api_account",
+      "evidence_ref": "user-message-2026-10-19-free-quota",
+      "verified_at": "2026-10-19T01:13:10.246003+08:00"
+    },
+    "providers": {
+      "gemini": {
+        "provider": "gemini",
+        "model": "gemini-3.1-flash-lite",
+        "billing_boundary": "FREE_CONFIRMED",
+        "free_only": true,
+        "paid_overage_allowed": false,
+        "auto_switch_paid": false,
+        "qualification": "用户人工确认当前 API 账户仍有可用免费额度；不将自动余额查询失败解释为余额不足。"
+      },
+      "tavily": {
+        "provider": "tavily",
+        "billing_boundary": "FREE_CONFIRMED",
+        "free_only": true,
+        "paid_overage_allowed": false,
+        "auto_switch_paid": false,
+        "qualification": "用户人工确认当前 API 账户仍有可用免费额度；运行前仍以 Tavily usage precheck 的剩余量和 PAYG=0 为准。"
+      }
+    },
+    "scope": [
+      "continuation_natural_execution",
+      "continuation_matched_budget",
+      "continuation_claim_scoring",
+      "continuation_judging",
+      "continuation_report_qa"
+    ],
+    "stop_conditions": [
+      "provider free-plan quota is exhausted",
+      "PAYG or any overage signal is non-zero",
+      "provider configuration or model validation fails",
+      "resource manager capacity or concurrency circuit breaker trips"
+    ],
+    "account_balance_query_unavailable_is_global_blocker": false,
+    "secrets_logged": false
+  }
+}

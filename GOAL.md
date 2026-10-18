@@ -57,7 +57,7 @@
 | P1 仓库审计 | `PROJECT_AUDIT.md` 记录真实能力、缺陷和可执行性 | COMPLETE |
 | P2 协议冻结 | 设计、任务、Rubric、隔离和预算策略落盘 | COMPLETE（六地区最小正式 claim target、输入 hash、Rubric 和 E1 primary task 映射均已冻结；snapshot/rise-fall/long-history 均有正式地区覆盖） |
 | P3 工程实现 | Resource Manager、Manifest、Runner、Judge、Metrics、Report 有测试 | COMPLETE（含空报告拒绝、DeepSeek thinking 参数、批次过滤、失败 Judge 不并入统计的回归测试） |
-| P4 资源验证 | 选定 Provider 的模型、调用方式和计费边界有证据 | COMPLETE（历史 DeepSeek API、Search、真实 Usage 和旧授权标签均已记录；续作已确认缺少账户级账单证据并关闭 Gate） |
+| P4 资源验证 | 选定 Provider 的模型、调用方式和计费边界有证据 | PARTIAL（Tavily free-plan 可用；Gemini 用户已确认免费额度但当前 key 首次真实调用无效，已按规则熔断） |
 | P5 Smoke Test | 至少一轮真实 A/B/C，运行无 Mock 污染且来源可核验 | COMPLETE（正式修正批次先经低预算诊断，空报告问题已被发现并修复） |
 | P6 正式实验 | 在确认配额内执行冻结批次并保留所有成功/失败样本 | COMPLETE（E1/E2 各 18 个修正后 VALID 运行；旧失败批次保留并排除） |
 | P7 审计与报告 | 独立审计、统计、图表和 `FINAL_REPORT.md` 完成 | COMPLETE（E1/E2 Claim、Judge、QA、合并观测、统计、图表和批次审计均已落盘） |
@@ -80,13 +80,13 @@
 - 历史正式批次使用 DeepSeek `deepseek-flash` 与 DeepSeek Search，旧账本记录为 `USER_AUTHORIZED_PAID`；本轮 Ground Truth 使用当前用户明确的任务级授权，不把本地 Usage 记录当作账户账单。
 - E1 研究账本：91,815 LLM tokens、72 次搜索；E2 研究账本：55,065 LLM tokens、0 次搜索。
 - E1/E2 Claim、Judge、QA 后处理继续通过独立 Resource Manager 账本记录；总 DeepSeek LLM tokens 为 586,373，搜索请求为 72。
-- Gemini/Tavily 仍保留为可用 Provider 的配置和历史资源证据，但不进入本次正式结论；没有自动充值、静默升级或把付费调用标记为免费。
+- 本轮续作仅授权 Gemini/Tavily 免费额度；Tavily 预检为 Researcher、剩余 770 credits、PAYG=0。没有自动充值、静默升级或把付费调用标记为免费；DeepSeek 不在本轮授权内。
 
 ## Execution Status
 
 - Git：当前工作在 `codex/experiment-superiority`；续作新增审计与计划文件，不提交 `.env` 或 API Key。
 - 测试：本轮新增回归测试覆盖 DeepSeek thinking 参数、空报告拒绝、批次前缀过滤、失败 Judge 不并入统计、布尔字符串兼容；全量测试与静态检查在收尾阶段复核，pytest cache 的 Windows 权限警告仍为环境问题。
-- Provider：历史 DeepSeek Models、Search 和 Chat Probe 曾成功；本轮 Ground Truth 采集使用当前用户明确授权的任务级 DeepSeek Gate，实际调用与原始来源均已留存；账户级账单仍未核实，正式 E1/E2 Gate 仍未打开。
+- Provider：本轮 `.env` 配置为 Gemini + Tavily。Tavily 只读 usage 预检成功；Gemini models 预检 HTTP 400，首次真实 LLM 调用返回 `INVALID_ARGUMENT`（valid API key required），已停止 Gemini，未切换 DeepSeek。新增 `GEMINI_API_KEY` provider-specific 配置支持。
 - 正式 E1：`formal_target_deepseek_20261018_corrected_r2`，6 地区 × A/B/C = 18/18 `VALID`，报告全部非空，资源与产物审计通过。
 - 正式 E2：六个 `e2_formal_target_deepseek_20261018_corrected_*` 批次，18/18 `VALID`，冻结输入 hash 全部匹配，资源与产物审计通过。
 - 后处理：E1/E2 Claim Verification 各 18/18 有效；Blind Judge 各 17/18 有效；Report-Based QA 各 18/18 可解析；统计、配对差异、区域统计和真实 SVG 图表已生成。
@@ -140,7 +140,9 @@
 - `experiments/independent_comparison/reports/SECOND_ROUND_REPORT.md`：第二轮 A/B/C 尚未运行；报告区分了已完成的真实 Ground Truth 冻结与尚未完成的效能验证。
 - `experiments/independent_comparison/ground_truth/continuation_ground_truth_20261019.jsonl` 及 manifest：六地区、三模式共 90 条 rich claims；每条均有两个不同 URL、两个检索上下文和可复核原文摘录，source hash 为 `a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd`。
 - `experiments/independent_comparison/ground_truth/collection_20261019/`：真实 Search/Fetch/LLM 原始响应、任务检查点和恢复进度；不含 API Key。
-- `experiments/independent_comparison/manifests/continuation_ground_truth_precheck_20261018.json`、`continuation_ground_truth_gate_20261018.json`：本轮任务级 DeepSeek 配置与当前用户授权证据；不改写历史 `continuation_resource_gate_20261018.json`。
+- `experiments/independent_comparison/manifests/resource_authorization_20261019.json`：当前用户对 Gemini/Tavily 免费额度的人工确认，明确禁止付费超额和自动切换。
+- `experiments/independent_comparison/manifests/resource_precheck_20261019.json`、`continuation_resource_gate_20261018.json`、`continuation_resource_manager_state_20261019.json`：Tavily 免费层核验、Gemini 失败熔断、中央账本状态和唯一解锁条件。
+- `experiments/independent_comparison/runs/continuation_natural_stage_a_20261019/`：Stage A 首次真实运行的失败样本、资源结算和停止证据；未伪造为有效结果。
 - `src/county_research_ai/evaluation/metrics.py`、`src/county_research_ai/evaluation/statistics.py`、`scripts/generate_independent_stats.py`：错误率、分析深度、QA、时间、token、搜索请求、单位覆盖效率和地区×组差异的 observation/统计/图表支持；E1/E2 正式 observation、CSV、JSON 和 SVG 已生成。
 - Gemini/Tavily/DeepSeek 官方资源核验记录写入 `PROJECT_AUDIT.md` 和本文件，不将 Key 或响应中的敏感字段写入日志。
 
@@ -148,12 +150,12 @@
 
 - 当前续作已创建 `codex/experiment-superiority` 分支并推送；历史数据和续作审计产物均保留。
 - 研究规模只完成每组每地区 1 次重复，不能支持稳定性或显著性结论；这是结果局限，不阻塞本 Goal 的最小验收。
-- 当前没有可靠账户价格、账单或免费资格字段，报告只呈现真实 tokens/请求数，不将其换算成金额；在重新确认前禁止业务 API。
+- 当前具体阻塞仅为 Gemini Provider 配置：`LLM_API_KEY` 对 Gemini 无效。Tavily 仍有免费资格证据，但 A/B/C 需要共同 LLM，因此整轮暂停；只需配置有效 `GEMINI_API_KEY`（或替换 `LLM_API_KEY`）并刷新 precheck。
 - 未完成可靠的模块消融，因此不能把 C 的任何差异归因到某一个专用模块。
 
 ## Final Acceptance
 
-第一轮真实实验产物、失败样本、资源计量、Ground Truth、盲评、审计、统计和最终报告均已落盘并可核验；续作真实 Ground Truth 已冻结，但第二轮公平效能实验尚未运行，研究结论仍为 `INCONCLUSIVE_WITH_EFFICIENCY_REGRESSION`。只有完成离线评分校准和公平第二轮验证后，才能重新判断整体优势。
+第一轮真实实验产物、失败样本、资源计量、Ground Truth、盲评、审计、统计和最终报告均已落盘并可核验；续作真实 Ground Truth 已冻结。Stage A 已启动但在首个 Gemini 调用因无效 key 停止，尚未形成 A/B/C 有效对照；修复 Gemini 配置后再继续离线审计、Natural Execution 和 Matched Budget。
 
 ## Goal Continuation：实验有效性修复
 
@@ -163,14 +165,14 @@
 - Benchmark Validity：`FROZEN_CONTINUATION_BENCHMARK`；六地区 × snapshot/rise-fall/long-history，每地区 15 条、每模式 5 条，共 90 条 rich claims，均通过双 URL、双上下文和逐条原文摘录校验。
 - Research Evidence：`INCONCLUSIVE`；第一轮事实指标不能解释为完整研究能力。
 - Efficiency Performance：`REGRESSION_OBSERVED`；C 的时间和 token 成本明显高于 A/B。
-- Overall Goal Completion：`NOT_COMPLETE`；有效 Benchmark 已完成，等待离线评分校准后的第二轮 Natural Execution 与 Matched Budget 验证。
+- Overall Goal Completion：`BLOCKED_PROVIDER_CONFIGURATION`；有效 Benchmark 已完成，Stage A 失败样本已保留，等待唯一的 Gemini key 配置修复。
 
 ### 续作优先级
 
-1. `P0` 保留历史账单不确定性边界；正式 E1/E2 仍需独立 billing gate，不能把本轮用户授权或本地 Usage 当作账户账单。
+1. `P0` 保留历史 DeepSeek 账单边界；本轮 Gemini/Tavily 只允许用户确认的免费额度，不允许付费超额或自动切换。
 2. `P0` 已完成 15–20 条/地区、任务匹配、双上下文核查的 rich Ground Truth 冻结。
 3. `P0` 重构 Fact Precision、Ground Truth Recall、Evidence Support、Factual Error 与 N/A 分母。
-4. `P1` 通过离线控制样例校准 Judge，再冻结 Natural Execution 与 Matched Budget 协议。
+4. `P1` 配置有效 Gemini key 后，通过离线控制样例校准 Judge，再继续 Natural Execution 与 Matched Budget。
 5. `P2` 仅在有效 Benchmark 完成后开展真实模块消融。
 
 续作计划：`docs/superpowers/plans/2026-10-18-goal-continuation-validity.md`。
