@@ -1,0 +1,51 @@
+{
+  "api_keys_logged": false,
+  "claim_count": 90,
+  "claims_per_region": {
+    "临泽县": 15,
+    "于都县": 15,
+    "德清县": 15,
+    "攀枝花市": 15,
+    "白山市": 15,
+    "长汀县": 15
+  },
+  "claims_per_region_task": {
+    "临泽县::long-history": 5,
+    "临泽县::rise-fall": 5,
+    "临泽县::snapshot": 5,
+    "于都县::long-history": 5,
+    "于都县::rise-fall": 5,
+    "于都县::snapshot": 5,
+    "德清县::long-history": 5,
+    "德清县::rise-fall": 5,
+    "德清县::snapshot": 5,
+    "攀枝花市::long-history": 5,
+    "攀枝花市::rise-fall": 5,
+    "攀枝花市::snapshot": 5,
+    "白山市::long-history": 5,
+    "白山市::rise-fall": 5,
+    "白山市::snapshot": 5,
+    "长汀县::long-history": 5,
+    "长汀县::rise-fall": 5,
+    "长汀县::snapshot": 5
+  },
+  "created_at": "2026-10-18T16:56:43.958416+00:00",
+  "gate_id": "continuation_ground_truth_gate_20261018",
+  "llm_provider": "deepseek",
+  "llm_requests": 32,
+  "llm_requests_scope": "retained_extraction_artifacts_only",
+  "model": "deepseek-flash",
+  "resume_enabled": true,
+  "retained_successful_search_contexts": 36,
+  "schema_version": "continuation-v1",
+  "search_provider": "deepseek",
+  "search_stats": {
+    "failed_requests": 0,
+    "requests": 0,
+    "successful_requests": 0
+  },
+  "search_stats_scope": "current_process_only",
+  "source_hash": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+  "source_path": "experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_source_20261019.jsonl",
+  "status": "COLLECTED_CONTINUATION_BENCHMARK_SOURCE"
+}

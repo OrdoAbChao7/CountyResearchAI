@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_2ad71c1fb3c8",
+      "claim": "于都县建县于西汉高祖六年（公元前201年），置雩都县，以北有雩山而得名。",
+      "source": "于都县",
+      "url": "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+      "date": "2026-09-18T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "建县时间与县名由来",
+      "unit": "历史事件",
+      "evidence_excerpt": "西汉高祖六年（公元前201年）置雩都县，以北有雩山而得名。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+        "http://szb.gnrbs.cn/resfile/2021-07-01/T077/T077.pdf#1#1"
+      ],
+      "verification_contexts": [
+        "region_03_long-history_local_history",
+        "region_03_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "西汉高祖六年（公元前201年）置雩都县，以北有雩山而得名。",
+        "全县地区生产总值（工农业总产值）从0.27亿元增至279.43亿元"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "于都县建县于西汉高祖六年（公元前201年），当时置雩都县，因县北有雩山而得名。",
+      "source_title": "于都县",
+      "source_date": "2026-09-18T16:00:00+00:00",
+      "metric_year": "公元前201年（西汉高祖六年）",
+      "administrative_scope": "于都县县域"
+    },
+    {
+      "claim_id": "continuation_61e442a92b28",
+      "claim": "1957年6月1日起，因字生僻，于都县由“雩都”改名为“于都”。",
+      "source": "于都县",
+      "url": "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+      "date": "2026-09-18T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "县名变更",
+      "unit": "历史事件",
+      "evidence_excerpt": "1957年6月1日起，因字生僻，改“雩都”为“于都”。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+        "http://szb.gnrbs.cn/resfile/2021-07-01/T077/T077.pdf#1#1"
+      ],
+      "verification_contexts": [
+        "region_03_long-history_local_history",
+        "region_03_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "1957年6月1日起，因字生僻，改“雩都”为“于都”。",
+        "全县地区生产总值（工农业总产值）从0.27亿元增至279.43亿元"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "1957年6月1日起，因“雩”字生僻，改“雩都”为“于都”。",
+      "source_title": "于都县",
+      "source_date": "2026-09-18T16:00:00+00:00",
+      "metric_year": "1957年6月1日",
+      "administrative_scope": "于都县县域"
+    },
+    {
+      "claim_id": "continuation_2c43bcd05c57",
+      "claim": "于都县工业园区总面积6平方公里，已完成“三通一平”面积3700亩，引入县外资金29亿元，签约项目146个，动工建厂企业17家，投产企业42家，被评为省重点工业园区。",
+      "source": "于都县",
+      "url": "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+      "date": "2026-09-18T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "工业园区建设",
+      "unit": "面积/资金/项目/企业数",
+      "evidence_excerpt": "于都工业园区总面积6平方公里，完成“三通一平”面积3700亩，引入县外资金29亿元，签约项目146个，动工建厂企业17家，投产企业42家，被评为省重点工业园区。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+        "http://www.ydxdw.gov.cn/n379779/n379780/c664901/content.html#1"
+      ],
+      "verification_contexts": [
+        "region_03_long-history_local_history",
+        "region_03_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "于都工业园区总面积6平方公里，完成“三通一平”面积3700亩，引入县外资金29亿元，签约项目146个，动工建厂企业17家，投产企业42家，被评为省重点工业园区。",
+        "五年间，于都工业经济的“基本盘”愈发稳固，规上营收、企业数双双突破“二百”大关，其中规上工业企业达240家、稳居河东片第一；工业园区面积扩大1.4倍；上市企业、国家级专精特新“小巨人”等实现零突破。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "于都工业园区总面积6平方公里，完成“三通一平”面积3700亩，引入县外资金29亿元，签约项目146个，动工建厂企业17家，投产企业42家，被评为省重点工业园区。",
+      "source_title": "于都县",
+      "source_date": "2026-09-18T16:00:00+00:00",
+      "metric_year": "未明确年份（原文为2012年前后经济段落）",
+      "administrative_scope": "于都县县域"
+    },
+    {
+      "claim_id": "continuation_9bb8cb64920f",
+      "claim": "2005年于都县主要工业产品产量为：钨精矿年产量2997.26吨、发电量722.8万度、齿轮845万件、原煤5.5万吨、水泥62.3万吨；而1978年钨精矿产量仅526吨、发电量71.17万度、水泥1591吨、石灰93204吨。",
+      "source": "于都县",
+      "url": "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+      "date": "2026-09-18T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "主要工业产品产量",
+      "unit": "吨/万度/万件/万吨",
+      "evidence_excerpt": "2005年主要产品产量：钨精矿年产量达2997.26吨、发电量722.8万度、齿轮845万件、原煤5.5万吨、水泥62.3万吨。而1978年65%钨精矿产量仅526吨，发电量71.17万度，水泥1591吨，石灰93204吨。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+        "http://szb.gnrbs.cn/resfile/2021-07-01/T077/T077.pdf#1#1"
+      ],
+      "verification_contexts": [
+        "region_03_long-history_local_history",
+        "region_03_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "2005年主要产品产量：钨精矿年产量达2997.26吨、发电量722.8万度、齿轮845万件、原煤5.5万吨、水泥62.3万吨。而1978年65%钨精矿产量仅526吨，发电量71.17万度，水泥1591吨，石灰93204吨。",
+        "全县地区生产总值（工农业总产值）从0.27亿元增至279.43亿元"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2005年于都县钨精矿产量2997.26吨、发电量722.8万度、齿轮845万件、原煤5.5万吨、水泥62.3万吨；1978年钨精矿产量526吨、发电量71.17万度、水泥1591吨、石灰93204吨。",
+      "source_title": "于都县",
+      "source_date": "2026-09-18T16:00:00+00:00",
+      "metric_year": "2005年与1978年对比",
+      "administrative_scope": "于都县县域"
+    },
+    {
+      "claim_id": "continuation_ede40834b5cc",
+      "claim": "2012年于都县完成规模以上工业增加值47.55亿元，新增规模以上工业企业9户，新增税收超百万元企业5户、超千万元企业2户；矿业、机械电子业、轻纺食品业分别完成主营业务收入33.9亿元、57.7亿元和57.6亿元。",
+      "source": "于都县",
+      "url": "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+      "date": "2026-09-18T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "规模以上工业增加值及分行业主营业务收入",
+      "unit": "亿元/户",
+      "evidence_excerpt": "2012年于都县完成规模以上工业增加值47.55亿元。新增规模以上工业企业9户，新增税收超百万元企业5户、超千万元企业2户。矿业、机械电子业、轻纺食品业分别完成主营业务收入33.9亿元、57.7亿元和57.6亿元。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://baike.baidu.com/item/%E4%BA%8E%E9%83%BD%E5%8E%BF?adapt=1&bst=1791861944.27a848153c76678a#1",
+        "http://www.ydxdw.gov.cn/n379779/n379780/c664901/content.html#1"
+      ],
+      "verification_contexts": [
+        "region_03_long-history_local_history",
+        "region_03_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "2012年于都县完成规模以上工业增加值47.55亿元。新增规模以上工业企业9户，新增税收超百万元企业5户、超千万元企业2户。矿业、机械电子业、轻纺食品业分别完成主营业务收入33.9亿元、57.7亿元和57.6亿元。",
+        "截至2025年，全县规上企业营收达234.62亿元，同比增长5.5%，实现利润13.14亿元，同比增长9.2%。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2012年于都县完成规模以上工业增加值47.55亿元，新增规模以上工业企业9户，新增税收超百万元企业5户、超千万元企业2户；矿业、机械电子业、轻纺食品业分别完成主营业务收入33.9亿元、57.7亿元和57.6亿元。",
+      "source_title": "于都县",
+      "source_date": "2026-09-18T16:00:00+00:00",
+      "metric_year": "2012年",
+      "administrative_scope": "于都县县域"
+    }
+  ]
+}

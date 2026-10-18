@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_3499cb225ab4",
+      "claim": "2024年临泽县完成地区生产总值79.68亿元，同比增长6.1%。",
+      "source": "临泽县2024年主要经济指标完成情况",
+      "url": "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+      "date": "2025-04-15",
+      "region": "临泽县",
+      "metric": "地区生产总值（GDP）",
+      "unit": "亿元",
+      "evidence_excerpt": "2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+        "http://www.gslz.gov.cn/zfxxgk/fdzdgknr/jczwgkly/sthj/202508/W020250815425493656083.pdf#18#4"
+      ],
+      "verification_contexts": [
+        "region_06_snapshot_official_bulletin",
+        "region_06_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。",
+        "2024年初步核算，实现生产总值79.68亿元，比上年增长 \\(6.1\\%\\) 。其中 ... 根据临泽县2024年国民经济和社会发展统计公报，截至2024年末，全年实现农林牧渔业增加值28.71亿元，增长 \\(7.46\\%\\) 。"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年临泽县完成地区生产总值79.68亿元，同比增长6.1%。",
+      "source_title": "临泽县2024年主要经济指标完成情况",
+      "source_date": "2025-04-15",
+      "metric_year": "2024",
+      "administrative_scope": "临泽县县域本级"
+    },
+    {
+      "claim_id": "continuation_67da47431fd1",
+      "claim": "2024年临泽县第一产业增加值26.35亿元，同比增长7.7%。",
+      "source": "临泽县2024年主要经济指标完成情况",
+      "url": "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+      "date": "2025-04-15",
+      "region": "临泽县",
+      "metric": "第一产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "一产增加值26.35亿元，同比增长7.7％；",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+        "http://www.gslz.gov.cn/zfxxgk/fdzdgknr/jczwgkly/sthj/202508/W020250815425493656083.pdf#18#4"
+      ],
+      "verification_contexts": [
+        "region_06_snapshot_official_bulletin",
+        "region_06_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "一产增加值26.35亿元，同比增长7.7％；",
+        "2024年初步核算，实现生产总值79.68亿元，比上年增长 \\(6.1\\%\\) 。其中 ... 根据临泽县2024年国民经济和社会发展统计公报，截至2024年末，全年实现农林牧渔业增加值28.71亿元，增长 \\(7.46\\%\\) 。"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年临泽县第一产业增加值26.35亿元，同比增长7.7%。",
+      "source_title": "临泽县2024年主要经济指标完成情况",
+      "source_date": "2025-04-15",
+      "metric_year": "2024",
+      "administrative_scope": "临泽县县域本级"
+    },
+    {
+      "claim_id": "continuation_1b4e364002af",
+      "claim": "2024年临泽县第二产业增加值15.26亿元，同比增长10.8%。",
+      "source": "临泽县2024年主要经济指标完成情况",
+      "url": "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+      "date": "2025-04-15",
+      "region": "临泽县",
+      "metric": "第二产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "二产增加值15.26亿元，同比增长10.8％；",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+        "http://61.178.178.81/zfxxgk/zfwj_6139/zfwj_9389/agwzlfl/lzf_6140/202502/t20250226_1362334_wap.html"
+      ],
+      "verification_contexts": [
+        "region_06_snapshot_official_bulletin",
+        "region_06_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "二产增加值15.26亿元，同比增长10.8％；",
+        "预计全年实现地区生产总值79.57亿元、增长7.2％，一产增加值27.89亿元、增长7.5％，二产增加值13.76亿元、增长10％，三产增加值37.92亿元、增长6％"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年临泽县第二产业增加值15.26亿元，同比增长10.8%。",
+      "source_title": "临泽县2024年主要经济指标完成情况",
+      "source_date": "2025-04-15",
+      "metric_year": "2024",
+      "administrative_scope": "临泽县县域本级"
+    },
+    {
+      "claim_id": "continuation_ecb10ad17acc",
+      "claim": "2024年临泽县第三产业增加值38.07亿元，同比增长3.3%。",
+      "source": "临泽县2024年主要经济指标完成情况",
+      "url": "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+      "date": "2025-04-15",
+      "region": "临泽县",
+      "metric": "第三产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "三产增加值38.07亿元，同比增长3.3％。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+        "http://61.178.178.81/zfxxgk/zfwj_6139/zfwj_9389/agwzlfl/lzf_6140/202502/t20250226_1362334_wap.html"
+      ],
+      "verification_contexts": [
+        "region_06_snapshot_official_bulletin",
+        "region_06_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "三产增加值38.07亿元，同比增长3.3％。",
+        "预计全年实现地区生产总值79.57亿元、增长7.2％，一产增加值27.89亿元、增长7.5％，二产增加值13.76亿元、增长10％，三产增加值37.92亿元、增长6％"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年临泽县第三产业增加值38.07亿元，同比增长3.3%。",
+      "source_title": "临泽县2024年主要经济指标完成情况",
+      "source_date": "2025-04-15",
+      "metric_year": "2024",
+      "administrative_scope": "临泽县县域本级"
+    },
+    {
+      "claim_id": "continuation_ff51d8745b8d",
+      "claim": "2024年临泽县一般公共预算收入3.01亿元，同比增长6.9%。",
+      "source": "临泽县2024年主要经济指标完成情况",
+      "url": "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+      "date": "2025-04-15",
+      "region": "临泽县",
+      "metric": "一般公共预算收入",
+      "unit": "亿元",
+      "evidence_excerpt": "一般公共预算收入3.01亿元，同比增长6.9％；",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://61.178.178.81/zfxxgk/fdzdgknr/tjxx/202504/t20250415_1387267.html",
+        "http://61.178.178.81/zfxxgk/zfwj_6139/zfwj_9389/agwzlfl/lzf_6140/202502/t20250226_1362334_wap.html"
+      ],
+      "verification_contexts": [
+        "region_06_snapshot_official_bulletin",
+        "region_06_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "一般公共预算收入3.01亿元，同比增长6.9％；",
+        "一般公共预算收入3亿元、增长6.9％"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年临泽县一般公共预算收入3.01亿元，同比增长6.9%。",
+      "source_title": "临泽县2024年主要经济指标完成情况",
+      "source_date": "2025-04-15",
+      "metric_year": "2024",
+      "administrative_scope": "临泽县县域本级"
+    }
+  ]
+}

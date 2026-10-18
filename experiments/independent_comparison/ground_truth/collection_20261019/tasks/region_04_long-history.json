@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_11edd755436f",
+      "claim": "1965年成立攀枝花特区，1987年更名为攀枝花市。",
+      "source": "【国庆特辑】四川省21个市（州）75 年发展变迁",
+      "url": "http://scdfz.sc.gov.cn/gzdt/zyhy/content_159655#1",
+      "date": "2024-10-01",
+      "region": "攀枝花市",
+      "metric": "历史沿革与行政区划名称变化",
+      "unit": "年份/事件",
+      "evidence_excerpt": "1965年成立攀枝花特区\\,1987年更名为攀枝花市。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://scdfz.sc.gov.cn/gzdt/zyhy/content_159655#1",
+        "http://panzhihua.gov.cn/tzfw/tzhj/lswh/10321380.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_long-history_local_history",
+        "region_04_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "1965年成立攀枝花特区\\,1987年更名为攀枝花市。",
+        "攀枝花1965年建市，是全国唯一以花命名的城市"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "1965年成立攀枝花特区，1987年更名为攀枝花市。",
+      "source_title": "【国庆特辑】四川省21个市（州）75 年发展变迁",
+      "source_date": "2024-10-01",
+      "metric_year": "1965年、1987年",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_e690f25db7d4",
+      "claim": "攀枝花开发建设主要经历三个阶段：以攀钢项目为标志的钢铁基地建设时期、以二滩电站项目为标志的清洁能源基地建设时期，以及以发展康养产业、钒钛产业为标志的康养胜地和钒钛产业基地建设时期。",
+      "source": "【国庆特辑】四川省21个市（州）75 年发展变迁",
+      "url": "http://scdfz.sc.gov.cn/gzdt/zyhy/content_159655#1",
+      "date": "2024-10-01",
+      "region": "攀枝花市",
+      "metric": "开发建设阶段与产业变迁",
+      "unit": "历史阶段/产业类别",
+      "evidence_excerpt": "60年来\\,攀枝花开发建设主要经历三个阶段\\,即以攀钢项目为标志的钢铁基地建设时期、以二滩电站项目为标志的清洁能源基地建设时期\\,以及以发展康养产业、钒钛产业为标志的康养胜地和钒钛产业基地建设时期",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://scdfz.sc.gov.cn/gzdt/zyhy/content_159655#1",
+        "http://lw.news.cn/2022-12/22/c_1310685563.htm#1"
+      ],
+      "verification_contexts": [
+        "region_04_long-history_local_history",
+        "region_04_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "60年来\\,攀枝花开发建设主要经历三个阶段\\,即以攀钢项目为标志的钢铁基地建设时期、以二滩电站项目为标志的清洁能源基地建设时期\\,以及以发展康养产业、钒钛产业为标志的康养胜地和钒钛产业基地建设时期",
+        "攀枝花市委提出，除了端好“铁饭碗”、做强“钛钒碗”，还要创造“金饭碗”，利用得天独厚的金色阳光资源，持续做好“阳光文章”，大力发展现代农业、清洁能源和阳光康养旅游度假产业。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "攀枝花开发建设主要经历三个阶段：以攀钢项目为标志的钢铁基地建设时期、以二滩电站项目为标志的清洁能源基地建设时期，以及以发展康养产业、钒钛产业为标志的康养胜地和钒钛产业基地建设时期。",
+      "source_title": "【国庆特辑】四川省21个市（州）75 年发展变迁",
+      "source_date": "2024-10-01",
+      "metric_year": "1965年以来60年",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_967fdf968b1a",
+      "claim": "20世纪60年代，攀枝花因特殊的地理位置和丰富的矿产资源，被国家列为三线建设的重中之重，成为新中国首批资源开发特区。",
+      "source": "攀枝花市情介绍(2026)",
+      "url": "http://panzhihua.gov.cn/tzfw/tzhj/lswh/10321380.shtml",
+      "date": "2026-10-15",
+      "region": "攀枝花市",
+      "metric": "工业起步与三线建设定位",
+      "unit": "历史时期/事件",
+      "evidence_excerpt": "上世纪60年代，攀枝花因特殊的地理位置和丰富的矿产资源，被国家列为三线建设的重中之重，成为新中国首批资源开发特区。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/tzfw/tzhj/lswh/10321380.shtml",
+        "http://scdfz.sc.gov.cn/gzdt/zyhy/content_159655#1"
+      ],
+      "verification_contexts": [
+        "region_04_long-history_industrial_history",
+        "region_04_long-history_local_history"
+      ],
+      "verification_excerpts": [
+        "上世纪60年代，攀枝花因特殊的地理位置和丰富的矿产资源，被国家列为三线建设的重中之重，成为新中国首批资源开发特区。",
+        "1965年成立攀枝花特区\\,1987年更名为攀枝花市。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "20世纪60年代，攀枝花因特殊的地理位置和丰富的矿产资源，被国家列为三线建设的重中之重，成为新中国首批资源开发特区。",
+      "source_title": "攀枝花市情介绍(2026)",
+      "source_date": "2026-10-15",
+      "metric_year": "20世纪60年代",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_84c08afef615",
+      "claim": "1970年7月1日，攀钢炼铁厂一号高炉炼出第一炉铁水。",
+      "source": "长江上游“首位城市”崛起记",
+      "url": "http://lw.news.cn/2022-12/22/c_1310685563.htm#1",
+      "date": "2022-12-21",
+      "region": "攀枝花市",
+      "metric": "钢铁基地建设关键节点",
+      "unit": "日期/事件",
+      "evidence_excerpt": "1970年7月1日，攀钢炼铁厂一号高炉炼出第一炉铁水。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://lw.news.cn/2022-12/22/c_1310685563.htm#1",
+        "http://www.panzhihua.gov.cn/zwgk/gzdt/bdyw/10195890.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_long-history_industrial_history",
+        "region_04_long-history_local_history"
+      ],
+      "verification_excerpts": [
+        "1970年7月1日，攀钢炼铁厂一号高炉炼出第一炉铁水。",
+        "全书重点记述1965年以来，攀枝花在三线建设的伟大实践中，自力更生、艰苦创业，实现从“不毛之地”到“百里钢城”再到“中国钒钛之都”的历史飞跃"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "1970年7月1日，攀钢炼铁厂一号高炉炼出第一炉铁水。",
+      "source_title": "长江上游“首位城市”崛起记",
+      "source_date": "2022-12-21",
+      "metric_year": "1970年",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_d70f3edba9a9",
+      "claim": "2023年攀枝花钒钛产业产值首次超过钢铁产业，实现了从“钢铁之城”到“钒钛之都”的蝶变。",
+      "source": "攀枝花市情介绍(2026)",
+      "url": "http://panzhihua.gov.cn/tzfw/tzhj/lswh/10321380.shtml",
+      "date": "2026-10-15",
+      "region": "攀枝花市",
+      "metric": "产业转型与产值结构变化",
+      "unit": "年份/产值比较",
+      "evidence_excerpt": "钒钛产业保持快速增长，2023年产值首次超过钢铁产业，实现了从“钢铁之城”到“钒钛之都”的蝶变。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/tzfw/tzhj/lswh/10321380.shtml",
+        "http://www.panzhihua.gov.cn/zwgk/gzdt/bdyw/10195890.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_long-history_industrial_history",
+        "region_04_long-history_local_history"
+      ],
+      "verification_excerpts": [
+        "钒钛产业保持快速增长，2023年产值首次超过钢铁产业，实现了从“钢铁之城”到“钒钛之都”的蝶变。",
+        "实现从“不毛之地”到“百里钢城”再到“中国钒钛之都”的历史飞跃"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2023年攀枝花钒钛产业产值首次超过钢铁产业，实现了从“钢铁之城”到“钒钛之都”的蝶变。",
+      "source_title": "攀枝花市情介绍(2026)",
+      "source_date": "2026-10-15",
+      "metric_year": "2023年",
+      "administrative_scope": "地级市全市"
+    }
+  ]
+}

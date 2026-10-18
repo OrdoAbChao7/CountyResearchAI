@@ -1,0 +1,22 @@
+{
+  "gate_id": "continuation_ground_truth_gate_20261018",
+  "status": "READY_FOR_GROUND_TRUTH",
+  "created_at": "2026-10-18T16:54:53.928455+00:00",
+  "scope": [
+    "ground_truth_collection"
+  ],
+  "business_api_calls_allowed": true,
+  "allow_paid_authorized": true,
+  "llm_provider": "deepseek",
+  "search_provider": "deepseek",
+  "model": "deepseek-flash",
+  "authorization": {
+    "source": "current user instruction",
+    "method": "explicit_current_user_authorization",
+    "account_scope": "current_task",
+    "evidence_ref": "user-message-current-ground-truth",
+    "verified_at": "2026-10-18T16:54:53.928455+00:00"
+  },
+  "resource_precheck": "continuation_ground_truth_precheck_20261018.json",
+  "api_keys_logged": false
+}

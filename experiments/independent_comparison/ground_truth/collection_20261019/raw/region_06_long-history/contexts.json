@@ -1,0 +1,12 @@
+[
+  {
+    "context_id": "region_06_long-history_local_history",
+    "query": "甘肃省临泽县 资源型产业体系 2000 2006 2007 资源转型 工业 官方",
+    "result_count": 3
+  },
+  {
+    "context_id": "region_06_long-history_industrial_history",
+    "query": "甘肃省临泽县 资源枯竭城市 转型 2007 工业 官方",
+    "result_count": 3
+  }
+]

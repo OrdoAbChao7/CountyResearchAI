@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_44e0a2ba9d2b",
+      "claim": "2000～2003年，临泽县县属国有、集体企业、乡镇企业在产权制度改革中，通过产权出售、联合租赁、破产重组等形式转为民营企业。",
+      "source": "1983～2010年, 全县相继组织实施水利、林业、畜牧、科技、农电、乡镇企业、农村能源及移民安置8个方面的“两西”建设项目",
+      "url": "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626397323306922.pdf#102#69",
+      "date": "unknown",
+      "region": "临泽县",
+      "metric": "企业产权制度改革",
+      "unit": "历史事件",
+      "evidence_excerpt": "2000～2003年，县属国有、集体企业、乡镇企业在产权制度改革中，通过产权出售、联合租赁、破产重组等形式转为民营企业。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626397323306922.pdf#102#69",
+        "https://www.zsbeike.com/kepu/9917703.html"
+      ],
+      "verification_contexts": [
+        "region_06_long-history_local_history",
+        "region_06_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "2000～2003年，县属国有、集体企业、乡镇企业在产权制度改革中，通过产权出售、联合租赁、破产重组等形式转为民营企业。",
+        "1991年以来\\,境内工业门类主要有农产品加工、机械制造、建筑建材、矿产品冶炼、食品制造、水电开发、印刷造纸、日用杂品等10大行业。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2000～2003年，临泽县县属国有、集体企业、乡镇企业在产权制度改革中，通过产权出售、联合租赁、破产重组等形式转为民营企业。",
+      "source_title": "1983～2010年, 全县相继组织实施水利、林业、畜牧、科技、农电、乡镇企业、农村能源及移民安置8个方面的“两西”建设项目",
+      "source_date": "unknown",
+      "metric_year": "2000～2003年",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_4900cf8c323f",
+      "claim": "到2004年，临泽县规模以上工业实现增加值1.95亿元，以柠檬酸为主的工业产品出口总额突破1000万美元；工业增加值首次超过农业增加值，以种子加工、番茄加工、玉米深加工、草畜产品加工、水能开发为主的工业主导型经济格局初步形成。",
+      "source": "2009年始,县委、县政府把种植无公害蔬菜和高原夏菜作为发展蔬菜产业的重点,相继建成以蓼泉、沙河、新华、平川镇,倪家营乡为主的茄子、辣椒、萝卜、大白菜、甘蓝、韭菜、芹菜、西红柿等蔬菜生产基地",
+      "url": "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626398503669495.pdf#104#6",
+      "date": "unknown",
+      "region": "临泽县",
+      "metric": "规模以上工业增加值及工业结构",
+      "unit": "亿元、万美元",
+      "evidence_excerpt": "到2004年,全县规模以上工业实现增加值1.95亿元,以柠檬酸为主的工业产品出口总额突破1000万美元;工业增加值首次超过农业增加值,以种子加工、番茄加工、玉米深加工、草畜产品加工、水能开发为主的工业主导型经济格局初步形成。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626398503669495.pdf#104#6",
+        "https://www.zsbeike.com/kepu/9917703.html"
+      ],
+      "verification_contexts": [
+        "region_06_long-history_local_history",
+        "region_06_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "到2004年,全县规模以上工业实现增加值1.95亿元,以柠檬酸为主的工业产品出口总额突破1000万美元;工业增加值首次超过农业增加值,以种子加工、番茄加工、玉米深加工、草畜产品加工、水能开发为主的工业主导型经济格局初步形成。",
+        "1991年以来\\,境内工业门类主要有农产品加工、机械制造、建筑建材、矿产品冶炼、食品制造、水电开发、印刷造纸、日用杂品等10大行业。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "到2004年，临泽县规模以上工业实现增加值1.95亿元，以柠檬酸为主的工业产品出口总额突破1000万美元；工业增加值首次超过农业增加值，以种子加工、番茄加工、玉米深加工、草畜产品加工、水能开发为主的工业主导型经济格局初步形成。",
+      "source_title": "2009年始,县委、县政府把种植无公害蔬菜和高原夏菜作为发展蔬菜产业的重点,相继建成以蓼泉、沙河、新华、平川镇,倪家营乡为主的茄子、辣椒、萝卜、大白菜、甘蓝、韭菜、芹菜、西红柿等蔬菜生产基地",
+      "source_date": "unknown",
+      "metric_year": "2004年",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_6553ad1105be",
+      "claim": "2007年，国务院在《关于促进资源型城市可持续发展的若干意见》中提出，对于资源已经成熟而枯竭的城市，要选择好产业转型方向，重点用高新技术、先进适用技术改造传统产业，因地制宜，尽快形成新的主导产业。",
+      "source": "2007.24.",
+      "url": "http://www.qinghai.gov.cn/xxgk/xxgk/qhzb/qhzb2007/201712/P020171204326031272858.pdf#7#1",
+      "date": "unknown",
+      "region": "临泽县",
+      "metric": "资源型城市产业转型政策",
+      "unit": "政策文件",
+      "evidence_excerpt": "2007.24. 国务院关于促进资源型城市可持续发展的若干意见 ... 对于资源已经成熟而枯竭的城市，要选择好产业转型方向，重点用高新技术、先进适用技术改造传统产业，因地制宜，尽快形成新的主导产业。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.qinghai.gov.cn/xxgk/xxgk/qhzb/qhzb2007/201712/P020171204326031272858.pdf#7#1",
+        "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626397323306922.pdf#102#69"
+      ],
+      "verification_contexts": [
+        "region_06_long-history_industrial_history",
+        "region_06_long-history_local_history"
+      ],
+      "verification_excerpts": [
+        "2007.24. 国务院关于促进资源型城市可持续发展的若干意见 ... 对于资源已经成熟而枯竭的城市，要选择好产业转型方向，重点用高新技术、先进适用技术改造传统产业，因地制宜，尽快形成新的主导产业。",
+        "2000～2003年，县属国有、集体企业、乡镇企业在产权制度改革中，通过产权出售、联合租赁、破产重组等形式转为民营企业。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2007年，国务院在《关于促进资源型城市可持续发展的若干意见》中提出，对于资源已经成熟而枯竭的城市，要选择好产业转型方向，重点用高新技术、先进适用技术改造传统产业，因地制宜，尽快形成新的主导产业。",
+      "source_title": "2007.24.",
+      "source_date": "unknown",
+      "metric_year": "2007年",
+      "administrative_scope": "国家层面"
+    },
+    {
+      "claim_id": "continuation_6d0034433695",
+      "claim": "1991年以来，临泽县境内工业门类主要有农产品加工、机械制造、建筑建材、矿产品冶炼、食品制造、水电开发、印刷造纸、日用杂品等10大行业。",
+      "source": "第五节 工业门类 临泽县志",
+      "url": "https://www.zsbeike.com/kepu/9917703.html",
+      "date": "unknown",
+      "region": "临泽县",
+      "metric": "工业门类",
+      "unit": "行业类别",
+      "evidence_excerpt": "1991年以来\\,境内工业门类主要有农产品加工、机械制造、建筑建材、矿产品冶炼、食品制造、水电开发、印刷造纸、日用杂品等10大行业。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.zsbeike.com/kepu/9917703.html",
+        "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626398503669495.pdf#104#6"
+      ],
+      "verification_contexts": [
+        "region_06_long-history_industrial_history",
+        "region_06_long-history_local_history"
+      ],
+      "verification_excerpts": [
+        "1991年以来\\,境内工业门类主要有农产品加工、机械制造、建筑建材、矿产品冶炼、食品制造、水电开发、印刷造纸、日用杂品等10大行业。",
+        "到2004年,全县规模以上工业实现增加值1.95亿元,以柠檬酸为主的工业产品出口总额突破1000万美元;工业增加值首次超过农业增加值,以种子加工、番茄加工、玉米深加工、草畜产品加工、水能开发为主的工业主导型经济格局初步形成。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "1991年以来，临泽县境内工业门类主要有农产品加工、机械制造、建筑建材、矿产品冶炼、食品制造、水电开发、印刷造纸、日用杂品等10大行业。",
+      "source_title": "第五节 工业门类 临泽县志",
+      "source_date": "unknown",
+      "metric_year": "1991年以来",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_e7aa35798dd6",
+      "claim": "经过20余年发展，临泽县石膏采掘业受资源枯竭、市场压力加大及经济效益不佳等因素影响而逐渐萎缩。",
+      "source": "第五节 工业门类 临泽县志",
+      "url": "https://www.zsbeike.com/kepu/9917703.html",
+      "date": "unknown",
+      "region": "临泽县",
+      "metric": "资源枯竭产业萎缩",
+      "unit": "行业变化",
+      "evidence_excerpt": "经过20余年发展\\,除石膏采掘业受资源枯竭、市场压力加大及经济效益不佳等因素而逐渐萎缩",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.zsbeike.com/kepu/9917703.html",
+        "https://gsdfszw.org.cn/gsxz/zys_272/lzx/201806/P020180626397323306922.pdf#102#69"
+      ],
+      "verification_contexts": [
+        "region_06_long-history_industrial_history",
+        "region_06_long-history_local_history"
+      ],
+      "verification_excerpts": [
+        "经过20余年发展\\,除石膏采掘业受资源枯竭、市场压力加大及经济效益不佳等因素而逐渐萎缩",
+        "2000～2003年，县属国有、集体企业、乡镇企业在产权制度改革中，通过产权出售、联合租赁、破产重组等形式转为民营企业。"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "经过20余年发展，临泽县石膏采掘业受资源枯竭、市场压力加大及经济效益不佳等因素影响而逐渐萎缩。",
+      "source_title": "第五节 工业门类 临泽县志",
+      "source_date": "unknown",
+      "metric_year": "1991年以来20余年",
+      "administrative_scope": "县域本级"
+    }
+  ]
+}

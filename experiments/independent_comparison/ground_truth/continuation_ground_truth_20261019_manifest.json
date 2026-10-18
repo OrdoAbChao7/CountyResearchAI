@@ -1,0 +1,24 @@
+{
+  "claim_count": 90,
+  "claims_per_region": {
+    "临泽县": 15,
+    "于都县": 15,
+    "德清县": 15,
+    "攀枝花市": 15,
+    "白山市": 15,
+    "长汀县": 15
+  },
+  "freeze_scope": "independent_task_matched_claims",
+  "regions": [
+    "临泽县",
+    "于都县",
+    "德清县",
+    "攀枝花市",
+    "白山市",
+    "长汀县"
+  ],
+  "schema_version": "continuation-v1",
+  "source_hash": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+  "source_path": "experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_source_20261019.jsonl",
+  "status": "FROZEN_CONTINUATION_BENCHMARK"
+}

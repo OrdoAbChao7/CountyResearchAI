@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_14694665284e",
+      "claim": "2024年攀枝花市地区生产总值（GDP）为1395.24亿元，按可比价格计算比上年增长6.3%。",
+      "source": "攀枝花市2024年国民经济和社会发展统计公报",
+      "url": "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+      "date": "2025-05-06",
+      "region": "攀枝花市",
+      "metric": "地区生产总值（GDP）",
+      "unit": "亿元",
+      "evidence_excerpt": "根据地区生产总值统一核算初步结果，2024年攀枝花市地区生产总值（GDP）1395\\.24亿元，按可比价格计算，比上年增长6\\.3\\%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+        "http://panzhihua.gov.cn/tzfw/zwgk/tzsj/10204926.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_snapshot_official_bulletin",
+        "region_04_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "根据地区生产总值统一核算初步结果，2024年攀枝花市地区生产总值（GDP）1395\\.24亿元，按可比价格计算，比上年增长6\\.3\\%。",
+        "根据地区生产总值统一核算结果，2024年全市实现地区生产总值1395\\.24亿元，按不变价格计算，比上年增长6\\.3\\%。"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年攀枝花市地区生产总值（GDP）1395.24亿元，按可比价格计算比上年增长6.3%（初步核算结果）。",
+      "source_title": "攀枝花市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-05-06",
+      "metric_year": "2024",
+      "administrative_scope": "攀枝花市全市"
+    },
+    {
+      "claim_id": "continuation_a5d7002af1fa",
+      "claim": "2024年攀枝花市第一产业增加值102.14亿元，比上年增长3.6%。",
+      "source": "攀枝花市2024年国民经济和社会发展统计公报",
+      "url": "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+      "date": "2025-05-06",
+      "region": "攀枝花市",
+      "metric": "第一产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第一产业增加值102\\.14亿元，增长3\\.6\\%",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+        "http://panzhihua.gov.cn/tzfw/zwgk/tzsj/10204926.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_snapshot_official_bulletin",
+        "region_04_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第一产业增加值102\\.14亿元，增长3\\.6\\%",
+        "第一产业增加值102\\.14亿元，比上年增长3\\.6\\%"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年攀枝花市第一产业增加值102.14亿元，比上年增长3.6%。",
+      "source_title": "攀枝花市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-05-06",
+      "metric_year": "2024",
+      "administrative_scope": "攀枝花市全市"
+    },
+    {
+      "claim_id": "continuation_735f391fd097",
+      "claim": "2024年攀枝花市第二产业增加值790.14亿元，比上年增长6.4%。",
+      "source": "攀枝花市2024年国民经济和社会发展统计公报",
+      "url": "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+      "date": "2025-05-06",
+      "region": "攀枝花市",
+      "metric": "第二产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第二产业增加值790\\.14亿元，增长6\\.4\\%",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+        "http://panzhihua.gov.cn/tzfw/zwgk/tzsj/10204926.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_snapshot_official_bulletin",
+        "region_04_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第二产业增加值790\\.14亿元，增长6\\.4\\%",
+        "第二产业增加值790\\.14亿元，比上年增长6\\.4\\%"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年攀枝花市第二产业增加值790.14亿元，比上年增长6.4%。",
+      "source_title": "攀枝花市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-05-06",
+      "metric_year": "2024",
+      "administrative_scope": "攀枝花市全市"
+    },
+    {
+      "claim_id": "continuation_a672cc634ca0",
+      "claim": "2024年攀枝花市第三产业增加值502.95亿元，比上年增长6.8%。",
+      "source": "攀枝花市2024年国民经济和社会发展统计公报",
+      "url": "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+      "date": "2025-05-06",
+      "region": "攀枝花市",
+      "metric": "第三产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第三产业增加值502\\.95亿元，增长6\\.8\\%",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+        "http://panzhihua.gov.cn/tzfw/zwgk/tzsj/10204926.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_snapshot_official_bulletin",
+        "region_04_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第三产业增加值502\\.95亿元，增长6\\.8\\%",
+        "第三产业增加值502\\.96亿元，比上年增长6\\.8\\%"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年攀枝花市第三产业增加值502.95亿元，比上年增长6.8%（统计公报口径；经济运行情况为502.96亿元）。",
+      "source_title": "攀枝花市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-05-06",
+      "metric_year": "2024",
+      "administrative_scope": "攀枝花市全市"
+    },
+    {
+      "claim_id": "continuation_aae56feb2956",
+      "claim": "2024年攀枝花市全部工业增加值701.53亿元，比上年增长6.5%。",
+      "source": "攀枝花市2024年国民经济和社会发展统计公报",
+      "url": "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+      "date": "2025-05-06",
+      "region": "攀枝花市",
+      "metric": "全部工业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "全年全部工业增加值701\\.53亿元，比上年增长6\\.5\\%，对经济增长的贡献率为51\\.2\\%。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://panzhihua.gov.cn/zfxxgk1/fdzdgknr/tjxx/tjgb1/10209745.shtml#1",
+        "http://panzhihua.gov.cn/tzfw/zwgk/tzsj/10204926.shtml"
+      ],
+      "verification_contexts": [
+        "region_04_snapshot_official_bulletin",
+        "region_04_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "全年全部工业增加值701\\.53亿元，比上年增长6\\.5\\%，对经济增长的贡献率为51\\.2\\%。",
+        "第二产业增加值790\\.14亿元，比上年增长6\\.4\\%"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年攀枝花市全部工业增加值701.53亿元，比上年增长6.5%。",
+      "source_title": "攀枝花市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-05-06",
+      "metric_year": "2024",
+      "administrative_scope": "攀枝花市全市"
+    }
+  ]
+}

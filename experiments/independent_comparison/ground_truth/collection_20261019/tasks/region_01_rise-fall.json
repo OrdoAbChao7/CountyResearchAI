@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_d33ee56cc9c1",
+      "claim": "2024年德清县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算）。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "地区生产总值（GDP）",
+      "unit": "亿元",
+      "evidence_excerpt": "初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jjyxqkfx/art/2025/art_1369365983.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_rise-fall_historical_statistics",
+        "region_01_rise-fall_official_comparison"
+      ],
+      "verification_excerpts": [
+        "初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。",
+        "根据地区生产总值统一核算结果，2024年全县实现地区生产总值（GDP）722.5亿元，首次突破700亿大关；按不变价格计算，同比增长5.8%"
+      ],
+      "research_mode": "rise-fall",
+      "expected_answer": "2024年德清县GDP为722.5亿元，同比增长5.8%（按可比价计算），为初步核算数。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024年",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_5de938232a57",
+      "claim": "根据第五次全国经济普查结果和国家GDP核算制度规定，2023年德清县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "地区生产总值历史修订值及产业结构",
+      "unit": "亿元、比例",
+      "evidence_excerpt": "根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+        "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_rise-fall_historical_statistics",
+        "region_01_rise-fall_official_comparison"
+      ],
+      "verification_excerpts": [
+        "根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。",
+        "根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。"
+      ],
+      "research_mode": "rise-fall",
+      "expected_answer": "2023年德清县GDP修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8，修订依据为第五次全国经济普查结果和国家GDP核算制度规定。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2023年（修订值）",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_4b8cdd71f864",
+      "claim": "2024年德清县规模以上工业增加值300.6亿元，同比增长7.7%；其中装备制造业增加值120.7亿元，同比增长14.2%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "规模以上工业增加值及装备制造业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "规模以上工业增加值300.6亿元，同比增长7.7%。其中，战略性新兴产业增加值102.3亿元，同比增长7.4%；高新技术产业增加值217.6亿元，同比增长9.0%；装备制造业增加值120.7亿元，同比增长14.2%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/tjyb/art/2025/art_1969902292.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_rise-fall_historical_statistics",
+        "region_01_rise-fall_official_comparison"
+      ],
+      "verification_excerpts": [
+        "规模以上工业增加值300.6亿元，同比增长7.7%。其中，战略性新兴产业增加值102.3亿元，同比增长7.4%；高新技术产业增加值217.6亿元，同比增长9.0%；装备制造业增加值120.7亿元，同比增长14.2%。",
+        "规模以上工业增加值 | 300.6 | 7.7\n#战略性新兴产业增加值 | 102.3 | 7.4\n高新技术产业增加值 | 217.6 | 9.0\n装备制造业增加值 | 120.7 | 14.2"
+      ],
+      "research_mode": "rise-fall",
+      "expected_answer": "2024年德清县规上工业增加值300.6亿元、同比增长7.7%；装备制造业增加值120.7亿元、同比增长14.2%。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024年",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_2e2fa062f9be",
+      "claim": "2024年德清县固定资产投资同比增长3.2%，其中民间投资下降6.0%，交通、水利、能源投资和生态环境投资增长20.4%，高新技术产业投资下降0.9%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "固定资产投资及分项投资增速",
+      "unit": "百分比",
+      "evidence_excerpt": "全年固定资产投资同比增长3.2%。民间投资下降6.0%；交通、水利、能源投资和生态环境投资增长20.4%；高新技术产业投资下降0.9%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jjyxqkfx/art/2025/art_1369365983.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_rise-fall_historical_statistics",
+        "region_01_rise-fall_official_comparison"
+      ],
+      "verification_excerpts": [
+        "全年固定资产投资同比增长3.2%。民间投资下降6.0%；交通、水利、能源投资和生态环境投资增长20.4%；高新技术产业投资下降0.9%。",
+        "2024年，全县固定资产投资同比增长3.2%，高于全市0.4个百分点，居全市第三。其中，工业投资增长13.9%，交通、水利、能源投资和生态环境增长20.4%。"
+      ],
+      "research_mode": "rise-fall",
+      "expected_answer": "2024年德清县固定资产投资同比增长3.2%；民间投资下降6.0%；交通、水利、能源投资和生态环境投资增长20.4%；高新技术产业投资下降0.9%。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024年",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_4fce75f66884",
+      "claim": "2024年德清县全体常住居民人均可支配收入67748元，同比增长5.3%；其中城镇常住居民78454元、增长4.2%，农村常住居民52308元、增长7.2%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "居民人均可支配收入",
+      "unit": "元",
+      "evidence_excerpt": "据住户抽样调查，全县全体常住居民人均可支配收入67748元，同比增长5.3%。其中城镇常住居民人均可支配收入78454元，同比增长4.2%。城镇常住居民人均生活消费性支出52967元，同比增长5.8%。农村常住居民人均可支配收入达52308元，同比增长7.2%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jmshxfplsjgjc/art/2025/art_1486301305.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/jjyxqkfx/art/2025/art_1369365983.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_rise-fall_historical_statistics",
+        "region_01_rise-fall_official_comparison"
+      ],
+      "verification_excerpts": [
+        "据住户抽样调查，全县全体常住居民人均可支配收入67748元，同比增长5.3%。其中城镇常住居民人均可支配收入78454元，同比增长4.2%。城镇常住居民人均生活消费性支出52967元，同比增长5.8%。农村常住居民人均可支配收入达52308元，同比增长7.2%。",
+        "2024年，全县居民人均可支配收入67748元，增长5.3%，其中城镇居民人均可支配收入78454元，增长4.2%；农村居民人均可支配收入52308元，增长7.2%。城乡收入比缩小至为1.50。"
+      ],
+      "research_mode": "rise-fall",
+      "expected_answer": "2024年德清县全体居民人均可支配收入67748元、同比增长5.3%；城镇居民78454元、增长4.2%；农村居民52308元、增长7.2%。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024年",
+      "administrative_scope": "德清县县域本级"
+    }
+  ]
+}

@@ -18,6 +18,73 @@ DEEPSEEK_ALLOWED_BILLING_BOUNDARIES = {
 }
 
 
+def require_ground_truth_collection_gate(
+    gate_path: Path,
+    precheck_path: Path | None = None,
+    *,
+    max_precheck_age_seconds: int = DEFAULT_PRECHECK_MAX_AGE_SECONDS,
+) -> dict[str, Any]:
+    """Authorize only the current, explicitly scoped Ground Truth collection.
+
+    This is intentionally separate from ``require_formal_api_gate``.  A current
+    user authorization to make paid calls can unlock source collection for this
+    task, but it must not silently reopen historical E1/E2 launch manifests or
+    reinterpret old billing evidence as account-level confirmation.
+    """
+    gate_file = Path(gate_path)
+    gate = _load_json(gate_file)
+    configured = gate.get("resource_precheck")
+    if precheck_path is None:
+        if not configured:
+            raise FormalGateError("ground truth gate has no resource precheck")
+        precheck_path = gate_file.parent / str(configured)
+    precheck = _load_json(Path(precheck_path))
+
+    if gate.get("status") != "READY_FOR_GROUND_TRUTH":
+        raise FormalGateError(
+            "ground truth collection gate is not open: "
+            f"status={gate.get('status', '<missing>')}"
+        )
+    if gate.get("business_api_calls_allowed") is not True:
+        raise FormalGateError("ground truth collection business calls are disabled")
+    if gate.get("allow_paid_authorized") is not True:
+        raise FormalGateError("ground truth collection paid authorization is missing")
+    scope = gate.get("scope")
+    if not isinstance(scope, list) or set(scope) != {"ground_truth_collection"}:
+        raise FormalGateError("ground truth gate scope must be ground_truth_collection only")
+    if str(gate.get("llm_provider", "")).lower() != "deepseek":
+        raise FormalGateError("ground truth collection LLM provider must be deepseek")
+    if str(gate.get("search_provider", "")).lower() != "deepseek":
+        raise FormalGateError("ground truth collection search provider must be deepseek")
+    model = gate.get("model")
+    if not isinstance(model, str) or not model.strip():
+        raise FormalGateError("ground truth collection model is missing")
+
+    _validate_precheck_freshness(
+        precheck,
+        max_precheck_age_seconds=max_precheck_age_seconds,
+    )
+    _validate_current_user_authorization(
+        gate.get("authorization"),
+        max_precheck_age_seconds=max_precheck_age_seconds,
+    )
+    deepseek = precheck.get("deepseek")
+    if not isinstance(deepseek, dict) or deepseek.get("provider") != "deepseek":
+        raise FormalGateError("Ground Truth DeepSeek precheck is missing or invalid")
+    if deepseek.get("model") != model:
+        raise FormalGateError(
+            "Ground Truth DeepSeek model mismatch: "
+            f"gate={model}, precheck={deepseek.get('model') or '<missing>'}"
+        )
+    if deepseek.get("llm_configured") is not True:
+        raise FormalGateError("DeepSeek LLM is not configured")
+    if deepseek.get("search_configured") is not True:
+        raise FormalGateError("DeepSeek Search/Fetch is not configured")
+    if deepseek.get("search_enabled") is not True:
+        raise FormalGateError("DeepSeek Search/Fetch is not enabled")
+    return {"gate": gate, "precheck": precheck}
+
+
 def require_formal_api_gate(
     gate_path: Path,
     precheck_path: Path | None = None,
@@ -348,6 +415,47 @@ def _validate_billing_evidence(
         raise FormalGateError(
             f"{label} billing evidence is stale: "
             f"age_seconds={evidence_age_seconds:.0f}, max={max_precheck_age_seconds}"
+        )
+
+
+def _validate_current_user_authorization(
+    authorization: Any,
+    *,
+    max_precheck_age_seconds: int,
+) -> None:
+    """Validate a fresh, task-scoped user authorization without inventing prices."""
+    required_fields = (
+        "source",
+        "method",
+        "account_scope",
+        "evidence_ref",
+        "verified_at",
+    )
+    if not isinstance(authorization, dict) or any(
+        not isinstance(authorization.get(field), str)
+        or not authorization[field].strip()
+        for field in required_fields
+    ):
+        raise FormalGateError("current user authorization evidence is missing")
+    if authorization["method"] != "explicit_current_user_authorization":
+        raise FormalGateError("ground truth gate requires explicit current user authorization")
+    if authorization["account_scope"] != "current_task":
+        raise FormalGateError("ground truth authorization scope is not current_task")
+    try:
+        verified_at = datetime.fromisoformat(
+            authorization["verified_at"].replace("Z", "+00:00")
+        )
+    except ValueError as exc:
+        raise FormalGateError("current user authorization timestamp is invalid") from exc
+    if verified_at.tzinfo is None:
+        raise FormalGateError("current user authorization timestamp must include timezone")
+    age_seconds = (
+        datetime.now(timezone.utc) - verified_at.astimezone(timezone.utc)
+    ).total_seconds()
+    if age_seconds > max_precheck_age_seconds:
+        raise FormalGateError(
+            "current user authorization is stale: "
+            f"age_seconds={age_seconds:.0f}, max={max_precheck_age_seconds}"
         )
 
 

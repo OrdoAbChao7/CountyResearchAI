@@ -1,0 +1,24 @@
+{
+  "check_id": "continuation_ground_truth_precheck_20261018",
+  "checked_at": "2026-10-18T16:54:53.928455+00:00",
+  "status": "READY_FOR_GROUND_TRUTH",
+  "expected": {
+    "llm_provider": "deepseek",
+    "search_provider": "deepseek",
+    "historical_model_target": "deepseek-flash"
+  },
+  "deepseek": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "llm_configured": true,
+    "search_configured": true,
+    "search_enabled": true,
+    "observed_llm_provider": "deepseek",
+    "observed_llm_model": "deepseek-flash",
+    "observed_llm_base_url": "https://api.deepseek.com/v1",
+    "observed_search_provider": "deepseek",
+    "api_keys_logged": false
+  },
+  "business_calls_made": false,
+  "api_keys_logged": false
+}

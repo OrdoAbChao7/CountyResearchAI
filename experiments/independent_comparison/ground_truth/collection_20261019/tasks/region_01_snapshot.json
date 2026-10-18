@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_f7a2ce02987c",
+      "claim": "2024年德清县实现生产总值（GDP）722.5亿元，同比增长5.8%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "地区生产总值（GDP）",
+      "unit": "亿元",
+      "evidence_excerpt": "初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/tjyb/art/2025/art_1969902292.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_snapshot_official_bulletin",
+        "region_01_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。",
+        "全县生产总值 | 亿元 | 722.5 | 5.8"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年德清县全县实现生产总值（GDP）722.5亿元，按可比价计算同比增长5.8%，为年度初步统计数据。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_883aa3007a72",
+      "claim": "2024年德清县第一产业增加值31.4亿元，同比增长3.8%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "第一产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "其中，第一产业增加值31.4亿元，同比增长3.8%；",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/tjyb/art/2025/art_1969902292.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_snapshot_official_bulletin",
+        "region_01_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "其中，第一产业增加值31.4亿元，同比增长3.8%；",
+        "#一产增加值 | 亿元 | 31.4 | 3.8"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年德清县第一产业增加值31.4亿元，同比增长3.8%，为年度初步统计数据。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_e4c785968b50",
+      "claim": "2024年德清县第二产业增加值378.1亿元，同比增长7.1%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "第二产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第二产业增加值378.1亿元，同比增长7.1%；",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/tjyb/art/2025/art_1969902292.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_snapshot_official_bulletin",
+        "region_01_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第二产业增加值378.1亿元，同比增长7.1%；",
+        "二产增加值 | 亿元 | 378.1 | 7.1"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年德清县第二产业增加值378.1亿元，同比增长7.1%，为年度初步统计数据。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_96bd036aacf9",
+      "claim": "2024年德清县第三产业增加值313.1亿元，同比增长4.3%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "第三产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第三产业增加值313.1亿元，同比增长4.3%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/tjyb/art/2025/art_1969902292.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_snapshot_official_bulletin",
+        "region_01_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第三产业增加值313.1亿元，同比增长4.3%。",
+        "三产增加值 | 亿元 | 313.1 | 4.3"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年德清县第三产业增加值313.1亿元，同比增长4.3%，为年度初步统计数据。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024",
+      "administrative_scope": "德清县县域本级"
+    },
+    {
+      "claim_id": "continuation_5b14c2f3f486",
+      "claim": "2024年德清县规模以上工业增加值300.6亿元，同比增长7.7%。",
+      "source": "2024年德清县国民经济和社会发展统计公报",
+      "url": "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+      "date": "2025-03-31",
+      "region": "德清县",
+      "metric": "规模以上工业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "规模以上工业增加值300.6亿元，同比增长7.7%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/art/2025/3/31/art_1229212621_59083942.html#1",
+        "http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xtjj/tjxx/tjyb/art/2025/art_1969902292.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_snapshot_official_bulletin",
+        "region_01_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "规模以上工业增加值300.6亿元，同比增长7.7%。",
+        "规模以上工业增加值 | 300.6 | 7.7"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年德清县规模以上工业增加值300.6亿元，同比增长7.7%，为年度初步统计数据。",
+      "source_title": "2024年德清县国民经济和社会发展统计公报",
+      "source_date": "2025-03-31",
+      "metric_year": "2024",
+      "administrative_scope": "德清县县域本级"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "context_id": "region_01_long-history_local_history",
+    "query": "浙江省德清县 资源型产业体系 2000 2006 2007 资源转型 工业 官方",
+    "result_count": 5
+  },
+  {
+    "context_id": "region_01_long-history_industrial_history",
+    "query": "浙江省德清县 2000 2006 2007 工业 产业结构 政府工作报告 官方",
+    "result_count": 5
+  }
+]

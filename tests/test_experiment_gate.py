@@ -12,6 +12,7 @@ from county_research_ai.evaluation.gate import (
     require_formal_api_gate,
     require_frozen_ground_truth,
     require_frozen_launch_manifest,
+    require_ground_truth_collection_gate,
 )
 from county_research_ai.evaluation.ground_truth import GroundTruthClaim, GroundTruthStore
 
@@ -165,6 +166,83 @@ def test_continuation_gate_manifest_is_closed_before_business_calls():
     assert gate["status"] == "CLOSED_BILLING_UNCONFIRMED"
     assert gate["business_api_calls_allowed"] is False
     assert gate["allow_paid_authorized"] is False
+
+
+def test_ground_truth_collection_gate_accepts_currently_authorized_paid_scope(tmp_path):
+    now = datetime.now(timezone.utc).isoformat()
+    gate = {
+        "status": "READY_FOR_GROUND_TRUTH",
+        "business_api_calls_allowed": True,
+        "allow_paid_authorized": True,
+        "scope": ["ground_truth_collection"],
+        "llm_provider": "deepseek",
+        "search_provider": "deepseek",
+        "model": "deepseek-flash",
+        "authorization": {
+            "source": "current user instruction",
+            "method": "explicit_current_user_authorization",
+            "account_scope": "current_task",
+            "evidence_ref": "user-message-current-ground-truth",
+            "verified_at": now,
+        },
+        "resource_precheck": "precheck.json",
+    }
+    precheck = {
+        "checked_at": now,
+        "deepseek": {
+            "provider": "deepseek",
+            "model": "deepseek-flash",
+            "llm_configured": True,
+            "search_configured": True,
+            "search_enabled": True,
+        },
+    }
+    gate_path = tmp_path / "gate.json"
+    precheck_path = tmp_path / "precheck.json"
+    gate_path.write_text(json.dumps(gate), encoding="utf-8")
+    precheck_path.write_text(json.dumps(precheck), encoding="utf-8")
+
+    result = require_ground_truth_collection_gate(gate_path, precheck_path)
+
+    assert result["gate"]["status"] == "READY_FOR_GROUND_TRUTH"
+
+
+def test_ground_truth_collection_gate_rejects_provider_mismatch(tmp_path):
+    now = datetime.now(timezone.utc).isoformat()
+    gate = {
+        "status": "READY_FOR_GROUND_TRUTH",
+        "business_api_calls_allowed": True,
+        "allow_paid_authorized": True,
+        "scope": ["ground_truth_collection"],
+        "llm_provider": "deepseek",
+        "search_provider": "deepseek",
+        "model": "deepseek-flash",
+        "authorization": {
+            "source": "current user instruction",
+            "method": "explicit_current_user_authorization",
+            "account_scope": "current_task",
+            "evidence_ref": "user-message-current-ground-truth",
+            "verified_at": now,
+        },
+        "resource_precheck": "precheck.json",
+    }
+    precheck = {
+        "checked_at": now,
+        "deepseek": {
+            "provider": "deepseek",
+            "model": "deepseek-flash",
+            "llm_configured": False,
+            "search_configured": False,
+            "search_enabled": False,
+        },
+    }
+    gate_path = tmp_path / "gate.json"
+    precheck_path = tmp_path / "precheck.json"
+    gate_path.write_text(json.dumps(gate), encoding="utf-8")
+    precheck_path.write_text(json.dumps(precheck), encoding="utf-8")
+
+    with pytest.raises(FormalGateError, match="not configured"):
+        require_ground_truth_collection_gate(gate_path, precheck_path)
 
 
 def test_deepseek_gate_rejects_llm_free_when_search_fetch_billing_is_unknown(tmp_path):

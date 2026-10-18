@@ -1,9 +1,11 @@
 schema_version: "continuation-v1"
-status: DRAFT_BILLING_GATE_CLOSED
-freeze_date: 2026-10-18
+status: FROZEN_BENCHMARK_FORMAL_GATE_CLOSED
+freeze_date: 2026-10-19
 billing_gate: ../manifests/continuation_resource_gate_20261018.json
 benchmark_claim_schema: benchmark_claim_schema.yaml
 regions_file: ../datasets/independent_regions_20261018.yaml
+ground_truth_manifest: ../ground_truth/continuation_ground_truth_20261019_manifest.json
+ground_truth_gate: ../manifests/continuation_ground_truth_gate_20261018.json
 quality_metrics:
   - fact_precision
   - ground_truth_recall
@@ -36,6 +38,7 @@ failure_policy:
   failed_judge_visible: true
   failed_provider_visible: true
   no_metric_imputation: true
-  no_new_business_api_call_until_gate_reopened: true
+  no_formal_experiment_api_call_until_gate_reopened: true
+  ground_truth_collection_requires_task_gate: true
 ablations:
   allowed_only_when_module_can_be_disabled_without_fabricated_output: true

@@ -24,10 +24,10 @@ from county_research_ai.llm.client import OpenAICompatibleClient
 FORMAL_ROOT = Path(__file__).resolve().parents[1] / "experiments" / "independent_comparison"
 FORMAL_GATE_PATH = FORMAL_ROOT / "manifests" / "continuation_resource_gate_20261018.json"
 CONTINUATION_GROUND_TRUTH_PATH = (
-    FORMAL_ROOT / "ground_truth" / "continuation_ground_truth_20261018.jsonl"
+    FORMAL_ROOT / "ground_truth" / "continuation_ground_truth_20261019.jsonl"
 )
 CONTINUATION_GROUND_TRUTH_MANIFEST_PATH = (
-    FORMAL_ROOT / "ground_truth" / "continuation_ground_truth_20261018_manifest.json"
+    FORMAL_ROOT / "ground_truth" / "continuation_ground_truth_20261019_manifest.json"
 )
 
 
