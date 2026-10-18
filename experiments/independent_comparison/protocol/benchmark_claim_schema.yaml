@@ -1,5 +1,7 @@
 schema_version: "continuation-v1"
-status: DRAFT_FOR_CONTINUATION_FREEZE
+status: FROZEN
+freeze_date: 2026-10-19
+freeze_manifest: ../ground_truth/continuation_ground_truth_20261019_manifest.json
 description: >-
   每条声明必须能映射到一个冻结任务、一个版本化的权威答案和两个独立核验上下文。
 required_fields:

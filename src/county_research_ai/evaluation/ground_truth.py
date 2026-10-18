@@ -23,6 +23,7 @@ class GroundTruthClaim:
     verification_status: str
     verification_sources: tuple[str, ...] = ()
     verification_contexts: tuple[str, ...] = ()
+    verification_excerpts: tuple[str, ...] = ()
     research_mode: str = ""
     expected_answer: str = ""
     source_title: str = ""
@@ -51,6 +52,8 @@ class GroundTruthClaim:
             raise ValueError("verification_sources must not contain empty values")
         if any(not value for value in self.verification_contexts):
             raise ValueError("verification_contexts must not contain empty values")
+        if any(not value for value in self.verification_excerpts):
+            raise ValueError("verification_excerpts must not contain empty values")
         if self.research_mode and self.research_mode not in {
             "snapshot",
             "rise-fall",
@@ -73,6 +76,7 @@ class GroundTruthClaim:
             "verification_status": self.verification_status,
             "verification_sources": list(self.verification_sources),
             "verification_contexts": list(self.verification_contexts),
+            "verification_excerpts": list(self.verification_excerpts),
             "research_mode": self.research_mode,
             "expected_answer": self.expected_answer,
             "source_title": self.source_title,
@@ -86,6 +90,7 @@ class GroundTruthClaim:
         data = dict(value)
         data["verification_sources"] = tuple(data.get("verification_sources", ()))
         data["verification_contexts"] = tuple(data.get("verification_contexts", ()))
+        data["verification_excerpts"] = tuple(data.get("verification_excerpts", ()))
         return cls(**data)
 
 

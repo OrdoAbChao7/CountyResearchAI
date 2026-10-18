@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_e4692d5e1010",
+      "claim": "2024年白山市全年实现地区生产总值567.85亿元，比上年增长3.4%。",
+      "source": "白山市2024年国民经济和社会发展统计公报 - 白山市2024年国民经济和社会发展统计公报",
+      "url": "http://wza.cbs.gov.cn/esd/sq/shjjfz/201805/t20180519_323827.html#1",
+      "date": "2025-06-08",
+      "region": "白山市",
+      "metric": "地区生产总值（GDP）",
+      "unit": "亿元",
+      "evidence_excerpt": "初步核算，全年实现地区生产总值[1]567.85亿元，比上年增长3.4%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://wza.cbs.gov.cn/esd/sq/shjjfz/201805/t20180519_323827.html#1",
+        "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1"
+      ],
+      "verification_contexts": [
+        "region_05_snapshot_official_bulletin",
+        "region_05_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "初步核算，全年实现地区生产总值[1]567.85亿元，比上年增长3.4%。",
+        "初步核算，全年实现地区生产总值567\\.85亿元，比上年增长3\\.4\\%。"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年白山市全市地区生产总值567.85亿元，比上年增长3.4%（初步核算）。",
+      "source_title": "白山市2024年国民经济和社会发展统计公报 - 白山市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-06-08",
+      "metric_year": "2024",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_719ef2f9d4ae",
+      "claim": "2024年白山市第一产业增加值72.80亿元，增长4.7%。",
+      "source": "白山市2024年国民经济和社会发展统计公报 - 白山市2024年国民经济和社会发展统计公报",
+      "url": "http://wza.cbs.gov.cn/esd/sq/shjjfz/201805/t20180519_323827.html#1",
+      "date": "2025-06-08",
+      "region": "白山市",
+      "metric": "第一产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元...",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://wza.cbs.gov.cn/esd/sq/shjjfz/201805/t20180519_323827.html#1",
+        "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1"
+      ],
+      "verification_contexts": [
+        "region_05_snapshot_official_bulletin",
+        "region_05_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元...",
+        "其中，第一产业增加值72\\.80亿元，增长4\\.7\\%；第二产业增加值141\\.38亿元，增长0\\.2\\%；第三产业增加值353\\.67亿元，增长4\\.3\\%。"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年白山市全市第一产业增加值72.80亿元，比上年增长4.7%（初步核算）。",
+      "source_title": "白山市2024年国民经济和社会发展统计公报 - 白山市2024年国民经济和社会发展统计公报",
+      "source_date": "2025-06-08",
+      "metric_year": "2024",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_0e97764340d4",
+      "claim": "2024年白山市第二产业增加值141.38亿元，增长0.2%。",
+      "source": "解读：《白山市2024年国民经济和社会发展统计公报》",
+      "url": "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1",
+      "date": "2025-08-11",
+      "region": "白山市",
+      "metric": "第二产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第二产业增加值141\\.38亿元，增长0\\.2\\%",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1",
+        "http://www.ljszx.gov.cn/sq/shjjfz/201805/t20180519_323827.html#1"
+      ],
+      "verification_contexts": [
+        "region_05_snapshot_official_bulletin",
+        "region_05_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第二产业增加值141\\.38亿元，增长0\\.2\\%",
+        "其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元..."
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年白山市全市第二产业增加值141.38亿元，比上年增长0.2%（初步核算）。",
+      "source_title": "解读：《白山市2024年国民经济和社会发展统计公报》",
+      "source_date": "2025-08-11",
+      "metric_year": "2024",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_6c8ebae49e09",
+      "claim": "2024年白山市第三产业增加值353.67亿元，增长4.3%。",
+      "source": "解读：《白山市2024年国民经济和社会发展统计公报》",
+      "url": "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1",
+      "date": "2025-08-11",
+      "region": "白山市",
+      "metric": "第三产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第三产业增加值353\\.67亿元，增长4\\.3\\%",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1",
+        "http://www.ljszx.gov.cn/sq/shjjfz/201805/t20180519_323827.html#1"
+      ],
+      "verification_contexts": [
+        "region_05_snapshot_official_bulletin",
+        "region_05_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第三产业增加值353\\.67亿元，增长4\\.3\\%",
+        "其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元..."
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年白山市全市第三产业增加值353.67亿元，比上年增长4.3%（初步核算）。",
+      "source_title": "解读：《白山市2024年国民经济和社会发展统计公报》",
+      "source_date": "2025-08-11",
+      "metric_year": "2024",
+      "administrative_scope": "地级市全市"
+    },
+    {
+      "claim_id": "continuation_585369208905",
+      "claim": "2024年白山市三次产业结构比重为12.8:24.9:62.3。",
+      "source": "解读：《白山市2024年国民经济和社会发展统计公报》",
+      "url": "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1",
+      "date": "2025-08-11",
+      "region": "白山市",
+      "metric": "三次产业结构比重",
+      "unit": "比例",
+      "evidence_excerpt": "三次产业结构比重为12\\.8\\:24\\.9\\:62\\.3。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://jjw.jldrc.jl.gov.cn/zccs_421816/202508/t20250811_11226.html#1",
+        "http://www.ljszx.gov.cn/sq/shjjfz/201805/t20180519_323827.html#1"
+      ],
+      "verification_contexts": [
+        "region_05_snapshot_official_bulletin",
+        "region_05_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "三次产业结构比重为12\\.8\\:24\\.9\\:62\\.3。",
+        "初步核算，全年实现地区生产总值[1]567.85亿元，比上年增长3.4%。其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元..."
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年白山市全市三次产业结构比重为12.8:24.9:62.3（初步核算）。",
+      "source_title": "解读：《白山市2024年国民经济和社会发展统计公报》",
+      "source_date": "2025-08-11",
+      "metric_year": "2024",
+      "administrative_scope": "地级市全市"
+    }
+  ]
+}

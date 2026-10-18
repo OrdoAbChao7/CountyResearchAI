@@ -1,5 +1,7 @@
 schema_version: "continuation-v1"
-status: DRAFT_HOLDOUT_REGIONS
+status: FROZEN_CONTINUATION_BENCHMARK
+freeze_date: 2026-10-19
+freeze_manifest: ../ground_truth/continuation_ground_truth_20261019_manifest.json
 freeze_scope: independent_regions_and_task_quotas_only
 claim_quota:
   min: 15

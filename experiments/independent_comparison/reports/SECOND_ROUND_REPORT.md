@@ -2,11 +2,12 @@
 
 ## 状态
 
-`NOT_RUN_BILLING_GATE_CLOSED`
+`BENCHMARK_FROZEN_SECOND_ROUND_NOT_RUN`
 
-本报告不提供新的真实 Provider 质量结论。续作资源 Gate 为
-`CLOSED_BILLING_UNCONFIRMED`，当前没有账户级账单或免费额度证据，因此没有发起新的
-DeepSeek、Gemini、Tavily 业务调用，也没有把离线夹具结果伪装成真实实验结果。
+本报告仍不提供新的真实 Provider 质量结论。A/B/C 的正式实验 Gate 仍为
+`CLOSED_BILLING_UNCONFIRMED`，因此 Natural Execution、Matched Budget 和模块消融均未运行。
+本轮只在当前用户明确授权的任务级 Ground Truth Gate 下调用 DeepSeek，完成了真实来源采集和
+Benchmark 冻结；这些调用的 Usage 与原始响应已留存，但不等同于账户级账单。
 
 ## 已完成的可验证工作
 
@@ -17,18 +18,21 @@ DeepSeek、Gemini、Tavily 业务调用，也没有把离线夹具结果伪装�
 - 离线 Judge 校准夹具覆盖正确、矛盾、不支持、未提及、争议和行政范围混淆六类情形。
 - rich Benchmark Claim 必须包含任务模式、预期答案、来源标题/日期、指标年份、行政范围，
   并通过两个来源和两个独立上下文核验。
-- 本地 Builder 会在输入不足、地区配额不满足或双重核验缺失时拒绝冻结，未生成虚假
-  15–20 条/地区 Ground Truth。
+- 真实续作采集已完成 6 个地区 × 3 种模式 × 5 条声明：共 90 条；每个地区 15 条，
+  每种模式 5 条。90/90 条均有两个不同 URL、两个上下文和逐条原文摘录。
+- 本地 Builder 已生成 `FROZEN_CONTINUATION_BENCHMARK`，source hash 为
+  `a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd`。
 
 ## 未运行的实验
 
-Natural Execution 和 Matched Budget 均未运行；模块消融也未运行。原因不是实验结果为零，
-而是当前没有可合法、可审计的业务调用授权和成本证据。
+Natural Execution 和 Matched Budget 均未运行；模块消融也未运行。原因是正式实验 Gate
+仍未打开，不能把 Ground Truth 采集授权扩大为整轮 A/B/C 研究授权，也不能把本地 Usage
+记录直接换算为账户费用。
 
 ## 解锁条件
 
-1. 为 LLM 与 Search/Fetch 分别提供当前、可审计的账户计费或免费额度证据，重新生成 fresh precheck。
-2. 冻结 `benchmark_claim_schema.yaml`、`continuation_protocol.yaml` 和独立来源 Claim JSONL，
-   每个地区满足 15–20 条、每种任务满足配额、每条 Claim 通过双来源/双上下文核验。
-3. 重新打开 continuation Gate 后，分别运行 Natural Execution 与 Matched Budget，保留预算耗尽、
+1. 为正式 LLM 与 Search/Fetch 分别提供当前、可审计的账户计费或免费额度证据，重新生成 formal fresh precheck。
+2. 使用已冻结的 `benchmark_claim_schema.yaml`、`continuation_protocol.yaml` 和
+   `continuation_ground_truth_20261019.jsonl`，先完成离线评分校准与输入 hash 复核。
+3. 重新打开 formal Gate 后，分别运行 Natural Execution 与 Matched Budget，保留预算耗尽、
    Provider 失败、Judge 失败和仲裁状态，不做隐式补值。

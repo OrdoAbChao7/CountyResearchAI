@@ -45,7 +45,7 @@ The generated report is an in-depth research draft, not an official policy deter
 
 ## Verification Record
 
-- **Test Suite**: `462 passed` in the continuation full-suite run; pytest cache has a Windows permission warning.
+- **Test Suite**: `474 passed` in the continuation full-suite run; pytest cache has a Windows permission warning.
 - **Static Analysis**: the changed/new experiment files pass scoped `ruff check`; full-tree lint remains non-clean because legacy `scripts/_verify_*.py` files contain 73 pre-existing findings.
 - **Resource safety regression**: settlement `overrun` usage is now included in subsequent capacity checks, so a run that exceeds its limit cannot reserve more work from the same persisted budget; covered by `test_overrun_usage_blocks_later_reservations`.
 - **Historical Offline Benchmark** (not evidence for real efficacy):
@@ -59,7 +59,7 @@ The real-provider comparison is complete for the minimum one-repeat target: corr
 
 The E2 fixed-input path includes deterministic document-pack hashing, strict no-search execution for all groups, and a real-resource path for C. Formal E1/E2 runners verify the frozen Ground Truth manifest before creating a batch or initializing business resources, and persist configuration-bound checkpoints for safe `--resume`. Claim verification, anonymous Judge batches, Report-Based QA, run-level summary/paired-difference statistics, SVG figures, and corrected-batch audits are now generated. Each final E1/E2 Judge batch has 17/18 valid candidates; failed candidates remain recorded and are not imputed.
 
-The Ground Truth process now has six independent public-source verification logs. A six-claim, six-region minimum Ground Truth passes the two-source/two-context freeze validator, with version-scoped claims for 德清县 and 攀枝花市 and an amount-only claim for 长汀县; unresolved claims remain preserved in the verification matrix. The three-claim partial panel and four-claim industry supplemental panel remain historical non-formal panels. Formal QA and claim scoring now verify the frozen Ground Truth manifest `source_hash` before loading claims. Six bounded-excerpt E2 packs are referenced by a frozen formal manifest and have been consumed by the corrected E2 API batches.
+The continuation benchmark is now frozen from real DeepSeek Search/Fetch and LLM extraction: six regions × three modes × five claims per mode = 90 rich claims. Every claim has two distinct source URLs, two observed search contexts, and stored verbatim verification excerpts; the frozen source hash is `a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd`. Raw source material, extraction responses, task checkpoints, and gate/precheck evidence remain under `experiments/independent_comparison/ground_truth/collection_20261019/` and the continuation manifests. Formal QA and claim scoring now verify the frozen Ground Truth manifest `source_hash` before loading claims. The older six-claim panel and industry supplemental panel remain historical non-formal panels.
 
 The frozen E1 task schedule explicitly covers `snapshot`, `rise-fall`, and `long-history`; all six regions were executed once per group in the corrected batch. The final report concludes `NO_OVERALL_ADVANTAGE`, with a limited E2 report-QA advantage for C at higher token cost.
 
@@ -73,6 +73,6 @@ The deterministic independent auditor passed the corrected E1 root and all six c
 
 The first-round evidence is preserved but its research conclusion is downgraded to `INCONCLUSIVE_WITH_EFFICIENCY_REGRESSION`: the six-claim GDP-only Ground Truth did not match the full industry-research task, E1 had an uninformative denominator, E2 had a ceiling effect, and no account-level billing evidence is available for the historical DeepSeek usage.
 
-The continuation has a closed resource gate, a P0 audit, a rich Claim schema, denominator-aware quality metrics, deterministic offline Judge calibration, explicit retry/adjudication states, and a local-only benchmark builder. No new DeepSeek/Gemini/Tavily business call is allowed until a fresh gate is opened with current billing evidence. The independent benchmark remains `DRAFT_HOLDOUT_REGIONS` until authoritative source Claim JSONL is supplied and frozen.
+The continuation has a formal resource gate that remains closed for A/B/C, a task-scoped Ground Truth gate opened under current user authorization, a rich Claim schema, denominator-aware quality metrics, deterministic offline Judge calibration, explicit retry/adjudication states, and a frozen local benchmark builder. Ground Truth collection used real DeepSeek calls and preserved their usage/raw evidence; account-level billing remains unverified. Natural Execution, Matched Budget, and module ablation have not run.
 
-The second-round report is explicitly `NOT_RUN_BILLING_GATE_CLOSED`; it records the offline validation and unlock conditions without fabricating a real-provider result.
+The second-round report is `BENCHMARK_FROZEN_SECOND_ROUND_NOT_RUN`: the benchmark is real and frozen, but no A/B/C efficacy result is claimed until the formal experiment gate is opened.
