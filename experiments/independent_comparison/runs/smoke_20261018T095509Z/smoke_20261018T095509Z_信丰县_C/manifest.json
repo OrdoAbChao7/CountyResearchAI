@@ -1,0 +1,16 @@
+{
+  "artifacts": {},
+  "config_hash": "e9cfe40351aa1b092c4898872321cfb90abc0d3953621946f6569350388e25b5",
+  "county": "信丰县",
+  "created_at": "2026-10-18T09:58:43.500900+00:00",
+  "error": "ResearchStageError: research stage failed: analyze | context={'county': '信丰县', 'focus': '脐橙产业', 'mode': 'snapshot'}",
+  "experiment_id": "E1",
+  "group": "C",
+  "mode": "snapshot",
+  "model": "gemini-3.1-flash-lite",
+  "run_id": "smoke_20261018T095509Z_信丰县_C",
+  "search_provider": "tavily",
+  "status": "FAILED",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T09:59:37.021159+00:00"
+}

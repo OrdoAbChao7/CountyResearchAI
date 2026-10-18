@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_02_长汀县_long-history_r1_A",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是传统网页检索。研究对象：长汀县；方向：生态治理、工业发展与文旅融合；模式：long-history。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 奋楫扬帆创佳绩——长汀持续推进闽西活力副中心城市建设\nURL: https://www.longyan.cn/jeecms/html/ywzytw3/20260117/127026.html\n2025年以来，长汀县紧紧围绕“生态优先、工业强县、文旅富民”发展思路，迎难而上、实干争先，闽西活力副中心城市建设取得实质性进展，全年预计完成地区生产总值369.21亿元、增长4.5%；社会消费品零售总额增长3.6% ... 长汀县接续实施“工业发展年”活动，出台“首位产业”差异化扶持办法，实现规模工业产值207亿元、增长7.2%，规模工业增加值增速5.6%。向上争取工业设备更新项目数...\n\n[2] 长汀县人民政府文件\nURL: http://www.changting.gov.cn/xxgk/zfxxgk/xrmzf/xzfwj/tzz/202605/P020260518535589048107.pdf#10#1\n锚定“生态优先、工业强县、文旅富民、城乡融合”发展路径 ... 有效应对一系列重大风险挑战 ... 当前及今后一段时期，长汀发展与全国全省全市一样，处于战略机遇和风险挑战并存、不确定难预料因素增多的时期，发展环境面临深刻复杂变化。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 375,
+    "completion_tokens": 2048,
+    "total_tokens": 2423
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 375,
+    "completion_tokens": 2048,
+    "total_tokens": 2423,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

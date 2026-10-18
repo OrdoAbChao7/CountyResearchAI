@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "input_pack": "input_pack.json:5d7893a8c2f0baef5e01cd9b80f07481c9f398ca7a8ebd30affe1f05f24c743e",
+    "report": "report.md:48ed14ffa3df1b4be93ea5532cbc6478546fe50cc99019e428b610e7baca2dd2",
+    "sources": "sources.json:89957ea6225d339dc19b49113f08623e01acaac19069cfe069a245db9e5b9f95"
+  },
+  "config_hash": "5502c6d29b37ac1a56eef37992b6eae009845d2f73f1c1394eef8949b13bf2d8",
+  "county": "长汀县",
+  "created_at": "2026-10-18T14:40:23.319373+00:00",
+  "duration_seconds": 15.764671,
+  "error": null,
+  "experiment_id": "E2",
+  "formal_target": true,
+  "group": "B",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 2467
+  },
+  "run_id": "e2_formal_target_deepseek_20261018_corrected_changting_e2_candidate_20261018_changting_snapshot_B",
+  "search_provider": "disabled-by-fixed-input-protocol",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T14:40:39.083460+00:00"
+}

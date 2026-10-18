@@ -1,0 +1,27 @@
+{
+  "status": "OK",
+  "valid_observations": 18,
+  "summary_rows": 30,
+  "region_summary_rows": 179,
+  "paired_rows": 20,
+  "figures_generated": [
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\fact_accuracy.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_fact_accuracy.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\key_fact_coverage.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_key_fact_coverage.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\evidence_support_rate.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_evidence_support_rate.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\error_rate.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_error_rate.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\analysis_depth.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_analysis_depth.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\report_qa_accuracy.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_report_qa_accuracy.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\duration_seconds.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_duration_seconds.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\llm_tokens.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_llm_tokens.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\search_requests.svg",
+    "experiments\\independent_comparison\\figures\\formal_target_deepseek_20261018_corrected_r2_v2\\region_search_requests.svg"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "judges_formal_target_deepseek_20261018_corrected_r2_49dc79ef30b6eea98af9fdff3e938af03c3f015048fa801f8ba34ea8ca68b7bb_judge_1",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立盲评 Agent。不要猜测实验组、运行编号或其他报告。只根据任务、冻结 Rubric 和匿名报告评分；只输出 JSON。\n任务：评价长汀县的long-history研究报告，按冻结 Rubric 对各维度评分。\nRubric：{\"schema_version\": \"1.0\", \"status\": \"FROZEN\", \"freeze_date\": \"2026-10-18\", \"freeze_scope\": \"formal_blind_judge_rubric_v1\", \"scale\": {\"min\": 0, \"max\": 5, \"anchors\": {\"0\": \"absent_or_unusable\", \"1\": \"major_defects\", \"3\": \"usable_with_material_gaps\", \"5\": \"strong_and_well_supported\"}}, \"dimensions\": {\"factual_accuracy\": {\"weight\": 0.25, \"rule\": \"verified_correct_claims_over_verifiable_claims\"}, \"key_fact_coverage\": {\"weight\": 0.15, \"rule\": \"correctly_covered_frozen_ground_truth_claims_over_all_claims\"}, \"source_reliability\": {\"weight\": 0.1, \"rule\": \"authority_and_source_content_match\"}, \"industry_logic\": {\"weight\": 0.1, \"rule\": \"resource_to_chain_to_market reasoning\"}, \"historical_explanation\": {\"weight\": 0.1, \"rule\": \"time_ordered phases and evidence-backed turning points\"}, \"causal_analysis\": {\"weight\": 0.1, \"rule\": \"distinguishes evidence from hypothesis and alternative causes\"}, \"structure_completeness\": {\"weight\": 0.05, \"rule\": \"required sections and scope clarity\"}, \"risk_analysis\": {\"weight\": 0.1, \"rule\": \"concrete risks, indicators and uncertainty\"}, \"unsupported_inference\": {\"weight\": -0.05, \"rule\": \"penalty for claims without matching evidence\"}}, \"judge_policy\": {\"minimum_independent_judges\": 2, \"adjudication_required_if_absolute_dimension_gap_at_least\": 2, \"judge_input_may_include\": [\"anonymous_report\", \"rubric\", \"task_prompt\"], \"judge_input_must_not_include\": [\"group_id\", \"ground_truth_before_claim_scoring\", \"other_reports\", \"run_trace\"]}}\n匿名报告：\n# 长汀县生态治理、工业发展与文旅融合研究报告（基于给定资料）\n\n**研究说明**：本报告严格依据所给三则资料撰写。凡资料未载明的数字、机制细节与因果关系，一律标注为\"资料缺口\"或\"推断\"，不作补全。资料[2]正文含省略号（\"今年1月-7月……\"），相关表述按残缺处理。\n\n\n## 一、生态治理\n\n### 事实（有来源）\n\n1. 全县水土保持率为93.56%，森林覆盖率为79.55%。【来源1】\n2. 长汀成功创建国家水土保持示范县，入选\"中国最美县域\"和全国水土保持高质量发展先行区。【来源1】\n3. \"长汀经验\"入选联合国生态修复典型案例。【来源1】\n4. 长汀在全国率先实现水土保持碳汇评估和交易。【来源1】\n5. 长汀成为国家生态文明试验区的重要典范。【来源1】\n6. 当地推行创新预防监管\"三三制\"，被表述为打造生态保护\"长汀模式\"的举措。【来源1，标题及题旨】\n\n### 推断\n\n- 水土保持率93.56%与森林覆盖率79.55%同处高位，可推断生态治理已从\"遏制流失\"阶段进入\"巩固提升\"阶段；但资料未给出历史对比数据，无法量化改善幅度。\n- \"率先实现水土保持碳汇评估和交易\"暗示生态治理与生态产品价值实现机制存在衔接，但资料未说明交易规模、参与主体与收益分配，属推断而非事实。\n\n### 资料缺口\n\n- \"三三制\"的具体内容（三项制度/三级监管/三支队伍等）资料未展开，无法核实其运作机制。\n- 水土保持率、森林覆盖率的统计基准年、监测口径未载明。\n- 碳汇评估的方法学、交易笔数与金额均无资料。\n\n\n## 二、工业发展\n\n### 事实（有来源）\n\n1. 长汀累计盘活34家企业闲置厂房，面积17.9万平方米。【来源2】\n2. 建成标准厂房超30万平方米。【来源2】\n3. 吸引近百家企业入驻。【来源2】\n4. 当地推进工业园区标准化建设提升行动，主题表述为\"标准化赋能、集约化跃升\"。【来源2，标题】\n5. 资料[2]提及\"今年1月-7月……\"，但后续内容缺失。【来源2】\n\n### 推断\n\n- \"盘活闲置厂房17.9万平方米\"与\"建成标准厂房超30万平方米\"并列，可推断当地工业空间供给走的是\"存量盘活+增量建设\"并行路径；但两者是否存在替代或叠加关系，资料未说明。\n- \"近百家企业入驻\"与标准厂房规模结合，可推断园区以中小企业集聚为主要形态；企业规模结构、产业门类均无资料，此推断置信度低。\n\n### 资料缺口\n\n- 资料[2]关键时段数据（1—7月）缺失，无法报告产值、投资、税收、就业等工业绩效指标。\n- 入驻企业的产业构成（如纺织服装、医疗器械、稀土等）无资料支撑，不予列明。\n- 盘活厂房与新建厂房的利用率、空置率无资料。\n- 工业园区标准化建设的具体标准条款无资料。\n\n\n## 三、文旅融合\n\n### 事实（有来源）\n\n1. 长汀打造36个现场教学观光点。【来源3】\n2. 开发一系列红色研学精品旅游线路。【来源3】\n3. 开设参观革命史记展、重温入党誓词、重走革命小道等多主题\"红色实景课堂\"。【来源3】\n4. 当地大力弘扬红色文化，为旅游产业发展增添新动能。【来源3】\n5. \"烟火气\"和\"红色文化\"交相辉映。【来源3】\n\n### 推断\n\n- \"36个现场教学观光点\"与\"红色研学线路\"\"红色实景课堂\"构成\"点—线—课堂\"的产品结构，可推断文旅融合以红色研学为主导业态；但资料未给出游客量、旅游收入，无法评估其经济贡献。\n- \"烟火气\"与红色文化并提，可推断古城休闲与红色旅游存在空间或产品叠加；具体叠加方式（街区、业态配比）无资料。\n\n### 资料缺口\n\n- 36个观光点的名单、分布与建设投入无资料。\n- 红色研学线路的条数、主题分类、客源结构无资料。\n- 文旅融合的接待人次、综合收入、就业带动等量化指标全部缺失。\n- \"古韵汀州\"与红色文化之外的其他文旅资源（如客家文化、古城历史街区）在资料[3]中仅见于标题，正文未展开，不作展开论述。\n\n\n## 四、综合判断（推断，非事实）\n\n- 三则资料分别对应生态、工业、文旅三条线，但**资料之间没有交叉引用**，因此\"生态治理—工业发展—文旅融合\"三者是否存在制度性联动（如生态补偿反哺工业、工业反哺文旅），无法从给定资料证实，只能作为待验证假设。\n- 从资料看，长汀在三领域均已形成可对外表述的\"模式\"或\"经验\"（长汀模式、标准化建设行动、红色实景课堂），可推断其治理特征是\"单项突破、各自成篇\"；是否已形成县域整体协同机制，属资料缺口。\n- 资料[1]的生态指标（93.56%、79.55%）与资料[2][3]的工业、文旅数据在时间上不统一（[1]为2025年8月发布，[2]为2026年9月发布，[3]为2025年12月发布），跨领域比较需谨慎，本报告不作跨领域因果归因。\n\n\n## 五、资料缺口汇总\n\n| 领域 | 主要缺口 |\n|---|---|\n| 生态 | \"三三制\"具体内容；指标基准年与口径；碳汇交易规模与方法学 |\n| 工业 | 1—7月绩效数据（原文省略）；产业门类与企业结构；厂房利用率 |\n| 文旅 | 游客量、旅游收入；观光点与线路明细；客源结构 |\n| 综合 | 三领域联动机制的任何直接证据；跨资料时间口径统一说明 |\n\n**结论**：依据给定资料，可确认长汀在生态治理上拥有高水土保持率、高森林覆盖率及多项国家级/国际级认定，在工业上完成了较大规模的厂房盘活与建设并吸引近百家企业入驻，在文旅上形成了以36个观光点和红色研学线路为骨架的产品体系。但三者的绩效数据、联动机制与关键细节均存在明显资料缺口，本报告不作超出资料的推断与数字补全。"
+    }
+  ],
+  "response": {
+    "content": "{\"factual_accuracy\": 4, \"key_fact_coverage\": 4, \"source_reliability\": 4, \"industry_logic\": 3, \"historical_explanation\": 2, \"causal_analysis\": 4, \"structure_completeness\": 4, \"risk_analysis\": 2, \"unsupported_inference\": 4}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 1954,
+    "completion_tokens": 79,
+    "total_tokens": 2033
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 1954,
+    "completion_tokens": 79,
+    "total_tokens": 2033,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

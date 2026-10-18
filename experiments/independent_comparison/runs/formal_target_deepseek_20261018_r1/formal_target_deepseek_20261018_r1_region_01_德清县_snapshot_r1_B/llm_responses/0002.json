@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_01_德清县_snapshot_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网 AI。研究对象：德清县；方向：高端制造与县域产业升级；模式：snapshot。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 2025年德清县国民经济和社会发展统计公报\nURL: http://www.deqing.gov.cn/col/col1229212614/art/2026/art_52bfef69978043b69456feedfe593551.html#1\n其中，战略性新兴产业增加值158.6亿元，同比增长13.4%；高新技术产业增加值232.2亿元，同比增长10.0%；装备制造业增加值138.8亿元，同比增长16.4%。全县规模以上工业企业利税总额141.1亿元 ... 制造业投资增长13.8%...\n\n[2] 新质生产力“挑大梁” 德清一批重大项目重塑产业新版图-德清新闻网\nURL: http://dqnews.zjol.com.cn/dqnews/system/2026/03/11/035170755.shtml\n近日，记者从县发改、经信等部门了解到，今年我县亿元以上产业项目新质生产力成为最鲜明的标签——在覆盖全县域的重大项目中，涉及高端装备、新材料、低空经济、生物医药等新质生产力领域的项目占比超过七成，展现出德清制造业向“新”而行的强劲脉动 ... 浙江威拓力、杭摩欧亿等一批企业，纷纷切换“新能源”与“智能化”赛道。年产5万台新能源电动搬运设备..."
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 367,
+    "completion_tokens": 512,
+    "total_tokens": 879
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 367,
+    "completion_tokens": 512,
+    "total_tokens": 879,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

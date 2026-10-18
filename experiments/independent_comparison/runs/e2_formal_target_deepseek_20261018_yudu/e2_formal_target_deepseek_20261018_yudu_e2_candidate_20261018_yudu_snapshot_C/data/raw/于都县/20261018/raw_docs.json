@@ -1,0 +1,38 @@
+[
+  {
+    "title": "于都县2024年国民经济和社会发展统计公报",
+    "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml",
+    "snippet": "于都县人民政府 2025-04-28 发布的年度统计公报摘录。",
+    "content": "2024年，全县实现地区生产总值（GDP）3526094万元，按可比价计算，同比增长4.9%。第一产业增加值372937万元，增长3.6%；第二产业增加值1150281万元，增长8.6%；第三产业增加值2002876万元，增长3.0%。全县实现工业增加值947850万元，较上年增长9.7%，占全县GDP比重为26.9%；其中，规模以上工业增加值增长13.8%。全县实现规模以上工业总产值2090798万元，比上年增长11.7%，工业产销率达98.1%。全县500万元以上项目固定资产投资比上年增长7.7%，其中第二产业投资增长15.7%，第三产业投资增长9.1%。注释：GDP及产业增加值绝对数按当年价格计算，增长速度按可比价格计算；本公报部分数据为年度快报初步统计数据，与统计年鉴不一致时以统计年鉴为准。",
+    "source": "official-web-snapshot",
+    "fetched_at": "2026-10-18T00:00:00Z",
+    "metadata": {
+      "snapshot_kind": "bounded_excerpt",
+      "administrative_scope": "于都县全县",
+      "retrieval_date": "2026-10-18"
+    },
+    "published_at": "2025-04-28T00:00:00Z",
+    "domain_type": "government",
+    "credibility_score": 0.95,
+    "evidence_type": "fact",
+    "source_summary": "官方年度统计公报，含 GDP、产业结构、工业和投资指标及统计口径。"
+  },
+  {
+    "title": "于都县2024年GDP增长4.9%",
+    "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202501/fa224dfb742e447fb7ea663716b1ff00.shtml",
+    "snippet": "于都县人民政府 2025-01-26 发布的统一核算结果摘要。",
+    "content": "根据地区生产总值统一核算结果，全年于都县地区生产总值352.61亿元，按不变价格计算，比上年增长4.9%。其中，第一产业增加值37.29亿元，增长3.6%；第二产业增加值115.03亿元，增长8.6%；第三产业增加值200.29亿元，增长3%。根据第五次全国经济普查结果，2023年全县生产总值修订为340.03亿元，2024年地区生产总值统一核算以修订后的数据为基数。",
+    "source": "official-web-snapshot",
+    "fetched_at": "2026-10-18T00:00:00Z",
+    "metadata": {
+      "snapshot_kind": "bounded_excerpt",
+      "administrative_scope": "于都县全县",
+      "retrieval_date": "2026-10-18"
+    },
+    "published_at": "2025-01-26T00:00:00Z",
+    "domain_type": "government",
+    "credibility_score": 0.95,
+    "evidence_type": "fact",
+    "source_summary": "官方统一核算结果摘要，用于核对 GDP、产业增加值和普查修订口径。"
+  }
+]

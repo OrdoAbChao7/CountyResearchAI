@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_03_于都县_rise-fall_r1_C",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "# 县域兴衰模型归纳提示词\n\n你是一位产业经济史学者,需要将该县产业兴衰历程归纳为一种典型的\"兴衰模型\",并提炼可迁移的历史规律。\n\n## 研究对象\n\n- 县名:于都县\n- 数据采集日期:2026-10-18\n\n## 已完成的兴衰分析结果\n\n以下是该县产业兴衰的初步分析(时间线、起家产业、兴起因子、衰落因子、人才流失):\n\n```\n## 起家产业\n(数据不足,需补充地方志)\n\n## 当前阶段\nunknown\n```\n\n## 任务要求\n\n基于上述分析,将该县产业兴衰历程归类为以下典型模型之一(或多个组合),并提炼规律:\n\n### 兴衰模型类型(pattern_type)\n\n- `resource_curse`       **资源诅咒型** — 资源起家 → 枯竭 → 衰退(如鹤岗、玉门)\n- `policy_driven`        **政策驱动型** — 政策红利期繁荣 → 退坡 → 转型(如部分特区、扶贫县)\n- `market_cycle`         **市场周期型** — 随宏观周期与价格周期起伏(如钢铁、煤炭县)\n- `industry_transfer`    **产业转移型** — 承接 → 壮大 → 再转出(如部分沿海县域)\n- `talent_drain`         **人才流失型** — 产业基础尚可但人力持续外流\n- `path_lock`            **路径锁定型** — 单一产业过度依赖,转型困难\n- `diversified_growth`   **多元共生型** — 多产业协同,韧性较强(如部分百强县)\n- `mixed`                **混合型** — 上述多种模型叠加(需在 summary 中说明主次)\n\n## 归纳要求\n\n1. **pattern_type** — 选择最贴合的 1 种(若多模型叠加则选 mixed 并在 summary 说明)\n2. **summary** — 2-3 句话概括该县兴衰主线(起家→壮大→衰落/转型的核心逻辑)\n3. **confidence** — 置信度 0-1(证据充分、判断明确则高;数据缺失则低)\n4. **evidence** — 支撑该判断的关键证据列表(数据点、关键事件)\n\n## 输出格式(严格 JSON)\n\n```json\n{\n  \"pattern_type\": \"resource_curse\",\n  \"summary\": \"该县 1980 年代起依托煤炭资源起家,1990-2010 年间煤炭产业贡献县财政 60% 以上;2014 年后随资源枯竭与环保整治,产业迅速萎缩,人口外流,属于典型资源诅咒型兴衰路径。\",\n  \"confidence\": 0.8,\n  \"evidence\": [\n    \"煤炭产值占工业比重 2005 年达 68%(材料 [4])\",\n    \"2014-2018 年 4 座主力矿井关停(材料 [7])\",\n    \"常住人口较户籍人口少 18 万(材料 [4])\"\n  ]\n}\n```\n\n只输出 JSON。这是面向投资者/创业者的历史规律研究,不要写成招商建议。\n"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 718,
+    "completion_tokens": 512,
+    "total_tokens": 1230
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 718,
+    "completion_tokens": 512,
+    "total_tokens": 1230,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

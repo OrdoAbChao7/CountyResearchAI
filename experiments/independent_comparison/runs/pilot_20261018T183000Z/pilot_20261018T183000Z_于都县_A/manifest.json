@@ -1,0 +1,19 @@
+{
+  "artifacts": {
+    "report": "report.md:024647680b0f7724c4a391fe15744cd7138eb8d84194884aca00474e8fa17308",
+    "sources": "sources.json:51453719559b334cf0081a69e2c787c627d14d7e68bf8815e1e095c12262ebd2"
+  },
+  "config_hash": "a57069a341ef0fbe9499e5640a9c8148ca59ca8f853caf2ac5af334515aadc3d",
+  "county": "于都县",
+  "created_at": "2026-10-18T10:12:24.516507+00:00",
+  "error": "Resource ledger actual usage 45641 exceeded pilot capacity 24000; historical runner lacked settlement-time overrun guard",
+  "experiment_id": "E1",
+  "group": "A",
+  "mode": "snapshot",
+  "model": "gemini-3.1-flash-lite",
+  "run_id": "pilot_20261018T183000Z_于都县_A",
+  "search_provider": "tavily",
+  "status": "INVALID_RESOURCE_ACCOUNTING",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T10:13:04.810262+00:00"
+}

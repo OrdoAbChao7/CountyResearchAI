@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "manifest_id": "fixed_input_candidate_manifest_20261018",
+  "status": "CANDIDATE_INPUT_PACKS_NOT_FORMAL",
+  "created_at": "2026-10-18T00:00:00+00:00",
+  "formal_ground_truth": false,
+  "excluded_from_formal_target": true,
+  "reason": "Six bounded-excerpt packs are prepared for E2 fixed-input preflight, but the six-region Ground Truth remains unfrozen and the source/page-context audit is incomplete.",
+  "packs": [
+    {
+      "file": "fixed_input_candidate_20261018_yudu.json",
+      "pack_id": "e2_candidate_20261018_yudu_snapshot",
+      "region": "于都县",
+      "source_hash": "59bb531886c698d96943b8f5a710580fed2ae73521ebf0e2dbd1459a8198e9dc"
+    },
+    {
+      "file": "fixed_input_candidate_20261018_baishan.json",
+      "pack_id": "e2_candidate_20261018_baishan_snapshot",
+      "region": "白山市",
+      "source_hash": "629d860c00df7a3282c3902c6984f49b3216705f64e76fed1eda82bd68b00d30"
+    },
+    {
+      "file": "fixed_input_candidate_20261018_linze.json",
+      "pack_id": "e2_candidate_20261018_linze_snapshot",
+      "region": "临泽县",
+      "source_hash": "0ef9d9226be88fccc522653f360ab21c922edb0562b5353d4f000c4afa1d3357"
+    },
+    {
+      "file": "fixed_input_candidate_20261018_deqing.json",
+      "pack_id": "e2_candidate_20261018_deqing_snapshot",
+      "region": "德清县",
+      "source_hash": "6ede1b67a56b758ee70677c9be66c6c1960de3ad2c4452910b2411a17a2e061a"
+    },
+    {
+      "file": "fixed_input_candidate_20261018_changting.json",
+      "pack_id": "e2_candidate_20261018_changting_snapshot",
+      "region": "长汀县",
+      "source_hash": "1b4530fb264f9c9a702ef9349b64a5ea75594aa18a920f03c21ac832adf34fc2"
+    },
+    {
+      "file": "fixed_input_candidate_20261018_panzhihua.json",
+      "pack_id": "e2_candidate_20261018_panzhihua_snapshot",
+      "region": "攀枝花市",
+      "source_hash": "51febe5a8cecc4dd39923032f2471b3b5a6e62bed0c432503353ae4c4bb1e854"
+    }
+  ]
+}

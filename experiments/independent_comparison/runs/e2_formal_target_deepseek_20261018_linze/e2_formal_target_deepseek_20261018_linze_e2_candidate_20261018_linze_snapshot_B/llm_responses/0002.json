@@ -1,0 +1,28 @@
+{
+  "run_id": "e2_formal_target_deepseek_20261018_linze_e2_candidate_20261018_linze_snapshot_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用 AI 固定输入分析研究员。研究对象：临泽县；方向：工业转型与特色产业；模式：snapshot。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 2024年张掖统计年鉴\nURL: https://www.zhangye.gov.cn/sjfb/xbtjnj/202512/P020251201576968180255.pdf\n张掖统计年鉴县域地区生产总值表列示：临泽县2024年地区生产总值79.68亿元；第一产业增加值26.35亿元，第二产业增加值15.26亿元，第三产业增加值38.07亿元。该表为张掖市辖县区数据，临泽县为县级行政范围。金额按年鉴表格口径记录，使用前应保留表号和页码。\n\n[2] 砥砺前行 挺起高质量发展的“工业脊梁”——临泽县“十四五”工业高质量发展步履坚实\nURL: https://www.zhangye.gov.cn/kjj/dzdt/gzdt/202510/t20251017_1466067.html\n2024年，临泽县GDP总量由2020年的57.01亿元提高到2024年的79.68亿元，年均增长7.6%。截至2024年底，县域内形成矿石精加工产业集群；临泽县规划凹凸棒石新材料产业园、通航产业园、绿色食品加工产业园和循环经济产业园，形成“一区五园”布局。全县48家精深加工企业年加工各类农产品87.32万吨，农产品加工转化率达75%。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 374,
+    "completion_tokens": 512,
+    "total_tokens": 886
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 374,
+    "completion_tokens": 512,
+    "total_tokens": 886,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

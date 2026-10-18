@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "input_pack": "input_pack.json:1602d8d8a6273cce72be23e1c1e11c84de2eecd306ec823e510b61eeb87ee544",
+    "report": "report.md:3179fcfd0b6bded7b8f029caffcc7c944fff1cb88d313d494fda38d7d0c0d323",
+    "sources": "sources.json:2e4b1d641480836aa514254485716ee2728be49b89b57dabb8349944e3275714"
+  },
+  "config_hash": "e56824fab503168891e6fb47c78cdc5e5d38186778716abeaa7af79579f8dc9b",
+  "county": "白山市",
+  "created_at": "2026-10-18T14:37:35.578404+00:00",
+  "duration_seconds": 13.322958,
+  "error": null,
+  "experiment_id": "E2",
+  "formal_target": true,
+  "group": "A",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 1717
+  },
+  "run_id": "e2_formal_target_deepseek_20261018_corrected_baishan_e2_candidate_20261018_baishan_snapshot_A",
+  "search_provider": "disabled-by-fixed-input-protocol",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T14:37:48.900825+00:00"
+}

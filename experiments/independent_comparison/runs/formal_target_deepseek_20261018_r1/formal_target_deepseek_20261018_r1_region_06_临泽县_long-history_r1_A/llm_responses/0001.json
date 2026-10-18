@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_06_临泽县_long-history_r1_A",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是传统网页检索。研究对象：临泽县；方向：工业转型与特色产业；模式：long-history。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 临泽县人民政府-临泽县2025年国民经济和社会发展统计公报\nURL: http://www.gslz.gov.cn/dzdt/tzgg/202606/t20260611_1552627_wap.html#1\n工业和建筑业 工业：全年完成工业增加值10.07亿元，同比增长19%，其中规模以上工业增加值同比增长20.4%。在规模以上工业中，分门类看，采矿业增长37.3%，制造业增长10%，电力、热力、燃气及水生产和供应业增长45%。\n\n[2] 临泽县人民政府-【纵深推进“三抓三促”行动】临泽：转型升级点燃产业发展“新引擎”\nURL: http://www.gslz.gov.cn/dzdt/zxdt/xndt/202506/t20250625_1418439.html\n绿色食品加工业依托自强枣业、祁连红等精深加工项目 ... 年加工量突破50万吨。循环经济产业龙头宏鑫矿业依托80万吨综合选矿项目，采用智能、绿色先进技术，年新增产值10亿元以上，资源综合利用率提升20％。以凹凸棒石新材料...\n\n[3] |    | 11 | 化学需氧量    | 重点工程任务排放总量减少（万吨） | 约束性    | 0.087348 | 0.0093 |\nURL: http://www.gslz.gov.cn/zfxxgk/fdzdgknr/guihuagangyao/guihuagangyao/202205/W020220518643603271616.pdf#8#3\n临泽县“十四五”生态环境保护规划 ... 第一节 优化调整产业结构 ... 全面落实《中国制造2025》和“互 ... 深入实施“十强双百”企业振兴计划，提高工业经济质量效益，立足农业优先型和文旅赋能型功能定位，围绕现代农业、凹凸棒石新材料、通用航空、清洁能源、文旅康养五大产业..."
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 503,
+    "completion_tokens": 512,
+    "total_tokens": 1015
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 503,
+    "completion_tokens": 512,
+    "total_tokens": 1015,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

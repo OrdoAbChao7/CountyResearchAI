@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_06_临泽县_long-history_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网研究助手。为研究 临泽县 的 工业转型与特色产业（任务模式 long-history），只输出 JSON：{\"queries\":[\"...\"]}，最多 3 个检索词。"
+    }
+  ],
+  "response": {
+    "content": "{\"queries\":[\"临泽县 工业转型 特色产业\",\"临泽县 生态工业 农产品加工 新能源\",\"临泽县 产业转型升级 十四五 规划\"]}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 51,
+    "completion_tokens": 39,
+    "total_tokens": 90
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 51,
+    "completion_tokens": 39,
+    "total_tokens": 90,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

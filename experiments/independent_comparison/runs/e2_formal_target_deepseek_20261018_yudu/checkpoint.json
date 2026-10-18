@@ -1,0 +1,10 @@
+{
+  "config_hash": "72b405d4206a04ace125ac87c41836eb7278a02dae7c2ac1d196bc9aaece2884",
+  "state": {
+    "completed": {
+      "e2_formal_target_deepseek_20261018_yudu_e2_candidate_20261018_yudu_snapshot_A": "VALID",
+      "e2_formal_target_deepseek_20261018_yudu_e2_candidate_20261018_yudu_snapshot_B": "VALID",
+      "e2_formal_target_deepseek_20261018_yudu_e2_candidate_20261018_yudu_snapshot_C": "VALID"
+    }
+  }
+}

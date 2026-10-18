@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:cf1fe9901b7dbd1ae512d8eb6d6aced7a4195acf9f91e3b399518c6ce4bf4764",
+    "sources": "sources.json:54b1c3df4c3a00b0322b7d1a2a5036fd63e0911bea2907814fd1256ba34f1b1f"
+  },
+  "config_hash": "16eedafd9a5e0e2e88a489364fd4d496ba0d23b68ec41e0165ee6426d3e4a437",
+  "county": "白山市",
+  "created_at": "2026-10-18T14:29:32.989225+00:00",
+  "duration_seconds": 45.257908,
+  "error": null,
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "C",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 4090,
+    "deepseek:search:search": 6
+  },
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_05_白山市_snapshot_r1_C",
+  "search_provider": "deepseek",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T14:30:18.246525+00:00"
+}

@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "input_pack": "input_pack.json:688d4c82a8a8be1121d390faec448d5751f7df515e27af25c499dfec5bb1a82f",
+    "report": "report.md:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": "sources.json:319066ab45de07d62519b17b6669b17438ca175c0426b399277a344a634fe4df"
+  },
+  "config_hash": "16dd81e0e476d0deec2c0e16a02e632980a18c09f014e7b8e3428f246473a0ac",
+  "county": "德清县",
+  "created_at": "2026-10-18T13:18:02.480865+00:00",
+  "duration_seconds": 13.084649,
+  "error": null,
+  "experiment_id": "E2",
+  "formal_target": true,
+  "group": "B",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 1623
+  },
+  "run_id": "e2_formal_target_deepseek_20261018_deqing_e2_candidate_20261018_deqing_snapshot_B",
+  "search_provider": "disabled-by-fixed-input-protocol",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T13:18:15.564944+00:00"
+}

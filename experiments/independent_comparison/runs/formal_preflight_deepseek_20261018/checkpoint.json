@@ -1,0 +1,10 @@
+{
+  "config_hash": "e550f4c55bfcd546195104b4b476582e8bb63a4d4c6b344e75449591929282b7",
+  "state": {
+    "completed": {
+      "formal_preflight_deepseek_20261018_region_01_德清县_snapshot_r1_A": "VALID",
+      "formal_preflight_deepseek_20261018_region_01_德清县_snapshot_r1_B": "VALID",
+      "formal_preflight_deepseek_20261018_region_01_德清县_snapshot_r1_C": "VALID"
+    }
+  }
+}

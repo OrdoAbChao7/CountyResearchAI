@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_03_于都县_rise-fall_r1_A",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是传统网页检索。研究对象：于都县；方向：产业结构与工业发展；模式：rise-fall。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 我县召开2025年经济运行情况新闻发布会\nURL: https://www.yudu.gov.cn/yudu/jryd/202602/449130ee8f1f44909b4b3fcf5e3e5b04.shtml#1\n分产业看，第一产业增加值37.6亿元，增长3.3%；第二产业增加值121.7亿元，增长6.7%；第三产业增加值216.7亿元 ... 全年全县规模以上工业增加值同比增长8.6%。\n\n[2] 于都县：厚植产业 育企兴城\nURL: http://gxt.jiangxi.gov.cn/jxsgyhxxht/dsgx/content/content_2046055924964589568.html#1\n于都县发挥“龙头引领”作用，引导天键股份、赢家时装等龙头企业率先改造，让中小企业“学有榜样、转有参照”。截至目前 ... 装备制造产业实现创新突破，龙头企业竞铭机械在PCB表面处理设备领域技术领先，新赛力科技深耕精密模具 ... 构建起“零件加工—整机供应—终端应用”的产业发展格局。\n\n[3] 关于于都县建设工业强县及推进科技创新（含人才引进）领域“十五五”规划编制专题调研报告\nURL: https://www.yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml#1\n关于于都县建设工业强县及推进科技创新（含人才引进）领域“十五五”规划编制专题调研报告 ... 我县产业发展与科技创新工作仍面临一系列深层次、结构性矛盾，制约着发展步伐 ... （三）要素保障瓶颈突出，创新驱动效能不强 ... （四）人才瓶颈制约明显，引育留用体系亟待完善。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 483,
+    "completion_tokens": 512,
+    "total_tokens": 995
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 483,
+    "completion_tokens": 512,
+    "total_tokens": 995,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

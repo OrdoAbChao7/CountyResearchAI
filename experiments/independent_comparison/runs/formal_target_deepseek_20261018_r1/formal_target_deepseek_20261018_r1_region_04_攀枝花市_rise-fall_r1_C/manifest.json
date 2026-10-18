@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:6300bb7572b51722aa1a33a60b16b340cace188139423fa581a8418cd9940993",
+    "sources": "sources.json:49853bb25c91437178ad3741abb6705f24e11849519d678893250434ba7c0bce"
+  },
+  "config_hash": "f0076675726b391903320baedb51fb049284da25cbc3719311f1778bc0a7b095",
+  "county": "攀枝花市",
+  "created_at": "2026-10-18T13:10:45.118517+00:00",
+  "duration_seconds": 59.894296,
+  "error": null,
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "C",
+  "mode": "rise-fall",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 7472,
+    "deepseek:search:search": 6
+  },
+  "run_id": "formal_target_deepseek_20261018_r1_region_04_攀枝花市_rise-fall_r1_C",
+  "search_provider": "deepseek",
+  "status": "VALID",
+  "task_id": "rise-fall",
+  "updated_at": "2026-10-18T13:11:45.012192+00:00"
+}

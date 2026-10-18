@@ -1,0 +1,8 @@
+{
+  "smoke_20261018T095509Z_安吉县_A": "VALID",
+  "smoke_20261018T095509Z_安吉县_B": "VALID",
+  "smoke_20261018T095509Z_安吉县_C": "FAILED",
+  "smoke_20261018T095509Z_信丰县_A": "FAILED",
+  "smoke_20261018T095509Z_信丰县_B": "FAILED",
+  "smoke_20261018T095509Z_信丰县_C": "FAILED"
+}

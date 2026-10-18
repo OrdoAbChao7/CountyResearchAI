@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "claim_file": "partial_verified_panel_20261018.jsonl",
+  "source_hash": "e871992341a4707f3440a0bd55e7bcc2fb4b356cc24e9573753189693465ba94",
+  "status": "PARTIAL_FROZEN_NOT_FORMAL",
+  "formal_ground_truth": false,
+  "claim_count": 3,
+  "regions": ["于都县", "白山市", "临泽县"],
+  "verification_contexts": ["D3_20261018_independent_overlap_review", "D4_20261018_independent_overlap_review"],
+  "excluded_from_formal_target": true,
+  "exclusion_reason": "The panel covers only one or two claims in three regions; the six-region task-level Ground Truth is not complete, and unresolved revision/metric gaps remain.",
+  "created_at": "2026-10-18T00:00:00+00:00"
+}

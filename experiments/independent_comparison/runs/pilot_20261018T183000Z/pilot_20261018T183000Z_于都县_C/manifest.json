@@ -1,0 +1,16 @@
+{
+  "artifacts": {},
+  "config_hash": "0a1df12610a203e9a754b239fd06f9c2b05c197f2e0a436eff16a2dff1b77b86",
+  "county": "于都县",
+  "created_at": "2026-10-18T10:13:44.353503+00:00",
+  "error": "ResearchStageError: research stage failed: analyze | context={'county': '于都县', 'focus': '脐橙产业', 'mode': 'snapshot'}",
+  "experiment_id": "E1",
+  "group": "C",
+  "mode": "snapshot",
+  "model": "gemini-3.1-flash-lite",
+  "run_id": "pilot_20261018T183000Z_于都县_C",
+  "search_provider": "tavily",
+  "status": "BLOCKED",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T10:14:30.788788+00:00"
+}

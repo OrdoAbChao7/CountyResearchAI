@@ -1,0 +1,41 @@
+{
+  "check_id": "resource_precheck_20261018",
+  "checked_at": "2026-10-18T11:42:45.4306921Z",
+  "deepseek": {
+    "configured": false,
+    "enabled": false,
+    "status": "DISABLED_BY_POLICY"
+  },
+  "gemini": {
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-lite",
+    "models_list_http_status": 200,
+    "target_model_visible": true,
+    "account_quota_fields_returned": false,
+    "billing_boundary": "UNKNOWN",
+    "public_pricing": "free_tier_input_output_free_of_charge",
+    "browser_account_check": {
+      "service": "Google AI Studio",
+      "landing_status": "PUBLIC_WELCOME_PAGE",
+      "account_entry_redirect": "GOOGLE_LOGIN_REQUIRED",
+      "authenticated_session_available": false,
+      "read_only": true,
+      "credentials_entered": false
+    },
+    "status": "MODEL_VISIBLE_ACCOUNT_BILLING_UNCONFIRMED"
+  },
+  "tavily": {
+    "provider": "tavily",
+    "usage_endpoint": "https://api.tavily.com/usage",
+    "http_status": 200,
+    "current_plan": "Researcher",
+    "plan_usage_credits": 230,
+    "plan_limit_credits": 1000,
+    "conservative_remaining_credits": 770,
+    "paygo_usage_credits": 0,
+    "status": "FREE_PLAN_USAGE_VISIBLE"
+  },
+  "formal_gate": "CLOSED_UNTIL_GEMINI_ACCOUNT_BILLING_BOUNDARY_CONFIRMED",
+  "business_model_calls_made": false,
+  "api_keys_logged": false
+}

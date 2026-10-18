@@ -1,0 +1,67 @@
+schema_version: "1.0"
+status: FROZEN
+freeze_scope: minimum_version_scoped_claim_target
+freeze_date: 2026-10-18
+exclude_development_cases: [安吉县, 信丰县, 鹤岗市]
+ground_truth_file: ../ground_truth/formal_ground_truth_20261018.jsonl
+ground_truth_manifest: ../ground_truth/formal_ground_truth_20261018_manifest.json
+fixed_input_manifest: fixed_input_formal_manifest_20261018.json
+unresolved_claims: ../ground_truth/verification_matrix_20261018.yaml
+regions:
+  - id: region_01
+    name: 德清县
+    province: 浙江省
+    level: county
+    type: developed_manufacturing
+    focus: 高端制造与县域产业升级
+    task_ids: [snapshot, long-history]
+    primary_task: snapshot
+    formal_claim_scope: 2024 initial-release GDP value and growth
+    preserved_dispute: later 723.1亿元/5.2% revision remains outside this version-scoped claim
+  - id: region_02
+    name: 长汀县
+    province: 福建省
+    level: county
+    type: ecological_restoration_and_agriculture
+    focus: 生态治理、工业发展与文旅融合
+    task_ids: [snapshot, long-history]
+    primary_task: long-history
+    formal_claim_scope: 2024 bulletin preliminary GDP amount
+    preserved_dispute: expected 360.8亿元/4.6% and bulletin 4.9% are kept as separate time-point/version facts
+  - id: region_03
+    name: 于都县
+    province: 江西省
+    level: county
+    type: labor_intensive_manufacturing
+    focus: 产业结构与工业发展
+    task_ids: [snapshot, rise-fall]
+    primary_task: rise-fall
+    formal_claim_scope: 2024 GDP value and comparable-price growth
+  - id: region_04
+    name: 攀枝花市
+    province: 四川省
+    level: prefecture_city
+    type: resource_manufacturing_transition
+    focus: 钒钛产业、先进材料与康养经济
+    task_ids: [rise-fall, long-history]
+    primary_task: rise-fall
+    formal_claim_scope: 2024 initial-release GDP value and growth
+    preserved_dispute: later 1375.14亿元/6.2% revision remains outside this version-scoped claim
+  - id: region_05
+    name: 白山市
+    province: 吉林省
+    level: prefecture_city
+    type: resource_and_population_pressure
+    focus: 产业结构与资源型经济
+    task_ids: [rise-fall, snapshot]
+    primary_task: snapshot
+    formal_claim_scope: 2024 GDP value and growth
+  - id: region_06
+    name: 临泽县
+    province: 甘肃省
+    level: county
+    type: arid_agriculture_and_sparse_sources
+    focus: 工业转型与特色产业
+    task_ids: [snapshot, long-history]
+    primary_task: long-history
+    formal_claim_scope: 2024 county GDP value

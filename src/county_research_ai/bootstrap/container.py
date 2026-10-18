@@ -7,6 +7,7 @@ from ..application.config import ResearchApplicationConfig
 from ..application.research import ResearchApplication
 from ..application.workflow import WorkflowRunner
 from ..config import Settings, get_settings
+from ..exceptions import LLMError, SearchError
 from ..infrastructure.search_adapter import CollectorSearchAdapter, ProviderSearchAdapter
 from ..llm.analyzer import LLMAnalyzer
 from ..llm.client import OpenAICompatibleClient
@@ -25,6 +26,18 @@ from ..reporting.long_history_renderer import LongHistoryReportRenderer
 from ..reporting.rise_fall_renderer import RiseFallReportRenderer
 from ..search.collector import SearchCollector
 from ..storage.local_fs import LocalFSStorage
+
+
+class _SearchDisabledByProtocol:
+    """E2 fixed-input runs 的非 Mock 搜索占位；被调用即失败。"""
+
+    name = "disabled-by-fixed-input-protocol"
+
+    def collect(self, *args, **kwargs):
+        raise SearchError("search is disabled by the E2 fixed-input protocol")
+
+    def collect_supplemental(self, *args, **kwargs):
+        raise SearchError("search is disabled by the E2 fixed-input protocol")
 
 
 def _render_filename(template: str, context: dict[str, str]) -> str:
@@ -59,24 +72,40 @@ class AppContainer:
         )
 
 
-def create_app_container(settings: Settings | None = None) -> AppContainer:
+def create_app_container(
+    settings: Settings | None = None,
+    *,
+    strict_real: bool = False,
+    search_enabled: bool = True,
+) -> AppContainer:
     settings = settings or get_settings()
-    search_key = settings.search.api_key.get_secret_value() if settings.search.api_key else ""
-    if search_key:
-        try:
-            search = CollectorSearchAdapter(SearchCollector.from_settings(settings=settings))
-        except Exception:
-            search = ProviderSearchAdapter(MockSearchProvider())
+    if not search_enabled:
+        search = _SearchDisabledByProtocol()
     else:
-        search = ProviderSearchAdapter(MockSearchProvider())
+        search_key = settings.search.api_key.get_secret_value() if settings.search.api_key else ""
+        if search_key:
+            try:
+                search = CollectorSearchAdapter(SearchCollector.from_settings(settings=settings))
+            except Exception:
+                if strict_real:
+                    raise
+                search = ProviderSearchAdapter(MockSearchProvider())
+        else:
+            if strict_real:
+                raise SearchError("strict real container requires a search API key")
+            search = ProviderSearchAdapter(MockSearchProvider())
 
     llm_key = settings.llm.api_key.get_secret_value() if settings.llm.api_key else ""
     if llm_key:
         try:
             llm = OpenAICompatibleClient(settings=settings)
         except Exception:
+            if strict_real:
+                raise
             llm = MockLLMClient()
     else:
+        if strict_real:
+            raise LLMError("strict real container requires an LLM API key")
         llm = MockLLMClient()
 
     storage = LocalFSStorage(settings=settings)

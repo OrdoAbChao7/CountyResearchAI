@@ -157,6 +157,10 @@ class OpenAICompatibleClient(LLMClient):
         所有 SDK 异常统一转换为 LLMError,这样上层的
         retry_if_exception_type(LLMError) 才能正确触发重试。
         """
+        llm_settings = getattr(getattr(self, "_settings", None), "llm", None)
+        provider = str(getattr(llm_settings, "provider", "")).lower()
+        if provider == "deepseek" and "extra_body" not in kwargs:
+            kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
         try:
             resp = self._client.chat.completions.create(
                 model=self._model,

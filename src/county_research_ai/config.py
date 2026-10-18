@@ -89,6 +89,7 @@ class SearchConfig(BaseModel):
     retry: SearchRetryConfig = Field(default_factory=SearchRetryConfig)
     fetch_detail: bool = True  # 是否抓取搜索结果详情页
     detail_max_chars: int = 8000  # 单页正文截断长度
+    deepseek_enabled: bool = False  # DeepSeek Search/Fetch must be explicitly enabled
 
 
 class StorageConfig(BaseModel):
@@ -199,6 +200,29 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data or {}
 
 
+def _apply_deepseek_env_defaults(
+    llm: dict[str, Any], search: dict[str, Any]
+) -> None:
+    """Apply DeepSeek-specific key, endpoint, and opt-in defaults."""
+    llm_provider = str(llm.get("provider", "deepseek")).lower()
+    if llm_provider == "deepseek" and not llm.get("api_key"):
+        deepseek_key = os.getenv("DEEPSEEK_API_KEY")
+        if deepseek_key:
+            llm["api_key"] = deepseek_key
+    if llm_provider == "deepseek" and not llm.get("base_url"):
+        llm["base_url"] = "https://api.deepseek.com/v1"
+
+    search_provider = str(search.get("provider", "tavily")).lower()
+    enabled = os.getenv("DEEPSEEK_SEARCH_ENABLED")
+    if search_provider == "deepseek" and enabled is not None:
+        search["deepseek_enabled"] = enabled.strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+
+
 def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:
     """将环境变量合并进 settings 字典,env 优先级更高。
 
@@ -231,6 +255,7 @@ def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:
         "tavily": "TAVILY_API_KEY",
         "serper": "SERPER_API_KEY",
         "bing": "BING_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY",
     }
     env_key = key_env_map.get(provider, "")
     if env_key and os.getenv(env_key):
@@ -241,6 +266,8 @@ def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:
         search["timeout"] = int(os.getenv("SEARCH_TIMEOUT"))  # type: ignore[arg-type]
     if os.getenv("SEARCH_CONCURRENCY"):
         search["concurrency"] = int(os.getenv("SEARCH_CONCURRENCY"))  # type: ignore[arg-type]
+
+    _apply_deepseek_env_defaults(llm, search)
 
     # ---------- 存储 ----------
     storage = settings_dict.setdefault("storage", {})

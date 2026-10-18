@@ -1,0 +1,28 @@
+{
+  "run_id": "judges_formal_target_deepseek_20261018_final_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_judge_1",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立盲评 Agent。不要猜测实验组、运行编号或其他报告。只根据任务、冻结 Rubric 和匿名报告评分；只输出 JSON。\n任务：评价白山市的snapshot研究报告，按冻结 Rubric 对各维度评分。\nRubric：{\"schema_version\": \"1.0\", \"status\": \"FROZEN\", \"freeze_date\": \"2026-10-18\", \"freeze_scope\": \"formal_blind_judge_rubric_v1\", \"scale\": {\"min\": 0, \"max\": 5, \"anchors\": {\"0\": \"absent_or_unusable\", \"1\": \"major_defects\", \"3\": \"usable_with_material_gaps\", \"5\": \"strong_and_well_supported\"}}, \"dimensions\": {\"factual_accuracy\": {\"weight\": 0.25, \"rule\": \"verified_correct_claims_over_verifiable_claims\"}, \"key_fact_coverage\": {\"weight\": 0.15, \"rule\": \"correctly_covered_frozen_ground_truth_claims_over_all_claims\"}, \"source_reliability\": {\"weight\": 0.1, \"rule\": \"authority_and_source_content_match\"}, \"industry_logic\": {\"weight\": 0.1, \"rule\": \"resource_to_chain_to_market reasoning\"}, \"historical_explanation\": {\"weight\": 0.1, \"rule\": \"time_ordered phases and evidence-backed turning points\"}, \"causal_analysis\": {\"weight\": 0.1, \"rule\": \"distinguishes evidence from hypothesis and alternative causes\"}, \"structure_completeness\": {\"weight\": 0.05, \"rule\": \"required sections and scope clarity\"}, \"risk_analysis\": {\"weight\": 0.1, \"rule\": \"concrete risks, indicators and uncertainty\"}, \"unsupported_inference\": {\"weight\": -0.05, \"rule\": \"penalty for claims without matching evidence\"}}, \"judge_policy\": {\"minimum_independent_judges\": 2, \"adjudication_required_if_absolute_dimension_gap_at_least\": 2, \"judge_input_may_include\": [\"anonymous_report\", \"rubric\", \"task_prompt\"], \"judge_input_must_not_include\": [\"group_id\", \"ground_truth_before_claim_scoring\", \"other_reports\", \"run_trace\"]}}\n匿名报告：\n"
+    }
+  ],
+  "response": {
+    "content": "{\"schema_version\":\"1.0\",\"report_status\":\"missing\",\"anonymous_report_provided\":false,\"dimension_scores\":{\"factual_accuracy\":{\"score\":0,\"reason\":\"匿名报告为空，无法核验任何可验证事实主张。\"},\"key_fact_coverage\":{\"score\":0,\"reason\":\"匿名报告为空，无法评估对冻结真值事实的覆盖。\"},\"source_reliability\":{\"score\":0,\"reason\":\"匿名报告为空，无来源可评估权威性与内容匹配度。\"},\"industry_logic\":{\"score\":0,\"reason\":\"匿名报告为空，无法评估资源—链条—市场推理。\"},\"historical_explanation\":{\"score\":0,\"reason\":\"匿名报告为空，无法评估时间阶段与转折点证据。\"},\"causal_analysis\":{\"score\":0,\"reason\":\"匿名报告为空，无法区分证据、假设与替代原因。\"},\"structure_completeness\":{\"score\":0,\"reason\":\"匿名报告为空，缺少必要章节与范围说明。\"},\"risk_analysis\":{\"score\":0,\"reason\":\"匿名报告为空，无法评估具体风险、指标与不确定性。\"},\"unsupported_inference\":{\"score\":0,\"reason\":\"匿名报告为空，无主张可判定为无证据推断，故不施加惩罚。\"}},\"overall_weighted_score\":0.0,\"notes\":\"匿名报告字段为空，只能按 absent_or_unusable 评分。\"}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 544,
+    "completion_tokens": 944,
+    "total_tokens": 1488
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 544,
+    "completion_tokens": 944,
+    "total_tokens": 1488,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

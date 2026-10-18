@@ -1,0 +1,22 @@
+{
+  "artifacts": {},
+  "config_hash": "dc3173f1cfcc8b18fe91057b1564f066d5d6e2d1b07da25309a072e724e770a9",
+  "county": "临泽县",
+  "created_at": "2026-10-18T14:31:26.255873+00:00",
+  "duration_seconds": 102.412368,
+  "error": "ResearchStageError: research stage failed: analyze | context={'county': '临泽县', 'focus': '工业转型与特色产业', 'mode': 'long-history'}",
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "C",
+  "mode": "long-history",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 17331,
+    "deepseek:search:search": 6
+  },
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_06_临泽县_long-history_r1_C",
+  "search_provider": "deepseek",
+  "status": "BLOCKED",
+  "task_id": "long-history",
+  "updated_at": "2026-10-18T14:33:08.667551+00:00"
+}

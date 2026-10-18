@@ -1,0 +1,19 @@
+{
+  "artifacts": {
+    "report": "report.md:7bcf8eb0409a2ebf5c3072a593142bf828ac6fa3f6b25a2570b5929c733195ce",
+    "sources": "sources.json:2a85056f5d40e71ce13063c2869bc3e4e17adc540808c79de6ab9ed7f4aca7d1"
+  },
+  "config_hash": "edb9c089a505428048882330a0e93238452e96c46fba01e4b3314ebbfb3ee4fe",
+  "county": "安吉县",
+  "created_at": "2026-10-18T09:55:09.130145+00:00",
+  "error": null,
+  "experiment_id": "E1",
+  "group": "A",
+  "mode": "snapshot",
+  "model": "gemini-3.1-flash-lite",
+  "run_id": "smoke_20261018T095509Z_安吉县_A",
+  "search_provider": "tavily",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T09:56:00.317673+00:00"
+}

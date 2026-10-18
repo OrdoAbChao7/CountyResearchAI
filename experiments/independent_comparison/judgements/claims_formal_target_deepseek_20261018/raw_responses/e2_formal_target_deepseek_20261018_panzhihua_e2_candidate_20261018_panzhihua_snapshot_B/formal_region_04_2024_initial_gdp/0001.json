@@ -1,0 +1,28 @@
+{
+  "run_id": "claims_formal_target_deepseek_20261018_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_formal_region_04_2024_initial_gdp",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立的声明级事实核验 Agent。当前已经进入 Ground Truth 评分阶段；只能依据研究报告和随报告归档的来源材料判断冻结 claim，不能读取其他实验组或运行轨迹。请区分报告没有提及、报告与 claim 矛盾、报告被来源支持和 claim 版本争议。只输出 JSON，字段为 status、evidence_supported、error_types、reason。status 必须是 SUPPORTED、CONTRADICTED、UNSUPPORTED、DISPUTED 或 UNVERIFIED。\n冻结 Claim：攀枝花市2024年初始发布口径的地区生产总值为1395.24亿元，比上年增长6.3%。\nClaim 元数据：region=攀枝花市; metric=地区生产总值及同比增速（初始发布口径）; unit=亿元；百分比; date=2025-01\n研究报告：\n\n归档来源材料：\n[\n  {\n    \"title\": \"攀枝花市投资环境（官方页面）\",\n    \"url\": \"https://www.panzhihua.gov.cn/ninfo_2584.html\",\n    \"content\": \"攀枝花市人民政府页面列示：2024年全市地区生产总值1395.24亿元、增长6.3%；规模以上工业增加值增长9%；全社会固定资产投资增长5.6%；社会消费品零售总额335亿元、增长6%。页面还将钒钛产业、康养产业和钢铁基地建设列为长期产业发展背景。该数值属于初始发布版本候选。\",\n    \"source\": \"official-web-snapshot\",\n    \"metadata\": {\n      \"snapshot_kind\": \"bounded_excerpt\",\n      \"administrative_scope\": \"攀枝花市全市\",\n      \"retrieval_date\": \"2026-10-18\",\n      \"version_scope\": \"initial_release_candidate\"\n    }\n  },\n  {\n    \"title\": \"2025年攀枝花市经济形势新闻发布稿（后续修订口径）\",\n    \"url\": \"https://www.sohu.com/a/979362062_121106884\",\n    \"content\": \"公开转载稿称：经最终核实，2024年攀枝花市地区生产总值现价总量为1375.14亿元，按不变价格计算比上年增长6.2%。该页面不是攀枝花市统计局原始发布页，因此只作为后续版本候选，不能与1395.24亿元初始值混为同一 claim。\",\n    \"source\": \"secondary-web-snapshot\",\n    \"metadata\": {\n      \"snapshot_kind\": \"bounded_excerpt\",\n      \"administrative_scope\": \"攀枝花市全市\",\n      \"retrieval_date\": \"2026-10-18\",\n      \"version_scope\": \"later_final_revision_candidate\"\n    }\n  }\n]"
+    }
+  ],
+  "response": {
+    "content": "{\"status\":\"SUPPORTED\",\"evidence_supported\":true,\"error_types\":[],\"reason\":\"归档来源中的官方页面快照明确列示攀枝花市2024年地区生产总值1395.24亿元、增长6.3%，并标注为初始发布版本候选；另一来源为后续最终核实修订口径（1375.14亿元、6.2%），属于不同版本，不构成对初始发布口径 claim 的矛盾。\"}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 607,
+    "completion_tokens": 349,
+    "total_tokens": 956
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 607,
+    "completion_tokens": 349,
+    "total_tokens": 956,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

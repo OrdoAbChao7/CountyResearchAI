@@ -1,0 +1,70 @@
+schema_version: "1.0"
+status: SUPPLEMENTAL_PARTIAL_NOT_FORMAL
+verification_roles: [D5, D6]
+rules:
+  formal_verified_requires: [two_distinct_sources, two_independent_verification_contexts]
+  unresolved_versions_must_be_preserved: true
+claims:
+  - claim_id: region_01_2024_industry_cluster_updated_wording
+    region: 德清县
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: PARTIAL
+    consensus: VERIFIED_CANDIDATE
+    claim_scope: "2024年主导产业包括高端装备、生物医药、绿色家居"
+    action: replace_long_candidate_wording; preserve_subterm_differences
+  - claim_id: region_02_2024_expected_vs_preliminary_gdp
+    region: 长汀县
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    claim_scope: "360.8/4.6为预计值，357.8/4.9为后发布初步统计公报值"
+    action: keep_as_two_time_point_claims; do_not_merge
+  - claim_id: region_03_2024_above_scale_industry_growth
+    region: 于都县
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    claim_scope: "2024年规模以上工业增加值增长13.8%"
+    action: eligible_for_supplemental_panel; keep_industry_added_value_claim_separate
+  - claim_id: region_04_2024_above_scale_industry_growth
+    region: 攀枝花市
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    claim_scope: "2024年规模以上工业增加值增长9.0%"
+    action: eligible_for_supplemental_panel
+  - claim_id: region_04_vanadium_titanium_advanced_materials_background
+    region: 攀枝花市
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    claim_scope: "钒钛/先进材料是攀枝花持续性产业背景"
+    action: eligible_for_supplemental_panel; preserve_date_scope
+  - claim_id: region_05_2024_industry_structure
+    region: 白山市
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: VERIFIED_CANDIDATE
+    consensus: PARTIAL_SOURCE_INDEPENDENCE
+    claim_scope: "2024年第二产业141.38亿元/0.2%，规上工业增加值下降5.3%"
+    action: retain_candidate; do_not_formal_freeze_until_independent_statistical_context
+  - claim_id: region_06_processing_enterprises_2025_context
+    region: 临泽县
+    d5_status: DISPUTED
+    d6_status: DISPUTED
+    consensus: DISPUTED
+    claim_scope: "精深加工企业45家或48家"
+    action: preserve_versions; do_not_freeze_single_value
+  - claim_id: region_06_processing_capacity_current_context
+    region: 临泽县
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: PARTIAL
+    consensus: PARTIAL_TIME_SCOPE
+    claim_scope: "87.32万吨/75%为公开报道当前口径，不能直接标为2024年末全年"
+    action: retain_as_context_only
+  - claim_id: region_06_gdp_2020_base
+    region: 临泽县
+    d5_status: VERIFIED_CANDIDATE
+    d6_status: DISPUTED
+    consensus: DISPUTED
+    claim_scope: "2020 GDP 57.01与官方年鉴57.45存在口径差异"
+    action: preserve_versions; do_not_freeze_growth_path

@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_C",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "# 县域产业历史时间线提取提示词\n\n你是一位地方志与县域经济史研究员,擅长从多源史料中提炼产业发展的关键节点。\n\n## 研究对象\n\n- 县名:于都县\n- 数据采集日期:2026-10-18\n\n## 参考数据\n\n以下是基于网络搜索、地方志、统计公报、政府工作报告采集的原始材料(可能存在噪声,请交叉验证):\n\n```\n[1] 关于于都县建设工业强县及推进科技创新（含人才引进）领域“十五五”规划编制专题调研报告\n来源: https://yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml\n预计2025年全年，全县规上工业总产值达237亿元，同比增长5.6%；实现规上营业收入226亿元 ... 产业结构实现从单一依赖传统产业向多元支撑格局的转变，企业实力不断增强，新增上市企业两家（九丰能源、天键股份）。\n```\n\n## 任务要求\n\n请从上述材料中提取该县产业发展的关键历史时间线事件,覆盖从\"起家\"到\"现状\"的完整脉络。\n\n### 事件类别(category)\n\n- `origin`     起家事件(早期立县产业形成)\n- `growth`     扩张事件(产业壮大、规模扩张)\n- `turning`    拐点事件(由盛转衰、由衰转兴的转折)\n- `decline`    衰落事件(企业倒闭、产业萎缩)\n- `policy`     政策事件(重大政策出台、退坡)\n- `external`   外部冲击(金融危机、环保整治、资源枯竭等)\n\n### 提取规范\n\n- 每个事件必须有明确年份或时间段(无法精确时给区间,如 \"2003-2008\")\n- 关键拐点、衰落事件必须绑定证据来源(source_url 取自参考材料)\n- 无法从材料中证实的年份写\"约\"或留空,不要编造\n- 覆盖 5-15 个关键事件,按时间顺序排列\n- impact 字段简述该事件对该县产业的影响(一句话)\n\n## 输出格式(严格 JSON)\n\n```json\n{\n  \"events\": [\n    {\n      \"year\": \"1998\",\n      \"event\": \"某大型煤矿投产,成为县财政支柱\",\n      \"category\": \"origin\",\n      \"impact\": \"确立煤炭产业为立县之本\",\n      \"source_url\": \"https://...\"\n    }\n  ]\n}\n```\n\n只输出 JSON,不要任何解释或额外文字。\n"
+    }
+  ],
+  "response": {
+    "content": "```json\n{\n  \"events\": [\n    {\n      \"year\": \"约2000年代前\",\n      \"event\": \"于都县产业结构长期单一依赖传统产业\",\n      \"category\": \"origin\",\n      \"impact\": \"奠定县域产业以传统产业为主的早期格局\",\n      \"source_url\": \"https://yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml\"\n    },\n    {\n      \"year\": \"约2020年代前\",\n      \"event\": \"九丰能源、天键股份相继上市,新增上市企业两家\",\n      \"category\": \"growth\",\n      \"impact\": \"企业实力增强,推动产业结构向多元支撑转变\",\n      \"source_url\": \"https://yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml\"\n    },\n    {\n      \"year\": \"2025\",\n      \"event\": \"全县规上工业总产值预计达237亿元,同比增长5.6%,规上营业收入226亿元\",\n      \"category\": \"growth\",\n      \"impact\": \"工业规模持续扩张,多元支撑格局基本形成\",\n      \"source_url\": \"https://yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml\"\n    },\n    {\n      \"year\": \"2025-2026\",\n      \"event\": \"启动工业强县及科技创新(含人才引进)领域“十五五”规划编制专题调研\",\n      \"category\": \"policy\",\n      \"impact\": \"以规划引领工业强县与科技创新,谋划下一阶段产业升级\",\n      \"source_url\": \"https://yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml\"\n    }\n  ]\n}\n```",
+    "model": "deepseek-flash",
+    "prompt_tokens": 556,
+    "completion_tokens": 436,
+    "total_tokens": 992
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 556,
+    "completion_tokens": 436,
+    "total_tokens": 992,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

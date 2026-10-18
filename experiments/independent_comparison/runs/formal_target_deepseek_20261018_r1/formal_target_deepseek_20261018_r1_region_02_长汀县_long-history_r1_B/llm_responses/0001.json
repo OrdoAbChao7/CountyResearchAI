@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_02_长汀县_long-history_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网研究助手。为研究 长汀县 的 生态治理、工业发展与文旅融合（任务模式 long-history），只输出 JSON：{\"queries\":[\"...\"]}，最多 3 个检索词。"
+    }
+  ],
+  "response": {
+    "content": "{\"queries\":[\"长汀县 生态治理 历史\",\"长汀县 工业发展 历史\",\"长汀县 文旅融合 历史\"]}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 79,
+    "completion_tokens": 220,
+    "total_tokens": 299
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 79,
+    "completion_tokens": 220,
+    "total_tokens": 299,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

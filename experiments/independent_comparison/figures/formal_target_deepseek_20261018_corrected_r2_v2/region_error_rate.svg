@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360">
+<rect width="100%" height="100%" fill="white" />
+<line x1="24" y1="32" x2="24" y2="290" stroke="#111827" />
+<line x1="24" y1="290" x2="930" y2="290" stroke="#111827" />
+<rect x="40" y="32.00" width="72" height="258.00" fill="#059669" /><text x="76.0" y="310" text-anchor="middle" transform="rotate(-35 76.0 310)">临泽县/A</text><text x="76.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="132" y="32.00" width="72" height="258.00" fill="#059669" /><text x="168.0" y="310" text-anchor="middle" transform="rotate(-35 168.0 310)">临泽县/B</text><text x="168.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="224" y="32.00" width="72" height="258.00" fill="#059669" /><text x="260.0" y="310" text-anchor="middle" transform="rotate(-35 260.0 310)">临泽县/C</text><text x="260.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="316" y="32.00" width="72" height="258.00" fill="#059669" /><text x="352.0" y="310" text-anchor="middle" transform="rotate(-35 352.0 310)">于都县/A</text><text x="352.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="408" y="32.00" width="72" height="258.00" fill="#059669" /><text x="444.0" y="310" text-anchor="middle" transform="rotate(-35 444.0 310)">于都县/B</text><text x="444.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="500" y="32.00" width="72" height="258.00" fill="#059669" /><text x="536.0" y="310" text-anchor="middle" transform="rotate(-35 536.0 310)">于都县/C</text><text x="536.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="592" y="32.00" width="72" height="258.00" fill="#059669" /><text x="628.0" y="310" text-anchor="middle" transform="rotate(-35 628.0 310)">德清县/A</text><text x="628.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="684" y="32.00" width="72" height="258.00" fill="#059669" /><text x="720.0" y="310" text-anchor="middle" transform="rotate(-35 720.0 310)">德清县/B</text><text x="720.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="776" y="32.00" width="72" height="258.00" fill="#059669" /><text x="812.0" y="310" text-anchor="middle" transform="rotate(-35 812.0 310)">德清县/C</text><text x="812.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="868" y="32.00" width="72" height="258.00" fill="#059669" /><text x="904.0" y="310" text-anchor="middle" transform="rotate(-35 904.0 310)">攀枝花市/A</text><text x="904.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="960" y="290.00" width="72" height="0.00" fill="#059669" /><text x="996.0" y="310" text-anchor="middle" transform="rotate(-35 996.0 310)">攀枝花市/B</text><text x="996.0" y="284.00" text-anchor="middle">0.000</text>
+<rect x="1052" y="290.00" width="72" height="0.00" fill="#059669" /><text x="1088.0" y="310" text-anchor="middle" transform="rotate(-35 1088.0 310)">攀枝花市/C</text><text x="1088.0" y="284.00" text-anchor="middle">0.000</text>
+<rect x="1144" y="32.00" width="72" height="258.00" fill="#059669" /><text x="1180.0" y="310" text-anchor="middle" transform="rotate(-35 1180.0 310)">白山市/A</text><text x="1180.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="1236" y="290.00" width="72" height="0.00" fill="#059669" /><text x="1272.0" y="310" text-anchor="middle" transform="rotate(-35 1272.0 310)">白山市/B</text><text x="1272.0" y="284.00" text-anchor="middle">0.000</text>
+<rect x="1328" y="32.00" width="72" height="258.00" fill="#059669" /><text x="1364.0" y="310" text-anchor="middle" transform="rotate(-35 1364.0 310)">白山市/C</text><text x="1364.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="1420" y="32.00" width="72" height="258.00" fill="#059669" /><text x="1456.0" y="310" text-anchor="middle" transform="rotate(-35 1456.0 310)">长汀县/A</text><text x="1456.0" y="26.00" text-anchor="middle">1.000</text>
+<rect x="1512" y="290.00" width="72" height="0.00" fill="#059669" /><text x="1548.0" y="310" text-anchor="middle" transform="rotate(-35 1548.0 310)">长汀县/B</text><text x="1548.0" y="284.00" text-anchor="middle">0.000</text>
+<rect x="1604" y="32.00" width="72" height="258.00" fill="#059669" /><text x="1640.0" y="310" text-anchor="middle" transform="rotate(-35 1640.0 310)">长汀县/C</text><text x="1640.0" y="26.00" text-anchor="middle">1.000</text>
+</svg>

@@ -1,0 +1,30 @@
+{
+  "check_id": "resource_precheck",
+  "checked_at": "2026-10-18T13:00:46.2086299Z",
+  "deepseek": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "configured": true,
+    "enabled": true,
+    "llm_billing_boundary": "USER_AUTHORIZED_PAID",
+    "search_fetch_billing_boundary": "USER_AUTHORIZED_PAID",
+    "llm_billing_evidence": {
+      "source": "current user instruction in Codex session",
+      "method": "explicit_paid_api_authorization",
+      "account_scope": "current DeepSeek API key",
+      "evidence_ref": "user-message-20261018-deepseek-paid-use",
+      "verified_at": "2026-10-18T13:00:46.2086299Z"
+    },
+    "search_fetch_billing_evidence": {
+      "source": "current user instruction in Codex session",
+      "method": "explicit_paid_api_authorization",
+      "account_scope": "current DeepSeek API key",
+      "evidence_ref": "user-message-20261018-deepseek-paid-use",
+      "verified_at": "2026-10-18T13:00:46.2086299Z"
+    },
+    "status": "USER_AUTHORIZED_PAID_EVIDENCE_ATTACHED"
+  },
+  "business_model_calls_made": false,
+  "api_keys_logged": false,
+  "scope": "formal_batch_preflight"
+}

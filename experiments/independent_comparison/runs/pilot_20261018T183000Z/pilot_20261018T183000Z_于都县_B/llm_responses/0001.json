@@ -1,0 +1,28 @@
+{
+  "run_id": "pilot_20261018T183000Z_于都县_B",
+  "provider": "gemini",
+  "model": "gemini-3.1-flash-lite",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网研究助手。为研究 于都县 的 脐橙产业（任务模式 snapshot），只输出 JSON：{\"queries\":[\"...\"]}，最多 3 个检索词。"
+    }
+  ],
+  "response": {
+    "content": "{\"queries\":[\"于都县 脐橙产业 发展现状\", \"于都县 脐橙种植面积 产量\", \"于都县 脐橙产业 品牌建设 政策\"]}",
+    "model": "gemini-3.1-flash-lite",
+    "prompt_tokens": 39,
+    "completion_tokens": 40,
+    "total_tokens": 79
+  },
+  "usage": {
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-lite",
+    "prompt_tokens": 39,
+    "completion_tokens": 40,
+    "total_tokens": 79,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

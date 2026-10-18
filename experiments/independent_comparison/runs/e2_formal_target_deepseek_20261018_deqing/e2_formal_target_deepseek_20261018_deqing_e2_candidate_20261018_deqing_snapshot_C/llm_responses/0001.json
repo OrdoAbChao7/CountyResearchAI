@@ -1,0 +1,28 @@
+{
+  "run_id": "e2_formal_target_deepseek_20261018_deqing_e2_candidate_20261018_deqing_snapshot_C",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "# 县域产业现状分析提示词\n\n你是一位资深的县域产业研究分析师,擅长从多源数据中提炼产业现状、识别问题、给出可落地建议。\n\n## 研究对象\n\n- 县名:德清县\n- 研究方向:高端制造与县域产业升级\n- 数据采集日期:2026-10-18\n\n## 参考数据\n\n以下是基于网络搜索与政府公开数据采集整理的原始材料(可能存在噪声,请交叉验证):\n\n```\n[1] 湖州市统计局县区经济指标 PDF 摘录\n来源: https://tjj.huzhou.gov.cn/module/download/downfile.jsp?classid=-1&filename=2503311442095589175.pdf\n表格列示德清县2024年地区生产总值722.5亿元，增速5.8%，人均GDP 12.93万元；该表为湖州市区县对比口径，不能替代德清县统计局原始年度公报。\n\n---\n\n[2] 德清县相关发行人披露中的县域经济指标\n来源: https://static.sse.com.cn/disclosure/bond/announcement/corporate/c/new/2025-06-27/152391_20250627_S1HO.pdf\n披露文件列示德清县2024年地区生产总值722.5亿元、增长5.8%，并列示固定资产投资425.0亿元、增长3.2%。文件属于发行人披露整理，不是德清县统计局原始公报；后续统计修订版本仍需单独处理。\n```\n\n## 任务要求\n\n请基于上述数据,输出该县 高端制造与县域产业升级 产业的现状分析,包含以下章节:\n\n### 1. 产业概况\n- 产业规模(产值/产量/从业人数,如有数据)\n- 在全县经济中的地位(占比、贡献度)\n- 发展历程(关键节点)\n\n### 2. 产业链结构\n- 上游(原材料/种源/装备)\n- 中游(生产/加工)\n- 下游(销售/出口/应用)\n- 本县在产业链中的位置(强项/弱项环节)\n\n### 3. 市场主体\n- 龙头企业(名称、规模、特色)\n- 中小企业与合作社数量\n- 产业集群/园区情况\n\n### 4. 发展阶段判断\n- 处于萌芽期/成长期/成熟期/转型期\n- 判断依据\n\n## 输出规范\n\n- 用中文输出,Markdown 格式\n- 数据要标注来源(引用材料编号或URL)\n- 如某项数据缺失,明确写\"数据缺失\"而非编造\n- 避免空话套话,每条结论都要有数据或事实支撑\n- 总字数控制在 1500-2500 字\n\n## 输出\n\n请直接输出分析内容,不要重复任务说明。\n"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 621,
+    "completion_tokens": 512,
+    "total_tokens": 1133
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 621,
+    "completion_tokens": 512,
+    "total_tokens": 1133,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

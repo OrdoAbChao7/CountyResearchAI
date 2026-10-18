@@ -1,0 +1,10 @@
+{
+  "config_hash": "173db2846c6c8d7e7d08db4b41e0213f4185eaa30b7937fd0ba7d281a4c00f33",
+  "state": {
+    "completed": {
+      "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_A": "VALID",
+      "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_B": "VALID",
+      "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_C": "VALID"
+    }
+  }
+}

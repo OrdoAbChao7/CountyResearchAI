@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_05_白山市_snapshot_r1_A",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是传统网页检索。研究对象：白山市；方向：产业结构与资源型经济；模式：snapshot。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 解读：白山市2025年国民经济和社会发展统计公报\nURL: http://jjw.jldrc.jl.gov.cn/zccs_421816/202609/t20260929_18426.html#1\n初步核算，全年实现地区生产总值590.17亿元，比上年增长5.6%。其中，第一产业增加值75.79亿元，增长4.9%；第二产业增加值145.58亿元，增长4.3%；第三产业增加值368.80亿元...\n\n[2] 产业巨头齐聚！白山矿泉水产业集群，剑指百亿 | 特色产业调研行 - 产业巨头齐聚！白山矿泉水产业集群，剑指百亿 | 特色产业调研行\nURL: https://www.sohu.com/a/1028622731_122014422?scm=10001.8085_13-8085_13.0.0-0-0-0-0.0&spm=smpc.channel_437.PureFeedListText_657446spmCode.91.1783603669271DApiNKv_8086#1\n中国长白山是国际饮水资源保护组织认定的“世界三大黄金水源地”之一，依托这一独特禀赋，当地已集聚泉阳泉、农夫山泉、娃哈哈等产业巨头，形成全产业链集群效应 ... 白山市抚松县是上市公司泉阳泉控股子公司吉林森工集团泉阳泉饮品公司所在地，在泉阳泉、农夫山泉等龙头企业带动下...\n\n[3] 转型金融支持资源枯竭型城市高质量发展探析 - 转型金融支持资源枯竭型城市高质量发展探析\nURL: https://www.financialnews.com.cn/m/2025-12/08/content_438965.html#1\n白山市作为吉林典型资源型城市，依托“一山两江”加快培育绿色产业和战略性新兴产业，2025年上半年，农林牧渔业总产值增长4.8%、林业产值增长20%，资源型产业升级见效，但经济总量仍居全省末位，“资源富集但效益转化不足”矛盾突出，面临资源枯竭与环境约束压力。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 538,
+    "completion_tokens": 512,
+    "total_tokens": 1050
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 538,
+    "completion_tokens": 512,
+    "total_tokens": 1050,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}
