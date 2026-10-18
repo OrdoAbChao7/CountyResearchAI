@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:f8785697a64f9a954346a61b87b1668f977c4a26d9fe708057a514cc279f24da",
+    "sources": "sources.json:9944a4608d6ff65ce7b497f5e192a068e530dd94b504af3b29964a24fdbbafc2"
+  },
+  "config_hash": "40d2599f9191777866fdcf5ba03ead99a194a4edf6216c390addd121ad2a1a65",
+  "county": "德清县",
+  "created_at": "2026-10-18T13:03:15.282497+00:00",
+  "duration_seconds": 39.76458,
+  "error": null,
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "C",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 1472,
+    "deepseek:search:search": 6
+  },
+  "run_id": "formal_preflight_deepseek_20261018_region_01_德清县_snapshot_r1_C",
+  "search_provider": "deepseek",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T13:03:55.046332+00:00"
+}

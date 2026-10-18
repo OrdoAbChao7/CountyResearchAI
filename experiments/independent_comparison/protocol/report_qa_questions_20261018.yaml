@@ -1,0 +1,31 @@
+schema_version: "1.0"
+status: FROZEN
+freeze_date: 2026-10-18
+freeze_scope: one_report_based_question_per_formal_ground_truth_region
+ground_truth_file: ../ground_truth/formal_ground_truth_20261018.jsonl
+answerer_must_not_see: [ground_truth_claim, group_id, other_reports, run_trace]
+questions:
+  - question_id: qa_region_01_2024_gdp
+    region: 德清县
+    claim_id: formal_region_01_2024_initial_gdp
+    prompt: 根据这份研究报告，德清县2024年初始发布口径的地区生产总值总量和同比增速分别是多少？如果报告没有明确回答，请回答“报告未明确说明”。
+  - question_id: qa_region_02_2024_gdp
+    region: 长汀县
+    claim_id: formal_region_02_2024_bulletin_gdp_amount
+    prompt: 根据这份研究报告，长汀县2024年统计公报初步统计口径的地区生产总值总量是多少？如果报告没有明确回答，请回答“报告未明确说明”。
+  - question_id: qa_region_03_2024_gdp
+    region: 于都县
+    claim_id: formal_region_03_2024_gdp_growth
+    prompt: 根据这份研究报告，2024年于都县地区生产总值总量和按可比价格计算的同比增速分别是多少？如果报告没有明确回答，请回答“报告未明确说明”。
+  - question_id: qa_region_04_2024_gdp
+    region: 攀枝花市
+    claim_id: formal_region_04_2024_initial_gdp
+    prompt: 根据这份研究报告，攀枝花市2024年初始发布口径的地区生产总值总量和同比增速分别是多少？如果报告没有明确回答，请回答“报告未明确说明”。
+  - question_id: qa_region_05_2024_gdp
+    region: 白山市
+    claim_id: formal_region_05_2024_gdp_growth
+    prompt: 根据这份研究报告，2024年白山市地区生产总值总量和同比增速分别是多少？如果报告没有明确回答，请回答“报告未明确说明”。
+  - question_id: qa_region_06_2024_gdp
+    region: 临泽县
+    claim_id: formal_region_06_2024_gdp_amount
+    prompt: 根据这份研究报告，2024年临泽县地区生产总值总量是多少？如果报告没有明确回答，请回答“报告未明确说明”。

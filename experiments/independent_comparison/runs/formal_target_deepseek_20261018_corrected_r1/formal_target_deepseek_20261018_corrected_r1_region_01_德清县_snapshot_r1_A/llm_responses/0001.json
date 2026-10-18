@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_01_德清县_snapshot_r1_A",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是传统网页检索。研究对象：德清县；方向：高端制造与县域产业升级；模式：snapshot。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 2025年德清县国民经济和社会发展统计公报\nURL: http://www.deqing.gov.cn/col/col1229212614/art/2026/art_52bfef69978043b69456feedfe593551.html#1\n其中，战略性新兴产业增加值158.6亿元，同比增长13.4%；高新技术产业增加值232.2亿元，同比增长10.0%；装备制造业增加值138.8亿元，同比增长16.4%。全县规模以上工业企业利税总额141.1亿元...\n\n[2] 制造业加速向“新” 德清县工业技改投资增幅居全省前列\nURL: https://local.cctv.cn/2025/06/20/ARTIDm0NUhaQtZsReWr7ADZ7250620.shtml\n自2007年建成投产以来，浙江鼎力从一家生产叉车的小企业快速成长为全球智能高空作业平台制造领域龙头企业，目前拥有全球专利250余项，产品远销全球80多个国家和地区。\n\n[3] <table><tr><td>项目</td><td>德清县域总体规划</td><td>德清通航智造小镇规划</td><td>结论</td></tr><tr><td></td><td>经济、健康产业、高端装备制造、休闲旅游四大产业，改造提升现代物流和绿色家居...\nURL: http://www.mhtz.gov.cn/upload/files/2018/4/3115631556.pdf#50#7\n<td>经济、健康产业、高端装备制造、休闲旅游四大产业，改造提升现代物流和绿色家居(新型建材)等一批传统优势产业，着力培育通用航空产业，打造代表德清县高端制造通用航空产业，打造代表德清县高端制造与现代城市服务功能的核心区块 ... 打造德清县高端制造与现代城市服务核心区块。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 486,
+    "completion_tokens": 2048,
+    "total_tokens": 2534
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 486,
+    "completion_tokens": 2048,
+    "total_tokens": 2534,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

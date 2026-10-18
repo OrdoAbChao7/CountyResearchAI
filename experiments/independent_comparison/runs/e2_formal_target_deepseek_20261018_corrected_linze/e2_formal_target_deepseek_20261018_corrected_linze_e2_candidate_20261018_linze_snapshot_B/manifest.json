@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "input_pack": "input_pack.json:f15749908bfc3ece5f443135d87a083b42f01ea5c66f23a230679afa0d2ade3d",
+    "report": "report.md:5d46d8680ca8062911b13fed1840a7ee246a0413d86c0bc097fda21a5467f74f",
+    "sources": "sources.json:30f34eedb2b108d5c2f690151e3261633badc05d063c0f659ddbf1ff60eb06cf"
+  },
+  "config_hash": "3ae26211b3b5b3a75bd4807fba93e56e2c1a40c03f3ae5481a3e6e10ea16fade",
+  "county": "临泽县",
+  "created_at": "2026-10-18T14:38:41.604183+00:00",
+  "duration_seconds": 19.717708,
+  "error": null,
+  "experiment_id": "E2",
+  "formal_target": true,
+  "group": "B",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 3117
+  },
+  "run_id": "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_B",
+  "search_provider": "disabled-by-fixed-input-protocol",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T14:39:01.321287+00:00"
+}

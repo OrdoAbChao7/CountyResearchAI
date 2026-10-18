@@ -1,0 +1,128 @@
+[
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_baishan_e2_candidate_20261018_baishan_snapshot_A",
+    "group": "A",
+    "county": "白山市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "7b19efa292363144e89cdf5a40ff8f707c720b629c7544cbb36854a6473a8e93"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_baishan_e2_candidate_20261018_baishan_snapshot_B",
+    "group": "B",
+    "county": "白山市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "b8c7d8720292ffb839c8692050aebfc9d78e7ffd6f1dce9d8792be6892e5f5d1"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_baishan_e2_candidate_20261018_baishan_snapshot_C",
+    "group": "C",
+    "county": "白山市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "6c474a30537ba0fdaa412905897ee12cd52ebdc1f0d1f50056b6d4a255e7fe61"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_changting_e2_candidate_20261018_changting_snapshot_A",
+    "group": "A",
+    "county": "长汀县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "d5a6b7474b06ce98cca900efe6294ab4d46e5dedee3430cdd7f4000a2cd7aae5"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_changting_e2_candidate_20261018_changting_snapshot_B",
+    "group": "B",
+    "county": "长汀县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "83349f081880654d2195252d33f4196b06943a75aba8c393e7b5a799f356a7cc"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_changting_e2_candidate_20261018_changting_snapshot_C",
+    "group": "C",
+    "county": "长汀县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "8b67d9ae8e6aa42def23244ff6b56a12101b851be9a37ef9db227acb51d8773e"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_deqing_e2_candidate_20261018_deqing_snapshot_A",
+    "group": "A",
+    "county": "德清县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "1af5399fdd15f31fd687fc3f8c7c6e97fdbe3355fba8f0ff2b20a16a0b86b22e"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_deqing_e2_candidate_20261018_deqing_snapshot_B",
+    "group": "B",
+    "county": "德清县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "d54907cf30d29bf98be76812149ffb9a247e2fd56cb0fccee2ffa68eb7eb539a"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_deqing_e2_candidate_20261018_deqing_snapshot_C",
+    "group": "C",
+    "county": "德清县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "4180481021260bf5ec258466b68e4a280cb3f75bf82145131bda09c549478044"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_A",
+    "group": "A",
+    "county": "临泽县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "1c42a363abbc0a8c0c32d59f4aa1c634ad7bdebc33553e8fc52067daa52cd662"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_B",
+    "group": "B",
+    "county": "临泽县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "e4a4a842309ca56e1ca24822201ec1210ba650b53a3df1e2d1a0fbd36378860d"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_linze_e2_candidate_20261018_linze_snapshot_C",
+    "group": "C",
+    "county": "临泽县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "45dec06fec13103a24bdf05a3190c359a8e10638db756a1d294b47486dfc2593"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_A",
+    "group": "A",
+    "county": "攀枝花市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "21e01644b27c8b6f1247f78f15037283416264304265a31e002d7364a5848d5d"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_B",
+    "group": "B",
+    "county": "攀枝花市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "4e4e3c906cc866d394835a144fb8dc3a7e48b24dea9bd274edd8d7093f2a61ef"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_C",
+    "group": "C",
+    "county": "攀枝花市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "efed0283e9251d28c3bbaa1fa9f834a47e7097db372488ee55c895ab0c82acdd"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_yudu_e2_candidate_20261018_yudu_snapshot_A",
+    "group": "A",
+    "county": "于都县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "059176c6178eea4c9d25c430ab5585a6e13a4e56a52a41f25d4972ebf014102a"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_yudu_e2_candidate_20261018_yudu_snapshot_B",
+    "group": "B",
+    "county": "于都县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "aed3bda2e978ef134aa9e04e149fe85eb677d5367299f5f3ecf063f2aff3b37d"
+  },
+  {
+    "run_id": "e2_formal_target_deepseek_20261018_corrected_yudu_e2_candidate_20261018_yudu_snapshot_C",
+    "group": "C",
+    "county": "于都县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "1779c9cc48c62a4c4aaf33576bb95bc1afe98ce129caabb50005dbc1ecf62fa5"
+  }
+]

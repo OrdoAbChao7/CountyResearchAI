@@ -1,0 +1,28 @@
+{
+  "run_id": "judges_formal_target_deepseek_20261018_schema_final_3bb18677cfbb080e922641e57ae8394f603ad70798324bd061049327b8b1ecfd_judge_2",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立盲评 Agent。不要猜测实验组、运行编号或其他报告。只根据任务、冻结 Rubric 和匿名报告评分；只输出 JSON。\n任务：评价临泽县的snapshot研究报告，按冻结 Rubric 对各维度评分。\nRubric：{\"schema_version\": \"1.0\", \"status\": \"FROZEN\", \"freeze_date\": \"2026-10-18\", \"freeze_scope\": \"formal_blind_judge_rubric_v1\", \"scale\": {\"min\": 0, \"max\": 5, \"anchors\": {\"0\": \"absent_or_unusable\", \"1\": \"major_defects\", \"3\": \"usable_with_material_gaps\", \"5\": \"strong_and_well_supported\"}}, \"dimensions\": {\"factual_accuracy\": {\"weight\": 0.25, \"rule\": \"verified_correct_claims_over_verifiable_claims\"}, \"key_fact_coverage\": {\"weight\": 0.15, \"rule\": \"correctly_covered_frozen_ground_truth_claims_over_all_claims\"}, \"source_reliability\": {\"weight\": 0.1, \"rule\": \"authority_and_source_content_match\"}, \"industry_logic\": {\"weight\": 0.1, \"rule\": \"resource_to_chain_to_market reasoning\"}, \"historical_explanation\": {\"weight\": 0.1, \"rule\": \"time_ordered phases and evidence-backed turning points\"}, \"causal_analysis\": {\"weight\": 0.1, \"rule\": \"distinguishes evidence from hypothesis and alternative causes\"}, \"structure_completeness\": {\"weight\": 0.05, \"rule\": \"required sections and scope clarity\"}, \"risk_analysis\": {\"weight\": 0.1, \"rule\": \"concrete risks, indicators and uncertainty\"}, \"unsupported_inference\": {\"weight\": -0.05, \"rule\": \"penalty for claims without matching evidence\"}}, \"judge_policy\": {\"minimum_independent_judges\": 2, \"adjudication_required_if_absolute_dimension_gap_at_least\": 2, \"judge_input_may_include\": [\"anonymous_report\", \"rubric\", \"task_prompt\"], \"judge_input_must_not_include\": [\"group_id\", \"ground_truth_before_claim_scoring\", \"other_reports\", \"run_trace\"]}}\n匿名报告：\n# 临泽县 工业转型与特色产业产业研究报告\n\n> 生成日期: 2026-10-18 13:17 UT[GROUP]  \n> 报告版本: 0.1.0\n\n## 执行摘要\n\n## 执行摘要\n\n**输入材料为空，无法生成摘要。**\n\n您提供的 `industry_status` 章节内容为空白。执行摘要需基于实际分析数据提炼结论、优势、瓶颈与建议，凭空撰写将违背\"数据支撑、客观中性\"的要求，并可能误导决策。\n\n**请您补充以下任一材料后，我将立即生成摘要：**\n\n1. **完整的 `industry_status` 章节文本**（含产业规模、增速、企业数量、产值、占比等数据）；\n2. **或提供关键数据点**，例如：\n   - 临泽县工业总产值/增加值及增速\n   - 规上工业企业数量与主导行业构成\n   - 特色产业（如红枣、制种、凹凸棒石等）的规模与全国/全省地位\n   - 已知瓶颈（如产业链短、要素制约、龙头企业缺乏等）\n   - 现有政策或规划方向\n\n**参考框架（待数据填充后使用）：**\n\n- **一句话结论**：\n\n## 一、产业现状分析\n\n\n\n> 数据参考来源数: 2\n## 数据来源\n\n- [2024年张掖统计年鉴](https://www.zhangye.gov.cn/sjfb/xbtjnj/202512/P020251201576968180255.pdf)\n- [砥砺前行 挺起高质量发展的“工业脊梁”——临泽县“十四五”工业高质量发展步履坚实](https://www.zhangye.gov.cn/kjj/dzdt/gzdt/202510/t20251017_1466067.html)\n\n"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 919,
+    "completion_tokens": 1024,
+    "total_tokens": 1943
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 919,
+    "completion_tokens": 1024,
+    "total_tokens": 1943,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

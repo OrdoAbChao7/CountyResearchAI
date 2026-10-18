@@ -1,0 +1,70 @@
+schema_version: "1.0"
+status: frozen_minimum_target
+default_timezone: Asia/Shanghai
+freeze_date: 2026-10-18
+formal_regions_file: ../datasets/formal_regions_20261018.yaml
+formal_ground_truth_manifest: ../ground_truth/formal_ground_truth_20261018_manifest.json
+formal_fixed_input_manifest: ../datasets/fixed_input_formal_manifest_20261018.json
+freeze_scope: one_version_scoped_claim_per_region; unresolved_claims_preserved
+research_boundary:
+  human_user_study: false
+  conclusion_scope: automated_research_workflow_only
+  mock_results_as_real: false
+groups:
+  - id: A
+    name: traditional_search_researcher
+    county_research_ai_modules: false
+  - id: B
+    name: general_purpose_ai_researcher
+    county_research_ai_modules: false
+  - id: C
+    name: county_research_ai_researcher
+    county_research_ai_modules: true
+    strict_real_provider: true
+experiments:
+  - id: E1
+    name: end_to_end_research
+    inputs: [region_task]
+    search_enabled: true
+  - id: E2
+    name: fixed_input_analysis
+    inputs: [frozen_document_pack]
+    search_enabled: false
+tasks:
+  - id: snapshot
+    output_requirements: [facts, sources, current_industry, bottlenecks, recommendations]
+  - id: rise-fall
+    output_requirements: [timeline, turning_points, causes, evidence, risks]
+  - id: long-history
+    output_requirements: [administrative_history, economic_phases, industry_changes, causes, evidence]
+budgets:
+  default_run:
+    max_llm_requests: 8
+    max_llm_tokens_reserved: 24000
+    max_tavily_credits: 12
+    max_wall_time_seconds: 900
+  smoke_test:
+    max_regions: 2
+    repeats_per_group: 1
+    max_llm_requests_per_run: 3
+    max_tavily_credits_per_run: 6
+    deepseek_enabled: false
+  formal_target:
+    regions: 6
+    repeats_per_group: 3
+    runs: 54
+    may_stop_early_on_budget: true
+validity:
+  invalid_statuses: [INVALID_MOCK, INVALID_CONFIG, FAILED, BLOCKED, NOT_RUN]
+  missing_usage: INVALID_USAGE_UNKNOWN
+  provider_failure: FAILED
+  ground_truth_leak: INVALID_CONFIG
+  model_drift: INVALID_CONFIG
+  unbalanced_resource_lease: INVALID_RESOURCE_ACCOUNTING
+free_resource_policy:
+  gemini_model: gemini-3.1-flash-lite
+  gemini_billing_class: unknown_until_account_level_check
+  gemini_account_quota: unknown
+  tavily_monthly_credit_ceiling: 1000
+  tavily_account_balance: 230_of_1000_verified_2026-10-18
+  deepseek_search_fetch: disabled_by_policy

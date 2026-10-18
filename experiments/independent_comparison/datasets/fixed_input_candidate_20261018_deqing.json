@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "pack_id": "e2_candidate_20261018_deqing_snapshot",
+  "region": "德清县",
+  "focus": "高端制造与县域产业升级",
+  "mode": "snapshot",
+  "documents": [
+    {
+      "title": "湖州市统计局县区经济指标 PDF 摘录",
+      "url": "https://tjj.huzhou.gov.cn/module/download/downfile.jsp?classid=-1&filename=2503311442095589175.pdf",
+      "snippet": "湖州市统计局公开 PDF 中的 2024 年区县经济指标表摘录。",
+      "content": "表格列示德清县2024年地区生产总值722.5亿元，增速5.8%，人均GDP 12.93万元；该表为湖州市区县对比口径，不能替代德清县统计局原始年度公报。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00+00:00",
+      "metadata": {"snapshot_kind": "bounded_excerpt", "administrative_scope": "德清县全县", "retrieval_date": "2026-10-18", "version_scope": "initial_release_candidate"},
+      "published_at": "2025-03-31T00:00:00+00:00",
+      "domain_type": "government",
+      "credibility_score": 0.9,
+      "evidence_type": "fact",
+      "source_summary": "地级市统计部门区县经济指标表，支持初始发布值。"
+    },
+    {
+      "title": "德清县相关发行人披露中的县域经济指标",
+      "url": "https://static.sse.com.cn/disclosure/bond/announcement/corporate/c/new/2025-06-27/152391_20250627_S1HO.pdf",
+      "snippet": "上海证券交易所披露文件中的德清县 2024 年主要经济指标摘录。",
+      "content": "披露文件列示德清县2024年地区生产总值722.5亿元、增长5.8%，并列示固定资产投资425.0亿元、增长3.2%。文件属于发行人披露整理，不是德清县统计局原始公报；后续统计修订版本仍需单独处理。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00+00:00",
+      "metadata": {"snapshot_kind": "bounded_excerpt", "administrative_scope": "德清县全县", "retrieval_date": "2026-10-18", "version_scope": "initial_release_candidate"},
+      "published_at": "2025-06-27T00:00:00+00:00",
+      "domain_type": "official_disclosure",
+      "credibility_score": 0.8,
+      "evidence_type": "fact",
+      "source_summary": "发行人披露中的县域经济指标，用于核对初始发布值和投资背景。"
+    }
+  ],
+  "source_hash": "6ede1b67a56b758ee70677c9be66c6c1960de3ad2c4452910b2411a17a2e061a"
+}

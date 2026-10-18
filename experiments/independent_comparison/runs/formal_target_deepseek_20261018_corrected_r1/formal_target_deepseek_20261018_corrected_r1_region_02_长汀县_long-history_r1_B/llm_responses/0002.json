@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_02_长汀县_long-history_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网 AI。研究对象：长汀县；方向：生态治理、工业发展与文旅融合；模式：long-history。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 长汀生态治水探绿色发展（保护生态 治理污染）\nURL: http://www.xinhuanet.com/politics/2016-04/20/c_128911606.htm\n咬定水土治理不放松，先后出台制定10多个政策性文件，一任接着一任干，在汀江两岸逐步建起自然保护与生态休闲观光区、生态宜居城市与历史文化名城保护区、稀土工业与工贸发展区...\n\n[2] 长汀：打造新时期水土保持高质量发展先行区样板\nURL: http://www.changting.gov.cn/xwzx/ctxw/202510/t20251020_2251797.htm\n打造“红旗跃过汀江・‘两山’实践走廊”等示范片区，建成水土流失治理科教馆、马栏山森林公园等项目，培育河田窑下等生态村，形成全域生态旅游格局，2024年全县接待游客973万人次，旅游收入近91亿元。完成全国首单水土保持项目碳汇交易...\n\n[3] 【喜迎党代会·长汀这五年】转型升级提质增效 县域经济产业根基更加坚实\nURL: https://www.ct165.com/NewsInfo.aspx?Id=90317\n过去五年，长汀县锚定“生态优先、工业强县、文旅富民、城乡融合”的发展思路，一张蓝图绘到底，全县上下同心同向、接力奋进，在攻坚克难中砥砺前行，在拼搏奋斗中开创新局，在笃行实干中推动各项事业稳步向前，不断书写老区苏区振兴发展新篇章。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 425,
+    "completion_tokens": 2049,
+    "total_tokens": 2474
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 425,
+    "completion_tokens": 2049,
+    "total_tokens": 2474,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

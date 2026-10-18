@@ -18,6 +18,8 @@
 from __future__ import annotations
 
 import logging
+import threading
+import time
 from datetime import datetime
 from typing import Any
 
@@ -386,6 +388,140 @@ class BingSearchProvider(SearchProvider):
         return docs
 
 
+# ===== 4. DeepSeek Search/Fetch =====
+
+
+class DeepSeekSearchProvider(SearchProvider):
+    """DeepSeek Search/Fetch provider with an explicit opt-in switch.
+
+    The direct Search/Fetch endpoints are kept disabled by default because
+    their billing policy is account-dependent.  Callers must explicitly set
+    ``DEEPSEEK_SEARCH_ENABLED=true`` (or pass ``enabled=True``) only after
+    independently confirming the account's allowed billing boundary.
+    """
+
+    name = "deepseek"
+    SEARCH_ENDPOINT = "https://api.deepseek.com/v1/tools/search"
+    FETCH_ENDPOINT = "https://api.deepseek.com/v1/tools/fetch"
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        *,
+        settings: Settings | None = None,
+        enabled: bool | None = None,
+        timeout: float | None = None,
+        min_interval_seconds: float = 0.0,
+    ) -> None:
+        s = settings or get_settings()
+        self._api_key = api_key or s.search.api_key.get_secret_value()
+        self._enabled = s.search.deepseek_enabled if enabled is None else enabled
+        self._timeout = timeout or float(s.search.timeout)
+        self._min_interval = max(0.0, min_interval_seconds)
+        self._last_request = 0.0
+        self._lock = threading.Lock()
+        self._stats = {
+            "requests": 0,
+            "successful_requests": 0,
+            "failed_requests": 0,
+        }
+
+    def search(self, query: str, max_results: int = 10) -> list[RawDoc]:
+        data = self._post(self.SEARCH_ENDPOINT, {"query": query, "count": max_results})
+        docs: list[RawDoc] = []
+        seen_urls: set[str] = set()
+        seen_content: set[str] = set()
+        results = data.get("results", [])
+        if not isinstance(results, list):
+            return docs
+        for item in results:
+            if not isinstance(item, dict):
+                continue
+            url = str(item.get("url", ""))
+            if url and url in seen_urls:
+                continue
+            if url:
+                seen_urls.add(url)
+            content = str(item.get("content", item.get("snippet", "")))
+            content_key = content.strip()
+            if content_key and content_key in seen_content:
+                continue
+            if content_key:
+                seen_content.add(content_key)
+            docs.append(
+                RawDoc(
+                    title=str(item.get("title", "")),
+                    url=url,
+                    snippet=str(item.get("snippet", item.get("content", ""))),
+                    content=content,
+                    source=self.name,
+                    metadata={
+                        "published_date": item.get("published_date"),
+                        "score": item.get("score"),
+                        "raw_result": item,
+                    },
+                )
+            )
+        return docs
+
+    def fetch(self, url: str) -> dict[str, Any]:
+        return self._post(self.FETCH_ENDPOINT, {"url": url})
+
+    def stats(self) -> dict[str, int]:
+        with self._lock:
+            return dict(self._stats)
+
+    def _post(self, endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
+        self._ensure_enabled()
+        with self._lock:
+            delay = self._min_interval - (time.monotonic() - self._last_request)
+            if delay > 0:
+                time.sleep(delay)
+            self._last_request = time.monotonic()
+            self._stats["requests"] += 1
+        try:
+            with httpx.Client(timeout=self._timeout) as client:
+                response = client.post(
+                    endpoint,
+                    headers={
+                        "Authorization": f"Bearer {self._api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+            if response.status_code >= 400:
+                raise SearchError(
+                    f"DeepSeek HTTP {response.status_code}",
+                    context={"endpoint": endpoint, "status_code": response.status_code},
+                )
+            data = response.json()
+            if not isinstance(data, dict):
+                raise SearchError(
+                    "DeepSeek response is not an object",
+                    context={"endpoint": endpoint},
+                )
+            with self._lock:
+                self._stats["successful_requests"] += 1
+            return data
+        except SearchError:
+            with self._lock:
+                self._stats["failed_requests"] += 1
+            raise
+        except (httpx.HTTPError, ValueError) as exc:
+            with self._lock:
+                self._stats["failed_requests"] += 1
+            raise SearchError(
+                "DeepSeek response or network error",
+                context={"endpoint": endpoint, "error_type": type(exc).__name__},
+            ) from exc
+
+    def _ensure_enabled(self) -> None:
+        if not self._api_key:
+            raise SearchError("DeepSeek API key is missing")
+        if not self._enabled:
+            raise SearchError("DeepSeek Search/Fetch is disabled_by_policy")
+
+
 # ===== Provider 工厂 =====
 
 
@@ -393,6 +529,7 @@ PROVIDER_CLASSES: dict[str, type[SearchProvider]] = {
     "tavily": TavilySearchProvider,
     "serper": SerperSearchProvider,
     "bing": BingSearchProvider,
+    "deepseek": DeepSeekSearchProvider,
 }
 
 

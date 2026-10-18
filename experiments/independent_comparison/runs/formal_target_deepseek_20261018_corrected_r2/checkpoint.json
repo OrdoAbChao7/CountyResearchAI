@@ -1,0 +1,25 @@
+{
+  "config_hash": "40723faaa38d8508108772f944df5cbe578ce06d13f2b1c6adae1e68af0c6bfd",
+  "state": {
+    "completed": {
+      "formal_target_deepseek_20261018_corrected_r2_region_01_德清县_snapshot_r1_A": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_01_德清县_snapshot_r1_B": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_01_德清县_snapshot_r1_C": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_02_长汀县_long-history_r1_A": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_02_长汀县_long-history_r1_B": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_02_长汀县_long-history_r1_C": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_A": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_B": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_C": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_A": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_B": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_C": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_05_白山市_snapshot_r1_A": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_05_白山市_snapshot_r1_B": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_05_白山市_snapshot_r1_C": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_06_临泽县_long-history_r1_A": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_06_临泽县_long-history_r1_B": "VALID",
+      "formal_target_deepseek_20261018_corrected_r2_region_06_临泽县_long-history_r1_C": "VALID"
+    }
+  }
+}

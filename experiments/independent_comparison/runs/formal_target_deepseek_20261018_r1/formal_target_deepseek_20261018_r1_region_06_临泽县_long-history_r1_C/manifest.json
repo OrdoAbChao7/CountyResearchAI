@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:704d2ae7c10ce9e12df3a5c604ac2880de4422d8f329f58d7d90a4558688a085",
+    "sources": "sources.json:d4852f101841101676195b7c4f3fae1168f900a74466294cf01a5954ebfa8a03"
+  },
+  "config_hash": "12457f8ebeecbcf719a734bb1edbd1ea83eeb309aa2cd2a63a1ec9b26b72e521",
+  "county": "临泽县",
+  "created_at": "2026-10-18T13:14:13.250953+00:00",
+  "duration_seconds": 71.151848,
+  "error": null,
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "C",
+  "mode": "long-history",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 9866,
+    "deepseek:search:search": 6
+  },
+  "run_id": "formal_target_deepseek_20261018_r1_region_06_临泽县_long-history_r1_C",
+  "search_provider": "deepseek",
+  "status": "VALID",
+  "task_id": "long-history",
+  "updated_at": "2026-10-18T13:15:24.402186+00:00"
+}

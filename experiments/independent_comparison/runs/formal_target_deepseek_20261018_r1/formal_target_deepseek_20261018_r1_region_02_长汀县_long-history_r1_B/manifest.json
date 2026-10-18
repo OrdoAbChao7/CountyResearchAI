@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": "sources.json:b534b0c60eba125bfd9927e1ceee9a80ae3e5ef7cb0de5ef6f3e14fdfdf8592b"
+  },
+  "config_hash": "d8ac4d3a764e47d6d106b5eef2b1f3ee01817781a884c4ad61ce42c97946b5af",
+  "county": "长汀县",
+  "created_at": "2026-10-18T13:06:28.016281+00:00",
+  "duration_seconds": 25.986743,
+  "error": null,
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "B",
+  "mode": "long-history",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 1292,
+    "deepseek:search:search": 3
+  },
+  "run_id": "formal_target_deepseek_20261018_r1_region_02_长汀县_long-history_r1_B",
+  "search_provider": "deepseek",
+  "status": "VALID",
+  "task_id": "long-history",
+  "updated_at": "2026-10-18T13:06:54.002460+00:00"
+}

@@ -1,0 +1,50 @@
+{
+  "county": {
+    "name": "长汀县",
+    "province": "",
+    "prefecture": "",
+    "full_name": ""
+  },
+  "focus": "生态治理、工业发展与文旅融合",
+  "docs": [
+    {
+      "title": "长汀县2024年国民经济和社会发展统计公报",
+      "url": "https://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm",
+      "snippet": "长汀县人民政府公开的 2024 年统计公报摘录。",
+      "content": "据市统计局初步反馈，2024年长汀县全年实现地区生产总值357.8亿元，比上年增长4.9%。第一产业增加值43.9亿元、增长2.5%；第二产业增加值133.5亿元、增长3.0%；第三产业增加值180.5亿元、增长7.1%。公报数据为年度快报初步统计口径，使用时需保留时间点和修订说明。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00Z",
+      "metadata": {
+        "snapshot_kind": "bounded_excerpt",
+        "administrative_scope": "长汀县全县",
+        "retrieval_date": "2026-10-18",
+        "version_scope": "initial_bulletin_candidate"
+      },
+      "published_at": "2025-06-30T00:00:00Z",
+      "domain_type": "government",
+      "credibility_score": 0.95,
+      "evidence_type": "fact",
+      "source_summary": "官方统计公报，含 GDP、三次产业和初步统计口径。"
+    },
+    {
+      "title": "长汀入选全国首批一体化推进水土保持工程建设县",
+      "url": "https://www.fujian.gov.cn/xwdt/fjyw/202505/t20250511_6912362.htm",
+      "snippet": "福建省人民政府门户网站公开的长汀生态治理与产业发展文章摘录。",
+      "content": "福建省人民政府门户网站文章称，长汀通过做强林下经济、做优生态文旅、做精产业融合，GDP提升至357.8亿元，并持续推进水土保持和生态价值转化。该文支持经济总量和产业发展背景，但不独立给出4.9%的增速。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00Z",
+      "metadata": {
+        "snapshot_kind": "bounded_excerpt",
+        "administrative_scope": "长汀县全县",
+        "retrieval_date": "2026-10-18"
+      },
+      "published_at": "2025-05-11T00:00:00Z",
+      "domain_type": "government",
+      "credibility_score": 0.85,
+      "evidence_type": "context",
+      "source_summary": "省级政府新闻背景，提供生态治理、文旅和产业融合上下文。"
+    }
+  ],
+  "total_chars": 297,
+  "processed_at": "2026-10-18T13:18:59.650980Z"
+}

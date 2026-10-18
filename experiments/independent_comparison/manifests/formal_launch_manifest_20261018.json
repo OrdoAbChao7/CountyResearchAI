@@ -1,0 +1,87 @@
+{
+  "manifest_id": "formal_launch_manifest_20261018",
+  "status": "FROZEN_LAUNCH_CONFIGURATION",
+  "created_at": "2026-10-18T00:00:00+00:00",
+  "experiment_id": "E1+E2",
+  "llm_provider": "deepseek",
+  "model": "deepseek-flash",
+  "search_provider": "deepseek",
+  "groups": ["A", "B", "C"],
+  "regions": [
+    {"id": "region_01", "name": "德清县", "primary_task": "snapshot"},
+    {"id": "region_02", "name": "长汀县", "primary_task": "long-history"},
+    {"id": "region_03", "name": "于都县", "primary_task": "rise-fall"},
+    {"id": "region_04", "name": "攀枝花市", "primary_task": "rise-fall"},
+    {"id": "region_05", "name": "白山市", "primary_task": "snapshot"},
+    {"id": "region_06", "name": "临泽县", "primary_task": "long-history"}
+  ],
+  "formal_target": {
+    "repeats_per_group": 3,
+    "expected_e1_specs": 54,
+    "may_stop_early_on_budget": true
+  },
+  "e1": {
+    "batch_id": "formal_target_deepseek_20261018_corrected_r2",
+    "output_root": "experiments/independent_comparison/runs/formal_target_deepseek_20261018_corrected_r2",
+    "max_tokens": 2048,
+    "llm_request_options": {"thinking": "disabled"},
+    "max_search_results": 1,
+    "llm_tasks": ["industry_status"],
+    "resource_limits": {
+      "llm_units": 100000,
+      "search_units": 500,
+      "billing_class": "user_authorized_paid"
+    }
+  },
+  "e2": {
+    "batch_id_prefix": "e2_formal_target_deepseek_20261018_corrected",
+    "output_root_template": "experiments/independent_comparison/runs/{batch_id}",
+    "max_tokens": 2048,
+    "llm_request_options": {"thinking": "disabled"},
+    "search_enabled": false,
+    "resource_limits": {
+      "llm_units": 24000,
+      "billing_class": "user_authorized_paid"
+    }
+  },
+  "bounded_preflight": {
+    "regions": ["德清县"],
+    "repeats_per_group": 1,
+    "expected_e1_specs": 3,
+    "purpose": "validate_provider_usage_isolation_and_resource_settlement_before_expansion"
+  },
+  "frozen_inputs": {
+    "protocol": {
+      "path": "experiments/independent_comparison/protocol/protocol.yaml",
+      "sha256": "bd007c71c8705ee6a1a97bf12c2343416907856c34c208e28e64a5848b88ea46"
+    },
+    "rubric": {
+      "path": "experiments/independent_comparison/protocol/rubric.yaml",
+      "sha256": "d4501e046fba323dbf0486679b2ba31968e98e3047a27af7f5fa7b758ef42f46"
+    },
+    "formal_regions": {
+      "path": "experiments/independent_comparison/datasets/formal_regions_20261018.yaml",
+      "sha256": "5628e8217af76125a2dfbac15320fde62b95e2642cc600cdefaba3b28b9e88cb"
+    },
+    "ground_truth_manifest": {
+      "path": "experiments/independent_comparison/ground_truth/formal_ground_truth_20261018_manifest.json",
+      "sha256": "9bfe78a2426b114a5a6b2179d6f2f9ddded028b4d03b7f20b6f85101c0affdd7"
+    },
+    "ground_truth_claim_source_hash": "7a5af074d7530f174d057d7958bf204663af39c964a034b7fdad31f652da8bc7",
+    "ground_truth_claim_file_sha256": "7a5af074d7530f174d057d7958bf204663af39c964a034b7fdad31f652da8bc7",
+    "fixed_input_manifest": {
+      "path": "experiments/independent_comparison/datasets/fixed_input_formal_manifest_20261018.json",
+      "sha256": "76d23835cf7455ac844f5a8d093e3f85941dcc26aa94cc1b4531b88cbd2f848f"
+    },
+    "fixed_input_packs": [
+      {"file": "fixed_input_candidate_20261018_yudu.json", "source_hash": "59bb531886c698d96943b8f5a710580fed2ae73521ebf0e2dbd1459a8198e9dc", "file_sha256": "050a12959e8a47f1ae80e9eeaa6cc204e159edb438e7e02ae69fca0c721ffe1f"},
+      {"file": "fixed_input_candidate_20261018_baishan.json", "source_hash": "629d860c00df7a3282c3902c6984f49b3216705f64e76fed1eda82bd68b00d30", "file_sha256": "c86571ce1c668664b7d515080eb67d4a0d122703b23a6691efcd383dee00c82f"},
+      {"file": "fixed_input_candidate_20261018_linze.json", "source_hash": "0ef9d9226be88fccc522653f360ab21c922edb0562b5353d4f000c4afa1d3357", "file_sha256": "b6a78df3535531bea09c13ab27ac27ed72fbddfb2d4a284ce335047de337ec85"},
+      {"file": "fixed_input_candidate_20261018_deqing.json", "source_hash": "6ede1b67a56b758ee70677c9be66c6c1960de3ad2c4452910b2411a17a2e061a", "file_sha256": "30e1c9a700fcf0775bbcc5c08fb93b634fab3fa3a9ae7337c29ef509142c2aff"},
+      {"file": "fixed_input_candidate_20261018_changting.json", "source_hash": "1b4530fb264f9c9a702ef9349b64a5ea75594aa18a920f03c21ac832adf34fc2", "file_sha256": "e9e54fd7ae73e4261021f54eb812e21eacf0cadc6ac7527d0fd27ee79b813055"},
+      {"file": "fixed_input_candidate_20261018_panzhihua.json", "source_hash": "51febe5a8cecc4dd39923032f2471b3b5a6e62bed0c432503353ae4c4bb1e854", "file_sha256": "87b40a143a4b9acfe943bc35fc0a991acbb90275b50a1f7ee2c5d77986b10106"}
+    ]
+  },
+  "formal_gate": "experiments/independent_comparison/manifests/formal_target_gate_20261018.json",
+  "business_api_calls_before_launch": 0
+}

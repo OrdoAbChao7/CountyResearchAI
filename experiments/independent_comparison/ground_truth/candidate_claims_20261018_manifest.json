@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "candidate_file": "candidate_claims_20261018.jsonl",
+  "source_hash": "11953E35495C142FE888915F4A27D0B94C1C629EAC2E9A1E23DEF2CB49A43D30",
+  "status": "UNFROZEN",
+  "formal_ground_truth": false,
+  "claim_count": 6,
+  "excluded_from_quality_metrics": true,
+  "exclusion_reason": "Every candidate claim is UNVERIFIED; source-level and context-level independent verification is incomplete.",
+  "created_at": "2026-10-18T00:00:00+00:00"
+}

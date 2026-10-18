@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "input_pack": "input_pack.json:9d89f1575fba10d3c65e93d43bf9ff6ceb21261e7e6e04c0e011f811b52c3417",
+    "report": "report.md:73a11db8641927cc9838fc7c20ece47996feca67b71c3ab3393b1f6bd9f9a306",
+    "sources": "sources.json:d6102472c910b5116ab84cfe62eef435577eedfd2427d6bdf75900d008ac5d18"
+  },
+  "config_hash": "5ffedd328d4de7a6efa4a97f4fc0e92aeecd577dd988877d1214e818c91da1d3",
+  "county": "于都县",
+  "created_at": "2026-10-18T13:16:23.419793+00:00",
+  "duration_seconds": 13.08352,
+  "error": null,
+  "experiment_id": "E2",
+  "formal_target": true,
+  "group": "C",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 2152
+  },
+  "run_id": "e2_formal_target_deepseek_20261018_yudu_e2_candidate_20261018_yudu_snapshot_C",
+  "search_provider": "disabled-by-fixed-input-protocol",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T13:16:36.502722+00:00"
+}

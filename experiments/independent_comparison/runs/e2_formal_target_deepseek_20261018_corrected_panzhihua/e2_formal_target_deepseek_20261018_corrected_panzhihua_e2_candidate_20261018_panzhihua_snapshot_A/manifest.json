@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "input_pack": "input_pack.json:7d6c3e4f67529b7d6b2b52564d0e45773b3e65225fdb57c1c9446caab96ba6ff",
+    "report": "report.md:6faff2eba3f1a56161c937745de801a1b946f1fca4ea8014cbbbadadd95b3292",
+    "sources": "sources.json:5a58539fad6eaf578a429c959e41660545d8731fe26f90ed1dac63f06c88525a"
+  },
+  "config_hash": "fb76ad7d6779c2bf1f1f529b76df6f1713eae48c02eb782461a670b6ce58d123",
+  "county": "攀枝花市",
+  "created_at": "2026-10-18T14:40:57.213083+00:00",
+  "duration_seconds": 13.995215,
+  "error": null,
+  "experiment_id": "E2",
+  "formal_target": true,
+  "group": "A",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 1936
+  },
+  "run_id": "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_A",
+  "search_provider": "disabled-by-fixed-input-protocol",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T14:41:11.207744+00:00"
+}

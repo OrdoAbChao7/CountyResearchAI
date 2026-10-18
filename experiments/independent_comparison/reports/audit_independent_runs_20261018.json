@@ -1,0 +1,42 @@
+{
+  "runs_checked": 105,
+  "passed": false,
+  "issues": [
+    {
+      "run_id": "c_probe_20261018T182500Z_安吉县_C",
+      "severity": "WARNING",
+      "code": "RAW_LLM_ARCHIVE_MISSING",
+      "message": "VALID artifact predates raw LLM response archiving or did not record it"
+    },
+    {
+      "run_id": "pilot_20261018T183000Z_于都县_A",
+      "severity": "ERROR",
+      "code": "RESOURCE_CAPACITY_EXCEEDED",
+      "message": "(gemini, gemini-3.1-flash-lite, llm) total=45641 exceeds capacity=24000"
+    },
+    {
+      "run_id": "pilot_20261018T183000Z_于都县_B",
+      "severity": "ERROR",
+      "code": "RESOURCE_CAPACITY_EXCEEDED",
+      "message": "(gemini, gemini-3.1-flash-lite, llm) total=45641 exceeds capacity=24000"
+    },
+    {
+      "run_id": "pilot_20261018T183000Z_于都县_C",
+      "severity": "ERROR",
+      "code": "RESOURCE_CAPACITY_EXCEEDED",
+      "message": "(gemini, gemini-3.1-flash-lite, llm) total=45641 exceeds capacity=24000"
+    },
+    {
+      "run_id": "smoke_20261018T095509Z_安吉县_A",
+      "severity": "WARNING",
+      "code": "RAW_LLM_ARCHIVE_MISSING",
+      "message": "VALID artifact predates raw LLM response archiving or did not record it"
+    },
+    {
+      "run_id": "smoke_20261018T095509Z_安吉县_B",
+      "severity": "WARNING",
+      "code": "RAW_LLM_ARCHIVE_MISSING",
+      "message": "VALID artifact predates raw LLM response archiving or did not record it"
+    }
+  ]
+}

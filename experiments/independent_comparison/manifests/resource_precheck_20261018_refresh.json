@@ -1,0 +1,30 @@
+{
+  "check_id": "resource_precheck",
+  "checked_at": "2026-10-18T12:41:41.655178+00:00",
+  "deepseek": {
+    "configured": false,
+    "enabled": false,
+    "status": "DISABLED_BY_POLICY"
+  },
+  "gemini": {
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-lite",
+    "account_quota_fields_returned": false,
+    "billing_boundary": "UNKNOWN",
+    "models_list_http_status": 200,
+    "target_model_visible": true,
+    "status": "MODEL_VISIBLE_ACCOUNT_BILLING_UNCONFIRMED"
+  },
+  "tavily": {
+    "usage_http_status": 200,
+    "current_plan": "Researcher",
+    "plan_usage_credits": 230,
+    "plan_limit_credits": 1000,
+    "conservative_remaining_credits": 770,
+    "paygo_usage_credits": 0,
+    "status": "FREE_PLAN_USAGE_VISIBLE"
+  },
+  "formal_gate": "CLOSED_UNTIL_GEMINI_ACCOUNT_BILLING_BOUNDARY_CONFIRMED",
+  "business_model_calls_made": false,
+  "api_keys_logged": false
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_03_于都县_rise-fall_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网 AI。研究对象：于都县；方向：产业结构与工业发展；模式：rise-fall。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 我县召开2025年经济运行情况新闻发布会\nURL: https://www.yudu.gov.cn/yudu/jryd/202602/449130ee8f1f44909b4b3fcf5e3e5b04.shtml#1\n全年全县规模以上工业增加值同比增长8.6%。分三大门类看，制造业增加值增长12.0%，电力、热力、燃气及水生产和供应业增加值增长1.7%，采矿业增加值下降12.5%。新兴产业快速发展。\n\n[2] 关于于都县建设工业强县及推进科技创新（含人才引进）领域“十五五”规划编制专题调研报告\nURL: https://www.yudu.gov.cn/ydxxxgk/zxgh21vpg/202512/d8e07df5017848e8a510cb582fde31b0.shtml#1\n预计2025年全年，全县规上工业总产值达237亿元，同比增长5.6%；实现规上营业收入226亿元 ... 规上工业总产值突破400亿元大关，奋力向500亿元迈进；规上企业数量突破300家..."
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 328,
+    "completion_tokens": 512,
+    "total_tokens": 840
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 328,
+    "completion_tokens": 512,
+    "total_tokens": 840,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

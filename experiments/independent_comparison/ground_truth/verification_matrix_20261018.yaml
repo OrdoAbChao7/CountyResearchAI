@@ -1,0 +1,43 @@
+schema_version: "1.0"
+status: PARTIAL_REVIEWED_NOT_FORMAL
+verification_roles: [D1, D2, D3, D4]
+rules:
+  formal_verified_requires: [two_distinct_sources, two_independent_verification_contexts]
+  unresolved_versions_must_be_preserved: true
+claims:
+  - claim_id: region_01_2024_gdp_growth_candidate
+    region: 德清县
+    d3_status: DISPUTED
+    d4_status: VERIFIED_CANDIDATE
+    consensus: DISPUTED
+    action: split_initial_release_and_later_revision; do_not_freeze_single_value
+  - claim_id: region_02_2024_gdp_growth_candidate
+    region: 长汀县
+    d3_status: VERIFIED_CANDIDATE
+    d4_status: UNVERIFIED
+    consensus: PARTIAL_AMOUNT_ONLY
+    action: split_gdp_amount_from_growth; hold_growth
+  - claim_id: region_03_2024_gdp_growth_candidate
+    region: 于都县
+    d3_status: VERIFIED_CANDIDATE
+    d4_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    action: eligible_for_partial_verified_panel
+  - claim_id: region_04_2024_gdp_growth_candidate
+    region: 攀枝花市
+    d3_status: DISPUTED
+    d4_status: VERIFIED_CANDIDATE
+    consensus: DISPUTED
+    action: preserve_initial_and_later_final_values; hold_single_value
+  - claim_id: region_05_2024_gdp_growth_candidate
+    region: 白山市
+    d3_status: VERIFIED_CANDIDATE
+    d4_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    action: eligible_for_partial_verified_panel
+  - claim_id: region_06_2024_gdp_candidate
+    region: 临泽县
+    d3_status: VERIFIED_CANDIDATE
+    d4_status: VERIFIED_CANDIDATE
+    consensus: VERIFIED_CANDIDATE
+    action: eligible_for_partial_verified_panel

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "pack_id": "e2_candidate_20261018_panzhihua_snapshot",
+  "region": "攀枝花市",
+  "focus": "钒钛产业、先进材料与康养经济",
+  "mode": "snapshot",
+  "documents": [
+    {
+      "title": "攀枝花市投资环境（官方页面）",
+      "url": "https://www.panzhihua.gov.cn/ninfo_2584.html",
+      "snippet": "攀枝花市人民政府公开的投资环境页面中的 2024 年经济指标摘录。",
+      "content": "攀枝花市人民政府页面列示：2024年全市地区生产总值1395.24亿元、增长6.3%；规模以上工业增加值增长9%；全社会固定资产投资增长5.6%；社会消费品零售总额335亿元、增长6%。页面还将钒钛产业、康养产业和钢铁基地建设列为长期产业发展背景。该数值属于初始发布版本候选。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00+00:00",
+      "metadata": {"snapshot_kind": "bounded_excerpt", "administrative_scope": "攀枝花市全市", "retrieval_date": "2026-10-18", "version_scope": "initial_release_candidate"},
+      "published_at": "2025-10-17T00:00:00+00:00",
+      "domain_type": "government",
+      "credibility_score": 0.9,
+      "evidence_type": "fact",
+      "source_summary": "官方政府页面，含初始 GDP、工业和投资指标及产业背景。"
+    },
+    {
+      "title": "2025年攀枝花市经济形势新闻发布稿（后续修订口径）",
+      "url": "https://www.sohu.com/a/979362062_121106884",
+      "snippet": "公开转载的 2025 年经济形势新闻稿中关于 2024 年 GDP 最终核实值的摘录。",
+      "content": "公开转载稿称：经最终核实，2024年攀枝花市地区生产总值现价总量为1375.14亿元，按不变价格计算比上年增长6.2%。该页面不是攀枝花市统计局原始发布页，因此只作为后续版本候选，不能与1395.24亿元初始值混为同一 claim。",
+      "source": "secondary-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00+00:00",
+      "metadata": {"snapshot_kind": "bounded_excerpt", "administrative_scope": "攀枝花市全市", "retrieval_date": "2026-10-18", "version_scope": "later_final_revision_candidate"},
+      "published_at": "2026-01-23T00:00:00+00:00",
+      "domain_type": "secondary_media",
+      "credibility_score": 0.65,
+      "evidence_type": "revision_notice",
+      "source_summary": "后续版本线索，明确保留 GDP 修订争议。"
+    }
+  ],
+  "source_hash": "51febe5a8cecc4dd39923032f2471b3b5a6e62bed0c432503353ae4c4bb1e854"
+}

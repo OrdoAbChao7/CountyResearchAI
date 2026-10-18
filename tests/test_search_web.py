@@ -12,6 +12,7 @@ from county_research_ai.exceptions import SearchError
 from county_research_ai.search.web_search import (
     PROVIDER_CLASSES,
     BingSearchProvider,
+    DeepSeekSearchProvider,
     SerperSearchProvider,
     TavilySearchProvider,
     create_provider,
@@ -108,6 +109,93 @@ class TestCreateProvider:
     def test_factory_returns_correct_class(self, name, tmp_settings):
         p = create_provider(provider=name, settings=tmp_settings)
         assert type(p) is PROVIDER_CLASSES[name]
+
+    def test_factory_supports_deepseek_without_enabling_paid_search(self, tmp_settings):
+        tmp_settings.search.provider = "deepseek"
+        p = create_provider(provider="deepseek", settings=tmp_settings)
+
+        assert type(p) is DeepSeekSearchProvider
+        with pytest.raises(SearchError, match="disabled_by_policy"):
+            p.search("县域产业")
+
+
+class TestDeepSeekProvider:
+    def test_enabled_search_parses_results_and_tracks_stats(self, monkeypatch, tmp_settings):
+        requests = []
+
+        class Response:
+            status_code = 200
+
+            def json(self):
+                return {
+                    "results": [
+                        {
+                            "title": "官方统计",
+                            "url": "https://example.gov.cn/stat",
+                            "snippet": "摘要",
+                            "content": "正文",
+                            "published_date": "2026-01-02",
+                            "score": 0.91,
+                        }
+                    ]
+                }
+
+        class Client:
+            def __init__(self, *, timeout):
+                self.timeout = timeout
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                return False
+
+            def post(self, endpoint, *, headers, json):
+                requests.append({"endpoint": endpoint, "headers": headers, "json": json})
+                return Response()
+
+        monkeypatch.setattr("county_research_ai.search.web_search.httpx.Client", Client)
+        p = DeepSeekSearchProvider(api_key="secret", settings=tmp_settings, enabled=True)
+
+        documents = p.search("县域产业", max_results=7)
+
+        assert len(documents) == 1
+        assert documents[0].source == "deepseek"
+        assert documents[0].metadata["published_date"] == "2026-01-02"
+        assert requests[0]["endpoint"] == p.SEARCH_ENDPOINT
+        assert requests[0]["json"] == {"query": "县域产业", "count": 7}
+        assert p.stats() == {
+            "requests": 1,
+            "successful_requests": 1,
+            "failed_requests": 0,
+        }
+
+    def test_fetch_uses_deepseek_fetch_endpoint(self, monkeypatch, tmp_settings):
+        class Response:
+            status_code = 200
+
+            def json(self):
+                return {"url": "https://example.gov.cn/page", "content": "正文"}
+
+        class Client:
+            def __init__(self, *, timeout):
+                self.timeout = timeout
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                return False
+
+            def post(self, endpoint, *, headers, json):
+                assert endpoint == DeepSeekSearchProvider.FETCH_ENDPOINT
+                assert json == {"url": "https://example.gov.cn/page"}
+                return Response()
+
+        monkeypatch.setattr("county_research_ai.search.web_search.httpx.Client", Client)
+        p = DeepSeekSearchProvider(api_key="secret", settings=tmp_settings, enabled=True)
+
+        assert p.fetch("https://example.gov.cn/page")["content"] == "正文"
 
     def test_unknown_provider_raises(self, tmp_settings):
         with pytest.raises(SearchError):

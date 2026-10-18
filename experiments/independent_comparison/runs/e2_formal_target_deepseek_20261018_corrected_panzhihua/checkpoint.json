@@ -1,0 +1,10 @@
+{
+  "config_hash": "0e50672bbaa8d6b4f6b74c9919ce749b6007084d548e6ec6275cb6b733d3fd03",
+  "state": {
+    "completed": {
+      "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_A": "VALID",
+      "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_B": "VALID",
+      "e2_formal_target_deepseek_20261018_corrected_panzhihua_e2_candidate_20261018_panzhihua_snapshot_C": "VALID"
+    }
+  }
+}

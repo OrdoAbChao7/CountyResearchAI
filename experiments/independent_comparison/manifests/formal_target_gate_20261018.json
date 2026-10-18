@@ -1,0 +1,29 @@
+{
+  "run_id": "formal_target_gate_20261018",
+  "experiment_id": "E1+E2",
+  "group": "ALL",
+  "county": "six-candidate-set",
+  "task_id": "formal-target",
+  "mode": "mixed",
+  "llm_provider": "deepseek",
+  "model": "deepseek-flash",
+  "search_provider": "deepseek",
+  "status": "READY_FOR_FORMAL_RUN",
+  "reason": "User explicitly authorized DeepSeek API use without an additional spend cap. Read-only model visibility, one real Search request, and one minimal Chat Completion succeeded; both LLM and Search/Fetch scopes are recorded as USER_AUTHORIZED_PAID with auditable evidence. The corrected E1/E2 batches were executed under this paid-authorized gate; this does not claim free-tier access.",
+  "resource_precheck": "resource_precheck_20261018_deepseek.json",
+  "account_check": "../reports/DEEPSEEK_API_PROBE_20261018.md",
+  "launch_manifest": "formal_launch_manifest_20261018.json",
+  "unlock_conditions": [
+    "Confirm the frozen six-region Ground Truth manifest hash and preserve unresolved revision claims outside the scored target.",
+    "Record the user's explicit paid-use authorization separately for DeepSeek LLM and Search/Fetch.",
+    "Run the bounded E1/E2 preflight and preserve all successful and failed outputs.",
+    "Run a low-budget E1/E2 preflight within the persisted ResourceManager capacity before expanding repeats.",
+    "Record the exact frozen protocol, model, budget, input-pack hashes and output directory before launch."
+  ],
+  "excluded_from_quality_metrics": false,
+  "completed_batches": [
+    "formal_target_deepseek_20261018_corrected_r2",
+    "e2_formal_target_deepseek_20261018_corrected_*"
+  ],
+  "created_at": "2026-10-18T13:00:46.2086299Z"
+}

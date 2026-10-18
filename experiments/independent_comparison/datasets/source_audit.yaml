@@ -1,0 +1,138 @@
+schema_version: "1.0"
+audit_date: "2026-10-18"
+status: UNFROZEN
+purpose: >-
+  Public-source triage for the six proposed formal regions. This file records
+  candidate sources and blockers; it is not a Ground Truth file and cannot
+  authorize a formal run.
+freeze_rule: >-
+  A claim may enter frozen Ground Truth only after claim-level extraction,
+  two distinct verification sources, two independent verification contexts,
+  and a resolved or explicitly preserved dispute.
+regions:
+  - id: region_01
+    name: 德清县
+    candidate_status: NEEDS_PRIMARY_CONFIRMATION
+    sources:
+      - authority: 德清县统计局（来源标注）
+        source_type: secondary_mirror
+        url: https://zgrkk.com/reports/4511.html
+        observed_scope: 2024 GDP and three-sector values
+        observed_note: 转载页面标注来源为德清县统计局；不能单独作为冻结依据。
+      - authority: 上海证券交易所/发行人披露
+        source_type: official_disclosure
+        url: https://static.sse.com.cn/disclosure/bond/announcement/corporate/c/new/2025-06-27/152391_20250627_S1HO.pdf
+        observed_scope: 2024 GDP and three-sector values cited in disclosure
+        observed_note: 与候选统计口径一致，但披露文件不是德清县统计局原始公报。
+      - authority: 湖州市统计局
+        source_type: official_prefecture_statistics_pdf
+        url: https://tjj.huzhou.gov.cn/module/download/downfile.jsp?classid=-1&filename=2503311442095589175.pdf
+        observed_scope: 2024 county GDP comparison, including Deqing 722.5亿元 and 5.8%
+        observed_note: 地级市统计部门 PDF 支持初始发布值，但不是德清县统计局原始公报；后续 723.1/5.2 版本仍需单独核验。
+    blocker: 未找到可直接核验的德清县统计局或德清县政府原始年度公报。
+
+  - id: region_02
+    name: 长汀县
+    candidate_status: CANDIDATE_NEEDS_INDEPENDENT_CONTEXT
+    sources:
+      - authority: 长汀县统计局 / 长汀县人民政府
+        source_type: official_statistical_bulletin
+        url: https://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm
+        observed_scope: 2024 GDP, sector values, population, industry, and source notes
+        observed_note: 原始公报给出 357.8 亿元、增长 4.9%，并明确说明为初步统计数及普查修订口径。
+      - authority: 长汀县人民政府
+        source_type: official_yearbook_landing_page
+        url: https://www.changting.gov.cn/xxgk/tjxx/tjnj/202602/t20260202_2274562.htm
+        observed_scope: 2025 statistical yearbook containing a 2024 data context candidate
+        attachment_url: https://www.changting.gov.cn/xxgk/tjxx/tjnj/202602/P020260205534015753419.pdf
+        observed_note: 官方年鉴入口和附件 URL 已定位；PDF 正文抓取超时，正式冻结前仍需下载并记录具体页码/表格及独立上下文哈希。
+      - authority: 长汀县统计局（来源标注）
+        source_type: secondary_mirror
+        url: https://tjgb.hongheiku.com/xjtjgb/xj2020/65034.html
+        observed_scope: 2024 GDP and sector values
+        observed_note: 转载页面标注来源为长汀县统计局；需回到原始公报复核。
+      - authority: 龙岩市人民政府
+        source_type: official_government_article
+        url: https://www.longyan.gov.cn/zt/rdzt/2025lylh/lhjj/202501/t20250106_2190614.htm
+        observed_scope: 2024 expected GDP and growth forecast
+        observed_note: 页面使用年初“预计”口径，数字与 2025-06 发布的最终统计公报不同；两者应作为不同时间点记录，不能混为同一 claim。
+    blocker: 需要从官方年鉴或其他独立统计上下文完成 claim-level 复核，预计值作为时间点差异保留。
+
+  - id: region_03
+    name: 于都县
+    candidate_status: NEEDS_INDEPENDENT_CONTEXT
+    sources:
+      - authority: 于都县人民政府
+        source_type: official_statistical_bulletin
+        url: https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml
+        observed_scope: 2024 GDP, growth, and sector values
+        observed_note: 可作为原始统计公报候选来源。
+      - authority: 于都县人民政府
+        source_type: official_government_article
+        url: https://www.yudu.gov.cn/ydxxxgk/c108380/202501/fa224dfb742e447fb7ea663716b1ff00.shtml
+        observed_scope: 2024 GDP and growth
+        observed_note: 与统计公报候选数字一致，但需要确认是否为独立核查上下文而非同一统计稿件的转载。
+    blocker: 需要按 claim 建立独立 verification_context，并将先导 GT 与正式 GT 分离。
+
+  - id: region_04
+    name: 攀枝花市
+    candidate_status: PRIMARY_DATA_NOT_CONFIRMED
+    sources:
+      - authority: 攀枝花市统计局（来源标注）
+        source_type: secondary_mirror
+        url: https://tjgb.hongheiku.com/djs/61659.html
+        observed_scope: 2024 GDP, growth, and sector values
+        observed_note: 转载页面标注来源为攀枝花市统计局；不能单独冻结。
+      - authority: 攀枝花市人民政府
+        source_type: official_index_page
+        url: https://www.panzhihua.gov.cn/zfxxgk1/zfgb/issue_28676_30394/column_28676_30394_31170/1893613.shtml
+        observed_scope: annual government-report index
+        observed_note: 已定位官方入口，但尚未获得可直接抽取并核对 2024 指标的正文。
+      - authority: 攀枝花市人民政府
+        source_type: official_government_article
+        url: https://www.panzhihua.gov.cn/ninfo_2584.html
+        observed_scope: 2024 GDP and major economic indicators
+        observed_note: 官方招商环境页面支持初始发布值 1395.24亿元、增长6.3%；它不是统计公报，不能单独解决后续修订值争议。
+      - authority: 公开转载的 2025 经济形势新闻稿
+        source_type: secondary_final_revision_report
+        url: https://www.sohu.com/a/979362062_121106884
+        observed_scope: final revised 2024 GDP value and growth
+        observed_note: 报告称最终核实为 1375.14亿元、增长6.2%；当前未找到可直接核验的攀枝花市统计局原始发布页，保留为后续版本候选而非冻结值。
+    blocker: 需取得官方统计公报或年鉴正文，并完成第二独立上下文核验。
+
+  - id: region_05
+    name: 白山市
+    candidate_status: CANDIDATE_NEEDS_CLAIM_EXTRACTION
+    sources:
+      - authority: 吉林省统计局
+        source_type: official_statistical_bulletin
+        url: https://tjj.jl.gov.cn/tjsj/tjgb/ndgb/202508/t20250806_3488030.html
+        observed_scope: 2024 Baishan GDP, growth, and sector structure
+        observed_note: 可作为官方年度公报上下文。
+      - authority: 吉林省统计局
+        source_type: official_provincial_table
+        url: https://tjj.jl.gov.cn/tjsj/jdsj/dqsczz/202502/t20250226_3396365.html
+        observed_scope: 2024 prefecture-level GDP comparison table
+        observed_note: 可作为第二官方表格上下文，但冻结前仍需逐 claim 记录口径和上下文哈希。
+    blocker: 仅有候选来源，不代表已完成任务所需全部 Ground Truth claim 的抽取与双上下文核验。
+
+  - id: region_06
+    name: 临泽县
+    candidate_status: CANDIDATE_NEEDS_CLAIM_EXTRACTION
+    sources:
+      - authority: 张掖市人民政府/科学技术局
+        source_type: official_government_article
+        url: https://www.zhangye.gov.cn/kjj/dzdt/gzdt/202510/t20251017_1466067.html
+        observed_scope: 2024 Linze GDP and multi-year development context
+        observed_note: 可作为官方叙述性上下文。
+      - authority: 张掖市人民政府
+        source_type: official_yearbook_pdf
+        url: https://www.zhangye.gov.cn/sjfb/xbtjnj/202512/P020251201576968180255.pdf
+        observed_scope: 2024 county GDP, sector values, and per-capita value
+        observed_note: 可作为官方表格上下文；冻结前需保存页码、摘录和上下文哈希。
+      - authority: 临泽县统计局（来源标注）
+        source_type: secondary_mirror
+        url: https://tjgb.hongheiku.com/xjtjgb/xj2020/57827.html
+        observed_scope: 2024 GDP and sector values
+        observed_note: 转载页面可用于发现冲突，不替代官方原始来源。
+    blocker: 需要按 claim 固化页码/摘录和独立 verification_context，不能把同源数字重复计为独立核验。

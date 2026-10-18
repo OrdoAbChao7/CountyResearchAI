@@ -1,0 +1,14 @@
+{
+  "bundle_id": "pilot_20261018_yudu",
+  "claim_file": "pilot_20261018_yudu.jsonl",
+  "claim_file_sha256": "a61f30d0a1ffbde587851ac0d4eb12a4914f7876c6e08b761db449a5fa34b9a6",
+  "claim_count": 2,
+  "region": "于都县",
+  "status": "FROZEN_PILOT",
+  "verification": {
+    "minimum_sources_per_verified_claim": 2,
+    "minimum_independent_contexts_per_verified_claim": 2,
+    "validated_by": "GroundTruthStore.freeze(require_cross_verification=True)"
+  },
+  "quality_use": "pilot_only; not a six-region formal freeze"
+}

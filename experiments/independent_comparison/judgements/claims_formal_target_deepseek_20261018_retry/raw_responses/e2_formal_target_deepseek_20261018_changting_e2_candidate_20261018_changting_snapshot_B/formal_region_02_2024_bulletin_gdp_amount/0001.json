@@ -1,0 +1,28 @@
+{
+  "run_id": "claims_formal_target_deepseek_20261018_retry_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_formal_region_02_2024_bulletin_gdp_amount",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立的声明级事实核验 Agent。当前已经进入 Ground Truth 评分阶段；只能依据研究报告和随报告归档的来源材料判断冻结 claim，不能读取其他实验组或运行轨迹。请区分报告没有提及、报告与 claim 矛盾、报告被来源支持和 claim 版本争议。只输出 JSON，字段为 status、evidence_supported、error_types、reason。status 必须是 SUPPORTED、CONTRADICTED、UNSUPPORTED、DISPUTED 或 UNVERIFIED。\n冻结 Claim：长汀县2024年统计公报（2025年6月发布的初步统计口径）列示地区生产总值总量为357.8亿元。\nClaim 元数据：region=长汀县; metric=地区生产总值总量（统计公报初步口径）; unit=亿元; date=2025-06-30\n研究报告：\n\n归档来源材料：\n[\n  {\n    \"title\": \"长汀县2024年国民经济和社会发展统计公报\",\n    \"url\": \"https://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm\",\n    \"content\": \"据市统计局初步反馈，2024年长汀县全年实现地区生产总值357.8亿元，比上年增长4.9%。第一产业增加值43.9亿元、增长2.5%；第二产业增加值133.5亿元、增长3.0%；第三产业增加值180.5亿元、增长7.1%。公报数据为年度快报初步统计口径，使用时需保留时间点和修订说明。\",\n    \"source\": \"official-web-snapshot\",\n    \"metadata\": {\n      \"snapshot_kind\": \"bounded_excerpt\",\n      \"administrative_scope\": \"长汀县全县\",\n      \"retrieval_date\": \"2026-10-18\",\n      \"version_scope\": \"initial_bulletin_candidate\"\n    }\n  },\n  {\n    \"title\": \"长汀入选全国首批一体化推进水土保持工程建设县\",\n    \"url\": \"https://www.fujian.gov.cn/xwdt/fjyw/202505/t20250511_6912362.htm\",\n    \"content\": \"福建省人民政府门户网站文章称，长汀通过做强林下经济、做优生态文旅、做精产业融合，GDP提升至357.8亿元，并持续推进水土保持和生态价值转化。该文支持经济总量和产业发展背景，但不独立给出4.9%的增速。\",\n    \"source\": \"official-web-snapshot\",\n    \"metadata\": {\n      \"snapshot_kind\": \"bounded_excerpt\",\n      \"administrative_scope\": \"长汀县全县\",\n      \"retrieval_date\": \"2026-10-18\"\n    }\n  }\n]"
+    }
+  ],
+  "response": {
+    "content": "{\"status\":\"SUPPORTED\",\"evidence_supported\":true,\"error_types\":[],\"reason\":\"归档来源《长汀县2024年国民经济和社会发展统计公报》明确记载：据市统计局初步反馈，2024年长汀县全年地区生产总值为357.8亿元，并说明为年度快报初步统计口径；来源URL发布日期为2025年6月30日，与冻结claim的统计公报、初步口径、总量和日期均一致。\"}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 608,
+    "completion_tokens": 341,
+    "total_tokens": 949
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 608,
+    "completion_tokens": 341,
+    "total_tokens": 949,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

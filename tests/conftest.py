@@ -48,7 +48,14 @@ def _reset_global_settings(monkeypatch):
     # 阻止 load_settings() 调用 load_dotenv 把 .env 的真实 key 注入环境
     monkeypatch.setattr("county_research_ai.config.load_dotenv", lambda *a, **kw: False)
     # 清掉系统环境变量中可能残留的 API key(防止真实网络调用)
-    for key in ("LLM_API_KEY", "TAVILY_API_KEY", "SERPER_API_KEY", "BING_API_KEY"):
+    for key in (
+        "LLM_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "DEEPSEEK_SEARCH_ENABLED",
+        "TAVILY_API_KEY",
+        "SERPER_API_KEY",
+        "BING_API_KEY",
+    ):
         monkeypatch.delenv(key, raising=False)
     reset_settings()
     yield

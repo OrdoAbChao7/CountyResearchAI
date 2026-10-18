@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_04_攀枝花市_rise-fall_r1_A",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是传统网页检索。研究对象：攀枝花市；方向：钒钛产业、先进材料与康养经济；模式：rise-fall。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 生态宜居公园城、社会治理示范区\nURL: http://wap.panzhihua.gov.cn/uploadfiles/202210/27/2022102715485511737881.pdf#14#3\n工业经济提质增速明显，钒钛产业链条迈向中高端，建成全国有影响力的万吨级钛材深加工基地，钒钛产业产值占比达20%以上，重点优势产业规模不断扩大，新兴产业培育成势见效，亿元税收企业不断涌现。服务业对经济增长贡献率保持在50%左右...\n\n[2] 攀枝花日报-“头部企业”的力量\nURL: http://pzhrb.pzhkai.com/html/2024-10/22/content_81674_17912023.htm\n在攀枝花打造“中国钒钛之都”、盐边县建设“钒钛首县”、全市高质量发展建设共同富裕试验区的路上，龙佰四川矿冶有限公司始终扛鼎前行，“龙”腾花城、“佰”利盐边，呈现出——\n\n[3] 四川攀枝花：接续推动产业建圈强链\nURL: http://www.jingjiribao.cn/static/detail.jsp?id=680395\n钒钛产业被纳入四川省先进材料产业链关键“子链” ... 攀西钒 ... 坚持“优前段、强中段、聚后段”，以红格南矿全链条开发为牵引，做强钒钛钢铁新材料 ... 布局“水风光氢储”清洁能源，抢占光电信息、低空经济新领域，夯实工业底盘。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 435,
+    "completion_tokens": 512,
+    "total_tokens": 947
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 435,
+    "completion_tokens": 512,
+    "total_tokens": 947,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_r1_region_06_临泽县_long-history_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网 AI。研究对象：临泽县；方向：工业转型与特色产业；模式：long-history。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 临泽县人民政府-2025年政府工作报告\nURL: http://61.178.178.81/zfxxgk/fdzdgknr/qtfdzdgknr/zfgzbg_6187/202602/t20260228_1513000_wap.html\n特色产业稳步壮大。聚焦拓展“六个空间” ... 聚焦向新固本强链，生态工业蓄势增效 ... 扩产增效宏鑫等传统产业，建成投产鸿宝康等技改项目5个，升规入库鸿飞新能源等企业7户，支撑工业经济持续领跑。\n\n[2] 张掖：砥砺前行 挺起高质量发展的“工业脊梁” ——临泽县“十四五”工业高质量发展步履坚实 - 张掖：砥砺前行 挺起高质量发展的“工业脊梁”\nURL: http://kjt.gansu.gov.cn/kjt/c111534/202510/174226466.shtml#1\n站在“十四五”收官的历史坐标上，临泽以一组硬核数据刻下工业经济高质量发展的足迹：2024年，全县GDP总量由2020年的57.01亿元提高到2024年的79.68亿元，年均增长7.6％，分别高于全省（5.9％）、全市（6.5％）1.7、1.1个百分点；入选全省“前三季度工业经济稳增长作出贡献县”名单...\n\n[3] 甘肃·临泽-2025年政府工作报告\nURL: http://www.gslz.gov.cn/zfxxgk/fdzdgknr/qtfdzdgknr/zfgzbg_6187/202602/t20260228_1513000.html#1\n深入实施“强科技”行动，强化产业发展重点领域关键核心技术攻关，构建特色化科技创新体系 ... 历史建筑等文化遗产和自然遗产一体保护机制，积极融入河西走廊国家遗产线路建设 ... 全面推动文化产业创新发展 ... 主要预期目标是：地区生产总值增长6.5%，一产增加值增长6.2%，二产增加值增长7.8%，三产增加值增长6.4%，规上工业增加值增长10%..."
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 542,
+    "completion_tokens": 512,
+    "total_tokens": 1054
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 542,
+    "completion_tokens": 512,
+    "total_tokens": 1054,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}
