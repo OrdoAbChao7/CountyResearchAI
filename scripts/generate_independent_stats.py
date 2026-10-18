@@ -111,18 +111,23 @@ def generate_stats(
 
 def _load_observations(path: Path) -> list[MetricObservation]:
     observations: list[MetricObservation] = []
+    seen_run_ids: set[str] = set()
     for line_number, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
         value = json.loads(line)
         if value.get("status") != RunStatus.VALID.value:
             continue
-        metrics = value.get("metrics")
+        run_id = str(value["run_id"])
+        if run_id in seen_run_ids:
+            continue
+        seen_run_ids.add(run_id)
+        metrics = value.get("task_metrics") or value.get("metrics")
         if not isinstance(metrics, dict):
             raise ValueError(f"VALID metric record missing metrics at line {line_number}")
         observations.append(
             MetricObservation(
-                run_id=str(value["run_id"]),
+                run_id=run_id,
                 group=str(value["group"]),
                 region=str(value["region"]),
                 task_id=str(value["task_id"]),

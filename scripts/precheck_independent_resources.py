@@ -290,7 +290,11 @@ def build_precheck(
         "checked_at": checked_at or datetime.now(timezone.utc).isoformat(),
         "deepseek": deepseek,
         "gemini": check_gemini_models(
-            api_key=settings.llm.api_key.get_secret_value(),
+            api_key=(
+                settings.llm.api_key.get_secret_value()
+                if settings.llm.provider.lower() == "gemini"
+                else ""
+            ),
             target_model=settings.llm.model,
         ),
         "tavily": check_tavily_usage(

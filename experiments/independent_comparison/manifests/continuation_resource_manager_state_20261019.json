@@ -1,11 +1,17 @@
 {
   "state_id": "continuation_resource_manager_state_20261019",
-  "status": "CIRCUIT_OPEN_FOR_GEMINI",
-  "updated_at": "2026-10-19T01:18:18.607508+08:00",
+  "status": "STAGE_B_NATURAL_AND_MATCHED_AUDITED",
+  "updated_at": "2026-10-19T03:59:17+08:00",
   "authorization_manifest": "resource_authorization_20261019.json",
   "precheck_manifest": "resource_precheck_20261019.json",
   "gate_manifest": "continuation_resource_gate_20261018.json",
-  "resource_db": "../runs/continuation_resource_manager_20261019.sqlite",
+  "paid_authorization_manifest": "continuation_paid_authorization_20261019.json",
+  "billing_evidence_manifest": "continuation_deepseek_billing_evidence_20261019.json",
+  "resource_dbs": {
+    "stage_a": "../runs/continuation_resource_manager_deepseek_flash_retry_20261019.sqlite",
+    "stage_b_natural": "../runs/continuation_resource_manager_natural_deepseek_flash_20261019.sqlite",
+    "matched_budget": "../runs/continuation_resource_manager_matched_deepseek_flash_20261019.sqlite"
+  },
   "providers": {
     "gemini": {
       "status": "STOPPED_PROVIDER_CONFIGURATION",
@@ -14,22 +20,48 @@
       "reason": "Stage A first LLM call returned HTTP 400 INVALID_ARGUMENT: valid API key required.",
       "requests": 1,
       "reserved_units": 2048,
-      "settled_units": 2048
+      "settled_units": 2048,
+      "next_action": "remain stopped until a separate valid Gemini credential is supplied"
+    },
+    "deepseek_llm": {
+      "status": "COMPLETED_USER_AUTHORIZED_PAID",
+      "billing_boundary": "USER_AUTHORIZED_PAID",
+      "business_calls_allowed": true,
+      "model": "deepseek-flash",
+      "search_fetch_enabled": false,
+      "auto_switch_paid": false,
+      "batch_usage": {
+        "stage_a_valid_retry": {"llm_units": 304320, "search_requests": 72},
+        "stage_b_natural": {"llm_units": 923585, "search_requests": 216},
+        "matched_budget": {"llm_units": 891385, "search_requests": 216}
+      },
+      "note": "Provider usage units are recorded; account invoice balance is not inferred from local usage."
+    },
+    "deepseek_search_fetch": {
+      "status": "DISABLED_BY_POLICY",
+      "business_calls_allowed": false,
+      "reason": "DeepSeek Search/Fetch remain disabled; Tavily is the frozen search provider."
     },
     "tavily": {
-      "status": "ELIGIBLE_BUT_BATCH_PAUSED",
+      "status": "COMPLETED_FREE_CONFIRMED",
       "billing_boundary": "FREE_CONFIRMED_BY_USER",
-      "business_calls_allowed": false,
-      "reason": "A/B/C requires the same LLM as Gemini; isolated Tavily calls are not started.",
-      "requests": 3,
-      "settled_units": 3,
+      "business_calls_allowed": true,
+      "reason": "Precheck confirmed Researcher plan with 770 conservative credits remaining and PAYG=0; no automatic paid switch.",
+      "requests": 507,
+      "settled_units": 507,
       "precheck_remaining_credits": 770,
-      "paygo_usage_credits": 0
+      "continuation_usage": {
+        "stage_a_valid_retry": 72,
+        "stage_b_natural": 216,
+        "matched_budget": 216
+      },
+      "paygo_usage_credits": 0,
+      "stop_condition": "stop immediately if free eligibility is no longer confirmed, credits are exhausted, or PAYG becomes non-zero"
     }
   },
   "active_leases": 0,
   "unsettled_leases": 0,
-  "next_action": "configure a valid Gemini API key, refresh precheck, then reopen only this continuation gate",
-  "paid_overage_allowed": false,
+  "next_action": "publish the audited second-round report; do not start further paid or free-provider calls without a new authorization/precheck",
+  "paid_overage_allowed": true,
   "auto_switch_paid": false
 }

@@ -17,6 +17,8 @@ def test_stage_a_audit_preserves_failure_and_closes_resource_ledger():
     result = audit_batch(root)
 
     assert result["source_hash_verified"] is True
+    assert result["task_matching"]["status"] == "PASS"
+    assert result["task_matching"]["run_task_mismatches"] == []
     assert result["benchmark"]["claim_count"] == 90
     assert result["summary_status"] == "STOPPED"
     assert result["statuses"] == {"FAILED": 1}

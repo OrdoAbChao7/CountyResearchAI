@@ -1,4 +1,4 @@
-"""Run the frozen continuation benchmark with the current free-only providers."""
+"""Run the frozen continuation benchmark with the authorized provider mix."""
 from __future__ import annotations
 
 import argparse
@@ -31,6 +31,9 @@ REGIONS_PATH = FORMAL_ROOT / "datasets" / "independent_regions_20261018.yaml"
 RESOURCE_DB_DEFAULT = FORMAL_ROOT / "runs" / "continuation_resource_manager_20261019.sqlite"
 LLM_CAPACITY = 180_000
 SEARCH_CAPACITY = 220
+MATCHED_LLM_BUDGET = 90_000
+MATCHED_SEARCH_BUDGET = 6
+MATCHED_WALL_CLOCK_SECONDS = 120
 MODES = ("snapshot", "rise-fall", "long-history")
 
 
@@ -148,6 +151,15 @@ def build_continuation_specs(
                                 "search_enabled": True,
                                 "ground_truth_manifest": str(GROUND_TRUTH_MANIFEST_PATH),
                                 "ground_truth_claim_quota": 5,
+                                "matched_budget": (
+                                    {
+                                        "llm_units": MATCHED_LLM_BUDGET,
+                                        "search_requests": MATCHED_SEARCH_BUDGET,
+                                        "wall_clock_seconds": MATCHED_WALL_CLOCK_SECONDS,
+                                    }
+                                    if execution_policy == "matched_budget"
+                                    else None
+                                ),
                             },
                         )
                     )
@@ -187,6 +199,8 @@ def run_batch(
     modes: list[str] | None = None,
     execution_policy: str = "natural",
     repeats: int = 1,
+    llm_capacity: int = LLM_CAPACITY,
+    search_capacity: int = SEARCH_CAPACITY,
 ) -> dict[str, Any]:
     gate_result = require_formal_api_gate(GATE_PATH)
     benchmark = validate_continuation_benchmark()
@@ -211,18 +225,41 @@ def run_batch(
     if root.exists():
         raise FileExistsError(f"continuation batch directory already exists: {root}")
     root.mkdir(parents=True)
+    run_limits = None
+    if execution_policy == "matched_budget":
+        llm_key = (settings.llm.provider, settings.llm.model, "llm")
+        search_key = (settings.search.provider, "search", "search")
+        run_limits = {
+            spec.run_id: {
+                llm_key: MATCHED_LLM_BUDGET,
+                search_key: MATCHED_SEARCH_BUDGET,
+            }
+            for spec in specs
+        }
     manager = ResourceManager(
         Path(resource_db),
         limits={
             (settings.llm.provider, settings.llm.model, "llm"): ResourceLimit(
-                LLM_CAPACITY, billing_class="free_confirmed"
+                llm_capacity,
+                billing_class=(
+                    "paid_authorized"
+                    if settings.llm.provider.lower() == "deepseek"
+                    else "free_confirmed"
+                ),
             ),
             (settings.search.provider, "search", "search"): ResourceLimit(
-                SEARCH_CAPACITY, billing_class="free_confirmed"
+                search_capacity, billing_class="free_confirmed"
             ),
         },
+        run_limits=run_limits,
     )
-    runner = ExperimentRunner(root, manager)
+    runner = ExperimentRunner(
+        root,
+        manager,
+        max_duration_seconds=(
+            MATCHED_WALL_CLOCK_SECONDS if execution_policy == "matched_budget" else None
+        ),
+    )
     _write_batch_manifest(
         root,
         batch_id=batch_id,
@@ -266,12 +303,25 @@ def run_batch(
         manifest = runner.run(spec, execute)
         results[spec.run_id] = manifest.status.value
         print(json.dumps({"run_id": spec.run_id, "status": manifest.status.value}, ensure_ascii=False))
-        if manifest.status is not RunStatus.VALID:
+        if (
+            manifest.status is not RunStatus.VALID
+            and not (
+                execution_policy == "matched_budget"
+                and manifest.status is RunStatus.BUDGET_EXHAUSTED
+            )
+        ):
             stopped_reason = f"provider_or_resource_stop:{manifest.status.value}"
             break
     completed = len(results)
     skipped = [spec.run_id for spec in specs if spec.run_id not in results]
-    status = "VALID" if completed == len(specs) else "STOPPED"
+    status = (
+        "VALID"
+        if completed == len(specs) and all(status == RunStatus.VALID.value for status in results.values())
+        else "BUDGET_EXHAUSTED"
+        if completed == len(specs)
+        and any(status == RunStatus.BUDGET_EXHAUSTED.value for status in results.values())
+        else "STOPPED"
+    )
     summary = {
         "status": status,
         "batch_id": batch_id,
@@ -307,6 +357,8 @@ def main() -> int:
     parser.add_argument("--mode", action="append", dest="modes")
     parser.add_argument("--execution-policy", choices=("natural", "matched_budget"), default="natural")
     parser.add_argument("--repeats", type=int, default=1)
+    parser.add_argument("--llm-capacity", type=int, default=LLM_CAPACITY)
+    parser.add_argument("--search-capacity", type=int, default=SEARCH_CAPACITY)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -317,6 +369,8 @@ def main() -> int:
                 modes=args.modes,
                 execution_policy=args.execution_policy,
                 repeats=args.repeats,
+                llm_capacity=args.llm_capacity,
+                search_capacity=args.search_capacity,
             ),
             ensure_ascii=False,
         )

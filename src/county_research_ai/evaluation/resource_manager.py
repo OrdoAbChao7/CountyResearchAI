@@ -95,10 +95,22 @@ class ResourceSnapshot:
 class ResourceManager:
     """使用 SQLite 事务实现并发安全的资源预留和结算。"""
 
-    def __init__(self, path: Path, *, limits: dict[ResourceKey, ResourceLimit]) -> None:
+    def __init__(
+        self,
+        path: Path,
+        *,
+        limits: dict[ResourceKey, ResourceLimit],
+        run_limits: dict[str, dict[ResourceKey, int]] | None = None,
+    ) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.limits = dict(limits)
+        self.run_limits = {
+            str(run_id): {key: int(capacity) for key, capacity in values.items()}
+            for run_id, values in (run_limits or {}).items()
+        }
+        if any(capacity <= 0 for values in self.run_limits.values() for capacity in values.values()):
+            raise ValueError("run-scoped resource capacities must be positive")
         self._initialize()
 
     def reserve(self, request: ResourceRequest) -> Lease:
@@ -120,6 +132,17 @@ class ResourceManager:
                     f"used={consumed}, reserved={reserved}, requested={request.units}, "
                     f"capacity={limit.capacity_units}"
                 )
+            run_capacity = self.run_limits.get(request.run_id, {}).get(request.key)
+            if run_capacity is not None:
+                run_consumed, run_reserved = self._run_totals(
+                    connection, request.key, request.run_id
+                )
+                if run_consumed + run_reserved + request.units > run_capacity:
+                    raise ResourceExhaustedError(
+                        f"run-scoped resource capacity exhausted: {request.run_id}; "
+                        f"key={request.key}, used={run_consumed}, reserved={run_reserved}, "
+                        f"requested={request.units}, capacity={run_capacity}"
+                    )
 
             lease_id = uuid.uuid4().hex
             created_at = _now()
@@ -266,6 +289,34 @@ class ResourceManager:
                 )
                 connection.commit()
                 raise ResourceOverrunError(overrun_error)
+            run_capacity = self.run_limits.get(row["run_id"], {}).get(key)
+            if run_capacity is not None:
+                run_consumed, run_reserved = self._run_totals(
+                    connection, key, row["run_id"], exclude_lease_id=lease_id
+                )
+                if run_consumed + run_reserved + settled_units > run_capacity:
+                    overrun_error = (
+                        "actual settlement exceeded run-scoped resource capacity: "
+                        f"{row['run_id']}; key={key}, consumed={run_consumed}, "
+                        f"reserved={run_reserved}, settled={settled_units}, "
+                        f"capacity={run_capacity}"
+                    )
+                    connection.execute(
+                        """
+                        UPDATE leases
+                        SET status='overrun', consumed_units=?, updated_at=?, usage_json=?, error=?
+                        WHERE lease_id=?
+                        """,
+                        (
+                            settled_units,
+                            now,
+                            json.dumps(usage or {}, ensure_ascii=False, sort_keys=True),
+                            overrun_error,
+                            lease_id,
+                        ),
+                    )
+                    connection.commit()
+                    raise ResourceOverrunError(overrun_error)
             connection.execute(
                 """
                 UPDATE leases
@@ -342,6 +393,39 @@ class ResourceManager:
               AND status='reserved' AND lease_id != ?
             """,
             (provider, model, kind, lease_id),
+        ).fetchone()[0]
+        return int(consumed), int(reserved)
+
+    @staticmethod
+    def _run_totals(
+        connection: sqlite3.Connection,
+        key: ResourceKey,
+        run_id: str,
+        *,
+        exclude_lease_id: str | None = None,
+    ) -> tuple[int, int]:
+        provider, model, kind = key
+        exclusion = " AND lease_id != ?" if exclude_lease_id else ""
+        params: tuple[Any, ...] = (provider, model, kind, run_id)
+        if exclude_lease_id:
+            params += (exclude_lease_id,)
+        consumed = connection.execute(
+            """
+            SELECT COALESCE(SUM(consumed_units), 0) FROM leases
+            WHERE provider=? AND model=? AND kind=? AND run_id=?
+              AND status IN ('settled', 'failed', 'overrun')
+            """ + exclusion,
+            params,
+        ).fetchone()[0]
+        reserved_params: tuple[Any, ...] = (provider, model, kind, run_id)
+        if exclude_lease_id:
+            reserved_params += (exclude_lease_id,)
+        reserved = connection.execute(
+            """
+            SELECT COALESCE(SUM(reserved_units), 0) FROM leases
+            WHERE provider=? AND model=? AND kind=? AND run_id=? AND status='reserved'
+            """ + exclusion,
+            reserved_params,
         ).fetchone()[0]
         return int(consumed), int(reserved)
 

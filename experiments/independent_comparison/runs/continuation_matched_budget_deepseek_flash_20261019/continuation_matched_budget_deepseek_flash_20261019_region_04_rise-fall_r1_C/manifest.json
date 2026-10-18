@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:3e57a828ca4518c5b248c52262bc3445ea46b6dda5768d560d0d175fc41cf1c6",
+    "sources": "sources.json:5899bec3c06631cd782cb87ece7603d6e21f034af1f14768054e346cc4ddb9a7"
+  },
+  "config_hash": "cf73bd916e3cd19e2677b4ae31a2bb47c863d7fc35b46e7d79e1707d36cfae89",
+  "county": "攀枝花市",
+  "created_at": "2026-10-18T19:35:02.523446+00:00",
+  "duration_seconds": 89.640155,
+  "error": null,
+  "experiment_id": "continuation-matched-budget",
+  "formal_target": true,
+  "group": "C",
+  "mode": "rise-fall",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 44395,
+    "tavily:search:search": 6
+  },
+  "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_C",
+  "search_provider": "tavily",
+  "status": "VALID",
+  "task_id": "rise-fall",
+  "updated_at": "2026-10-18T19:36:32.163323+00:00"
+}

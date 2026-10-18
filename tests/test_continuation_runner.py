@@ -37,6 +37,22 @@ def test_stage_a_specs_match_regions_modes_and_groups():
     assert all(spec.config["ground_truth_claim_quota"] == 5 for spec in specs)
 
 
+def test_matched_budget_specs_freeze_per_run_capacity_and_wall_clock():
+    specs = build_continuation_specs(
+        model="deepseek-flash",
+        search_provider="tavily",
+        batch_id="continuation_matched_budget_test",
+        region_names=["德清县"],
+        execution_policy="matched_budget",
+    )
+
+    assert len(specs) == 9
+    assert all(spec.config["execution_policy"] == "matched_budget" for spec in specs)
+    assert all(spec.config["matched_budget"]["llm_units"] == 90_000 for spec in specs)
+    assert all(spec.config["matched_budget"]["search_requests"] == 6 for spec in specs)
+    assert all(spec.config["matched_budget"]["wall_clock_seconds"] == 120 for spec in specs)
+
+
 def test_continuation_runner_paths_are_inside_project():
     from scripts import run_continuation_experiment
 

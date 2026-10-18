@@ -1,0 +1,22 @@
+{
+  "artifacts": {},
+  "config_hash": "01378b9177f970221813a2fd468327306957aaf576f90e59c8c6434259184e90",
+  "county": "德清县",
+  "created_at": "2026-10-18T17:27:15.199701+00:00",
+  "duration_seconds": 41.399223,
+  "error": "SearchError: provider model does not match frozen experiment model | context={'expected_model': 'deepseek-chat', 'actual_model': 'deepseek-flash'}",
+  "experiment_id": "continuation-natural-execution",
+  "formal_target": true,
+  "group": "A",
+  "mode": "snapshot",
+  "model": "deepseek-chat",
+  "resource_usage": {
+    "deepseek:deepseek-chat:llm": 2048,
+    "tavily:search:search": 3
+  },
+  "run_id": "continuation_natural_stage_a_deepseek_20261019_region_01_snapshot_r1_A",
+  "search_provider": "tavily",
+  "status": "FAILED",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T17:27:56.598374+00:00"
+}

@@ -1,23 +1,37 @@
 {
   "check_id": "resource_precheck",
-  "checked_at": "2026-10-18T17:15:08.792745+00:00",
+  "checked_at": "2026-10-18T17:28:31.741357+00:00",
   "deepseek": {
     "provider": "deepseek",
-    "model": null,
-    "configured": false,
+    "model": "deepseek-flash",
+    "configured": true,
     "enabled": false,
-    "llm_billing_boundary": "UNKNOWN",
+    "llm_billing_boundary": "USER_AUTHORIZED_PAID",
     "search_fetch_billing_boundary": "UNKNOWN",
-    "status": "DISABLED_BY_POLICY"
+    "status": "CONFIGURED_BILLING_UNCONFIRMED",
+    "llm_billing_evidence": {
+      "source": "current user instruction",
+      "method": "explicit_current_user_authorization",
+      "account_scope": "current_task",
+      "evidence_ref": "user-message-2026-10-19-deepseek-fallback",
+      "verified_at": "2026-10-19T01:25:20.7750718+08:00"
+    },
+    "search_fetch_billing_evidence": {
+      "source": "current user instruction",
+      "method": "explicit_current_user_authorization",
+      "account_scope": "current_task",
+      "evidence_ref": "user-message-2026-10-19-deepseek-fallback-search-disabled",
+      "verified_at": "2026-10-19T01:25:20.7750718+08:00"
+    }
   },
   "gemini": {
     "provider": "gemini",
-    "model": "gemini-3.1-flash-lite",
+    "model": "deepseek-flash",
     "account_quota_fields_returned": false,
     "billing_boundary": "FREE_CONFIRMED",
-    "models_list_http_status": 400,
+    "models_list_http_status": null,
     "target_model_visible": false,
-    "status": "HTTP_ERROR",
+    "status": "API_KEY_MISSING",
     "billing_basis": "user_attested_free_only",
     "billing_evidence": {
       "source": "current user instruction",

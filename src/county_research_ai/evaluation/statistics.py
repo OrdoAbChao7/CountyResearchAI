@@ -243,9 +243,10 @@ def _observation_metric_value(observation: MetricObservation, metric: str) -> fl
         return _resource_units(observation.resource_usage, "search")
     if metric == "coverage_per_llm_token":
         tokens = _resource_units(observation.resource_usage, "llm")
+        coverage = observation.metrics.key_fact_coverage
         return (
-            observation.metrics.key_fact_coverage / tokens
-            if tokens is not None and tokens > 0
+            coverage / tokens
+            if coverage is not None and tokens is not None and tokens > 0
             else None
         )
     return _metric_value(observation.metrics, metric)

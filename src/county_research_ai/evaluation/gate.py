@@ -15,6 +15,7 @@ class FormalGateError(RuntimeError):
 DEFAULT_PRECHECK_MAX_AGE_SECONDS = 24 * 60 * 60
 DEEPSEEK_ALLOWED_BILLING_BOUNDARIES = {
     "FREE_CONFIRMED",
+    "USER_AUTHORIZED_PAID",
 }
 
 
@@ -119,6 +120,15 @@ def require_formal_api_gate(
         authorization_path = _resolve_reference(gate_file, str(authorization_reference))
         _validate_free_only_authorization(
             _load_json(authorization_path),
+            max_precheck_age_seconds=max_precheck_age_seconds,
+        )
+    paid_authorization_reference = gate.get("paid_authorization_manifest")
+    if paid_authorization_reference:
+        paid_authorization_path = _resolve_reference(
+            gate_file, str(paid_authorization_reference)
+        )
+        _validate_paid_authorization(
+            _load_json(paid_authorization_path),
             max_precheck_age_seconds=max_precheck_age_seconds,
         )
     _validate_precheck_freshness(
@@ -340,7 +350,10 @@ def _validate_deepseek_llm_precheck(
         )
     if deepseek.get("configured") is not True:
         raise FormalGateError("DeepSeek LLM is not configured")
-    if deepseek.get("llm_billing_boundary") not in DEEPSEEK_ALLOWED_BILLING_BOUNDARIES:
+    allowed_boundaries = {"FREE_CONFIRMED"}
+    if gate.get("paid_authorization_manifest"):
+        allowed_boundaries = DEEPSEEK_ALLOWED_BILLING_BOUNDARIES
+    if deepseek.get("llm_billing_boundary") not in allowed_boundaries:
         raise FormalGateError(
             "DeepSeek LLM billing boundary is not allowed: "
             f"{deepseek.get('llm_billing_boundary') or '<missing>'}"
@@ -454,6 +467,35 @@ def _validate_free_only_authorization(
             raise FormalGateError(f"{provider} paid_overage_allowed must be false")
         if entry.get("auto_switch_paid") is not False:
             raise FormalGateError(f"{provider} auto_switch_paid must be false")
+
+
+def _validate_paid_authorization(
+    authorization: dict[str, Any],
+    *,
+    max_precheck_age_seconds: int,
+) -> None:
+    if authorization.get("status") != "ACTIVE_USER_AUTHORIZED_PAID":
+        raise FormalGateError("paid resource authorization is not active")
+    evidence = authorization.get("authorization")
+    _validate_billing_evidence(
+        evidence,
+        label="paid user authorization",
+        max_precheck_age_seconds=max_precheck_age_seconds,
+    )
+    providers = authorization.get("providers")
+    if not isinstance(providers, dict):
+        raise FormalGateError("paid resource authorization has no providers")
+    entry = providers.get("deepseek_llm")
+    if not isinstance(entry, dict) or entry.get("provider") != "deepseek":
+        raise FormalGateError("paid authorization is missing DeepSeek LLM provider")
+    if entry.get("scope") != "llm":
+        raise FormalGateError("paid authorization scope must be DeepSeek LLM only")
+    if entry.get("billing_boundary") != "USER_AUTHORIZED_PAID":
+        raise FormalGateError("DeepSeek LLM paid billing boundary is not authorized")
+    if entry.get("paid_overage_allowed") is not True:
+        raise FormalGateError("DeepSeek LLM paid_overage_allowed must be true")
+    if entry.get("auto_switch_paid") is not False:
+        raise FormalGateError("DeepSeek LLM auto_switch_paid must be false")
 
 
 def _validate_current_user_authorization(

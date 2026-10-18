@@ -88,8 +88,12 @@ def run_claim_batch(
         output_dir / "resources.sqlite",
         limits={
             (settings.llm.provider, settings.llm.model, "claim_verifier"): ResourceLimit(
-                len(candidates) * 8192,
-                billing_class="free_confirmed",
+                max(len(candidates) * 16384, 250000),
+                billing_class=(
+                    "paid_authorized"
+                    if settings.llm.provider.lower() == "deepseek"
+                    else "free_confirmed"
+                ),
             )
         },
     )
