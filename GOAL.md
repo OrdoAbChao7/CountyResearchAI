@@ -57,11 +57,11 @@
 | P1 仓库审计 | `PROJECT_AUDIT.md` 记录真实能力、缺陷和可执行性 | COMPLETE |
 | P2 协议冻结 | 设计、任务、Rubric、隔离和预算策略落盘 | COMPLETE（六地区最小正式 claim target、输入 hash、Rubric 和 E1 primary task 映射均已冻结；snapshot/rise-fall/long-history 均有正式地区覆盖） |
 | P3 工程实现 | Resource Manager、Manifest、Runner、Judge、Metrics、Report 有测试 | COMPLETE（含空报告拒绝、DeepSeek thinking 参数、批次过滤、失败 Judge 不并入统计的回归测试） |
-| P4 资源验证 | 选定 Provider 的模型、调用方式和计费边界有证据 | COMPLETE（DeepSeek API、Search、真实 Usage 和用户授权付费边界均已记录；Gemini/Tavily 不进入本正式批次） |
+| P4 资源验证 | 选定 Provider 的模型、调用方式和计费边界有证据 | COMPLETE（历史 DeepSeek API、Search、真实 Usage 和旧授权标签均已记录；续作已确认缺少账户级账单证据并关闭 Gate） |
 | P5 Smoke Test | 至少一轮真实 A/B/C，运行无 Mock 污染且来源可核验 | COMPLETE（正式修正批次先经低预算诊断，空报告问题已被发现并修复） |
 | P6 正式实验 | 在确认配额内执行冻结批次并保留所有成功/失败样本 | COMPLETE（E1/E2 各 18 个修正后 VALID 运行；旧失败批次保留并排除） |
 | P7 审计与报告 | 独立审计、统计、图表和 `FINAL_REPORT.md` 完成 | COMPLETE（E1/E2 Claim、Judge、QA、合并观测、统计、图表和批次审计均已落盘） |
-| P8 最终验收 | Engineering/Research Success 逐项有证据，Goal 才可完成 | COMPLETE（结论为 `NO_OVERALL_ADVANTAGE`，并明确 E2 的有限 QA 优势与局限） |
+| P8 最终验收 | Engineering/Research Success 逐项有证据，Goal 才可完成 | REOPENED（第一轮工程完成，但 Benchmark 有效性审计发现分母、Ground Truth 与授权边界问题） |
 
 ## Task Breakdown
 
@@ -76,20 +76,20 @@
 
 ## Resource Budget
 
-- 本正式批次使用 DeepSeek `deepseek-flash` 与 DeepSeek Search；用户明确授权使用 `.env` 中的 DeepSeek 凭据并承担可能的付费调用，资源类别记录为 `USER_AUTHORIZED_PAID`。
+- 历史正式批次使用 DeepSeek `deepseek-flash` 与 DeepSeek Search，旧账本记录为 `USER_AUTHORIZED_PAID`；续作已按当前指令撤回该解释，在新的计费证据前禁止任何新业务调用。
 - E1 研究账本：91,815 LLM tokens、72 次搜索；E2 研究账本：55,065 LLM tokens、0 次搜索。
 - E1/E2 Claim、Judge、QA 后处理继续通过独立 Resource Manager 账本记录；总 DeepSeek LLM tokens 为 586,373，搜索请求为 72。
 - Gemini/Tavily 仍保留为可用 Provider 的配置和历史资源证据，但不进入本次正式结论；没有自动充值、静默升级或把付费调用标记为免费。
 
 ## Execution Status
 
-- Git：工作仍在当前分支；本轮不修改 `.git` 元数据，不提交 API Key。
+- Git：当前工作在 `codex/experiment-superiority`；续作新增审计与计划文件，不提交 `.env` 或 API Key。
 - 测试：本轮新增回归测试覆盖 DeepSeek thinking 参数、空报告拒绝、批次前缀过滤、失败 Judge 不并入统计、布尔字符串兼容；全量测试与静态检查在收尾阶段复核，pytest cache 的 Windows 权限警告仍为环境问题。
-- Provider：DeepSeek `deepseek-flash` 的真实 Models、Search 和 Chat Probe 均成功；正式调用使用用户明确授权的 `USER_AUTHORIZED_PAID` 边界，不声称免费。
+- Provider：历史 DeepSeek Models、Search 和 Chat Probe 曾成功；但仓库没有账户账单或免费资格证据，历史 `USER_AUTHORIZED_PAID` 仅作审计证据，当前续作 Gate 为 `CLOSED_BILLING_UNCONFIRMED`。
 - 正式 E1：`formal_target_deepseek_20261018_corrected_r2`，6 地区 × A/B/C = 18/18 `VALID`，报告全部非空，资源与产物审计通过。
 - 正式 E2：六个 `e2_formal_target_deepseek_20261018_corrected_*` 批次，18/18 `VALID`，冻结输入 hash 全部匹配，资源与产物审计通过。
 - 后处理：E1/E2 Claim Verification 各 18/18 有效；Blind Judge 各 17/18 有效；Report-Based QA 各 18/18 可解析；统计、配对差异、区域统计和真实 SVG 图表已生成。
-- 研究结论：`NO_OVERALL_ADVANTAGE`；E2 报告 QA 为 C=0.667、A/B=0.500，属于有限优势证据；C 的成本更高，E1 未显示质量优势。完整解释见 `experiments/independent_comparison/reports/FINAL_REPORT.md`。
+- 第一轮研究结论降级为 `INCONCLUSIVE_WITH_EFFICIENCY_REGRESSION`：E2 报告 QA 曾观察到 C=0.667、A/B=0.500，但 Ground Truth 与任务覆盖不足、E1/E2 分母存在测量效度问题，且 C 的成本更高；完整历史结果保留在 `FINAL_REPORT.md`。
 - 旧的 512-token 空报告批次、`corrected_r1` 诊断批次和开发/先导失败样本均保留，未进入最终质量统计。
 - 历史离线 Benchmark：仅作为问题复现证据，不作为本 Goal 结论。
 
@@ -123,7 +123,7 @@
 - `experiments/independent_comparison/ground_truth/industry_supplemental_panel_20261018.jsonl` 及 manifest：四条通过双来源/双上下文校验的产业 Claim，但明确排除正式六地区质量目标。
 - `GOAL_COMPLETION_AUDIT_20261018.md`：按目标原文逐项核对工程、Ground Truth、正式运行、盲评、统计、图表和最终报告的完成状态。
 - `tests/test_evaluation_resource_manager.py::test_overrun_usage_blocks_later_reservations`：验证实际结算超预算后，持久化账本会阻止后续继续预留资源。
-- `src/county_research_ai/evaluation/gate.py`、`tests/test_experiment_gate.py`：验证正式 E1/E2 API gate 在状态未打开、DeepSeek LLM/Search/Fetch 任一独立 boundary 不属于 `FREE_CONFIRMED` 或 `USER_AUTHORIZED_PAID`、模型身份/可见性未核实、预检超过 24 小时、缺少新鲜 billing evidence、Tavily 余额耗尽或 PAYG 非零时，在创建运行目录前拒绝执行；launch manifest 在 provider 被声明时同时绑定 LLM provider。
+- `src/county_research_ai/evaluation/gate.py`、`tests/test_experiment_gate.py`：验证正式 E1/E2 API gate 在状态未打开、DeepSeek LLM/Search/Fetch 任一独立 boundary 不属于当前允许的 `FREE_CONFIRMED`、模型身份/可见性未核实、预检超过 24 小时、缺少新鲜 billing evidence、Tavily 余额耗尽或 PAYG 非零时，在创建运行目录前拒绝执行；历史 `USER_AUTHORIZED_PAID` 仅保留为审计记录。
 - `scripts/run_independent_formal.py`、`scripts/run_independent_formal_worker.py`、`tests/test_formal_runner.py`：冻结六地区 E1 编排、A/B/C 进程命令和低预算参数校验；当前 gate 关闭时不创建运行目录。
 - `src/county_research_ai/evaluation/experiment_runner.py`、`tests/test_experiment_runner.py`：执行异常后若仍有未结算资源租约，运行被标记为 `INVALID_RESOURCE_ACCOUNTING`，不再被普通 `FAILED` 状态掩盖。
 - `src/county_research_ai/evaluation/resource_manager.py`、`tests/test_evaluation_resource_manager.py`：重开同一 SQLite 账本时拒绝容量或计费类别漂移，避免恢复/多进程启动绕过冻结资源上限。
@@ -135,16 +135,40 @@
 - `src/county_research_ai/evaluation/checkpoints.py`、`scripts/run_independent_formal.py`、`scripts/run_independent_fixed_input.py`、`tests/test_experiment_models.py`、`tests/test_formal_runner.py`、`tests/test_fixed_input_runner.py`：E1/E2 批次持久化配置绑定 checkpoint；`--resume` 只跳过已有终态 Manifest，拒绝配置漂移、非终态运行和缺失证据。
 - `src/county_research_ai/evaluation/providers.py`、`src/county_research_ai/search/web_search.py`、`tests/test_evaluation_providers.py`、`tests/test_search_web.py`：DeepSeek Search/Fetch 适配器和普通 provider 工厂已接入，默认禁用，并覆盖离线响应解析、URL/内容去重、元数据、Fetch、失败统计、限速和 A/B 按冻结 provider 选择路径。
 - `scripts/merge_independent_observations.py`、`tests/test_merge_observations.py`：按 `run_id` 合并 Claim、Blind Judge 和 QA observation，保留无效/缺失状态后交给统计脚本。
+- `experiments/independent_comparison/protocol/benchmark_claim_schema.yaml`、`continuation_protocol.yaml`、`datasets/independent_regions_20261018.yaml`、`scripts/build_benchmark_ground_truth.py`：续作的 rich Claim、Natural Execution/Matched Budget 和本地冻结入口；输入不足或双重核验缺失时拒绝生成 Benchmark。
+- `experiments/independent_comparison/reports/SECOND_ROUND_REPORT.md`：第二轮因当前计费 Gate 关闭而明确记为 `NOT_RUN`，不把离线校准当作真实效能结果。
 - `src/county_research_ai/evaluation/metrics.py`、`src/county_research_ai/evaluation/statistics.py`、`scripts/generate_independent_stats.py`：错误率、分析深度、QA、时间、token、搜索请求、单位覆盖效率和地区×组差异的 observation/统计/图表支持；E1/E2 正式 observation、CSV、JSON 和 SVG 已生成。
 - Gemini/Tavily/DeepSeek 官方资源核验记录写入 `PROJECT_AUDIT.md` 和本文件，不将 Key 或响应中的敏感字段写入日志。
 
 ## Blockers
 
-- 当前 `.git` 目录在执行环境中不可写，无法创建独立分支；代码和实验产物保留在当前工作树。
+- 当前续作已创建 `codex/experiment-superiority` 分支并推送；历史数据和续作审计产物均保留。
 - 研究规模只完成每组每地区 1 次重复，不能支持稳定性或显著性结论；这是结果局限，不阻塞本 Goal 的最小验收。
-- 当前没有可靠账户价格字段，报告只呈现真实 tokens/请求数，不将其换算成金额。
+- 当前没有可靠账户价格、账单或免费资格字段，报告只呈现真实 tokens/请求数，不将其换算成金额；在重新确认前禁止业务 API。
 - 未完成可靠的模块消融，因此不能把 C 的任何差异归因到某一个专用模块。
 
 ## Final Acceptance
 
-真实实验产物、失败样本、资源计量、Ground Truth、盲评、审计、统计和最终报告均已落盘并可核验；最终结论必须保留为数据支持的 `NO_OVERALL_ADVANTAGE`，不得改写为项目获胜叙事。
+第一轮真实实验产物、失败样本、资源计量、Ground Truth、盲评、审计、统计和最终报告均已落盘并可核验；但续作审计已将研究状态改为 `INCONCLUSIVE_WITH_EFFICIENCY_REGRESSION`。只有完成有效 Ground Truth、离线评分校准和公平第二轮验证后，才能重新判断整体优势。
+
+## Goal Continuation：实验有效性修复
+
+### 当前状态
+
+- Engineering Completion：第一轮工程实现完成，测试基线保留。
+- Benchmark Validity：`REOPENED`；正式 Ground Truth 只有每地区一条 GDP claim，与产业研究任务不匹配。
+- Research Evidence：`INCONCLUSIVE`；第一轮事实指标不能解释为完整研究能力。
+- Efficiency Performance：`REGRESSION_OBSERVED`；C 的时间和 token 成本明显高于 A/B。
+- Overall Goal Completion：`NOT_COMPLETE`；等待有效 Benchmark 和第二轮验证。
+
+### 续作优先级
+
+1. `P0` 关闭历史付费授权解释，完成账单证据边界审计，不再发起业务 API 调用。
+2. `P0` 建立 15–20 条/地区、任务匹配、双上下文核查的 rich Ground Truth 规范。
+3. `P0` 重构 Fact Precision、Ground Truth Recall、Evidence Support、Factual Error 与 N/A 分母。
+4. `P1` 通过离线控制样例校准 Judge，再冻结 Natural Execution 与 Matched Budget 协议。
+5. `P2` 仅在有效 Benchmark 完成后开展真实模块消融。
+
+续作计划：`docs/superpowers/plans/2026-10-18-goal-continuation-validity.md`。
+P0 审计：`experiments/independent_comparison/reports/CONTINUATION_P0_AUDIT_20261018.md`。
+当前资源 Gate：`experiments/independent_comparison/manifests/continuation_resource_gate_20261018.json`。

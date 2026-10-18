@@ -5,6 +5,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,12 @@ class GroundTruthClaim:
     verification_status: str
     verification_sources: tuple[str, ...] = ()
     verification_contexts: tuple[str, ...] = ()
+    research_mode: str = ""
+    expected_answer: str = ""
+    source_title: str = ""
+    source_date: str = ""
+    metric_year: str = ""
+    administrative_scope: str = ""
 
     def __post_init__(self) -> None:
         required = {
@@ -44,8 +51,14 @@ class GroundTruthClaim:
             raise ValueError("verification_sources must not contain empty values")
         if any(not value for value in self.verification_contexts):
             raise ValueError("verification_contexts must not contain empty values")
+        if self.research_mode and self.research_mode not in {
+            "snapshot",
+            "rise-fall",
+            "long-history",
+        }:
+            raise ValueError(f"unsupported research_mode: {self.research_mode}")
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "claim_id": self.claim_id,
             "claim": self.claim,
@@ -60,6 +73,12 @@ class GroundTruthClaim:
             "verification_status": self.verification_status,
             "verification_sources": list(self.verification_sources),
             "verification_contexts": list(self.verification_contexts),
+            "research_mode": self.research_mode,
+            "expected_answer": self.expected_answer,
+            "source_title": self.source_title,
+            "source_date": self.source_date,
+            "metric_year": self.metric_year,
+            "administrative_scope": self.administrative_scope,
         }
 
     @classmethod
@@ -139,6 +158,30 @@ class GroundTruthStore:
             raise ValueError("ground truth manifest hash mismatch")
         return bundle
 
+    @classmethod
+    def freeze_continuation_verified(
+        cls,
+        path: Path,
+        manifest_path: Path,
+    ) -> GroundTruthBundle:
+        """冻结 continuation Benchmark，并拒绝第一轮 minimum-target manifest。"""
+        try:
+            manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"cannot read continuation ground truth manifest: {manifest_path}") from exc
+        if not isinstance(manifest, dict):
+            raise ValueError("continuation ground truth manifest must be an object")
+        if manifest.get("status") != "FROZEN_CONTINUATION_BENCHMARK":
+            raise ValueError("ground truth manifest is not a frozen continuation benchmark")
+        expected_hash = manifest.get("source_hash")
+        if not isinstance(expected_hash, str) or not expected_hash:
+            raise ValueError("continuation ground truth manifest source_hash is required")
+        bundle = cls.freeze(path, require_cross_verification=True)
+        cls.validate_rich_claims(bundle.claims)
+        if bundle.source_hash != expected_hash:
+            raise ValueError("continuation ground truth manifest hash mismatch")
+        return bundle
+
     @staticmethod
     def validate_cross_verification(claims: list[GroundTruthClaim]) -> None:
         if not claims:
@@ -155,4 +198,31 @@ class GroundTruthStore:
             if len(set(claim.verification_contexts)) < 2:
                 raise ValueError(
                     f"claim {claim.claim_id} requires two verification contexts"
+                )
+
+    @staticmethod
+    def validate_rich_claims(claims: list[GroundTruthClaim]) -> None:
+        """Validate task-matched claims for the continuation benchmark."""
+        GroundTruthStore.validate_cross_verification(claims)
+        required_fields = (
+            "research_mode",
+            "expected_answer",
+            "source_title",
+            "source_date",
+            "metric_year",
+            "administrative_scope",
+        )
+        for claim in claims:
+            missing = [
+                field
+                for field in required_fields
+                if not str(getattr(claim, field, "")).strip()
+            ]
+            if missing:
+                raise ValueError(
+                    f"claim {claim.claim_id} missing rich fields: {', '.join(missing)}"
+                )
+            if claim.verification_status != "VERIFIED":
+                raise ValueError(
+                    f"rich benchmark claim {claim.claim_id} must be VERIFIED"
                 )

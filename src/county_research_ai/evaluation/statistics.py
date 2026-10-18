@@ -10,7 +10,11 @@ MetricName = str
 _QUALITY_METRICS = {
     "fact_accuracy",
     "key_fact_coverage",
+    "fact_precision",
+    "ground_truth_recall",
     "evidence_support_rate",
+    "factual_error_rate",
+    "unverifiable_rate",
     "error_rate",
     "analysis_depth",
     "report_qa_accuracy",

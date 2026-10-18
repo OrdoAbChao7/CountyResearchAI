@@ -19,19 +19,21 @@ def test_metrics_calculate_claim_accuracy_coverage_and_error_types():
 
     result = MetricsCalculator.calculate(ground_truth, evaluations)
 
-    assert result.fact_accuracy == pytest.approx(1 / 3)
-    assert result.key_fact_coverage == pytest.approx(1 / 3)
+    assert result.fact_precision == pytest.approx(1 / 2)
+    assert result.ground_truth_recall == pytest.approx(1 / 3)
     assert result.evidence_support_rate == pytest.approx(1 / 3)
-    assert result.error_rate == pytest.approx(2 / 3)
+    assert result.factual_error_rate == pytest.approx(1 / 2)
+    assert result.unverifiable_rate == pytest.approx(1 / 3)
     assert result.error_counts == {"metric_scope": 1, "no_source": 1}
 
 
 def test_metrics_do_not_divide_by_zero_for_empty_reports():
     result = MetricsCalculator.calculate([], [])
 
-    assert result.fact_accuracy == 0.0
-    assert result.key_fact_coverage == 0.0
-    assert result.evidence_support_rate == 0.0
+    assert result.fact_precision is None
+    assert result.ground_truth_recall is None
+    assert result.evidence_support_rate is None
+    assert result.factual_error_rate is None
 
 
 def test_metrics_keep_unknown_claims_out_of_accuracy_denominator_when_not_verifiable():
@@ -39,9 +41,28 @@ def test_metrics_keep_unknown_claims_out_of_accuracy_denominator_when_not_verifi
 
     result = MetricsCalculator.calculate(["fact-1"], evaluations)
 
-    assert result.fact_accuracy == 0.0
+    assert result.fact_precision is None
+    assert result.ground_truth_recall is None
     assert result.verifiable_claims == 0
     assert result.unverified_claims == 1
+    assert result.unverifiable_rate == pytest.approx(1.0)
+
+
+def test_metrics_use_report_claims_for_precision_and_ground_truth_for_recall():
+    result = MetricsCalculator.calculate(
+        ["gt-1", "gt-2"],
+        [
+            ClaimEvaluation("gt-1", ClaimStatus.SUPPORTED, evidence_supported=True),
+            ClaimEvaluation("extra-correct", ClaimStatus.SUPPORTED, evidence_supported=True),
+            ClaimEvaluation("extra-wrong", ClaimStatus.CONTRADICTED),
+        ],
+    )
+
+    assert result.report_claim_count == 3
+    assert result.fact_precision == pytest.approx(2 / 3)
+    assert result.ground_truth_recall == pytest.approx(1 / 2)
+    assert result.factual_error_rate == pytest.approx(1 / 3)
+    assert result.unmatched_claims == 2
 
 
 def test_metrics_count_claims_outside_ground_truth_as_unmatched():

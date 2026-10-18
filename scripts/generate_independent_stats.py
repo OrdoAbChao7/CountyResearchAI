@@ -18,6 +18,10 @@ from county_research_ai.evaluation.statistics import (
 )
 
 _PAIRABLE_METRICS = (
+    "fact_precision",
+    "ground_truth_recall",
+    "factual_error_rate",
+    "unverifiable_rate",
     "fact_accuracy",
     "key_fact_coverage",
     "evidence_support_rate",
@@ -30,6 +34,10 @@ _PAIRABLE_METRICS = (
     "coverage_per_llm_token",
 )
 _FIGURE_METRICS = (
+    "fact_precision",
+    "ground_truth_recall",
+    "factual_error_rate",
+    "unverifiable_rate",
     "fact_accuracy",
     "key_fact_coverage",
     "evidence_support_rate",

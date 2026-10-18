@@ -1,0 +1,41 @@
+schema_version: "continuation-v1"
+status: DRAFT_BILLING_GATE_CLOSED
+freeze_date: 2026-10-18
+billing_gate: ../manifests/continuation_resource_gate_20261018.json
+benchmark_claim_schema: benchmark_claim_schema.yaml
+regions_file: ../datasets/independent_regions_20261018.yaml
+quality_metrics:
+  - fact_precision
+  - ground_truth_recall
+  - evidence_support_rate
+  - factual_error_rate
+  - unverifiable_rate
+  - analysis_depth
+cost_metrics:
+  - llm_tokens
+  - search_requests
+  - duration_seconds
+experiments:
+  natural_execution:
+    id: continuation-natural-execution
+    description: 每个系统按实际策略运行，单独记录预算消耗和预算耗尽。
+    search_enabled: true
+    budget_policy: system_default_with_hard_ledger
+  matched_budget:
+    id: continuation-matched-budget
+    description: 为每个配对任务冻结相同的搜索请求、LLM token 和 wall-clock 上限。
+    search_enabled: true
+    budget_policy: identical_per_pair
+    compare_only_within_matched_task: true
+budget_fields:
+  - reserved_units
+  - consumed_units
+  - budget_exhausted
+  - status
+failure_policy:
+  failed_judge_visible: true
+  failed_provider_visible: true
+  no_metric_imputation: true
+  no_new_business_api_call_until_gate_reopened: true
+ablations:
+  allowed_only_when_module_can_be_disabled_without_fabricated_output: true

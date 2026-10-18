@@ -85,6 +85,30 @@ class JudgeEvaluation:
     raw_response: str
 
 
+def classify_judge_status(
+    *,
+    completed_judges: int,
+    minimum_judges: int = 2,
+    retry_attempts: int = 0,
+    max_retry_attempts: int = 1,
+    adjudication_required: bool = False,
+    adjudicator_completed: bool = False,
+    adjudicator_failed: bool = False,
+) -> str:
+    """将 Judge 批次状态显式分为重试、仲裁和最终失败。"""
+    if completed_judges < 0 or minimum_judges < 1:
+        raise ValueError("judge counts must be non-negative and minimum_judges must be positive")
+    if retry_attempts < 0 or max_retry_attempts < 0:
+        raise ValueError("retry counts must be non-negative")
+    if adjudicator_failed:
+        return "FAILED_ADJUDICATION"
+    if completed_judges < minimum_judges:
+        return "RETRY_REQUIRED" if retry_attempts < max_retry_attempts else "FAILED_JUDGE"
+    if adjudication_required and not adjudicator_completed:
+        return "ADJUDICATION_REQUIRED"
+    return "VALID"
+
+
 class BlindJudge:
     @staticmethod
     def anonymize(*, group: str, run_id: str, report: str) -> AnonymousReport:

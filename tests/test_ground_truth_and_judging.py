@@ -14,6 +14,7 @@ from county_research_ai.evaluation.judging import (
     JudgeScore,
     _judge_prompt,
     calculate_analysis_depth,
+    classify_judge_status,
 )
 
 
@@ -76,6 +77,93 @@ def test_formal_ground_truth_freeze_rejects_unverified_claims(tmp_path):
 
     with pytest.raises(ValueError, match="UNVERIFIED"):
         GroundTruthStore.freeze(source, require_cross_verification=True)
+
+
+def test_rich_benchmark_claim_requires_task_matching_fields():
+    rich = replace(
+        _claim(),
+        research_mode="snapshot",
+        expected_answer="产业产值为10亿元，统计口径为县域本级",
+        source_title="2024年国民经济和社会发展统计公报",
+        source_date="2025-03-01",
+        metric_year="2024",
+        administrative_scope="县域本级",
+        verification_sources=("https://example.gov.cn/a", "https://example.gov.cn/b"),
+        verification_contexts=("context-a", "context-b"),
+    )
+
+    GroundTruthStore.validate_rich_claims([rich])
+
+
+def test_rich_benchmark_claim_rejects_missing_expected_answer():
+    rich = replace(
+        _claim(),
+        research_mode="rise-fall",
+        source_title="2024年统计公报",
+        source_date="2025-03-01",
+        metric_year="2024",
+        administrative_scope="县域本级",
+        verification_sources=("https://example.gov.cn/a", "https://example.gov.cn/b"),
+        verification_contexts=("context-a", "context-b"),
+    )
+
+    with pytest.raises(ValueError, match="expected_answer"):
+        GroundTruthStore.validate_rich_claims([rich])
+
+
+def test_rich_benchmark_claim_rejects_each_task_matching_field():
+    rich = replace(
+        _claim(),
+        research_mode="snapshot",
+        expected_answer="产业产值为10亿元",
+        source_title="2024年统计公报",
+        source_date="2025-03-01",
+        metric_year="2024",
+        administrative_scope="县域本级",
+        verification_sources=("https://example.gov.cn/a", "https://example.gov.cn/b"),
+        verification_contexts=("context-a", "context-b"),
+    )
+
+    for field in (
+        "research_mode",
+        "expected_answer",
+        "source_title",
+        "source_date",
+        "metric_year",
+        "administrative_scope",
+    ):
+        with pytest.raises(ValueError, match=field):
+            GroundTruthStore.validate_rich_claims([replace(rich, **{field: ""})])
+
+
+def test_continuation_freeze_requires_rich_claim_manifest(tmp_path):
+    source = tmp_path / "claims.jsonl"
+    rich = replace(
+        _claim(),
+        research_mode="snapshot",
+        expected_answer="产业产值为10亿元",
+        source_title="2024年统计公报",
+        source_date="2025-03-01",
+        metric_year="2024",
+        administrative_scope="县域本级",
+        verification_sources=("https://example.gov.cn/a", "https://example.gov.cn/b"),
+        verification_contexts=("context-a", "context-b"),
+    )
+    GroundTruthStore.write(source, [rich])
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "status": "FROZEN_CONTINUATION_BENCHMARK",
+                "source_hash": hashlib.sha256(source.read_bytes()).hexdigest(),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    bundle = GroundTruthStore.freeze_continuation_verified(source, manifest)
+
+    assert bundle.claims[0].research_mode == "snapshot"
 
 
 def test_verified_freeze_rejects_ground_truth_manifest_hash_drift(tmp_path):
@@ -228,3 +316,28 @@ def test_blind_judge_runner_uses_two_independent_contexts_and_detects_disagreeme
     assert [evaluation.judge_id for evaluation in evaluations] == ["judge-a", "judge-b"]
     assert BlindJudgeRunner.needs_adjudication(evaluations, minimum_gap=2)
     assert calculate_analysis_depth(evaluations) == pytest.approx(3 / 5)
+
+
+def test_judge_status_keeps_retry_and_adjudication_failures_explicit():
+    assert classify_judge_status(completed_judges=1) == "RETRY_REQUIRED"
+    assert (
+        classify_judge_status(completed_judges=1, retry_attempts=1)
+        == "FAILED_JUDGE"
+    )
+    assert (
+        classify_judge_status(
+            completed_judges=2,
+            adjudication_required=True,
+            adjudicator_completed=False,
+        )
+        == "ADJUDICATION_REQUIRED"
+    )
+    assert (
+        classify_judge_status(
+            completed_judges=2,
+            adjudication_required=True,
+            adjudicator_completed=False,
+            adjudicator_failed=True,
+        )
+        == "FAILED_ADJUDICATION"
+    )

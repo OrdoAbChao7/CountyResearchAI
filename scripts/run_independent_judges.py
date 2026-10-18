@@ -21,6 +21,7 @@ from county_research_ai.evaluation.judging import (
     BlindJudge,
     BlindJudgeRunner,
     calculate_analysis_depth,
+    classify_judge_status,
 )
 from county_research_ai.evaluation.providers import ResourceManagedJudgeClient
 from county_research_ai.evaluation.reporting import load_manifests, validate_manifest_artifacts
@@ -30,7 +31,7 @@ from county_research_ai.llm.client import OpenAICompatibleClient
 
 FORMAL_ROOT = Path(__file__).resolve().parents[1] / "experiments" / "independent_comparison"
 RUBRIC_PATH = FORMAL_ROOT / "protocol" / "rubric.yaml"
-FORMAL_GATE_PATH = FORMAL_ROOT / "manifests" / "formal_target_gate_20261018.json"
+FORMAL_GATE_PATH = FORMAL_ROOT / "manifests" / "continuation_resource_gate_20261018.json"
 
 
 @dataclass(frozen=True)
@@ -184,11 +185,7 @@ def run_judge_batch(
         limits={
             (settings.llm.provider, settings.llm.model, "judge"): ResourceLimit(
                 max_calls * 8192,
-                billing_class=(
-                    "paid_authorized"
-                    if settings.llm.provider == "deepseek"
-                    else "free_confirmed"
-                ),
+                billing_class="free_confirmed",
             )
         },
     )
@@ -254,8 +251,12 @@ def run_judge_batch(
                 )
             ),
         )
+        resolution_status = classify_judge_status(
+            completed_judges=len(evaluations),
+            adjudication_required=adjudication_required,
+        )
         adjudicator_failed = False
-        if adjudication_required:
+        if resolution_status == "ADJUDICATION_REQUIRED":
             judge_id = "adjudicator"
             adjudicator = ResourceManagedJudgeClient(
                 OpenAICompatibleClient(settings=settings),
@@ -284,10 +285,15 @@ def run_judge_batch(
                         "error": str(exc),
                     }
                 )
-        valid = len(evaluations) >= 2 and not adjudicator_failed
+        resolution_status = classify_judge_status(
+            completed_judges=len(evaluations),
+            adjudication_required=adjudication_required,
+            adjudicator_completed=adjudication_required and not adjudicator_failed,
+            adjudicator_failed=adjudicator_failed,
+        )
         rows.append(
             {
-                "status": "VALID" if valid else "FAILED_JUDGE",
+                "status": resolution_status,
                 "run_id": candidate.run_id,
                 "anonymous_report_hash": candidate.anonymous_report.report_hash,
                 "judge_evaluations": [
@@ -300,6 +306,7 @@ def run_judge_batch(
                 ],
                 "analysis_depth": calculate_analysis_depth(evaluations),
                 "adjudication_required": adjudication_required,
+                "resolution_status": resolution_status,
                 "judge_errors": judge_errors,
                 "resource_usage": _resource_usage(
                     manager, f"{batch_id}_{candidate.anonymous_report.report_hash}_"

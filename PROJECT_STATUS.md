@@ -45,7 +45,7 @@ The generated report is an in-depth research draft, not an official policy deter
 
 ## Verification Record
 
-- **Test Suite**: `451 passed` in the final full-suite run; pytest cache has a Windows permission warning.
+- **Test Suite**: `462 passed` in the continuation full-suite run; pytest cache has a Windows permission warning.
 - **Static Analysis**: the changed/new experiment files pass scoped `ruff check`; full-tree lint remains non-clean because legacy `scripts/_verify_*.py` files contain 73 pre-existing findings.
 - **Resource safety regression**: settlement `overrun` usage is now included in subsequent capacity checks, so a run that exceeds its limit cannot reserve more work from the same persisted budget; covered by `test_overrun_usage_blocks_later_reservations`.
 - **Historical Offline Benchmark** (not evidence for real efficacy):
@@ -63,8 +63,16 @@ The Ground Truth process now has six independent public-source verification logs
 
 The frozen E1 task schedule explicitly covers `snapshot`, `rise-fall`, and `long-history`; all six regions were executed once per group in the corrected batch. The final report concludes `NO_OVERALL_ADVANTAGE`, with a limited E2 report-QA advantage for C at higher token cost.
 
-DeepSeek can now be selected by the normal search provider factory and by A/B baseline construction. `DEEPSEEK_API_KEY` is accepted as the provider-specific LLM/Search key, the LLM defaults to `https://api.deepseek.com/v1`, and formal calls use the user-authorized paid boundary with `DEEPSEEK_SEARCH_ENABLED=true`. The OpenAI-compatible client disables DeepSeek thinking by default unless a caller explicitly supplies another `extra_body` value, preventing empty report content under bounded output budgets.
+DeepSeek can now be selected by the normal search provider factory and by A/B baseline construction. `DEEPSEEK_API_KEY` is accepted as the provider-specific LLM/Search key, the LLM defaults to `https://api.deepseek.com/v1`, and the historical formal manifests record the old `USER_AUTHORIZED_PAID` interpretation. That interpretation is not current billing evidence: the continuation gate rejects it and remains `CLOSED_BILLING_UNCONFIRMED`. The OpenAI-compatible client disables DeepSeek thinking by default unless a caller explicitly supplies another `extra_body` value, preventing empty report content under bounded output budgets.
 
 The post-run scoring path now separates blind holistic judging, report-based QA, and Ground Truth claim verification. Claim verification writes declaration-level metrics observations while retaining verifier resource usage separately from the A/B/C research resource ledger.
 
 The deterministic independent auditor passed the corrected E1 root and all six corrected E2 roots with no issues. Historical development/probe audit findings remain in `reports/AUDIT_REPORT.json`; they are not conflated with the corrected formal-batch audit.
+
+## Continuation validity repair status
+
+The first-round evidence is preserved but its research conclusion is downgraded to `INCONCLUSIVE_WITH_EFFICIENCY_REGRESSION`: the six-claim GDP-only Ground Truth did not match the full industry-research task, E1 had an uninformative denominator, E2 had a ceiling effect, and no account-level billing evidence is available for the historical DeepSeek usage.
+
+The continuation has a closed resource gate, a P0 audit, a rich Claim schema, denominator-aware quality metrics, deterministic offline Judge calibration, explicit retry/adjudication states, and a local-only benchmark builder. No new DeepSeek/Gemini/Tavily business call is allowed until a fresh gate is opened with current billing evidence. The independent benchmark remains `DRAFT_HOLDOUT_REGIONS` until authoritative source Claim JSONL is supplied and frozen.
+
+The second-round report is explicitly `NOT_RUN_BILLING_GATE_CLOSED`; it records the offline validation and unlock conditions without fabricating a real-provider result.
