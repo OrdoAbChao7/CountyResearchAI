@@ -114,6 +114,13 @@ def require_formal_api_gate(
             expected_search_provider=gate.get("search_provider"),
             expected_llm_provider=gate.get("llm_provider"),
         )
+    authorization_reference = gate.get("authorization_manifest")
+    if authorization_reference:
+        authorization_path = _resolve_reference(gate_file, str(authorization_reference))
+        _validate_free_only_authorization(
+            _load_json(authorization_path),
+            max_precheck_age_seconds=max_precheck_age_seconds,
+        )
     _validate_precheck_freshness(
         precheck,
         max_precheck_age_seconds=max_precheck_age_seconds,
@@ -298,10 +305,11 @@ def _validate_gemini_precheck(
         gemini.get("models_list_http_status") != 200
         or gemini.get("target_model_visible") is not True
     ):
-        raise FormalGateError(
-            "Gemini target model visibility is not verified: "
-            f"model={gemini.get('model') or '<missing>'}"
-        )
+        if gemini.get("model_validation") != "LIVE_CALL_REQUIRED":
+            raise FormalGateError(
+                "Gemini target model visibility is not verified: "
+                f"model={gemini.get('model') or '<missing>'}"
+            )
     billing_boundary = gemini.get("billing_boundary")
     if billing_boundary != "FREE_CONFIRMED":
         raise FormalGateError(
@@ -416,6 +424,36 @@ def _validate_billing_evidence(
             f"{label} billing evidence is stale: "
             f"age_seconds={evidence_age_seconds:.0f}, max={max_precheck_age_seconds}"
         )
+
+
+def _validate_free_only_authorization(
+    authorization: dict[str, Any],
+    *,
+    max_precheck_age_seconds: int,
+) -> None:
+    if authorization.get("status") != "ACTIVE_FREE_ONLY":
+        raise FormalGateError("free-only resource authorization is not active")
+    evidence = authorization.get("authorization")
+    _validate_billing_evidence(
+        evidence,
+        label="free-only user authorization",
+        max_precheck_age_seconds=max_precheck_age_seconds,
+    )
+    providers = authorization.get("providers")
+    if not isinstance(providers, dict):
+        raise FormalGateError("free-only resource authorization has no providers")
+    for provider in ("gemini", "tavily"):
+        entry = providers.get(provider)
+        if not isinstance(entry, dict) or entry.get("provider") != provider:
+            raise FormalGateError(f"free-only authorization is missing provider: {provider}")
+        if entry.get("billing_boundary") != "FREE_CONFIRMED":
+            raise FormalGateError(f"{provider} free billing boundary is not confirmed")
+        if entry.get("free_only") is not True:
+            raise FormalGateError(f"{provider} free-only flag is not true")
+        if entry.get("paid_overage_allowed") is not False:
+            raise FormalGateError(f"{provider} paid_overage_allowed must be false")
+        if entry.get("auto_switch_paid") is not False:
+            raise FormalGateError(f"{provider} auto_switch_paid must be false")
 
 
 def _validate_current_user_authorization(

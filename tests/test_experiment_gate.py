@@ -132,6 +132,52 @@ def test_formal_api_gate_accepts_only_ready_free_confirmed_state(tmp_path):
     require_formal_api_gate(gate_path, precheck_path)
 
 
+def test_formal_api_gate_accepts_user_attested_free_only_provider_scope(tmp_path):
+    gate_path, precheck_path = _write_gate(
+        tmp_path,
+        gate_status="READY_FOR_PREFLIGHT",
+        billing_boundary="FREE_CONFIRMED",
+        billing_evidence={
+            "source": "current user instruction",
+            "method": "manual_user_confirmation",
+            "account_scope": "current_api_account",
+            "evidence_ref": "user-message-2026-10-19-free-quota",
+            "verified_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+    gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    gate["authorization_manifest"] = "authorization.json"
+    gate["allow_paid_authorized"] = False
+    gate_path.write_text(json.dumps(gate), encoding="utf-8")
+    authorization = {
+        "status": "ACTIVE_FREE_ONLY",
+        "authorization": {
+            "source": "current user instruction",
+            "method": "manual_user_confirmation",
+            "account_scope": "current_api_account",
+            "evidence_ref": "user-message-2026-10-19-free-quota",
+            "verified_at": datetime.now(timezone.utc).isoformat(),
+        },
+        "providers": {
+            provider: {
+                "provider": provider,
+                "billing_boundary": "FREE_CONFIRMED",
+                "free_only": True,
+                "paid_overage_allowed": False,
+                "auto_switch_paid": False,
+            }
+            for provider in ("gemini", "tavily")
+        },
+    }
+    (tmp_path / "authorization.json").write_text(
+        json.dumps(authorization), encoding="utf-8"
+    )
+
+    result = require_formal_api_gate(gate_path, precheck_path)
+
+    assert result["gate"]["allow_paid_authorized"] is False
+
+
 def test_deepseek_gate_requires_separate_free_evidence_for_llm_and_search_fetch(
     tmp_path,
 ):
@@ -153,7 +199,7 @@ def test_deepseek_gate_rejects_historical_user_authorized_paid_boundary(tmp_path
         require_formal_api_gate(gate_path, precheck_path)
 
 
-def test_continuation_gate_manifest_is_closed_before_business_calls():
+def test_continuation_gate_manifest_uses_current_free_only_authorization():
     path = (
         Path(__file__).parents[1]
         / "experiments"
@@ -163,9 +209,12 @@ def test_continuation_gate_manifest_is_closed_before_business_calls():
     )
     gate = json.loads(path.read_text(encoding="utf-8"))
 
-    assert gate["status"] == "CLOSED_BILLING_UNCONFIRMED"
+    assert gate["status"] == "BLOCKED_PROVIDER_CONFIGURATION"
     assert gate["business_api_calls_allowed"] is False
     assert gate["allow_paid_authorized"] is False
+    assert gate["free_only"] is True
+    assert gate["account_balance_query_unavailable_is_global_blocker"] is False
+    assert gate["blocked_providers"] == ["gemini"]
 
 
 def test_ground_truth_collection_gate_accepts_currently_authorized_paid_scope(tmp_path):

@@ -28,6 +28,13 @@ _BILLING_EVIDENCE_FIELDS = (
     "evidence_ref",
     "verified_at",
 )
+DEFAULT_AUTHORIZATION_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "experiments"
+    / "independent_comparison"
+    / "manifests"
+    / "resource_authorization_20261019.json"
+)
 
 
 def check_gemini_models(
@@ -199,11 +206,73 @@ def apply_deepseek_billing_evidence(
     return result
 
 
+def apply_free_only_authorization(
+    base: dict[str, Any], authorization: dict[str, Any]
+) -> dict[str, Any]:
+    """Attach a user-confirmed free-only boundary without inventing a balance."""
+    if authorization.get("status") != "ACTIVE_FREE_ONLY":
+        raise ValueError("free-only authorization status is not ACTIVE_FREE_ONLY")
+    evidence = authorization.get("authorization")
+    if not isinstance(evidence, dict) or any(
+        not isinstance(evidence.get(field), str) or not evidence[field].strip()
+        for field in _BILLING_EVIDENCE_FIELDS
+    ):
+        raise ValueError("free-only authorization evidence is incomplete")
+    providers = authorization.get("providers")
+    if not isinstance(providers, dict):
+        raise ValueError("free-only authorization providers are missing")
+
+    result = {key: dict(value) for key, value in base.items() if isinstance(value, dict)}
+    for provider in ("gemini", "tavily"):
+        entry = providers.get(provider)
+        if not isinstance(entry, dict):
+            raise ValueError(f"free-only authorization missing provider: {provider}")
+        if entry.get("provider") != provider:
+            raise ValueError(f"free-only authorization provider mismatch: {provider}")
+        if entry.get("billing_boundary") != "FREE_CONFIRMED":
+            raise ValueError(f"free-only authorization boundary is not FREE_CONFIRMED: {provider}")
+        if entry.get("free_only") is not True:
+            raise ValueError(f"free-only authorization free_only is not true: {provider}")
+        if entry.get("paid_overage_allowed") is not False:
+            raise ValueError(f"free-only authorization paid_overage_allowed must be false: {provider}")
+        if entry.get("auto_switch_paid") is not False:
+            raise ValueError(f"free-only authorization auto_switch_paid must be false: {provider}")
+        target = result.setdefault(provider, {})
+        target.update(
+            {
+                "billing_boundary": "FREE_CONFIRMED",
+                "billing_basis": "user_attested_free_only",
+                "billing_evidence": dict(entry.get("billing_evidence") or evidence),
+                "free_only": True,
+                "paid_overage_allowed": False,
+                "auto_switch_paid": False,
+                "authorization_ref": authorization.get("authorization_id", "unknown"),
+            }
+        )
+
+    gemini = result["gemini"]
+    if gemini.get("target_model_visible") is not True:
+        gemini["model_validation"] = "LIVE_CALL_REQUIRED"
+    tavily = result["tavily"]
+    remaining = tavily.get("conservative_remaining_credits")
+    paygo = tavily.get("paygo_usage_credits")
+    if (
+        tavily.get("status") != "FREE_PLAN_USAGE_VISIBLE"
+        or not isinstance(remaining, (int, float))
+        or isinstance(remaining, bool)
+        or remaining <= 0
+        or paygo != 0
+    ):
+        raise ValueError("Tavily free quota is unavailable or PAYG is non-zero")
+    return result
+
+
 def build_precheck(
     *,
     settings: Any,
     checked_at: str | None = None,
     deepseek_evidence: dict[str, Any] | None = None,
+    authorization: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a machine-readable precheck record while keeping credentials out."""
     deepseek = check_deepseek_configuration(
@@ -216,7 +285,7 @@ def build_precheck(
     )
     if deepseek_evidence is not None:
         deepseek = apply_deepseek_billing_evidence(deepseek, deepseek_evidence)
-    return {
+    payload = {
         "check_id": "resource_precheck",
         "checked_at": checked_at or datetime.now(timezone.utc).isoformat(),
         "deepseek": deepseek,
@@ -227,10 +296,24 @@ def build_precheck(
         "tavily": check_tavily_usage(
             api_key=settings.search.api_key.get_secret_value(),
         ),
-        "formal_gate": "CLOSED_UNTIL_GEMINI_ACCOUNT_BILLING_BOUNDARY_CONFIRMED",
+        "formal_gate": "CLOSED_UNTIL_FREE_ONLY_AUTHORIZATION",
         "business_model_calls_made": False,
         "api_keys_logged": False,
     }
+    if authorization is not None:
+        payload["authorization"] = authorization
+        try:
+            provider_payload = apply_free_only_authorization(
+                {"gemini": payload["gemini"], "tavily": payload["tavily"]},
+                authorization,
+            )
+        except ValueError as exc:
+            payload["authorization_error"] = str(exc)
+        else:
+            payload["gemini"] = provider_payload["gemini"]
+            payload["tavily"] = provider_payload["tavily"]
+            payload["formal_gate"] = "READY_FOR_PREFLIGHT"
+    return payload
 
 
 def _credits(data: dict[str, Any], *names: str) -> int | float | None:
@@ -249,6 +332,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--deepseek-billing-evidence", type=Path)
+    parser.add_argument("--authorization", type=Path, default=DEFAULT_AUTHORIZATION_PATH)
     args = parser.parse_args()
     deepseek_evidence = None
     if args.deepseek_billing_evidence is not None:
@@ -258,9 +342,16 @@ def main() -> int:
             )
         except (OSError, json.JSONDecodeError) as exc:
             parser.error(f"cannot read DeepSeek billing evidence: {exc}")
+    authorization = None
+    if args.authorization.is_file():
+        try:
+            authorization = json.loads(args.authorization.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            parser.error(f"cannot read free-only authorization: {exc}")
     payload = build_precheck(
         settings=load_settings(),
         deepseek_evidence=deepseek_evidence,
+        authorization=authorization,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

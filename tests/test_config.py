@@ -82,6 +82,16 @@ class TestMergeEnv:
         merged = _merge_env({})
         assert "api_key" not in merged.get("llm", {})
 
+    def test_gemini_provider_prefers_provider_specific_key_over_generic_key(self, monkeypatch):
+        monkeypatch.setenv("LLM_PROVIDER", "gemini")
+        monkeypatch.setenv("LLM_API_KEY", "generic-key")
+        monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+        from county_research_ai.config import _merge_env
+
+        merged = _merge_env({"llm": {}, "search": {}})
+
+        assert merged["llm"]["api_key"] == "gemini-key"
+
     def test_search_provider_key_mapping(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "serper")
         monkeypatch.setenv("SERPER_API_KEY", "serper-test-key")

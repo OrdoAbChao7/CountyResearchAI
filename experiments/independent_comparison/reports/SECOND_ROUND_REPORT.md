@@ -2,12 +2,12 @@
 
 ## 状态
 
-`BENCHMARK_FROZEN_SECOND_ROUND_NOT_RUN`
+`STAGE_A_BLOCKED_GEMINI_PROVIDER_CONFIGURATION`
 
-本报告仍不提供新的真实 Provider 质量结论。A/B/C 的正式实验 Gate 仍为
-`CLOSED_BILLING_UNCONFIRMED`，因此 Natural Execution、Matched Budget 和模块消融均未运行。
-本轮只在当前用户明确授权的任务级 Ground Truth Gate 下调用 DeepSeek，完成了真实来源采集和
-Benchmark 冻结；这些调用的 Usage 与原始响应已留存，但不等同于账户级账单。
+本报告仍不提供新的真实 Provider 质量结论。续作资源授权已根据当前用户人工确认改为
+Gemini/Tavily 免费-only；Tavily usage 预检显示剩余 770 credits、PAYG=0。Stage A 首个真实
+Gemini LLM 调用返回 HTTP 400 `INVALID_ARGUMENT`（需要有效 API key），ResourceManager 随即
+停止本批次并保留失败 Manifest；没有切换到 DeepSeek，也没有产生付费调用。
 
 ## 已完成的可验证工作
 
@@ -22,17 +22,21 @@ Benchmark 冻结；这些调用的 Usage 与原始响应已留存，但不等同
   每种模式 5 条。90/90 条均有两个不同 URL、两个上下文和逐条原文摘录。
 - 本地 Builder 已生成 `FROZEN_CONTINUATION_BENCHMARK`，source hash 为
   `a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd`。
+- Stage A 计划为 2 个地区 × 3 个模式 × A/B/C = 18 个运行；实际只启动首个 A 运行，状态为
+  `FAILED`，Tavily 3 次搜索成功、Gemini 1 次调用失败并结算 2,048 个预留 token 单位。
 
 ## 未运行的实验
 
-Natural Execution 和 Matched Budget 均未运行；模块消融也未运行。原因是正式实验 Gate
-仍未打开，不能把 Ground Truth 采集授权扩大为整轮 A/B/C 研究授权，也不能把本地 Usage
-记录直接换算为账户费用。
+Natural Execution 和 Matched Budget 尚未产生有效结果；模块消融也未运行。Stage A 的首个
+Gemini 调用已证明当前 `.env` 的通用 `LLM_API_KEY` 对 Gemini 无效，Gate 已将 Gemini 熔断。
+Tavily 仍有免费资格，但 A/B/C 必须使用同一个有效底层 LLM。
 
 ## 解锁条件
 
-1. 为正式 LLM 与 Search/Fetch 分别提供当前、可审计的账户计费或免费额度证据，重新生成 formal fresh precheck。
-2. 使用已冻结的 `benchmark_claim_schema.yaml`、`continuation_protocol.yaml` 和
+1. 只需配置有效的 `GEMINI_API_KEY`（或替换 `LLM_API_KEY`），不要提供 DeepSeek 付费授权。
+2. 重新生成 Gemini/Tavily free-only precheck，并确认 `continuation_resource_gate_20261018.json`
+   重新打开；用户不需要重复提交额度证明。
+3. 使用已冻结的 `benchmark_claim_schema.yaml`、`continuation_protocol.yaml` 和
    `continuation_ground_truth_20261019.jsonl`，先完成离线评分校准与输入 hash 复核。
-3. 重新打开 formal Gate 后，分别运行 Natural Execution 与 Matched Budget，保留预算耗尽、
+4. 重新打开 formal Gate 后，分别运行 Natural Execution 与 Matched Budget，保留预算耗尽、
    Provider 失败、Judge 失败和仲裁状态，不做隐式补值。

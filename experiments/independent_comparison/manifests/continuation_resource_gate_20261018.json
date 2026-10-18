@@ -1,13 +1,36 @@
 {
   "gate_id": "continuation_resource_gate_20261018",
-  "status": "CLOSED_BILLING_UNCONFIRMED",
+  "status": "BLOCKED_PROVIDER_CONFIGURATION",
   "created_at": "2026-10-18T00:00:00+08:00",
+  "updated_at": "2026-10-19T01:15:08.792745+08:00",
   "experiment_id": "goal-continuation-validity",
   "business_api_calls_allowed": false,
   "allow_paid_authorized": false,
-  "llm_billing_boundary": "UNKNOWN",
-  "search_fetch_billing_boundary": "UNKNOWN",
-  "reason": "The current continuation instruction withdraws the prior interpretation of USER_AUTHORIZED_PAID. Historical usage and local ledgers are retained as evidence, but no account-level billing or free-quota evidence is available.",
+  "free_only": true,
+  "llm_provider": "gemini",
+  "model": "gemini-3.1-flash-lite",
+  "search_provider": "tavily",
+  "resource_precheck": "resource_precheck_20261019.json",
+  "authorization_manifest": "resource_authorization_20261019.json",
+  "ground_truth_manifest": "../ground_truth/continuation_ground_truth_20261019_manifest.json",
+  "protocol": "../protocol/continuation_protocol.yaml",
+  "scope": [
+    "continuation_natural_execution",
+    "continuation_matched_budget",
+    "continuation_claim_scoring",
+    "continuation_judging",
+    "continuation_report_qa"
+  ],
+  "blocked_providers": ["gemini"],
+  "tavily_still_eligible": true,
+  "reason": "Stage A 首个真实 Gemini 调用返回 HTTP 400 INVALID_ARGUMENT（Please pass a valid API key）。已按免费-only 授权立即停止 Gemini；Tavily 仍为 free-plan、剩余 770 credits、PAYG=0，但因 A/B/C 必须共用同一 LLM，整轮实验暂停。",
+  "account_balance_query_unavailable_is_global_blocker": false,
+  "stop_conditions": [
+    "provider free-plan quota is exhausted",
+    "PAYG or any overage signal is non-zero",
+    "provider configuration or model validation fails",
+    "resource manager capacity or concurrency circuit breaker trips"
+  ],
   "historical_evidence": [
     "experiments/independent_comparison/manifests/formal_target_gate_20261018.json",
     "experiments/independent_comparison/manifests/resource_precheck_20261018_deepseek.json",
@@ -15,8 +38,8 @@
     "experiments/independent_comparison/reports/CONTINUATION_P0_AUDIT_20261018.md"
   ],
   "unlock_requires": [
-    "current explicit authorization or provider/account billing evidence scoped separately to LLM and Search/Fetch",
-    "fresh precheck with no business call",
+    "configure a valid Gemini API key via GEMINI_API_KEY or LLM_API_KEY",
+    "fresh Gemini/Tavily free-only precheck",
     "offline benchmark and judge calibration passing",
     "frozen continuation protocol and independent Ground Truth manifest"
   ]

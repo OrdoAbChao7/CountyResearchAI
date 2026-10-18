@@ -5,6 +5,7 @@ import json
 import pytest
 from scripts.precheck_independent_resources import (
     apply_deepseek_billing_evidence,
+    apply_free_only_authorization,
     check_deepseek_configuration,
     check_gemini_models,
     check_tavily_usage,
@@ -219,5 +220,83 @@ def test_deepseek_precheck_rejects_evidence_missing_one_scope():
                         "verified_at": "2026-10-18T00:00:00+00:00",
                     },
                 }
+            },
+        )
+
+
+def test_free_only_authorization_marks_provider_without_inventing_balance():
+    base = {
+        "gemini": {
+            "provider": "gemini",
+            "model": "gemini-3.1-flash-lite",
+            "billing_boundary": "UNKNOWN",
+            "target_model_visible": False,
+        },
+        "tavily": {
+            "status": "FREE_PLAN_USAGE_VISIBLE",
+            "conservative_remaining_credits": 770,
+            "paygo_usage_credits": 0,
+        },
+    }
+    authorization = {
+        "status": "ACTIVE_FREE_ONLY",
+        "authorization": {
+            "source": "current user instruction",
+            "method": "manual_user_confirmation",
+            "account_scope": "current_api_account",
+            "evidence_ref": "user-message-2026-10-19-free-quota",
+            "verified_at": "2026-10-19T01:13:10+08:00",
+        },
+        "providers": {
+            provider: {
+                "provider": provider,
+                "billing_boundary": "FREE_CONFIRMED",
+                "free_only": True,
+                "paid_overage_allowed": False,
+                "auto_switch_paid": False,
+            }
+            for provider in ("gemini", "tavily")
+        },
+    }
+
+    result = apply_free_only_authorization(base, authorization)
+
+    assert result["gemini"]["billing_boundary"] == "FREE_CONFIRMED"
+    assert result["gemini"]["billing_basis"] == "user_attested_free_only"
+    assert result["gemini"]["model_validation"] == "LIVE_CALL_REQUIRED"
+    assert result["tavily"]["billing_boundary"] == "FREE_CONFIRMED"
+    assert result["tavily"]["conservative_remaining_credits"] == 770
+    assert result["tavily"]["paygo_usage_credits"] == 0
+
+
+def test_free_only_authorization_rejects_paid_overage_or_auto_switch():
+    with pytest.raises(ValueError, match="paid_overage_allowed"):
+        apply_free_only_authorization(
+            {"gemini": {}, "tavily": {}},
+            {
+                "status": "ACTIVE_FREE_ONLY",
+                "authorization": {
+                    "source": "current user instruction",
+                    "method": "manual_user_confirmation",
+                    "account_scope": "current_api_account",
+                    "evidence_ref": "test",
+                    "verified_at": "2026-10-19T01:13:10+08:00",
+                },
+                "providers": {
+                    "gemini": {
+                        "provider": "gemini",
+                        "billing_boundary": "FREE_CONFIRMED",
+                        "free_only": True,
+                        "paid_overage_allowed": True,
+                        "auto_switch_paid": False,
+                    },
+                    "tavily": {
+                        "provider": "tavily",
+                        "billing_boundary": "FREE_CONFIRMED",
+                        "free_only": True,
+                        "paid_overage_allowed": False,
+                        "auto_switch_paid": False,
+                    },
+                },
             },
         )
