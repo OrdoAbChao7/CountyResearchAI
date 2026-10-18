@@ -11,8 +11,6 @@ from typing import Any
 from scripts.run_continuation_experiment import (
     GROUND_TRUTH_MANIFEST_PATH,
     GROUND_TRUTH_PATH,
-    LLM_CAPACITY,
-    SEARCH_CAPACITY,
     validate_continuation_benchmark,
 )
 
@@ -32,6 +30,7 @@ def audit_batch(batch_root: Path) -> dict[str, Any]:
         GROUND_TRUTH_PATH,
         GROUND_TRUTH_MANIFEST_PATH,
     )
+    frozen_task_keys = {(claim.region, claim.research_mode) for claim in frozen.claims}
     planned = list(batch_manifest.get("planned_runs", []))
     manifests = sorted(batch_root.glob("*/manifest.json"))
     rows: list[dict[str, Any]] = []
@@ -43,6 +42,15 @@ def audit_batch(batch_root: Path) -> dict[str, Any]:
         if payload.get("task_id") not in {"snapshot", "rise-fall", "long-history"}:
             raise ValueError(f"continuation run has unknown task: {path}")
     statuses = Counter(str(row.get("status")) for row in rows)
+    task_mismatches = [
+        {
+            "run_id": row.get("run_id"),
+            "region": row.get("county"),
+            "task_id": row.get("task_id"),
+        }
+        for row in rows
+        if (row.get("county"), row.get("task_id")) not in frozen_task_keys
+    ]
     planned_set = set(planned)
     actual_set = {str(row.get("run_id")) for row in rows}
     missing = sorted(planned_set - actual_set)
@@ -66,6 +74,11 @@ def audit_batch(batch_root: Path) -> dict[str, Any]:
         "batch_id": batch_manifest.get("batch_id"),
         "benchmark": benchmark,
         "source_hash_verified": frozen.source_hash == benchmark["source_hash"],
+        "task_matching": {
+            "status": "PASS" if not task_mismatches else "FAIL",
+            "frozen_task_keys": len(frozen_task_keys),
+            "run_task_mismatches": task_mismatches,
+        },
         "planned_runs": len(planned),
         "manifest_runs": len(rows),
         "statuses": dict(sorted(statuses.items())),
@@ -84,6 +97,10 @@ def _audit_resource_db(path: Path) -> dict[str, Any]:
         rows = connection.execute(
             "SELECT status, COUNT(*), COALESCE(SUM(consumed_units),0) FROM leases GROUP BY status"
         ).fetchall()
+        limits = connection.execute(
+            "SELECT provider, model, kind, capacity_units, billing_class "
+            "FROM resource_limits ORDER BY provider, model, kind"
+        ).fetchall()
     finally:
         connection.close()
     by_status = {
@@ -96,7 +113,13 @@ def _audit_resource_db(path: Path) -> dict[str, Any]:
         "path": str(path),
         "by_status": by_status,
         "active_leases": active,
-        "limits": {"llm_units": LLM_CAPACITY, "search_requests": SEARCH_CAPACITY},
+        "limits": {
+            f"{provider}|{model}|{kind}": {
+                "capacity_units": int(capacity_units),
+                "billing_class": str(billing_class),
+            }
+            for provider, model, kind, capacity_units, billing_class in limits
+        },
     }
 
 

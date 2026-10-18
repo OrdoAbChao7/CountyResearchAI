@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:fd85c0458d4894dcfa72799489624a9cdd6517b2ede0a138209434a8e1eb4b5e",
+    "sources": "sources.json:fde3ef4e06539eb6b7d18fbb5ae203ce3dbf96abbaa94c0cde6f21de5961bb94"
+  },
+  "config_hash": "3888b497a7a7bc1f947ad20d2cc239aabd9ec1f0b9501e7764f322d78ad43442",
+  "county": "长汀县",
+  "created_at": "2026-10-18T19:13:06.950466+00:00",
+  "duration_seconds": 41.899624,
+  "error": null,
+  "experiment_id": "continuation-matched-budget",
+  "formal_target": true,
+  "group": "A",
+  "mode": "snapshot",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 5814,
+    "tavily:search:search": 3
+  },
+  "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_A",
+  "search_provider": "tavily",
+  "status": "VALID",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T19:13:48.849692+00:00"
+}

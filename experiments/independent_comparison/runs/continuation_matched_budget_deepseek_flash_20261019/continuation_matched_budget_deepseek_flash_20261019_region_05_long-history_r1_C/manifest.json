@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:e7e508815ed3f83fc74d4cdb85bd791e41b2993e1a4bb7fa6fa432af1e452825",
+    "sources": "sources.json:d296001bca99486560618a6cf2bad4f12e3f8b215e573456505119fc54ebe2c8"
+  },
+  "config_hash": "007f1b1cdf98089b466fd75fafa90fb21265cb513fdbbc4004e1e286dfaa8149",
+  "county": "白山市",
+  "created_at": "2026-10-18T19:46:53.763830+00:00",
+  "duration_seconds": 122.812153,
+  "error": "wall-clock budget exceeded: elapsed=122.812s, capacity=120.000s",
+  "experiment_id": "continuation-matched-budget",
+  "formal_target": true,
+  "group": "C",
+  "mode": "long-history",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 35187,
+    "tavily:search:search": 6
+  },
+  "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_C",
+  "search_provider": "tavily",
+  "status": "BUDGET_EXHAUSTED",
+  "task_id": "long-history",
+  "updated_at": "2026-10-18T19:48:56.575664+00:00"
+}

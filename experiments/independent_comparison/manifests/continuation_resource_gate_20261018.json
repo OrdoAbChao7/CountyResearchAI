@@ -1,17 +1,18 @@
 {
   "gate_id": "continuation_resource_gate_20261018",
-  "status": "BLOCKED_PROVIDER_CONFIGURATION",
+  "status": "READY_FOR_PREFLIGHT",
   "created_at": "2026-10-18T00:00:00+08:00",
-  "updated_at": "2026-10-19T01:15:08.792745+08:00",
+  "updated_at": "2026-10-19T01:26:55.6600278+08:00",
   "experiment_id": "goal-continuation-validity",
-  "business_api_calls_allowed": false,
-  "allow_paid_authorized": false,
-  "free_only": true,
-  "llm_provider": "gemini",
-  "model": "gemini-3.1-flash-lite",
+  "business_api_calls_allowed": true,
+  "allow_paid_authorized": true,
+  "free_only": false,
+  "llm_provider": "deepseek",
+  "model": "deepseek-flash",
   "search_provider": "tavily",
   "resource_precheck": "resource_precheck_20261019.json",
   "authorization_manifest": "resource_authorization_20261019.json",
+  "paid_authorization_manifest": "continuation_paid_authorization_20261019.json",
   "ground_truth_manifest": "../ground_truth/continuation_ground_truth_20261019_manifest.json",
   "protocol": "../protocol/continuation_protocol.yaml",
   "scope": [
@@ -21,9 +22,9 @@
     "continuation_judging",
     "continuation_report_qa"
   ],
-  "blocked_providers": ["gemini"],
+  "blocked_providers": [],
   "tavily_still_eligible": true,
-  "reason": "Stage A 首个真实 Gemini 调用返回 HTTP 400 INVALID_ARGUMENT（Please pass a valid API key）。已按免费-only 授权立即停止 Gemini；Tavily 仍为 free-plan、剩余 770 credits、PAYG=0，但因 A/B/C 必须共用同一 LLM，整轮实验暂停。",
+  "reason": "新鲜 DeepSeek LLM 用户授权/配置预检与 Tavily 免费层预检均通过；DeepSeek Search/Fetch 保持关闭。",
   "account_balance_query_unavailable_is_global_blocker": false,
   "stop_conditions": [
     "provider free-plan quota is exhausted",
@@ -38,8 +39,7 @@
     "experiments/independent_comparison/reports/CONTINUATION_P0_AUDIT_20261018.md"
   ],
   "unlock_requires": [
-    "configure a valid Gemini API key via GEMINI_API_KEY or LLM_API_KEY",
-    "fresh Gemini/Tavily free-only precheck",
+    "fresh DeepSeek LLM authorization/precheck and Tavily free-only precheck",
     "offline benchmark and judge calibration passing",
     "frozen continuation protocol and independent Ground Truth manifest"
   ]

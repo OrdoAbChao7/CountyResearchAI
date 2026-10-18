@@ -1,0 +1,1591 @@
+{
+  "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+  "status": "BUDGET_EXHAUSTED",
+  "created_at": "2026-10-18T19:04:13.068878+00:00",
+  "execution_policy": "matched_budget",
+  "benchmark": {
+    "claim_count": 90,
+    "source_hash": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+    "regions": 6,
+    "modes": {
+      "snapshot": 30,
+      "rise-fall": 30,
+      "long-history": 30
+    },
+    "claims_per_region_mode": 5
+  },
+  "ground_truth_path": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019.jsonl",
+  "ground_truth_manifest_path": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+  "resource_db": "experiments\\independent_comparison\\runs\\continuation_resource_manager_matched_deepseek_flash_20261019.sqlite",
+  "planned_runs": [
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_C",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_A",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_B",
+    "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_C"
+  ],
+  "config": [
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "德清县",
+      "region_id": "region_01",
+      "focus": "德清县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "长汀县",
+      "region_id": "region_02",
+      "focus": "长汀县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "于都县",
+      "region_id": "region_03",
+      "focus": "于都县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "攀枝花市",
+      "region_id": "region_04",
+      "focus": "攀枝花市产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "白山市",
+      "region_id": "region_05",
+      "focus": "白山市产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业现状与2024年主要经济指标",
+      "task_id": "snapshot",
+      "mode": "snapshot",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业发展变化、升降与转折机制",
+      "task_id": "rise-fall",
+      "mode": "rise-fall",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "A",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "B",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    },
+    {
+      "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+      "formal_target": true,
+      "continuation_benchmark": true,
+      "execution_policy": "matched_budget",
+      "model": "deepseek-flash",
+      "search_provider": "tavily",
+      "group": "C",
+      "county": "临泽县",
+      "region_id": "region_06",
+      "focus": "临泽县产业结构演变与工业历史",
+      "task_id": "long-history",
+      "mode": "long-history",
+      "repeat": 1,
+      "max_llm_tokens": 2048,
+      "max_search_results": 2,
+      "llm_tasks": [
+        "industry_status"
+      ],
+      "search_enabled": true,
+      "ground_truth_manifest": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019_manifest.json",
+      "ground_truth_claim_quota": 5,
+      "matched_budget": {
+        "llm_units": 90000,
+        "search_requests": 6,
+        "wall_clock_seconds": 120
+      }
+    }
+  ],
+  "summary": "summary.json"
+}

@@ -76,3 +76,34 @@ def test_stats_script_does_not_fabricate_figures_without_valid_rows(tmp_path):
 
     assert result["status"] == "NO_VALID_METRICS"
     assert not (tmp_path / "figures" / "fact_accuracy.svg").exists()
+
+
+def test_stats_script_uses_task_metrics_once_for_claim_level_rows(tmp_path):
+    source = tmp_path / "claim_observations.jsonl"
+    rows = []
+    for run_id, group, value in (
+        ("a-1", "A", 0.4),
+        ("c-1", "C", 0.8),
+    ):
+        first = _row(run_id, group, value)
+        first["task_metrics"] = dict(first["metrics"])
+        first["task_metrics"]["total_ground_truth_claims"] = 5
+        second = _row(run_id, group, value)
+        second["claim_id"] = f"{run_id}-claim-2"
+        second["task_metrics"] = dict(first["task_metrics"])
+        rows.extend((first, second))
+    source.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
+        encoding="utf-8",
+    )
+
+    result = generate_stats(
+        source,
+        summary_csv=tmp_path / "summary.csv",
+        paired_csv=tmp_path / "paired.csv",
+        summary_json=tmp_path / "summary.json",
+        figures_dir=tmp_path / "figures",
+    )
+
+    assert result["valid_observations"] == 2
+    assert result["paired_rows"] > 0

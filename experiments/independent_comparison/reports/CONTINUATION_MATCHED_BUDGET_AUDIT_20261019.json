@@ -1,0 +1,106 @@
+{
+  "status": "DATASET_AND_RESOURCE_AUDITED",
+  "batch_id": "continuation_matched_budget_deepseek_flash_20261019",
+  "benchmark": {
+    "claim_count": 90,
+    "source_hash": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+    "regions": 6,
+    "modes": {
+      "snapshot": 30,
+      "rise-fall": 30,
+      "long-history": 30
+    },
+    "claims_per_region_mode": 5
+  },
+  "source_hash_verified": true,
+  "task_matching": {
+    "status": "PASS",
+    "frozen_task_keys": 18,
+    "run_task_mismatches": []
+  },
+  "planned_runs": 54,
+  "manifest_runs": 54,
+  "statuses": {
+    "BUDGET_EXHAUSTED": 6,
+    "VALID": 48
+  },
+  "missing_runs": [],
+  "failed_runs": [
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_C",
+      "status": "BUDGET_EXHAUSTED",
+      "error": "wall-clock budget exceeded: elapsed=136.231s, capacity=120.000s",
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 52561,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_C",
+      "status": "BUDGET_EXHAUSTED",
+      "error": "wall-clock budget exceeded: elapsed=131.823s, capacity=120.000s",
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 76201,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_C",
+      "status": "BUDGET_EXHAUSTED",
+      "error": "wall-clock budget exceeded: elapsed=127.472s, capacity=120.000s",
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 72293,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_C",
+      "status": "BUDGET_EXHAUSTED",
+      "error": "wall-clock budget exceeded: elapsed=131.843s, capacity=120.000s",
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 76459,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_C",
+      "status": "BUDGET_EXHAUSTED",
+      "error": "wall-clock budget exceeded: elapsed=122.812s, capacity=120.000s",
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 35187,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_C",
+      "status": "BUDGET_EXHAUSTED",
+      "error": "wall-clock budget exceeded: elapsed=131.787s, capacity=120.000s",
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 63801,
+        "tavily:search:search": 6
+      }
+    }
+  ],
+  "resource": {
+    "status": "CLOSED",
+    "path": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\runs\\continuation_resource_manager_matched_deepseek_flash_20261019.sqlite",
+    "by_status": {
+      "settled": {
+        "leases": 378,
+        "consumed_units": 891601
+      }
+    },
+    "active_leases": 0,
+    "limits": {
+      "deepseek|deepseek-flash|llm": {
+        "capacity_units": 5400000,
+        "billing_class": "paid_authorized"
+      },
+      "tavily|search|search": {
+        "capacity_units": 320,
+        "billing_class": "free_confirmed"
+      }
+    }
+  },
+  "summary_status": "BUDGET_EXHAUSTED"
+}

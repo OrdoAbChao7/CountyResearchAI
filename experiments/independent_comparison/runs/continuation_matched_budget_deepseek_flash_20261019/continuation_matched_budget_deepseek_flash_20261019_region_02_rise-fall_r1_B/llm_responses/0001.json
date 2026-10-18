@@ -1,0 +1,28 @@
+{
+  "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网研究助手。为研究 长汀县 的 长汀县产业发展变化、升降与转折机制（任务模式 rise-fall），只输出 JSON：{\"queries\":[\"...\"]}，最多 3 个检索词。"
+    }
+  ],
+  "response": {
+    "content": "{\"queries\":[\"长汀县 产业发展 变化 升降 转折 机制\",\"长汀县 产业 兴衰 原因 分析\",\"长汀县 产业结构 演变 历史\"]}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 57,
+    "completion_tokens": 43,
+    "total_tokens": 100
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 57,
+    "completion_tokens": 43,
+    "total_tokens": 100,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

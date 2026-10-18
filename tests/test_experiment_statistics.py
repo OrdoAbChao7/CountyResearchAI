@@ -129,3 +129,27 @@ def test_statistics_keep_n_a_metrics_out_of_numeric_summaries():
     rows = summarize_observations([observation], metrics=("fact_precision", "unverifiable_rate"))
 
     assert [row.metric for row in rows] == ["unverifiable_rate"]
+
+
+def test_statistics_skip_coverage_per_token_when_coverage_is_missing():
+    observation = MetricObservation(
+        "run",
+        "A",
+        "甲县",
+        "snapshot",
+        1,
+        MetricsResult(
+            fact_accuracy=None,
+            key_fact_coverage=None,
+            evidence_support_rate=None,
+            total_ground_truth_claims=1,
+            verifiable_claims=0,
+            unverified_claims=1,
+            supported_claims=0,
+        ),
+        resource_usage={"deepseek:deepseek-flash:llm": 100},
+    )
+
+    rows = summarize_observations([observation], metrics=("coverage_per_llm_token",))
+
+    assert rows == []

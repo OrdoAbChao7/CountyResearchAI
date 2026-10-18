@@ -134,6 +134,52 @@ def test_deterministic_claim_check_covers_calibration_statuses():
     assert "scope_mismatch" in contradicted.evaluation.error_types
 
 
+def test_deterministic_claim_check_accepts_county_level_scope_synonyms():
+    claim = GroundTruthClaim(
+        **{
+            **_claim().__dict__,
+            "expected_answer": "2024年新地区县本级地区生产总值为10亿元",
+            "metric_year": "2024",
+            "administrative_scope": "新地区县本级",
+            "verification_sources": ("source-a", "source-b"),
+            "verification_contexts": ("context-a", "context-b"),
+        }
+    )
+
+    result = deterministic_claim_check(
+        report="2024年全县实现地区生产总值10亿元。",
+        source_material="2024年统计公报：全县地区生产总值为10亿元。",
+        claim=claim,
+    )
+
+    assert result is not None
+    assert result.evaluation.status is ClaimStatus.SUPPORTED
+
+
+def test_deterministic_claim_check_accepts_percent_unit_alias():
+    claim = GroundTruthClaim(
+        **{
+            **_claim().__dict__,
+            "metric": "产业增长率",
+            "unit": "百分比",
+            "expected_answer": "2024年新地区县本级产业增长率为5.8%",
+            "metric_year": "2024",
+            "administrative_scope": "新地区县本级",
+            "verification_sources": ("source-a", "source-b"),
+            "verification_contexts": ("context-a", "context-b"),
+        }
+    )
+
+    result = deterministic_claim_check(
+        report="2024年全县产业增长率为5.8%。",
+        source_material="2024年统计公报：全县产业增长率为5.8%。",
+        claim=claim,
+    )
+
+    assert result is not None
+    assert result.evaluation.status is ClaimStatus.SUPPORTED
+
+
 def test_offline_judge_calibration_fixture_has_no_provider_dependency():
     fixture = (
         Path(__file__).parents[1]

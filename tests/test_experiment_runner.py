@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from county_research_ai.evaluation.experiment_models import RunStatus
@@ -92,6 +93,23 @@ def test_runner_marks_missing_usage_invalid_without_dropping_failure_evidence(tm
 
     assert manifest.status == RunStatus.INVALID_USAGE_UNKNOWN
     assert (tmp_path / "runs" / "run-1" / "manifest.json").is_file()
+
+
+def test_runner_marks_wall_clock_budget_exhaustion(tmp_path):
+    runner = ExperimentRunner(
+        tmp_path / "runs",
+        ResourceManager(tmp_path / "resources.sqlite", limits={}),
+        max_duration_seconds=0.001,
+    )
+
+    def execute(artifact):
+        time.sleep(0.01)
+        return ExecutionOutcome(artifacts={}, usage_known=True)
+
+    manifest = runner.run(_spec("wall-clock-run"), execute)
+
+    assert manifest.status == RunStatus.BUDGET_EXHAUSTED
+    assert "wall-clock budget exceeded" in (manifest.error or "")
 
 
 def test_runner_marks_resource_exhaustion_blocked(tmp_path):

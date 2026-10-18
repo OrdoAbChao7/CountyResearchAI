@@ -89,10 +89,18 @@ def deterministic_claim_check(
     source_has_numbers = _contains_all_numbers(source_material, expected_numbers)
     report_has_years = _contains_all(report, expected_years)
     source_has_years = _contains_all(source_material, expected_years)
-    report_has_unit = not expected_unit or expected_unit in report
-    source_has_unit = not expected_unit or expected_unit in source_material
-    report_has_scope = not expected_scope or expected_scope in report
-    source_has_scope = not expected_scope or expected_scope in source_material
+    report_has_unit = _contains_unit(report, expected_unit)
+    source_has_unit = _contains_unit(source_material, expected_unit)
+    report_has_scope = _contains_scope(
+        report,
+        expected_scope=expected_scope,
+        region=claim.region,
+    )
+    source_has_scope = _contains_scope(
+        source_material,
+        expected_scope=expected_scope,
+        region=claim.region,
+    )
     source_matches = (
         source_relevant
         and source_has_numbers
@@ -206,6 +214,49 @@ def _contains_all_numbers(text: str, values: list[str]) -> bool:
         for value in re.findall(r"\d+(?:[,.]\d+)?%?", text)
     }
     return all(value in normalized for value in values)
+
+
+def _contains_scope(text: str, *, expected_scope: str, region: str) -> bool:
+    """Match equivalent administrative wording without crossing jurisdiction levels."""
+    if not expected_scope:
+        return True
+
+    candidates = {expected_scope}
+    if region:
+        candidates.add(region.strip())
+
+    scope = expected_scope.strip()
+    if "县" in scope and "市" not in scope:
+        candidates.add("全县")
+    elif "市" in scope and "县" not in scope:
+        candidates.add("全市")
+    elif "区" in scope and "县" not in scope and "市" not in scope:
+        candidates.add("全区")
+
+    return any(candidate and candidate in text for candidate in candidates)
+
+
+def _contains_unit(text: str, expected_unit: str) -> bool:
+    """Match common report notation for the frozen unit without dropping components."""
+    if not expected_unit:
+        return True
+
+    components = [
+        component.strip()
+        for component in re.split(r"[、；;/]+", expected_unit)
+        if component.strip()
+    ]
+    return all(_contains_unit_component(text, component) for component in components)
+
+
+def _contains_unit_component(text: str, component: str) -> bool:
+    if component in {"百分比", "比重（%）"}:
+        return any(marker in text for marker in ("%", "百分比", "比重"))
+    if component in {"比例", "比重"}:
+        return any(marker in text for marker in ("比例", "比重", "结构")) or bool(
+            re.search(r"\d+(?:[,.]\d+)?\s*[：:∶]\s*\d", text)
+        )
+    return component in text
 
 
 def _is_relevant(text: str, claim: GroundTruthClaim) -> bool:

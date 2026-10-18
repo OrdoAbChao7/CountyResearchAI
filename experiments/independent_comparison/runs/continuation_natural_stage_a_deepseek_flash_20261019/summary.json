@@ -1,0 +1,51 @@
+{
+  "status": "STOPPED",
+  "batch_id": "continuation_natural_stage_a_deepseek_flash_20261019",
+  "execution_policy": "natural",
+  "planned_runs": 18,
+  "completed_runs": 11,
+  "skipped_runs": [
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_snapshot_r1_C",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_rise-fall_r1_A",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_rise-fall_r1_B",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_rise-fall_r1_C",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_long-history_r1_A",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_long-history_r1_B",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_long-history_r1_C"
+  ],
+  "stopped_reason": "provider_or_resource_stop:INVALID_RESOURCE_ACCOUNTING",
+  "results": {
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_snapshot_r1_A": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_snapshot_r1_B": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_snapshot_r1_C": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_rise-fall_r1_A": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_rise-fall_r1_B": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_rise-fall_r1_C": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_long-history_r1_A": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_long-history_r1_B": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_01_long-history_r1_C": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_snapshot_r1_A": "VALID",
+    "continuation_natural_stage_a_deepseek_flash_20261019_region_02_snapshot_r1_B": "INVALID_RESOURCE_ACCOUNTING"
+  },
+  "benchmark": {
+    "claim_count": 90,
+    "source_hash": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+    "regions": 6,
+    "modes": {
+      "snapshot": 30,
+      "rise-fall": 30,
+      "long-history": 30
+    },
+    "claims_per_region_mode": 5
+  },
+  "resource_snapshot": {
+    "consumed": {
+      "tavily|search|search": 48,
+      "gemini|gemini-3.1-flash-lite|llm": 2048,
+      "deepseek|deepseek-chat|llm": 2048,
+      "deepseek|deepseek-flash|llm": 182849
+    },
+    "reserved": {},
+    "active": 0
+  }
+}

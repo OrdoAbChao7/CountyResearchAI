@@ -1,0 +1,38 @@
+{
+  "authorization_id": "continuation_deepseek_llm_user_authorized_paid_20261019",
+  "status": "ACTIVE_USER_AUTHORIZED_PAID",
+  "authorization": {
+    "source": "current user instruction",
+    "method": "explicit_current_user_authorization",
+    "account_scope": "current_task",
+    "evidence_ref": "user-message-2026-10-19-deepseek-fallback",
+    "verified_at": "2026-10-19T01:25:20.7750718+08:00"
+  },
+  "providers": {
+    "deepseek_llm": {
+      "provider": "deepseek",
+      "scope": "llm",
+      "model": "deepseek-flash",
+      "billing_boundary": "USER_AUTHORIZED_PAID",
+      "free_only": false,
+      "paid_overage_allowed": true,
+      "auto_switch_paid": false,
+      "qualification": "用户明确授权在 Gemini 不可用时使用已配置的 DeepSeek API；本授权仅覆盖当前 continuation 实验。"
+    }
+  },
+  "scope": [
+    "continuation_natural_execution",
+    "continuation_matched_budget",
+    "continuation_claim_scoring",
+    "continuation_judging",
+    "continuation_report_qa"
+  ],
+  "stop_conditions": [
+    "DeepSeek API 请求失败或模型配置失效",
+    "ResourceManager capacity or concurrency circuit breaker trips",
+    "Tavily free-plan quota is exhausted",
+    "Tavily PAYG or any overage signal is non-zero"
+  ],
+  "deepseek_search_fetch": "disabled_by_policy",
+  "secrets_logged": false
+}

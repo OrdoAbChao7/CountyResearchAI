@@ -1,0 +1,45 @@
+{
+  "status": "VALID_BATCH",
+  "batch_id": "continuation_natural_stage_a_deepseek_flash_retry_20261019",
+  "benchmark": {
+    "claim_count": 90,
+    "source_hash": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+    "regions": 6,
+    "modes": {
+      "snapshot": 30,
+      "rise-fall": 30,
+      "long-history": 30
+    },
+    "claims_per_region_mode": 5
+  },
+  "source_hash_verified": true,
+  "planned_runs": 18,
+  "manifest_runs": 18,
+  "statuses": {
+    "VALID": 18
+  },
+  "missing_runs": [],
+  "failed_runs": [],
+  "resource": {
+    "status": "CLOSED",
+    "path": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\runs\\continuation_resource_manager_deepseek_flash_retry_20261019.sqlite",
+    "by_status": {
+      "settled": {
+        "leases": 126,
+        "consumed_units": 304392
+      }
+    },
+    "active_leases": 0,
+    "limits": {
+      "deepseek|deepseek-flash|llm": {
+        "capacity_units": 500000,
+        "billing_class": "paid_authorized"
+      },
+      "tavily|search|search": {
+        "capacity_units": 220,
+        "billing_class": "free_confirmed"
+      }
+    }
+  },
+  "summary_status": "VALID"
+}

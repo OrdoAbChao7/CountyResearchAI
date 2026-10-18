@@ -199,7 +199,7 @@ def test_deepseek_gate_rejects_historical_user_authorized_paid_boundary(tmp_path
         require_formal_api_gate(gate_path, precheck_path)
 
 
-def test_continuation_gate_manifest_uses_current_free_only_authorization():
+def test_continuation_gate_manifest_uses_deepseek_fallback_authorization():
     path = (
         Path(__file__).parents[1]
         / "experiments"
@@ -209,12 +209,14 @@ def test_continuation_gate_manifest_uses_current_free_only_authorization():
     )
     gate = json.loads(path.read_text(encoding="utf-8"))
 
-    assert gate["status"] == "BLOCKED_PROVIDER_CONFIGURATION"
-    assert gate["business_api_calls_allowed"] is False
-    assert gate["allow_paid_authorized"] is False
-    assert gate["free_only"] is True
+    assert gate["status"] == "READY_FOR_PREFLIGHT"
+    assert gate["business_api_calls_allowed"] is True
+    assert gate["allow_paid_authorized"] is True
+    assert gate["free_only"] is False
+    assert gate["llm_provider"] == "deepseek"
+    assert gate["paid_authorization_manifest"] == "continuation_paid_authorization_20261019.json"
     assert gate["account_balance_query_unavailable_is_global_blocker"] is False
-    assert gate["blocked_providers"] == ["gemini"]
+    assert gate["blocked_providers"] == []
 
 
 def test_ground_truth_collection_gate_accepts_currently_authorized_paid_scope(tmp_path):

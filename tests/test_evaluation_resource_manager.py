@@ -149,3 +149,21 @@ def test_reopened_manager_rejects_persisted_limit_drift(tmp_path):
 
     with pytest.raises(ResourceStateError, match="resource limit drift"):
         _manager(db_path, capacity=3)
+
+
+def test_run_scoped_limit_rejects_one_run_without_blocking_other_runs(tmp_path):
+    key = ("gemini", "gemini-3.1-flash-lite", "llm")
+    manager = ResourceManager(
+        tmp_path / "resources.sqlite",
+        limits={key: ResourceLimit(10)},
+        run_limits={"run-1": {key: 2}},
+    )
+
+    lease = manager.reserve(_request("run-1", units=2))
+    manager.settle(lease.lease_id, 2)
+
+    with pytest.raises(ResourceExhaustedError, match="run-scoped"):
+        manager.reserve(_request("run-1"))
+
+    other_lease = manager.reserve(_request("run-2"))
+    manager.settle(other_lease.lease_id, 1)

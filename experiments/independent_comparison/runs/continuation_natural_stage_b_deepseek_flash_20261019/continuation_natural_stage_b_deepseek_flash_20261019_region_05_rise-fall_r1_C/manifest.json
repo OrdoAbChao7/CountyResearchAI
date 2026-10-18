@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:4aa4f892d4d3d9f02c69c2a85655c0db5d2d888fabdad936523f3d6c40e7866a",
+    "sources": "sources.json:6388e4f457924fbeb8cac2e455d4bf86aa56d490ef54415ab44b0aa8ae78a3c8"
+  },
+  "config_hash": "63b0b2a0bbfb392f1413c80f4396e7d60c1977384b786c8b1b555ee18c86130c",
+  "county": "白山市",
+  "created_at": "2026-10-18T18:46:41.153430+00:00",
+  "duration_seconds": 91.040269,
+  "error": null,
+  "experiment_id": "continuation-natural-execution",
+  "formal_target": true,
+  "group": "C",
+  "mode": "rise-fall",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 37987,
+    "tavily:search:search": 6
+  },
+  "run_id": "continuation_natural_stage_b_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+  "search_provider": "tavily",
+  "status": "VALID",
+  "task_id": "rise-fall",
+  "updated_at": "2026-10-18T18:48:12.193409+00:00"
+}

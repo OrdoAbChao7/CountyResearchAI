@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:06a853dbacf3ed8f211e4f715112e734e35194b645e15d2fe5d7183ba9ad8d2c",
+    "sources": "sources.json:2a0da7fadea8ec6a64a26a67407e9d76cfa3732475d8fda86ad5a27d41f54353"
+  },
+  "config_hash": "f688e87cc6901f3599475143ef59668052b76c715c7d78664fa930b9e0159365",
+  "county": "临泽县",
+  "created_at": "2026-10-18T18:54:11.593063+00:00",
+  "duration_seconds": 38.908524,
+  "error": null,
+  "experiment_id": "continuation-natural-execution",
+  "formal_target": true,
+  "group": "A",
+  "mode": "rise-fall",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 6904,
+    "tavily:search:search": 3
+  },
+  "run_id": "continuation_natural_stage_b_deepseek_flash_20261019_region_06_rise-fall_r1_A",
+  "search_provider": "tavily",
+  "status": "VALID",
+  "task_id": "rise-fall",
+  "updated_at": "2026-10-18T18:54:50.501203+00:00"
+}

@@ -36,9 +36,16 @@ Executor = Callable[[RunArtifact], ExecutionOutcome]
 
 
 class ExperimentRunner:
-    def __init__(self, root: Path, resource_manager: ResourceManager) -> None:
+    def __init__(
+        self,
+        root: Path,
+        resource_manager: ResourceManager,
+        *,
+        max_duration_seconds: float | None = None,
+    ) -> None:
         self.root = Path(root).resolve()
         self.resource_manager = resource_manager
+        self.max_duration_seconds = max_duration_seconds
 
     def run(self, spec: ExperimentRunSpec, execute: Executor) -> RunManifest:
         started = time.perf_counter()
@@ -73,6 +80,7 @@ class ExperimentRunner:
                 name: f"{path.relative_to(run_dir)}:{digest}"
                 for name, (path, digest) in outcome.artifacts.items()
             }
+            elapsed = time.perf_counter() - started
             if outcome.mock_detected:
                 manifest.transition(RunStatus.INVALID_MOCK, error="Mock component or output detected")
             elif active_leases or not outcome.resource_accounting_valid:
@@ -84,6 +92,17 @@ class ExperimentRunner:
                 manifest.transition(
                     RunStatus.INVALID_USAGE_UNKNOWN,
                     error="provider usage was unavailable",
+                )
+            elif (
+                self.max_duration_seconds is not None
+                and elapsed > self.max_duration_seconds
+            ):
+                manifest.transition(
+                    RunStatus.BUDGET_EXHAUSTED,
+                    error=(
+                        "wall-clock budget exceeded: "
+                        f"elapsed={elapsed:.3f}s, capacity={self.max_duration_seconds:.3f}s"
+                    ),
                 )
             else:
                 manifest.transition(RunStatus.VALID)
