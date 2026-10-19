@@ -19,8 +19,21 @@ class DeterministicClaimCheck:
     checks: dict[str, bool]
 
 
+def claim_comparison_key(claim: GroundTruthClaim) -> tuple[str, str, str, str, str, str]:
+    """Return the stable identity dimensions used for offline claim comparison."""
+    return (
+        claim.region.strip(),
+        claim.metric.strip(),
+        (claim.metric_year or claim.date).strip(),
+        (claim.administrative_scope or claim.region).strip(),
+        claim.unit.strip(),
+        claim.version.strip(),
+    )
+
+
 _DISPUTE_MARKERS = ("争议", "口径不一", "存在冲突", "disputed", "conflict")
 _SCOPE_MARKERS = ("县域本级", "全市", "市域", "全县", "全区", "全省", "全国")
+_VERSION_MARKERS = ("修订", "初版", "初报", "最终", "v1", "v2", "version")
 
 
 def deterministic_claim_check(
@@ -82,6 +95,23 @@ def deterministic_claim_check(
             ("empty_report",),
             "研究报告为空，无法核验冻结 Claim。",
             report_relevant=False,
+            source_relevant=source_relevant,
+        )
+
+    non_comparable = _detect_non_comparable_claim(
+        report=report,
+        claim=claim,
+        expected_numbers=expected_numbers,
+        expected_years=expected_years,
+        expected_scope=expected_scope,
+    )
+    if non_comparable is not None:
+        return _check(
+            claim,
+            ClaimStatus.NON_COMPARABLE,
+            (non_comparable,),
+            "报告提到相近事实，但地区、指标、期间、范围、单位、口径或版本不同，不能与冻结 Claim 直接比较。",
+            report_relevant=report_relevant,
             source_relevant=source_relevant,
         )
 
@@ -259,6 +289,77 @@ def _contains_unit_component(text: str, component: str) -> bool:
     return component in text
 
 
+def _detect_non_comparable_claim(
+    *,
+    report: str,
+    claim: GroundTruthClaim,
+    expected_numbers: list[str],
+    expected_years: set[str],
+    expected_scope: str,
+) -> str | None:
+    """Detect identity mismatches before treating a value difference as an error."""
+    report_years = set(re.findall(r"(?:19|20)\d{2}", report))
+    if expected_years and report_years and not expected_years.intersection(report_years):
+        if claim.metric.strip() in report:
+            return "period_mismatch"
+
+    if claim.metric.strip() and claim.metric.strip() not in report:
+        if (
+            _contains_region(report, claim.region)
+            and (not expected_years or expected_years.intersection(report_years))
+            and _contains_all_numbers(report, expected_numbers)
+        ):
+            return "metric_mismatch"
+
+    if claim.unit.strip() and not _contains_unit(report, claim.unit):
+        if claim.metric.strip() in report and re.search(r"\d+(?:[,.]\d+)?\s*(?:亿元|万元|万人|平方公里|%)", report):
+            return "unit_mismatch"
+
+    if claim.caliber.strip():
+        caliber_aliases = {
+            "县域本级": ("县域本级", "本级", "全县"),
+            "全产业链": ("全产业链", "产业链"),
+            "规模以上": ("规模以上", "规上"),
+        }
+        aliases = caliber_aliases.get(claim.caliber, (claim.caliber,))
+        explicit_caliber_markers = ("规模以上", "规上", "全产业链", "产业链")
+        if any(marker in report for marker in explicit_caliber_markers) and not any(
+            alias in report for alias in aliases
+        ):
+            if claim.metric.strip() in report and _contains_all_numbers(report, expected_numbers):
+                return "caliber_mismatch"
+
+    if claim.version.strip() and claim.version.strip() not in report:
+        if any(marker.casefold() in report.casefold() for marker in _VERSION_MARKERS):
+            return "version_mismatch"
+
+    if expected_scope and not _contains_scope(report, expected_scope=expected_scope, region=claim.region):
+        if claim.metric.strip() in report and _contains_all_numbers(report, expected_numbers):
+            if any(marker in report for marker in ("全市", "市域", "全省", "全国", "全区")):
+                return "scope_mismatch"
+
+    if claim.metric.strip() in report and not _contains_region(report, claim.region):
+        if re.search(r"(?:县|区|市|州|盟)", report):
+            return "region_mismatch"
+
+    return None
+
+
+def _contains_region(text: str, region: str) -> bool:
+    if not region.strip():
+        return True
+    candidates = {region.strip()}
+    for suffix in ("县", "区", "市", "州", "盟"):
+        if region.strip().endswith(suffix):
+            candidates.add(region.strip()[: -len(suffix)])
+    if "县" in region:
+        candidates.add("全县")
+        candidates.add("县域")
+    if "区" in region:
+        candidates.add("全区")
+    return any(candidate and candidate in text for candidate in candidates)
+
+
 def _is_relevant(text: str, claim: GroundTruthClaim) -> bool:
     if not text.strip():
         return False
@@ -280,12 +381,13 @@ def build_claim_verification_prompt(
         "只能依据研究报告和随报告归档的来源材料判断冻结 claim，不能读取其他实验组或运行轨迹。"
         "请区分报告没有提及、报告与 claim 矛盾、报告被来源支持和 claim 版本争议。只输出 JSON，"
         "字段为 status、evidence_supported、error_types、reason。status 必须是 "
-        "SUPPORTED、CONTRADICTED、UNSUPPORTED、DISPUTED 或 UNVERIFIED。\n"
+        "SUPPORTED、CONTRADICTED、UNSUPPORTED、DISPUTED、NON_COMPARABLE 或 UNVERIFIED。\n"
         f"冻结 Claim：{claim.claim}\n"
         f"Claim 元数据：region={claim.region}; metric={claim.metric}; unit={claim.unit}; date={claim.date}; "
         f"research_mode={claim.research_mode}; expected_answer={claim.expected_answer}; "
         f"source_title={claim.source_title}; source_date={claim.source_date}; "
-        f"metric_year={claim.metric_year}; administrative_scope={claim.administrative_scope}\n"
+        f"metric_year={claim.metric_year}; administrative_scope={claim.administrative_scope}; "
+        f"caliber={claim.caliber}; version={claim.version}\n"
         f"研究报告：\n{report}\n"
         f"归档来源材料：\n{source_material or '(没有来源材料)'}"
     )

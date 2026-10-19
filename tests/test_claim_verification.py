@@ -7,6 +7,7 @@ import pytest
 
 from county_research_ai.evaluation.claim_verification import (
     build_claim_verification_prompt,
+    claim_comparison_key,
     deterministic_claim_check,
     parse_claim_verification,
 )
@@ -28,6 +29,25 @@ def _claim() -> GroundTruthClaim:
         confidence="high",
         verification_status="VERIFIED",
     )
+
+
+def _rich_claim(**overrides: str) -> GroundTruthClaim:
+    payload = {
+        **_claim().__dict__,
+        "region": "德清县",
+        "metric": "地区生产总值",
+        "expected_answer": "2024年德清县本级地区生产总值为10亿元",
+        "source_title": "2024年德清县统计公报",
+        "source_date": "2025-03-01",
+        "metric_year": "2024",
+        "administrative_scope": "德清县本级",
+        "caliber": "县域本级",
+        "version": "v2",
+        "verification_sources": ("source-a", "source-b"),
+        "verification_contexts": ("context-a", "context-b"),
+    }
+    payload.update(overrides)
+    return GroundTruthClaim(**payload)
 
 
 def test_claim_verification_prompt_separates_frozen_claim_from_report():
@@ -112,7 +132,7 @@ def test_deterministic_claim_check_covers_calibration_statuses():
         "scope_confused": (
             "2024年全市产业产值为10亿元。",
             "2024年统计公报：县域本级产业产值为10亿元。",
-            ClaimStatus.CONTRADICTED,
+            ClaimStatus.NON_COMPARABLE,
         ),
     }
 
@@ -180,6 +200,143 @@ def test_deterministic_claim_check_accepts_percent_unit_alias():
     assert result.evaluation.status is ClaimStatus.SUPPORTED
 
 
+def test_claim_comparison_key_includes_region_metric_period_scope_unit_and_version():
+    claim = _rich_claim()
+
+    assert claim_comparison_key(claim) == (
+        "德清县",
+        "地区生产总值",
+        "2024",
+        "德清县本级",
+        "亿元",
+        "v2",
+    )
+
+
+@pytest.mark.parametrize(
+    ("name", "claim_overrides", "report", "source", "expected_status", "error_type"),
+    [
+        (
+            "different_period",
+            {},
+            "2023年德清县本级地区生产总值为10亿元。",
+            "2024年德清县本级地区生产总值为10亿元。",
+            ClaimStatus.NON_COMPARABLE,
+            "period_mismatch",
+        ),
+        (
+            "different_region",
+            {},
+            "2024年安吉县本级地区生产总值为10亿元。",
+            "2024年德清县本级地区生产总值为10亿元。",
+            ClaimStatus.NON_COMPARABLE,
+            "region_mismatch",
+        ),
+        (
+            "different_metric",
+            {},
+            "2024年德清县本级工业增加值为10亿元。",
+            "2024年德清县本级地区生产总值为10亿元。",
+            ClaimStatus.NON_COMPARABLE,
+            "metric_mismatch",
+        ),
+        (
+            "different_unit",
+            {},
+            "2024年德清县本级地区生产总值为1000万元。",
+            "2024年德清县本级地区生产总值为10亿元。",
+            ClaimStatus.NON_COMPARABLE,
+            "unit_mismatch",
+        ),
+        (
+            "different_caliber",
+            {"caliber": "全产业链"},
+            "2024年德清县规模以上地区生产总值为10亿元。",
+            "2024年德清县全产业链地区生产总值为10亿元。",
+            ClaimStatus.NON_COMPARABLE,
+            "caliber_mismatch",
+        ),
+        (
+            "different_version",
+            {},
+            "2024年德清县本级地区生产总值为10亿元（v1）。",
+            "2024年德清县本级地区生产总值为10亿元（v2）。",
+            ClaimStatus.NON_COMPARABLE,
+            "version_mismatch",
+        ),
+        (
+            "different_scope",
+            {},
+            "2024年全市地区生产总值为10亿元。",
+            "2024年德清县本级地区生产总值为10亿元。",
+            ClaimStatus.NON_COMPARABLE,
+            "scope_mismatch",
+        ),
+        (
+            "same_identity_wrong_value",
+            {},
+            "2024年德清县本级地区生产总值为12亿元。",
+            "2024年德清县本级地区生产总值为10亿元。",
+            ClaimStatus.CONTRADICTED,
+            "numeric_mismatch",
+        ),
+        (
+            "url_only_support",
+            {},
+            "2024年德清县本级地区生产总值为10亿元。",
+            "https://deqing.gov.cn/bulletin",
+            ClaimStatus.UNSUPPORTED,
+            "insufficient_evidence",
+        ),
+        (
+            "missing_mention",
+            {},
+            "报告仅讨论交通条件。",
+            "来源仅讨论人口规模。",
+            ClaimStatus.UNVERIFIED,
+            "claim_not_addressed",
+        ),
+        (
+            "disputed_source",
+            {},
+            "2024年德清县本级地区生产总值为10亿元。",
+            "两份来源对该指标的统计口径存在争议。",
+            ClaimStatus.DISPUTED,
+            "disputed_source",
+        ),
+        (
+            "different_percent_value",
+            {
+                "metric": "地区生产总值增长率",
+                "unit": "百分比",
+                "expected_answer": "2024年德清县本级地区生产总值增长率为5.8%",
+            },
+            "2024年德清县本级地区生产总值增长率为6.1%。",
+            "2024年德清县本级地区生产总值增长率为5.8%。",
+            ClaimStatus.CONTRADICTED,
+            "numeric_mismatch",
+        ),
+    ],
+)
+def test_deterministic_claim_check_does_not_turn_non_comparable_claims_into_contradictions(
+    name: str,
+    claim_overrides: dict[str, str],
+    report: str,
+    source: str,
+    expected_status: ClaimStatus,
+    error_type: str,
+):
+    result = deterministic_claim_check(
+        report=report,
+        source_material=source,
+        claim=_rich_claim(**claim_overrides),
+    )
+
+    assert result is not None, name
+    assert result.evaluation.status is expected_status, name
+    assert error_type in result.evaluation.error_types, name
+
+
 def test_offline_judge_calibration_fixture_has_no_provider_dependency():
     fixture = (
         Path(__file__).parents[1]
@@ -206,7 +363,10 @@ def test_offline_judge_calibration_fixture_has_no_provider_dependency():
             claim=claim,
         )
         assert result is not None
-        assert result.evaluation.status.value == row["expected_status"]
+        expected_status = row["expected_status"]
+        if row["case_id"] == "scope_confused":
+            expected_status = ClaimStatus.NON_COMPARABLE.value
+        assert result.evaluation.status.value == expected_status
 
 
 def test_parse_claim_verification_returns_declaration_level_evaluation():

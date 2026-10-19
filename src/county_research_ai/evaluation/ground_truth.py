@@ -30,6 +30,8 @@ class GroundTruthClaim:
     source_date: str = ""
     metric_year: str = ""
     administrative_scope: str = ""
+    caliber: str = ""
+    version: str = ""
 
     def __post_init__(self) -> None:
         required = {
@@ -83,6 +85,8 @@ class GroundTruthClaim:
             "source_date": self.source_date,
             "metric_year": self.metric_year,
             "administrative_scope": self.administrative_scope,
+            "caliber": self.caliber,
+            "version": self.version,
         }
 
     @classmethod

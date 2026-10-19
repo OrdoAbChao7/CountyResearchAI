@@ -24,7 +24,7 @@
 | --- | --- | --- | --- |
 | 0 | Baseline freeze, corpus inventory, reproducible loss audit | COMPLETE | `ARCHITECTURE_BASELINE_AUDIT.md`, `tests/test_evidence_preservation_regression.py` |
 | 1 | Evidence preservation and unified Source Contract | IN_PROGRESS | `PHASE1_EVIDENCE_PRESERVATION_REPORT.md`, `src/county_research_ai/evidence/source_contract.py`, `ARCHITECTURE_BASELINE_AUDIT.md` |
-| 2 | Claim classification and independent metrics | NOT_STARTED | `PHASE2_EVALUATION_AUDIT.md` |
+| 2 | Claim classification and independent metrics | COMPLETE | `PHASE2_EVALUATION_AUDIT.md`, `experiments/independent_comparison/claim_scores/continuation_matched_budget_deepseek_flash_20261019_v4_offline/` |
 | 3 | Structured Evidence Ledger and contracts | NOT_STARTED | `PHASE3_EVIDENCE_ARCHITECTURE.md` |
 | 4 | QuestionSlot-driven adaptive retrieval | NOT_STARTED | `PHASE4_ADAPTIVE_RETRIEVAL_REPORT.md` |
 | 5 | Evidence-bound analysis and verification | NOT_STARTED | `PHASE5_EVIDENCE_BOUND_SYNTHESIS_REPORT.md` |
@@ -46,6 +46,13 @@
 - The national GDP negative case is covered: national GDP is `全国范围`, while Deqing GDP is `县域本级`.
 - Validation: `pytest --no-cov -q` → `502 passed` with one Windows `.pytest_cache` permission warning; scoped Ruff for changed files is clean.
 - Phase 1 remains open until the adapter is replaced or complemented by the Phase 3 Pydantic contracts and historical offline rescore path is versioned.
+
+## Phase 2 progress
+
+- Claim identity is compared on `(region, metric, period, administrative_scope, unit, version)`; `NON_COMPARABLE` is separate from `CONTRADICTED` and excluded from factual-error denominators.
+- Twelve negative classification cases cover year, region, metric, unit, caliber, version, scope, wrong value, URL-only support, missing mention, disputed source, and percentage value mismatch.
+- The frozen continuation corpus was rescored offline into `continuation_matched_budget_deepseek_flash_20261019_v4_offline`: 48 runs, 240 claim observations, 28 classification changes, 0 Provider calls, and 0 semantic Judge calls.
+- Phase 2 acceptance is limited to deterministic/offline evaluation. It does not claim improved model quality or authorize a new real Provider experiment.
 
 ## Milestone gate rule
 

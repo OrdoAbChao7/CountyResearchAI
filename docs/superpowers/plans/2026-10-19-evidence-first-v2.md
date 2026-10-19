@@ -82,10 +82,10 @@
 - Consumes: archived reports, unified sources, frozen claims, and existing score outputs.
 - Produces: independent Ground Truth Recall, Report Fact Precision, Evidence Support Rate, Factual Error Rate, and Unverifiable Rate with claim-level change logs.
 
-- [ ] Add at least 12 negative tests covering different year, region, metric, unit, caliber, revised value, missing mention, and URL-only support.
-- [ ] Implement comparison on `(region, metric, period, scope, unit, version)` and classify non-comparable claims without calling them contradictions.
-- [ ] Re-score historical artifacts offline without Provider calls; preserve old outputs and write a new version.
-- [ ] Audit denominator independence and report every classification change and its cause.
+- [x] Add at least 12 negative tests covering different year, region, metric, unit, caliber, revised value, missing mention, and URL-only support.
+- [x] Implement comparison on `(region, metric, period, scope, unit, version)` and classify non-comparable claims without calling them contradictions.
+- [x] Re-score historical artifacts offline without Provider calls; preserve old outputs and write a new version.
+- [x] Audit denominator independence and report every classification change and its cause.
 
 ### Task 3: Phase 3 structured evidence architecture
 

@@ -107,3 +107,22 @@ def test_stats_script_uses_task_metrics_once_for_claim_level_rows(tmp_path):
 
     assert result["valid_observations"] == 2
     assert result["paired_rows"] > 0
+
+
+def test_stats_script_accepts_offline_rescore_rows(tmp_path):
+    source = tmp_path / "offline_claim_observations.jsonl"
+    row = _row("offline-1", "C", 0.8)
+    row["status"] = "VALID_OFFLINE"
+    row["metrics"]["non_comparable_rate"] = 0.2
+    source.write_text(json.dumps(row, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    result = generate_stats(
+        source,
+        summary_csv=tmp_path / "summary.csv",
+        paired_csv=tmp_path / "paired.csv",
+        summary_json=tmp_path / "summary.json",
+        figures_dir=tmp_path / "figures",
+    )
+
+    assert result["status"] == "OK"
+    assert "non_comparable_rate" in (tmp_path / "summary.csv").read_text(encoding="utf-8")
