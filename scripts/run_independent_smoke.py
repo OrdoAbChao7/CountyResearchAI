@@ -29,6 +29,7 @@ from county_research_ai.evaluation.providers import (
 )
 from county_research_ai.evaluation.resource_manager import ResourceLimit, ResourceManager
 from county_research_ai.evaluation.strict_container import StrictRealContainer
+from county_research_ai.evidence.source_contract import serialize_source_documents
 from county_research_ai.llm.client import OpenAICompatibleClient
 from county_research_ai.models import ResearchRequest
 from county_research_ai.search.web_search import create_provider
@@ -260,16 +261,7 @@ def _run_county_research_ai(
         raise ValueError("C report generated without archived source documents")
     sources_path, _ = artifact.write_json(
         "sources.json",
-        [
-            {
-                "title": doc.title,
-                "url": doc.url,
-                "content": doc.content,
-                "source": doc.source,
-                "metadata": doc.metadata,
-            }
-            for doc in source_docs
-        ],
+        serialize_source_documents(source_docs),
     )
     return ExecutionOutcome(
         artifacts={

@@ -203,7 +203,7 @@ class ProcessedData(BaseModel):
         contents = [doc.content or doc.snippet for doc in self.docs]
         if max_chars <= 0:
             return divider.join(
-                header + content for header, content in zip(headers, contents, strict=False)
+                header + content for header, content in zip(headers, contents, strict=True)
             )
 
         # Reserve all source labels first, preventing an early long document
@@ -227,7 +227,7 @@ class ProcessedData(BaseModel):
                 break
 
         blocks = []
-        for header, content, limit in zip(headers, contents, allocations, strict=False):
+        for header, content, limit in zip(headers, contents, allocations, strict=True):
             clipped = limit < len(content)
             prefix = marker if clipped else ""
             excerpt = content[:limit]
