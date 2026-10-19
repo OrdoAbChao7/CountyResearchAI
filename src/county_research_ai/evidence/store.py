@@ -50,6 +50,30 @@ _ENTERPRISE_PATTERN = re.compile(
     r"(?:公司|龙头企业|链主企业)"
 )
 
+def _iter_evidence_segments(text: str):
+    """Segment both paragraph-preserving and whitespace-flattened long documents.
+
+    Never discard a statistical bulletin solely because a paragraph exceeds
+    the legacy 300-character extraction limit. Overlapping windows retain
+    cross-boundary indicator/value pairs.
+    """
+    for paragraph in re.split(r"[\\n。；;]+", text):
+        paragraph = paragraph.strip()
+        if len(paragraph) < 10:
+            continue
+        if len(paragraph) <= 300:
+            yield paragraph
+            continue
+        start = 0
+        while start < len(paragraph):
+            piece = paragraph[start:start + 300].strip()
+            if len(piece) >= 10:
+                yield piece
+            if start + 300 >= len(paragraph):
+                break
+            start += 220
+
+
 
 class EvidenceStore:
     """线程安全的内存结构化证据库。"""
@@ -88,7 +112,7 @@ class EvidenceStore:
     ) -> list[EvidenceItem]:
         """从单篇文档中挖掘高质量事实与证据片段。"""
         full_text = f"{doc.title}\n{doc.snippet}\n{doc.content}"
-        lines = [line.strip() for line in full_text.splitlines() if line.strip()]
+        lines = list(_iter_evidence_segments(full_text))
         extracted: list[EvidenceItem] = []
 
         # 推断年份
