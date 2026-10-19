@@ -252,12 +252,24 @@ def _run_county_research_ai(
         )
     )
     report_path, _ = artifact.write_text("report.md", result.report_path.read_text(encoding="utf-8"))
+    # Use the same source contract as A/B. The previous metadata-only
+    # object made claim-evidence verification impossible for group C even
+    # when its archived raw documents contained the correct facts.
+    source_docs = container.app.storage.load_raw(spec.county)
+    if not source_docs:
+        raise ValueError("C report generated without archived source documents")
     sources_path, _ = artifact.write_json(
         "sources.json",
-        {
-            "report_path": str(result.report_path),
-            "sections": [section.title for section in result.report.sections],
-        },
+        [
+            {
+                "title": doc.title,
+                "url": doc.url,
+                "content": doc.content,
+                "source": doc.source,
+                "metadata": doc.metadata,
+            }
+            for doc in source_docs
+        ],
     )
     return ExecutionOutcome(
         artifacts={
