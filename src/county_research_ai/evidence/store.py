@@ -57,7 +57,7 @@ def _iter_evidence_segments(text: str):
     the legacy 300-character extraction limit. Overlapping windows retain
     cross-boundary indicator/value pairs.
     """
-    for paragraph in re.split(r"[\\n。；;]+", text):
+    for paragraph in re.split(r"[\n。；;]+", text):
         paragraph = paragraph.strip()
         if len(paragraph) < 10:
             continue
