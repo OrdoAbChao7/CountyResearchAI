@@ -187,21 +187,52 @@ class ProcessedData(BaseModel):
     processed_at: datetime = Field(default_factory=_utcnow)
 
     def render_for_llm(self, max_chars: int = 0) -> str:
-        """将文档列表渲染为 LLM 可读的文本块。
+        """Build a bounded, source-diverse evidence context for LLMs.
 
-        Args:
-            max_chars: 最大字符数,0 表示不截断
+        When evidence exceeds the budget, keep a bounded excerpt from *each*
+        document instead of discarding entire later sources. More selective
+        metric-aware chunk retrieval is handled by a future evidence-pack layer.
         """
-        blocks: list[str] = []
-        used = 0
-        for i, doc in enumerate(self.docs, start=1):
-            chunk = f"[{i}] {doc.title}\n来源: {doc.url}\n{doc.content or doc.snippet}"
-            if max_chars and used + len(chunk) > max_chars:
-                blocks.append(f"[{i}] (已截断) {doc.title}\n来源: {doc.url}")
+        if not self.docs:
+            return ""
+        divider = "\n\n---\n\n"
+        headers = [
+            f"[{i}] {doc.title}\n来源: {doc.url}\n"
+            for i, doc in enumerate(self.docs, start=1)
+        ]
+        contents = [doc.content or doc.snippet for doc in self.docs]
+        if max_chars <= 0:
+            return divider.join(
+                header + content for header, content in zip(headers, contents)
+            )
+
+        # Reserve all source labels first, preventing an early long document
+        # from hiding later county-specific evidence entirely.
+        marker = "(已截断) "
+        overhead = sum(len(h) + len(marker) for h in headers)
+        overhead += len(divider) * (len(headers) - 1)
+        if overhead >= max_chars:
+            return f"[1] {marker}{self.docs[0].title}\n来源: {self.docs[0].url}"
+
+        available = max_chars - overhead
+        share = available // len(contents)
+        allocations = [min(len(content), share) for content in contents]
+        available -= sum(allocations)
+        # Give spare space back to sources still containing unseen information.
+        for i, content in enumerate(contents):
+            additional = min(available, len(content) - allocations[i])
+            allocations[i] += additional
+            available -= additional
+            if not available:
                 break
-            blocks.append(chunk)
-            used += len(chunk)
-        return "\n\n---\n\n".join(blocks)
+
+        blocks = []
+        for header, content, limit in zip(headers, contents, allocations):
+            clipped = limit < len(content)
+            prefix = marker if clipped else ""
+            excerpt = content[:limit]
+            blocks.append(header.replace("\n来源:", f" {prefix}\n来源:", 1) + excerpt)
+        return divider.join(blocks)[:max_chars]
 
 
 class AnalysisResult(BaseModel):
