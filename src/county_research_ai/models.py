@@ -89,6 +89,9 @@ class RawDoc(BaseModel):
     credibility_score: float = 0.5
     evidence_type: str = "unknown"
     source_summary: str = ""
+    content_original_length: int | None = None  # 清洗/截断前正文长度
+    content_truncated: bool = False  # 正文是否因质量配置被截断
+    truncation_reason: str = ""  # 截断原因，例如 max_evidence_length:8000
 
 
 # ===== 结构化证据与反思模型 =====
@@ -171,6 +174,17 @@ class ReflectionResult(BaseModel):
 # ===== 流程中间产物 =====
 
 
+class ContextRenderAudit(BaseModel):
+    """记录一次 LLM 上下文渲染的预算分配与排除原因。"""
+
+    max_chars: int = 0
+    included_doc_indices: list[int] = Field(default_factory=list)
+    truncated_doc_indices: list[int] = Field(default_factory=list)
+    excluded_doc_indices: list[int] = Field(default_factory=list)
+    allocated_chars: dict[str, int] = Field(default_factory=dict)
+    exclusion_reasons: dict[str, str] = Field(default_factory=dict)
+
+
 class ProcessedData(BaseModel):
     """清洗后的结构化数据,供 LLM 消费。
 
@@ -185,6 +199,7 @@ class ProcessedData(BaseModel):
     docs: list[RawDoc] = Field(default_factory=list)
     total_chars: int = 0  # 全部文档总字符数(用于估算 token 与截断)
     processed_at: datetime = Field(default_factory=_utcnow)
+    render_audit: ContextRenderAudit = Field(default_factory=ContextRenderAudit)
 
     def render_for_llm(self, max_chars: int = 0) -> str:
         """Build a bounded, source-diverse evidence context for LLMs.
@@ -194,6 +209,7 @@ class ProcessedData(BaseModel):
         metric-aware chunk retrieval is handled by a future evidence-pack layer.
         """
         if not self.docs:
+            self.render_audit = ContextRenderAudit(max_chars=max_chars)
             return ""
         divider = "\n\n---\n\n"
         headers = [
@@ -202,9 +218,15 @@ class ProcessedData(BaseModel):
         ]
         contents = [doc.content or doc.snippet for doc in self.docs]
         if max_chars <= 0:
-            return divider.join(
+            rendered = divider.join(
                 header + content for header, content in zip(headers, contents, strict=True)
             )
+            self.render_audit = ContextRenderAudit(
+                max_chars=max_chars,
+                included_doc_indices=list(range(1, len(self.docs) + 1)),
+                allocated_chars={str(i): len(content) for i, content in enumerate(contents, 1)},
+            )
+            return rendered
 
         # Reserve all source labels first, preventing an early long document
         # from hiding later county-specific evidence entirely.
@@ -212,14 +234,30 @@ class ProcessedData(BaseModel):
         overhead = sum(len(h) + len(marker) for h in headers)
         overhead += len(divider) * (len(headers) - 1)
         if overhead >= max_chars:
-            return f"[1] {marker}{self.docs[0].title}\n来源: {self.docs[0].url}"
+            block = f"[1] {marker}{self.docs[0].title}\n来源: {self.docs[0].url}"
+            self.render_audit = ContextRenderAudit(
+                max_chars=max_chars,
+                included_doc_indices=[1],
+                excluded_doc_indices=list(range(2, len(self.docs) + 1)),
+                exclusion_reasons={
+                    str(i): "budget_headers_only" for i in range(2, len(self.docs) + 1)
+                },
+            )
+            return block[:max_chars]
 
         available = max_chars - overhead
         share = available // len(contents)
         allocations = [min(len(content), share) for content in contents]
         available -= sum(allocations)
-        # Give spare space back to sources still containing unseen information.
-        for i, content in enumerate(contents):
+        # Give spare space to local/government sources first, then to other
+        # sources. This is a bounded precursor to task-aware EvidencePack selection.
+        priority_order = sorted(
+            range(len(self.docs)),
+            key=lambda i: self._render_priority(self.docs[i]),
+            reverse=True,
+        )
+        for i in priority_order:
+            content = contents[i]
             additional = min(available, len(content) - allocations[i])
             allocations[i] += additional
             available -= additional
@@ -227,12 +265,54 @@ class ProcessedData(BaseModel):
                 break
 
         blocks = []
-        for header, content, limit in zip(headers, contents, allocations, strict=True):
+        truncated_indices: list[int] = []
+        allocated_chars: dict[str, int] = {}
+        exclusion_reasons: dict[str, str] = {}
+        for index, (header, content, limit) in enumerate(
+            zip(headers, contents, allocations, strict=True), start=1
+        ):
             clipped = limit < len(content)
+            if clipped:
+                truncated_indices.append(index)
+                exclusion_reasons[str(index)] = "budget_excerpt"
             prefix = marker if clipped else ""
-            excerpt = content[:limit]
+            excerpt = self._render_excerpt(content, limit)
             blocks.append(header.replace("\n来源:", f" {prefix}\n来源:", 1) + excerpt)
-        return divider.join(blocks)[:max_chars]
+            allocated_chars[str(index)] = len(excerpt)
+        rendered = divider.join(blocks)
+        self.render_audit = ContextRenderAudit(
+            max_chars=max_chars,
+            included_doc_indices=list(range(1, len(self.docs) + 1)),
+            truncated_doc_indices=truncated_indices,
+            allocated_chars=allocated_chars,
+            exclusion_reasons=exclusion_reasons,
+        )
+        return rendered[:max_chars]
+
+    def _render_priority(self, doc: RawDoc) -> float:
+        """Prefer county-local and explicitly prioritized documents."""
+        explicit = doc.metadata.get("evidence_priority", 0)
+        try:
+            priority = float(explicit)
+        except (TypeError, ValueError):
+            priority = 0.0
+        county_name = self.county.display() or self.county.name
+        if county_name and county_name in f"{doc.title}\n{doc.content}\n{doc.snippet}":
+            priority += 100.0
+        if doc.domain_type == "government":
+            priority += 10.0
+        return priority
+
+    @staticmethod
+    def _render_excerpt(content: str, limit: int) -> str:
+        if limit >= len(content):
+            return content
+        marker = "\n…\n"
+        if limit <= len(marker) + 1:
+            return content[:limit]
+        head = max(1, int((limit - len(marker)) * 0.6))
+        tail = limit - len(marker) - head
+        return content[:head] + marker + content[-tail:]
 
 
 class AnalysisResult(BaseModel):

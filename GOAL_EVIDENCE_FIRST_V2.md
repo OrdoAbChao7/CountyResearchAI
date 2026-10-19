@@ -23,7 +23,7 @@
 | Phase | Objective | Status | Evidence |
 | --- | --- | --- | --- |
 | 0 | Baseline freeze, corpus inventory, reproducible loss audit | COMPLETE | `ARCHITECTURE_BASELINE_AUDIT.md`, `tests/test_evidence_preservation_regression.py` |
-| 1 | Evidence preservation and unified Source Contract | IN_PROGRESS | `src/county_research_ai/evidence/source_contract.py`, `ARCHITECTURE_BASELINE_AUDIT.md` |
+| 1 | Evidence preservation and unified Source Contract | IN_PROGRESS | `PHASE1_EVIDENCE_PRESERVATION_REPORT.md`, `src/county_research_ai/evidence/source_contract.py`, `ARCHITECTURE_BASELINE_AUDIT.md` |
 | 2 | Claim classification and independent metrics | NOT_STARTED | `PHASE2_EVALUATION_AUDIT.md` |
 | 3 | Structured Evidence Ledger and contracts | NOT_STARTED | `PHASE3_EVIDENCE_ARCHITECTURE.md` |
 | 4 | QuestionSlot-driven adaptive retrieval | NOT_STARTED | `PHASE4_ADAPTIVE_RETRIEVAL_REPORT.md` |
@@ -38,6 +38,14 @@
 - Full `ruff check src tests scripts` → 77 findings; most are historical verification scripts. Candidate-specific findings are recorded in `ARCHITECTURE_BASELINE_AUDIT.md`.
 - Saved Deqing snapshot raw and processed artifacts contain `722.5亿元`, `300.6亿元`, `5.8%`, and `7.7%`; old formal C archives can contain only report metadata, so source-based scoring loses the actual evidence.
 - Candidate hotfix has three focused regression tests and changes processor cleaning, long-text evidence segmentation, bounded context distribution, and C source persistence. The initial Source Contract serializer now covers new experiment writers, but the full Source Contract, truncation audit trail, and structured claim/version semantics required by this Goal remain unfinished.
+
+## Phase 1 progress
+
+- The real Deqing C replay now retains all four required values through RawDoc → ProcessedData → EvidenceStore → bounded LLM context, and the new serializer produces 2 source documents with 24 deterministic chunks.
+- `RawDoc` records content length/truncation state; `ProcessedData` records context budget allocations, included/truncated/excluded documents, and exclusion reasons.
+- The national GDP negative case is covered: national GDP is `全国范围`, while Deqing GDP is `县域本级`.
+- Validation: `pytest --no-cov -q` → `502 passed` with one Windows `.pytest_cache` permission warning; scoped Ruff for changed files is clean.
+- Phase 1 remains open until the adapter is replaced or complemented by the Phase 3 Pydantic contracts and historical offline rescore path is versioned.
 
 ## Milestone gate rule
 

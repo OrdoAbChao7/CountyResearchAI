@@ -74,6 +74,9 @@ def serialize_source_documents(docs: Iterable[RawDoc]) -> list[dict[str, Any]]:
                 "document_timestamp": document_timestamp,
                 "published_at": doc.published_at.isoformat() if doc.published_at else None,
                 "retrieved_at": doc.fetched_at.isoformat(),
+                "content_original_length": doc.content_original_length,
+                "content_truncated": doc.content_truncated,
+                "truncation_reason": doc.truncation_reason,
                 "metadata": dict(doc.metadata),
                 "chunks": _text_chunks(content, doc_id),
             }

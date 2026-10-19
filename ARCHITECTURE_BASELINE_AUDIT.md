@@ -110,3 +110,7 @@ The new regression test initially added one import-order finding; it is tracked 
 
 `COMPLETE`: baseline SHA, branch, candidate ref, artifact inventory, real Deqing loss boundary, replay test, audit documents, green full test suite, and scoped Ruff result are recorded. Phase 1 remains open because the source serializer is only the initial contract layer; truncation reasons, complete A/B/C coverage, and downstream EvidencePack integration are still required. Existing experiment artifacts remain immutable.
 
+## Phase 1 update
+
+The initial Phase 1 gate is now reproducible in `PHASE1_EVIDENCE_PRESERVATION_REPORT.md`. The real C replay retains all four required values through the bounded context and emits 2 source documents with 24 deterministic chunks. The current branch has `502 passed` with one Windows `.pytest_cache` permission warning and clean scoped Ruff for changed files. This does not close Phase 1: the serializer is still a legacy adapter, and historical artifacts are intentionally not rewritten.
+

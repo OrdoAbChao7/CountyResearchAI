@@ -42,12 +42,12 @@
 - Consumes: baseline commit `52a6ed0`, candidate commit `b32470a`, saved Deqing raw/processed/report/source artifacts.
 - Produces: branch/commit ledger, reproducible failure location, preserved regression corpus manifest, and phase gate status.
 
-- [ ] Record current branch, commit, dirty state, candidate ref, Python/dependency versions, test command, Ruff scope, and artifact inventory.
-- [ ] Add a failing replay assertion that identifies the first stage where each Deqing fact disappears or loses source linkage.
-- [ ] Run the replay on the saved raw and processed files; record RawDoc → ProcessedData → EvidenceStore → context → report/score counts.
-- [ ] Write `ARCHITECTURE_BASELINE_AUDIT.md` with root cause evidence, candidate-patch review, known limitations, and exact commands/results.
-- [ ] Run `pytest --no-cov -q` and scoped/full Ruff; preserve historical failures separately from new failures.
-- [ ] Mark Phase 0 only when the replay, baseline SHA, branch, corpus, test results, and audit evidence are linked.
+- [x] Record current branch, commit, dirty state, candidate ref, Python/dependency versions, test command, Ruff scope, and artifact inventory.
+- [x] Add a failing replay assertion that identifies the first stage where each Deqing fact disappears or loses source linkage.
+- [x] Run the replay on the saved raw and processed files; record RawDoc → ProcessedData → EvidenceStore → context → report/score counts.
+- [x] Write `ARCHITECTURE_BASELINE_AUDIT.md` with root cause evidence, candidate-patch review, known limitations, and exact commands/results.
+- [x] Run `pytest --no-cov -q` and scoped/full Ruff; preserve historical failures separately from new failures.
+- [x] Mark Phase 0 only when the replay, baseline SHA, branch, corpus, test results, and audit evidence are linked.
 
 ### Task 1: Phase 1 evidence preservation and source contract
 
@@ -63,12 +63,12 @@
 - Consumes: legacy `RawDoc` and `ProcessedData`.
 - Produces: paragraph-aware `EvidenceChunk`-compatible segments, explicit truncation metadata, stable source identifiers, and A/B/C-compatible source archives.
 
-- [ ] Write failing tests for newline preservation, compressed one-line input, long paragraph extraction, metric/value/unit adjacency, and explicit truncation reasons.
-- [ ] Write failing tests that require `doc_id`, `content_hash`, fetch/provider metadata, document timestamp, and chunk mapping in every group’s `sources.json`.
-- [ ] Implement minimal cleaning/chunking changes while preserving legacy model fields and CLI behavior.
-- [ ] Make `render_for_llm` budget-aware by task/source priority and return an auditable exclusion/truncation record rather than silently slicing.
-- [ ] Re-run the full Deqing chain and assert 100% retention of the four required facts plus source URLs; assert nationwide GDP is not substituted.
-- [ ] Generate `PHASE1_EVIDENCE_PRESERVATION_REPORT.md` with before/after counts and remaining limits.
+- [x] Write failing tests for newline preservation, compressed one-line input, long paragraph extraction, metric/value/unit adjacency, and explicit truncation reasons.
+- [x] Write failing tests that require `doc_id`, `content_hash`, fetch/provider metadata, document timestamp, and chunk mapping in every group’s `sources.json`.
+- [x] Implement minimal cleaning/chunking changes while preserving legacy model fields and CLI behavior.
+- [x] Make `render_for_llm` budget-aware by task/source priority and return an auditable exclusion/truncation record rather than silently slicing.
+- [x] Re-run the full Deqing chain and assert 100% retention of the four required facts plus source URLs; assert nationwide GDP is not substituted.
+- [x] Generate `PHASE1_EVIDENCE_PRESERVATION_REPORT.md` with before/after counts and remaining limits.
 
 ### Task 2: Phase 2 evaluation audit and offline rescoring
 
