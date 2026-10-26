@@ -121,3 +121,10 @@ Summarized from `GOAL_EVIDENCE_FIRST_V2.md`; see the phase reports for detail.
   as sufficient. Regression: `test_outcome_never_sufficient_without_supported_claims`.
 - Full suite: `662 passed`; ruff clean on changed files. Ablation re-run is
   unchanged (the frozen corpus has no prefix-collision case).
+
+## 2026-10-26 — post-fix live smoke
+
+- Re-ran the API on `:8012` after the hardening fixes. Task `SUCCEEDED` /
+  `SUFFICIENT`, `MOCK`, 3 sources, 6 findings: one `SUPPORTED` (`20亿元`, 2024)
+  and five `NOT_COMPARABLE` (2025/2027 outside the 2024 window). This confirms
+  the fixes did not regress the end-to-end path.
