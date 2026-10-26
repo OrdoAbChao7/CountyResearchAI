@@ -12,7 +12,7 @@ Repository: `E:\Projects\AxiomScope` (formerly `E:\Projects\CountyResearchAI`)
 | Legacy baseline | `52a6ed0f5164721cece221ffb9e7f67f73ac3dd7` on `codex/experiment-superiority` (frozen) |
 | Python | 3.13.7 (`.venv`), FastAPI 0.162.0, uvicorn 0.54.0 |
 | Node | 24.19.0, npm 11.17.0 |
-| Python tests | `662 passed` (`pytest --no-cov -q`) |
+| Python tests | `674 passed` (`pytest --no-cov -q`) |
 | Frontend | `tsc --noEmit` clean, 4 Vitest tests, Vite build 160.8 kB JS |
 | Live smoke | `MOCK` run: `SUCCEEDED`/`SUFFICIENT`, 3 sources, 6 findings, 4,213-byte brief |
 

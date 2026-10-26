@@ -113,3 +113,20 @@ def test_date_window_contains_is_inclusive():
     assert not window.contains(date(2019, 12, 31))
     assert not window.contains(date(2025, 1, 1))
     assert not DateWindow().is_set
+
+
+def test_research_spec_target_years_round_trip_to_date_window():
+    spec = ResearchSpec(
+        region_id="德清县",
+        region_name="德清县",
+        research_focus="产业",
+        target_years=["2020", "2024"],
+        required_question_slots=[],
+        budget=8000,
+    )
+
+    contract = ResearchContract.from_research_spec(spec)
+
+    assert contract.date_window.start == date(2020, 1, 1)
+    assert contract.date_window.end == date(2024, 12, 31)
+    assert contract.to_research_spec().target_years == ["2020", "2024"]

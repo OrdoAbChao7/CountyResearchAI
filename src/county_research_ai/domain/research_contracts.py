@@ -363,9 +363,20 @@ class ResearchContract(BaseModel):
 
     @classmethod
     def from_research_spec(cls, spec: ResearchSpec) -> ResearchContract:
+        years = sorted(
+            int(year)
+            for year in spec.target_years
+            if str(year).isdigit() and len(str(year)) == 4
+        )
+        date_window = (
+            DateWindow(start=date(years[0], 1, 1), end=date(years[-1], 12, 31))
+            if years
+            else DateWindow()
+        )
         return cls(
             objective=spec.research_focus or f"{spec.region_name} 研究",
             regions=[spec.region_name],
+            date_window=date_window,
             required_questions=[slot.research_question for slot in spec.required_question_slots],
             budget=BudgetCaps(max_tokens=spec.budget),
             mode=spec.mode,

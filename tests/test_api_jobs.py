@@ -143,3 +143,12 @@ def test_busy_store_does_not_block_event_appends(tmp_path):
 
     assert time.monotonic() - started < 5
     assert len(store.list_events(job.job_id)) == 26
+
+
+def test_claim_for_execution_is_atomic(tmp_path):
+    store = _store(tmp_path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+
+    assert store.claim_for_execution(job.job_id) is True
+    assert store.claim_for_execution(job.job_id) is False
+    assert store.get_job(job.job_id).status is JobStatus.RUNNING

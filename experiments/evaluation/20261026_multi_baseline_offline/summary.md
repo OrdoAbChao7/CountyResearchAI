@@ -1,6 +1,6 @@
 # Multi-baseline offline comparison
 
-Generated: 2026-10-26T10:00:07.817489+00:00
+Generated: 2026-10-26T10:20:10.601494+00:00
 Evidence kind: `OFFLINE_REPLAY` · provider calls: 0
 Observations SHA-256: `4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e`
 

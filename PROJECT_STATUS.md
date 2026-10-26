@@ -50,7 +50,7 @@ The generated report is an in-depth research draft, not an official policy deter
 
 ## Verification Record
 
-- **Python Test Suite**: `662 passed` on 2026-10-26 (`pytest --no-cov -q`); one
+- **Python Test Suite**: `674 passed` on 2026-10-26 (`pytest --no-cov -q`); one
   Windows `.pytest_cache` permission warning.
 - **Frontend**: `tsc --noEmit` clean, 4 Vitest tests, Vite production build
   160.8 kB JS.

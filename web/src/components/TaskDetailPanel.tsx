@@ -105,6 +105,10 @@ export function TaskDetailPanel({
               (detail.budget_enforcement.enforced as unknown[] | undefined)?.join(", ") ??
                 "—",
             )}
+            {Array.isArray(detail.budget_enforcement.bounded_per_call) &&
+            (detail.budget_enforcement.bounded_per_call as unknown[]).length > 0
+              ? ` · 单次上限: ${(detail.budget_enforcement.bounded_per_call as unknown[]).join(", ")}`
+              : ""}
             {Array.isArray(detail.budget_enforcement.not_enforced_on_workflow_path) &&
             (detail.budget_enforcement.not_enforced_on_workflow_path as unknown[]).length > 0
               ? ` · 未执行: ${(detail.budget_enforcement.not_enforced_on_workflow_path as unknown[]).join(", ")}`

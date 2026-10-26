@@ -128,3 +128,47 @@ Summarized from `GOAL_EVIDENCE_FIRST_V2.md`; see the phase reports for detail.
   `SUFFICIENT`, `MOCK`, 3 sources, 6 findings: one `SUPPORTED` (`20亿元`, 2024)
   and five `NOT_COMPARABLE` (2025/2027 outside the 2024 window). This confirms
   the fixes did not regress the end-to-end path.
+
+## 2026-10-26 — independent review fixes
+
+An independent read-only review found serious verification and job-state defects.
+Fixed and covered:
+
+- **Unit-aware, single-span support.** A numeric value now needs a compatible
+  unit in the same span; `722.5亿元` no longer matches `722.5万人`, and `700`
+  does not match `7000`. Values and metrics in different spans no longer compose
+  into support. Region and period must also resolve in that span or its source
+  metadata.
+- **Run-scoped evidence.** `claim_relations` and `verification_records` now carry
+  `run_id`; `get_chain(..., run_id=...)` filters both, and a resumed run calls
+  `clear_run` so findings/sources/relations from an earlier attempt cannot leak.
+- **Supersession requires support.** An unsupported newer-series claim no longer
+  marks an older supported claim `OUTDATED`.
+- **Date windows.** Full ISO dates and `YYYY年M月` periods are checked at
+  day/month precision; multi-year periods pass if any year overlaps the window.
+- **Job durability.** `claim_for_execution` is atomic (no duplicate execution);
+  startup resubmits `QUEUED` jobs; terminal events are appended before the
+  terminal status so SSE cannot miss them; worker setup is inside the failure
+  handler.
+- **Honest budget labels.** Only `deadline_seconds` is `enforced`; `max_tokens`
+  and `max_documents` are `bounded_per_call`, never claimed as cumulative.
+  `capabilities` now exposes `bounded_per_call_caps`.
+- **Contract round-trip.** `from_research_spec` reconstructs `date_window` from
+  `target_years`.
+
+New regressions cover unit mismatch, longer-number prefix, wrong region, wrong
+year, cross-span composition, run-scoped verification, clear-on-resume,
+unsupported superseder, month-level windows, atomic claim, and queued recovery.
+Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
+985 objective-support claims, 113 supported after conflicts, 872 withheld,
+465 downgraded, 83 upgraded.
+
+## 2026-10-26 — final smoke after review fixes
+
+- Live API `:8013` with `max_tokens=2000`, `max_documents=5`: `SUCCEEDED` /
+  `SUFFICIENT` (`MOCK`), 3 sources, 6 findings (1 `SUPPORTED` 20亿元 in 2024;
+  5 `NOT_COMPARABLE` for 2025/2027), 1.23 s.
+- Budget response now reports only `deadline_seconds` as enforced,
+  `max_tokens`/`max_documents` as `bounded_per_call`, and
+  `max_steps`/`max_search_calls`/`max_cost` as not enforced.
+- `capabilities` exposes `bounded_per_call_caps`.

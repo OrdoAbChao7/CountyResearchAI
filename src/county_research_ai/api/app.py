@@ -42,7 +42,8 @@ logger = logging.getLogger(__name__)
 API_VERSION = "v1"
 JOB_SCHEMA_VERSION = 1
 EVIDENCE_SCHEMA_VERSION = 1
-ENFORCED_CAPS = ["deadline_seconds", "max_tokens", "max_documents"]
+ENFORCED_CAPS = ["deadline_seconds"]
+BOUNDED_PER_CALL_CAPS = ["max_tokens", "max_documents"]
 UNENFORCED_CAPS = ["max_steps", "max_search_calls", "max_cost"]
 _ID_RE = re.compile(r"^[A-Za-z0-9_:.\-]{1,200}$")
 
@@ -132,6 +133,7 @@ def _register_core_routes(
             mode_label=runner.mode_label,
             live_enabled=live_enabled,
             enforced_caps=list(ENFORCED_CAPS),
+            bounded_per_call_caps=list(BOUNDED_PER_CALL_CAPS),
             unenforced_caps=list(UNENFORCED_CAPS),
             docs_url="/docs",
         )
@@ -456,6 +458,9 @@ def create_app(
         recovered = job_store.recover_interrupted()
         if recovered:
             logger.warning("marked %s interrupted job(s) after restart", recovered)
+        for queued in job_store.list_jobs(limit=200):
+            if queued.status is JobStatus.QUEUED:
+                runner.submit(queued.job_id)
         yield
         if owned_runner:
             runner.shutdown(wait=False)

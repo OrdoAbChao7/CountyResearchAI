@@ -91,10 +91,14 @@ class JobRunner:
         if job is None or job.status.terminal:
             return
         started = time.monotonic()
-        self.store.mark_running(job_id)
-        self.store.append_event(job_id, "job.started", {"mode_label": job.mode_label})
-        graph = EvidenceGraphStore(self.evidence_db_path)
         try:
+            if not self.store.claim_for_execution(job_id):
+                return
+            self.store.append_event(
+                job_id, "job.started", {"mode_label": job.mode_label}
+            )
+            graph = EvidenceGraphStore(self.evidence_db_path)
+            graph.clear_run(job_id)
             context = ResearchContext.from_request(
                 ResearchRequest(
                     county=job.contract.regions[0],
@@ -136,6 +140,11 @@ class JobRunner:
             self._ensure_active(job_id, started)
             enforcement = self._budget_enforcement(job, started)
             outcome, reason = self._outcome(job, summary)
+            self.store.append_event(
+                job_id,
+                "job.completed",
+                {"outcome": outcome.value, "reason": reason},
+            )
             self.store.mark_terminal(
                 job_id,
                 JobStatus.SUCCEEDED,
@@ -149,20 +158,20 @@ class JobRunner:
                 },
                 budget_enforcement=enforcement,
             )
-            self.store.append_event(
-                job_id,
-                "job.completed",
-                {"outcome": outcome.value, "reason": reason},
-            )
         except _Cancelled:
+            self.store.append_event(
+                job_id, "job.cancelled", {"reason": "cancel_requested"}
+            )
             self.store.mark_terminal(
                 job_id,
                 JobStatus.CANCELLED,
                 outcome=ResearchOutcome.CANCELLED,
                 outcome_reason="cancel_requested",
             )
-            self.store.append_event(job_id, "job.cancelled", {"reason": "cancel_requested"})
         except _BudgetExceeded:
+            self.store.append_event(
+                job_id, "budget.exhausted", {"reason": "deadline_exceeded"}
+            )
             self.store.mark_terminal(
                 job_id,
                 JobStatus.BUDGET_EXHAUSTED,
@@ -170,25 +179,25 @@ class JobRunner:
                 outcome_reason="deadline_exceeded",
                 budget_enforcement=self._budget_enforcement(job, started),
             )
-            self.store.append_event(
-                job_id, "budget.exhausted", {"reason": "deadline_exceeded"}
-            )
         except Exception as exc:  # noqa: BLE001
             logger.exception("research job %s failed", job_id)
-            self.store.mark_terminal(
-                job_id,
-                JobStatus.FAILED,
-                outcome=ResearchOutcome.FAILED,
-                outcome_reason="execution_error",
-                error_code=type(exc).__name__,
-                error_message=str(exc)[:500],
-                budget_enforcement=self._budget_enforcement(job, started),
-            )
-            self.store.append_event(
-                job_id,
-                "job.failed",
-                {"code": type(exc).__name__},
-            )
+            try:
+                self.store.append_event(
+                    job_id,
+                    "job.failed",
+                    {"code": type(exc).__name__},
+                )
+                self.store.mark_terminal(
+                    job_id,
+                    JobStatus.FAILED,
+                    outcome=ResearchOutcome.FAILED,
+                    outcome_reason="execution_error",
+                    error_code=type(exc).__name__,
+                    error_message=str(exc)[:500],
+                    budget_enforcement=self._budget_enforcement(job, started),
+                )
+            except Exception:  # noqa: BLE001
+                logger.exception("could not record failure for job %s", job_id)
 
     def _container(self, contract):
         settings = self.settings
@@ -282,15 +291,17 @@ class JobRunner:
     ) -> dict[str, Any]:
         budget = job.contract.budget
         enforced: list[str] = []
+        bounded_per_call: list[str] = []
         not_enforced: list[str] = ["max_steps", "max_search_calls", "max_cost"]
         if budget.deadline_seconds:
             enforced.append("deadline_seconds")
         if budget.max_tokens:
-            enforced.append("max_tokens")
+            bounded_per_call.append("max_tokens")
         if budget.max_documents:
-            enforced.append("max_documents")
+            bounded_per_call.append("max_documents")
         return {
             "enforced": enforced,
+            "bounded_per_call": bounded_per_call,
             "not_enforced_on_workflow_path": not_enforced,
             "elapsed_seconds": round(time.monotonic() - started, 3),
             "deadline_seconds": budget.deadline_seconds,

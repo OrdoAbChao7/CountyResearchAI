@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-26T10:03:11.067886+00:00",
+  "generated_at": "2026-10-26T10:19:53.008067+00:00",
   "evidence_kind": "OFFLINE_VERIFIER_ABLATION",
   "provider_calls": 0,
   "semantic_judge_calls": 0,
@@ -10,19 +10,19 @@
     "spans": 295,
     "claims": 1275,
     "legacy_verified": 495,
-    "deterministic_supported": 173,
-    "objective_support": 1243,
-    "withheld_by_conflict": 998,
-    "downgraded": 417,
-    "upgraded": 95
+    "deterministic_supported": 113,
+    "objective_support": 985,
+    "withheld_by_conflict": 872,
+    "downgraded": 465,
+    "upgraded": 83
   },
   "reason_counts": {
-    "conflicting_supported_evidence": 998,
+    "conflicting_supported_evidence": 872,
     "no_evidence": 2,
     "numeric_value_without_period": 72,
-    "statement_exact_in_span": 134,
-    "statement_not_in_span": 30,
-    "value_and_span_verified": 39
+    "statement_exact_in_span": 84,
+    "statement_not_in_span": 216,
+    "value_and_span_verified": 29
   },
   "cases": [
     {
@@ -176,714 +176,860 @@
         "verified": 140
       },
       "deterministic_statuses": {
-        "NEEDS_REVIEW": 201,
-        "SUPPORTED": 30
+        "INSUFFICIENT": 140,
+        "NEEDS_REVIEW": 84,
+        "SUPPORTED": 7
       },
       "reasons": {
-        "conflicting_supported_evidence": 201,
-        "statement_exact_in_span": 24,
+        "conflicting_supported_evidence": 84,
+        "statement_exact_in_span": 1,
+        "statement_not_in_span": 140,
         "value_and_span_verified": 6
       },
-      "objective_support_count": 231,
-      "withheld_by_conflict": 201,
-      "downgraded_count": 116,
-      "upgraded_count": 6,
+      "objective_support_count": 91,
+      "withheld_by_conflict": 84,
+      "downgraded_count": 140,
+      "upgraded_count": 7,
       "downgraded": [
         {
           "claim_id": "036740dd0968",
           "metric": "增速与比重",
           "value": "7.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "039b702a7646",
           "metric": "产值与收入",
           "value": "24729亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "06f6b6eda0bb",
           "metric": "增速与比重",
           "value": "6.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "07ac688ecebd",
           "metric": "增速与比重",
           "value": "5.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "0c5941f2978a",
           "metric": "增速与比重",
           "value": "2.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "0c9a183d0cb6",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "105f6f73546a",
           "metric": "增速与比重",
           "value": "2.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "12a46a8c2271",
           "metric": "增速与比重",
           "value": "10.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "1ae2c5dcdab8",
           "metric": "宏观GDP",
           "value": "331691亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "1b338ba57968",
           "metric": "增速与比重",
           "value": "15.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "1b9e64d23c4e",
           "metric": "增速与比重",
           "value": "8.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "1c61bd9a9395",
           "metric": "增速与比重",
           "value": "11.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "1c949fd8bb98",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "214366ed3f5c",
           "metric": "增速与比重",
           "value": "3.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "217816b3e98c",
           "metric": "增速与比重",
           "value": "7.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "27ef252d1812",
           "metric": "增速与比重",
           "value": "5.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "289090be27c1",
           "metric": "增速与比重",
           "value": "0.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "28dcd5fd95e0",
           "metric": "增速与比重",
           "value": "0.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "2a5f9ddd6535",
           "metric": "增速与比重",
           "value": "9.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "317b89103963",
           "metric": "增速与比重",
           "value": "3.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "318bbd5707fc",
           "metric": "增速与比重",
           "value": "5.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "35b07b563ca7",
           "metric": "增速与比重",
           "value": "9.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "35bc4830a961",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "37d06afa9e17",
           "metric": "增速与比重",
           "value": "7.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "3a42e5c272fc",
           "metric": "增速与比重",
           "value": "4.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "3bf72c0f1b49",
           "metric": "产值与收入",
           "value": "56576亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "3c7c212344cd",
           "metric": "增速与比重",
           "value": "5.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "3f75ce5eb13f",
           "metric": "增速与比重",
           "value": "3.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "3f88f50aa633",
           "metric": "增速与比重",
           "value": "5.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "435d8604caf9",
           "metric": "增速与比重",
           "value": "5.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "462d23d9b970",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "467b12044e72",
           "metric": "增速与比重",
           "value": "1.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "472312dbb0b5",
           "metric": "产值与收入",
           "value": "89949亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "47d2380d3e3c",
           "metric": "宏观GDP",
           "value": "630228亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "48c139c949d9",
           "metric": "增速与比重",
           "value": "5.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "4a58d9d6712d",
           "metric": "增速与比重",
           "value": "1.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "5679f47acc89",
           "metric": "产值与收入",
           "value": "765583亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "568f3043a6b3",
           "metric": "增速与比重",
           "value": "4.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "58575237086f",
           "metric": "增速与比重",
           "value": "8.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "5d6bae3a48f8",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "5f47d4ad38f0",
           "metric": "增速与比重",
           "value": "3.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "6454ebe95420",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "64c99b36ea9f",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "6531821320d0",
           "metric": "宏观GDP",
           "value": "63451亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "65835bc0c4fa",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "6632ccc92f82",
           "metric": "增速与比重",
           "value": "6.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "66c03d264c7f",
           "metric": "增速与比重",
           "value": "0.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "6831509debdd",
           "metric": "增速与比重",
           "value": "64.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "68ca8631f004",
           "metric": "增速与比重",
           "value": "3.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "68f701a01e30",
           "metric": "增速与比重",
           "value": "5.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "6a6e5b204651",
           "metric": "增速与比重",
           "value": "3.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "6c135037ffcc",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "6c804bed7605",
           "metric": "增速与比重",
           "value": "5.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "6e96277e3d14",
           "metric": "增速与比重",
           "value": "0.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "71b44469ce91",
           "metric": "增速与比重",
           "value": "15.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "71d98643a85a",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "720b0a4a76d6",
           "metric": "产值与收入",
           "value": "91414亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "72379762b639",
           "metric": "宏观GDP",
           "value": "702356亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "74125f721875",
           "metric": "增速与比重",
           "value": "4.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "742768349ed5",
           "metric": "增速与比重",
           "value": "56.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "745bdde085a7",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "75d08b16c0e1",
           "metric": "增速与比重",
           "value": "11.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "797b29dfbb07",
           "metric": "增速与比重",
           "value": "4.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "798a02204c86",
           "metric": "增速与比重",
           "value": "5.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "7adf788fc2d7",
           "metric": "增速与比重",
           "value": "1.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "7b1459feba79",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "805607a315d5",
           "metric": "增速与比重",
           "value": "0.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "81079f586976",
           "metric": "增速与比重",
           "value": "5.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "86590892e794",
           "metric": "增速与比重",
           "value": "16.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "8742ce4ca8c7",
           "metric": "增速与比重",
           "value": "4.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "87dd043f7be8",
           "metric": "增速与比重",
           "value": "5.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "8a7cf1a4ce84",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "8d67e598b9e3",
           "metric": "增速与比重",
           "value": "14.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "8dd47a51d43d",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "91712429b8e4",
           "metric": "增速与比重",
           "value": "2.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "941749f60b1d",
           "metric": "增速与比重",
           "value": "0.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "996649b19378",
           "metric": "增速与比重",
           "value": "6.1%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "9b96514bd4a0",
           "metric": "增速与比重",
           "value": "3.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "9eab03db4b26",
           "metric": "增速与比重",
           "value": "5.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "9f1819d4fc3b",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "9f34c716bb9f",
           "metric": "增速与比重",
           "value": "18.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "9fdd4845fa62",
           "metric": "增速与比重",
           "value": "10.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "a2adc38108d7",
           "metric": "增速与比重",
           "value": "2.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "a568bc2bc155",
           "metric": "产值与收入",
           "value": "405442亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "a66e1801d7a0",
           "metric": "增速与比重",
           "value": "3.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "a902abb4569e",
           "metric": "增速与比重",
           "value": "0.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "a9c35a26eef6",
           "metric": "产值与收入",
           "value": "59232亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "aa0e3a39e929",
           "metric": "产值与收入",
           "value": "492087亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "abd0558f7de6",
           "metric": "增速与比重",
           "value": "45.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ade77f21f58e",
           "metric": "增速与比重",
           "value": "8.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "b07f461532aa",
           "metric": "增速与比重",
           "value": "14.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "b2ea9ef32ee2",
           "metric": "产值与收入",
           "value": "98544亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "b49c258063b9",
           "metric": "增速与比重",
           "value": "7.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "b625e2d949fa",
           "metric": "增速与比重",
           "value": "5.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ba018ecbf742",
           "metric": "增速与比重",
           "value": "1.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "bd515a600d2b",
           "metric": "增速与比重",
           "value": "3.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "bd6ad530eaeb",
           "metric": "增速与比重",
           "value": "2.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "be6999b03e4d",
           "metric": "产值与收入",
           "value": "137981亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "bef847a68a63",
           "metric": "增速与比重",
           "value": "5.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "c0983f8c8246",
           "metric": "宏观GDP",
           "value": "115394亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "c619cdc31115",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ca50272d9727",
           "metric": "增速与比重",
           "value": "7.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "cacbad4ec0cf",
           "metric": "增速与比重",
           "value": "3.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "caf700c8cd48",
           "metric": "增速与比重",
           "value": "5.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "cca97b6c381e",
           "metric": "增速与比重",
           "value": "5.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "cec7bd20009c",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "cf63314924ea",
           "metric": "宏观GDP",
           "value": "287156亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "d113fcd36a05",
           "metric": "增速与比重",
           "value": "1.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "d33fea7e331b",
           "metric": "增速与比重",
           "value": "6.8%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "d4aa33b32af1",
           "metric": "增速与比重",
           "value": "4.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "d5560b73fbf8",
           "metric": "产值与收入",
           "value": "84565亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "d87e2e13e753",
           "metric": "增速与比重",
           "value": "3.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "d8e888c702fb",
           "metric": "增速与比重",
           "value": "5.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "da0686098700",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "da2816941077",
           "metric": "增速与比重",
           "value": "3.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "da4b08c0449d",
           "metric": "增速与比重",
           "value": "34.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "daaa60acd956",
           "metric": "增速与比重",
           "value": "38.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "dd047914a0b9",
           "metric": "增速与比重",
           "value": "3.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "e19a24c4d3bc",
           "metric": "增速与比重",
           "value": "1.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "e55260fc3046",
           "metric": "增速与比重",
           "value": "2.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "e79f61f3e471",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "e94ae82c78f2",
           "metric": "增速与比重",
           "value": "36.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "ea1e24779390",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ea555639def7",
           "metric": "增速与比重",
           "value": "8.2%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ebcd69480cd2",
           "metric": "增速与比重",
           "value": "4.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ec65073f46fc",
           "metric": "增速与比重",
           "value": "8.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "ed450729707a",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ed5fb401b37d",
           "metric": "增速与比重",
           "value": "10.0%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ef56ca847117",
           "metric": "增速与比重",
           "value": "8.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "f002b0740a45",
           "metric": "增速与比重",
           "value": "2.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "f6c5eda04265",
           "metric": "宏观GDP",
           "value": "287350亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "f79fad8ed7f2",
           "metric": "增速与比重",
           "value": "16.4%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "f97e29474dd4",
           "metric": "增速与比重",
           "value": "5.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "f9dfebdc04c6",
           "metric": "增速与比重",
           "value": "4.6%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "f9e406d6aa8a",
+          "metric": "人口规模",
+          "value": "94350万人",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "fca935f6e5b7",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "fd0e9988a541",
           "metric": "增速与比重",
           "value": "6.9%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "fe4c22027e51",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ff17191ae3de",
           "metric": "增速与比重",
           "value": "4.3%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "ff2c0c831e80",
           "metric": "产值与收入",
           "value": "63438亿元",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         }
       ],
       "upgraded": [
@@ -906,6 +1052,11 @@
           "claim_id": "bcc33ef8e700",
           "metric": "面积与规模",
           "value": ""
+        },
+        {
+          "claim_id": "c56189cc8c68",
+          "metric": "宏观GDP",
+          "value": "722.5亿元"
         },
         {
           "claim_id": "c7437536386a",
@@ -971,19 +1122,16 @@
         "verified": 33
       },
       "deterministic_statuses": {
-        "INSUFFICIENT": 2,
-        "NOT_COMPARABLE": 12,
-        "SUPPORTED": 19
+        "INSUFFICIENT": 21,
+        "NOT_COMPARABLE": 12
       },
       "reasons": {
         "numeric_value_without_period": 12,
-        "statement_exact_in_span": 17,
-        "statement_not_in_span": 2,
-        "value_and_span_verified": 2
+        "statement_not_in_span": 21
       },
-      "objective_support_count": 31,
+      "objective_support_count": 0,
       "withheld_by_conflict": 0,
-      "downgraded_count": 14,
+      "downgraded_count": 33,
       "upgraded_count": 0,
       "downgraded": [
         {
@@ -1011,10 +1159,46 @@
           "reason": "numeric_value_without_period"
         },
         {
+          "claim_id": "0d315ecaba5a",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "1286c6eaa587",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "168e9bbfdd9b",
           "metric": "产值与收入",
           "value": "37.2亿元",
           "reason": "numeric_value_without_period"
+        },
+        {
+          "claim_id": "37a05a8bdfbf",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "3bb33e5071d0",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "40abebe115db",
+          "metric": "企业数量",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "45695c1ebef9",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "58e0afd570b3",
@@ -1023,16 +1207,40 @@
           "reason": "numeric_value_without_period"
         },
         {
+          "claim_id": "596ad56de13e",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "5afb7f13a123",
           "metric": "产值与收入",
           "value": "72.56亿元",
           "reason": "numeric_value_without_period"
         },
         {
+          "claim_id": "63d62c6e6356",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "68961b582dd2",
+          "metric": "人口规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "724182815696",
           "metric": "人口规模",
           "value": "2万人",
           "reason": "numeric_value_without_period"
+        },
+        {
+          "claim_id": "7ad4d8df24ed",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "82ade0ceef2a",
@@ -1047,8 +1255,26 @@
           "reason": "numeric_value_without_period"
         },
         {
+          "claim_id": "945c22f1ca80",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "a60f15b731c1",
           "metric": "政策规划",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "b0afa783888b",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "b49d7bbc2064",
+          "metric": "面积与规模",
           "value": "",
           "reason": "statement_not_in_span"
         },
@@ -1059,10 +1285,46 @@
           "reason": "numeric_value_without_period"
         },
         {
+          "claim_id": "c704a47768fc",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "ccbd487094ec",
           "metric": "面积与规模",
           "value": "310亩",
           "reason": "numeric_value_without_period"
+        },
+        {
+          "claim_id": "cdc954df6e56",
+          "metric": "产值与收入",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "d7f615e4afaa",
+          "metric": "增速与比重",
+          "value": "54%",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "d81faea7a2b1",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "f73654a90912",
+          "metric": "面积与规模",
+          "value": "7313亩",
+          "reason": "statement_not_in_span"
+        },
+        {
+          "claim_id": "f8ffaf971e6b",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "f9932f52e1b3",
@@ -1246,25 +1508,26 @@
         "verified": 1
       },
       "deterministic_statuses": {
-        "NOT_COMPARABLE": 4,
-        "SUPPORTED": 2
+        "INSUFFICIENT": 2,
+        "NOT_COMPARABLE": 4
       },
       "reasons": {
         "numeric_value_without_period": 4,
-        "statement_exact_in_span": 2
+        "statement_not_in_span": 2
       },
-      "objective_support_count": 6,
+      "objective_support_count": 0,
       "withheld_by_conflict": 0,
-      "downgraded_count": 0,
-      "upgraded_count": 1,
-      "downgraded": [],
-      "upgraded": [
+      "downgraded_count": 1,
+      "upgraded_count": 0,
+      "downgraded": [
         {
-          "claim_id": "2fa6e7cbfeb5",
-          "metric": "人口规模",
-          "value": ""
+          "claim_id": "592b03ff85f0",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
         }
-      ]
+      ],
+      "upgraded": []
     },
     {
       "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_C",
@@ -1448,7 +1711,7 @@
         "numeric_value_without_period": 9,
         "statement_not_in_span": 2
       },
-      "objective_support_count": 9,
+      "objective_support_count": 0,
       "withheld_by_conflict": 0,
       "downgraded_count": 11,
       "upgraded_count": 0,
@@ -1536,19 +1799,19 @@
         "verified": 11
       },
       "deterministic_statuses": {
-        "INSUFFICIENT": 4,
+        "INSUFFICIENT": 5,
         "NOT_COMPARABLE": 9,
-        "SUPPORTED": 3
+        "SUPPORTED": 2
       },
       "reasons": {
         "numeric_value_without_period": 9,
-        "statement_not_in_span": 4,
-        "value_and_span_verified": 3
+        "statement_not_in_span": 5,
+        "value_and_span_verified": 2
       },
-      "objective_support_count": 12,
+      "objective_support_count": 2,
       "withheld_by_conflict": 0,
       "downgraded_count": 11,
-      "upgraded_count": 3,
+      "upgraded_count": 2,
       "downgraded": [
         {
           "claim_id": "04938cddeac9",
@@ -1627,11 +1890,6 @@
           "claim_id": "75c15a7ef703",
           "metric": "增速与比重",
           "value": "5.06%"
-        },
-        {
-          "claim_id": "93fdb64bf19d",
-          "metric": "规上工业产值与收入",
-          "value": "1000亿元"
         }
       ]
     },
@@ -1660,7 +1918,7 @@
         "statement_not_in_span": 2,
         "value_and_span_verified": 3
       },
-      "objective_support_count": 41,
+      "objective_support_count": 32,
       "withheld_by_conflict": 28,
       "downgraded_count": 39,
       "upgraded_count": 0,
@@ -1916,18 +2174,16 @@
         "verified": 26
       },
       "deterministic_statuses": {
-        "INSUFFICIENT": 6,
-        "NOT_COMPARABLE": 25,
-        "SUPPORTED": 1
+        "INSUFFICIENT": 7,
+        "NOT_COMPARABLE": 25
       },
       "reasons": {
         "numeric_value_without_period": 25,
-        "statement_exact_in_span": 1,
-        "statement_not_in_span": 6
+        "statement_not_in_span": 7
       },
-      "objective_support_count": 26,
+      "objective_support_count": 0,
       "withheld_by_conflict": 0,
-      "downgraded_count": 25,
+      "downgraded_count": 26,
       "upgraded_count": 0,
       "downgraded": [
         {
@@ -2033,6 +2289,12 @@
           "reason": "numeric_value_without_period"
         },
         {
+          "claim_id": "b3d29fc90d5d",
+          "metric": "产量与产能",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "c2a257849510",
           "metric": "增速与比重",
           "value": "8%",
@@ -2096,17 +2358,19 @@
         "verified": 129
       },
       "deterministic_statuses": {
-        "NEEDS_REVIEW": 113,
-        "SUPPORTED": 16
+        "INSUFFICIENT": 6,
+        "NEEDS_REVIEW": 110,
+        "SUPPORTED": 13
       },
       "reasons": {
-        "conflicting_supported_evidence": 113,
-        "statement_exact_in_span": 13,
-        "value_and_span_verified": 3
+        "conflicting_supported_evidence": 110,
+        "statement_exact_in_span": 11,
+        "statement_not_in_span": 6,
+        "value_and_span_verified": 2
       },
-      "objective_support_count": 129,
-      "withheld_by_conflict": 113,
-      "downgraded_count": 113,
+      "objective_support_count": 123,
+      "withheld_by_conflict": 110,
+      "downgraded_count": 116,
       "upgraded_count": 0,
       "downgraded": [
         {
@@ -2194,6 +2458,12 @@
           "reason": "conflicting_supported_evidence"
         },
         {
+          "claim_id": "1e3b44fcbd5a",
+          "metric": "企业数量",
+          "value": "",
+          "reason": "statement_not_in_span"
+        },
+        {
           "claim_id": "210d83269506",
           "metric": "增速与比重",
           "value": "27.2%",
@@ -2203,7 +2473,7 @@
           "claim_id": "21a43fc35986",
           "metric": "增速与比重",
           "value": "43.5%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "257f699b2201",
@@ -2317,7 +2587,7 @@
           "claim_id": "3f447cc73a4e",
           "metric": "增速与比重",
           "value": "16.7%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "437d49894152",
@@ -2372,6 +2642,12 @@
           "metric": "增速与比重",
           "value": "13.0%",
           "reason": "conflicting_supported_evidence"
+        },
+        {
+          "claim_id": "519a7aa3065d",
+          "metric": "面积与规模",
+          "value": "",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "525e238f65b9",
@@ -2437,7 +2713,7 @@
           "claim_id": "6f743f20c564",
           "metric": "增速与比重",
           "value": "15%",
-          "reason": "conflicting_supported_evidence"
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "75c4bb0b9372",
@@ -2606,6 +2882,12 @@
           "metric": "增速与比重",
           "value": "41.5%",
           "reason": "conflicting_supported_evidence"
+        },
+        {
+          "claim_id": "b2299c9703a1",
+          "metric": "规上工业增速与比重",
+          "value": "101%",
+          "reason": "statement_not_in_span"
         },
         {
           "claim_id": "b424e99c5e6d",
@@ -3258,22 +3540,19 @@
         "verified": 1
       },
       "deterministic_statuses": {
-        "INSUFFICIENT": 2,
-        "NEEDS_REVIEW": 3,
+        "INSUFFICIENT": 12,
         "NOT_COMPARABLE": 4,
-        "SUPPORTED": 8
+        "SUPPORTED": 1
       },
       "reasons": {
-        "conflicting_supported_evidence": 3,
         "numeric_value_without_period": 4,
-        "statement_exact_in_span": 5,
-        "statement_not_in_span": 2,
-        "value_and_span_verified": 3
+        "statement_exact_in_span": 1,
+        "statement_not_in_span": 12
       },
-      "objective_support_count": 15,
-      "withheld_by_conflict": 3,
+      "objective_support_count": 1,
+      "withheld_by_conflict": 0,
       "downgraded_count": 1,
-      "upgraded_count": 8,
+      "upgraded_count": 1,
       "downgraded": [
         {
           "claim_id": "4d9ca656c431",
@@ -3284,44 +3563,9 @@
       ],
       "upgraded": [
         {
-          "claim_id": "1806e48ebbc0",
-          "metric": "人口规模",
-          "value": ""
-        },
-        {
           "claim_id": "482d08685740",
           "metric": "面积与规模",
           "value": ""
-        },
-        {
-          "claim_id": "63dcbc152b89",
-          "metric": "增速与比重",
-          "value": "6.9%"
-        },
-        {
-          "claim_id": "882058d8e0d3",
-          "metric": "企业数量",
-          "value": ""
-        },
-        {
-          "claim_id": "d2152c6dba99",
-          "metric": "产值与收入",
-          "value": "26.64亿元"
-        },
-        {
-          "claim_id": "d3331767da08",
-          "metric": "人口规模",
-          "value": ""
-        },
-        {
-          "claim_id": "e0e567c6cf2d",
-          "metric": "人口规模",
-          "value": ""
-        },
-        {
-          "claim_id": "f7b9e68f090a",
-          "metric": "产值与收入",
-          "value": "8.35亿元"
         }
       ]
     },
@@ -3339,20 +3583,18 @@
         "verified": 1
       },
       "deterministic_statuses": {
-        "INSUFFICIENT": 3,
-        "NEEDS_REVIEW": 3,
-        "SUPPORTED": 9
+        "INSUFFICIENT": 10,
+        "SUPPORTED": 5
       },
       "reasons": {
-        "conflicting_supported_evidence": 3,
-        "statement_exact_in_span": 3,
-        "statement_not_in_span": 3,
-        "value_and_span_verified": 6
+        "statement_exact_in_span": 2,
+        "statement_not_in_span": 10,
+        "value_and_span_verified": 3
       },
-      "objective_support_count": 12,
-      "withheld_by_conflict": 3,
+      "objective_support_count": 5,
+      "withheld_by_conflict": 0,
       "downgraded_count": 1,
-      "upgraded_count": 9,
+      "upgraded_count": 5,
       "downgraded": [
         {
           "claim_id": "4d9ca656c431",
@@ -3378,32 +3620,12 @@
           "value": ""
         },
         {
-          "claim_id": "63dcbc152b89",
-          "metric": "增速与比重",
-          "value": "6.9%"
-        },
-        {
           "claim_id": "6ad15c39187e",
           "metric": "增速与比重",
           "value": "14.5%"
         },
         {
-          "claim_id": "882058d8e0d3",
-          "metric": "企业数量",
-          "value": ""
-        },
-        {
           "claim_id": "a40934a407f2",
-          "metric": "产值与收入",
-          "value": "8.35亿元"
-        },
-        {
-          "claim_id": "d2152c6dba99",
-          "metric": "产值与收入",
-          "value": "26.64亿元"
-        },
-        {
-          "claim_id": "f7b9e68f090a",
           "metric": "产值与收入",
           "value": "8.35亿元"
         }

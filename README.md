@@ -100,7 +100,7 @@ cd web; npm run typecheck; npm test; npm run build      # 前端检查
 
 当前实测：
 
-- Python 测试 **662 passed**；前端 4 tests、`tsc` 与 Vite build 通过（2026-10-26）。
+- Python 测试 **674 passed**；前端 4 tests、`tsc` 与 Vite build 通过（2026-10-26）。
 - 本地 `MOCK` 端到端：任务 `SUCCEEDED` / `SUFFICIENT`，3 个来源、6 条结构化结论；2025/2027 结论在 2024 时间窗内被正确判为 `NOT_COMPARABLE`。
 - 冻结 matched-budget 离线 A/B/C 复算：C 组在现有小样本上落后 A/B 且资源消耗更高。**不能**据此得出 v2 优于基线的结论；D 组、40–60 独立任务、消融、真实 Provider 与语义 Judge 均未运行/未获授权。
 
@@ -125,7 +125,7 @@ docs/           架构、ADR、Demo、评测、目标状态
 ## 边界
 
 - 范围是县域/区域产业研究；不提供医疗、法律、证券投资建议，也不是通用 Agent。
-- `max_steps`、`max_search_calls`、`max_cost` 在旧 workflow 路径未强制执行；API 会如实报告 `not_enforced_on_workflow_path`。
+- `max_steps`、`max_search_calls`、`max_cost` 在旧 workflow 路径未强制执行；API 会如实报告 `not_enforced_on_workflow_path`。`max_tokens`/`max_documents` 是单次调用/单次采集上限，不是累计配额；只有 `deadline_seconds` 会触发 `BUDGET_EXHAUSTED`。
 - 确定性校验不识别语义改写/别名；未命中的正确结论会保持 `INSUFFICIENT`。
 - 单进程线程池适合本地 Demo，不是分布式任务队列。
 

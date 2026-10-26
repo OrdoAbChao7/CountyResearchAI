@@ -215,6 +215,29 @@ class JobStore:
             budget_enforcement=json.loads(row["budget_enforcement_json"]),
         )
 
+    def claim_for_execution(self, job_id: str) -> bool:
+        """Atomically move a queued/interrupted job to RUNNING.
+
+        Only one caller can win, which prevents duplicate execution when
+        ``resume`` is retried or two workers race on the same queued job.
+        """
+        now = _utcnow().isoformat()
+        with self._lock, self._connect() as connection:
+            cursor = connection.execute(
+                "UPDATE jobs SET status = ?, started_at = ?, finished_at = NULL,"
+                " updated_at = ?, error_code = '', error_message = ''"
+                " WHERE job_id = ? AND status IN (?, ?)",
+                (
+                    JobStatus.RUNNING.value,
+                    now,
+                    now,
+                    job_id,
+                    JobStatus.QUEUED.value,
+                    JobStatus.INTERRUPTED.value,
+                ),
+            )
+            return cursor.rowcount == 1
+
     def mark_running(self, job_id: str) -> None:
         now = _utcnow().isoformat()
         with self._lock, self._connect() as connection:

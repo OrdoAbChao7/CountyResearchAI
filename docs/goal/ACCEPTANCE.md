@@ -7,7 +7,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 
 | Check | Status | Command / artifact | Observed |
 | --- | --- | --- | --- |
-| Python suite | PASS | `python -m pytest --no-cov -q` | `662 passed in 8.31s`, exit 0 |
+| Python suite | PASS | `python -m pytest --no-cov -q` | `674 passed in 28.95s`, exit 0 |
 | Relocated manifest audit | PASS | `tests/test_audit_path_resolution.py` | 4 passed |
 | Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
 | Frontend tests | PASS | `cd web; npm test` | 4 passed |

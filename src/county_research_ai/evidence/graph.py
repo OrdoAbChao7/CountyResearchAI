@@ -120,6 +120,8 @@ class VerificationRecord(BaseModel):
     uncertainty: float | None = None
     human_review: dict[str, Any] | None = None
     verifier_version: str = DETERMINISTIC_VERIFIER_VERSION
+    run_id: str = ""
+    reason: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -226,7 +228,10 @@ def _quote_contains_value(quote: str, value: str, unit: str) -> bool:
     ``200``. Numeric tokens are then compared with unit conversion support.
     """
     normalized_quote = _normalize_ws(quote)
-    for form in _value_forms(value, unit):
+    forms = _value_forms(value, unit)
+    if unit:
+        forms = {form for form in forms if unit in form}
+    for form in forms:
         start = normalized_quote.find(form)
         while start != -1:
             end = start + len(form)
@@ -249,13 +254,60 @@ def _quote_contains_value(quote: str, value: str, unit: str) -> bool:
         if found is None:
             continue
         found_unit = match.group(2) or ""
-        if found == target and (not unit or found_unit == unit or not found_unit):
+        if not unit:
+            if found == target:
+                return True
+            continue
+        if found_unit == unit and found == target:
             return True
-        if target_unit_multiplier is not None:
+        if found_unit and target_unit_multiplier is not None:
             found_multiplier = _unit_multiplier(found_unit)
-            if found_multiplier is not None and found * found_multiplier == target * target_unit_multiplier:
+            if (
+                found_multiplier is not None
+                and found * found_multiplier
+                == target * target_unit_multiplier
+            ):
                 return True
     return False
+
+
+def _claim_supported_by_quote(
+    claim: AtomicClaim,
+    quote: str,
+    *,
+    title: str = "",
+    url: str = "",
+) -> bool:
+    """Whether one exact quote (plus source metadata) supports the claim.
+
+    A single span must carry the region, period, value/unit, and statement or
+    metric. Values and metrics found in different spans do not compose into
+    support.
+    """
+    evidence_text = f"{quote}\n{title}\n{url}"
+    if claim.region_id and claim.region_id not in evidence_text:
+        return False
+    claim_years = set(_years(claim.period))
+    if not claim_years:
+        return False
+    quote_years = set(_years(evidence_text))
+    if quote_years and not (claim_years & quote_years):
+        return False
+    if claim.value:
+        if not _quote_contains_value(quote, claim.value, claim.unit):
+            return False
+        if not claim.statement and not claim.metric_id:
+            return True
+        statement_ok = (
+            _normalize_ws(claim.statement) in _normalize_ws(quote)
+            if claim.statement
+            else False
+        )
+        metric_ok = bool(claim.metric_id) and claim.metric_id in quote
+        return statement_ok or metric_ok
+    if not claim.statement:
+        return False
+    return _normalize_ws(claim.statement) in _normalize_ws(quote)
 
 
 def _integrity_check(
@@ -501,8 +553,9 @@ class EvidenceGraphStore:
                     to_claim_id TEXT NOT NULL REFERENCES claims(claim_id),
                     relation TEXT NOT NULL,
                     rationale TEXT NOT NULL DEFAULT '',
+                    run_id TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL,
-                    PRIMARY KEY (from_claim_id, to_claim_id, relation)
+                    PRIMARY KEY (from_claim_id, to_claim_id, relation, run_id)
                 );
                 CREATE TABLE IF NOT EXISTS verification_records (
                     record_id TEXT PRIMARY KEY,
@@ -513,6 +566,8 @@ class EvidenceGraphStore:
                     uncertainty REAL,
                     human_review_json TEXT,
                     verifier_version TEXT NOT NULL DEFAULT '',
+                    run_id TEXT NOT NULL DEFAULT '',
+                    reason TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS findings (
@@ -534,6 +589,19 @@ class EvidenceGraphStore:
                 CREATE INDEX IF NOT EXISTS idx_run_snapshots_run ON run_snapshots(run_id);
                 """
             )
+            for table, column, ddl in (
+                ("claim_relations", "run_id", "TEXT NOT NULL DEFAULT ''"),
+                ("verification_records", "run_id", "TEXT NOT NULL DEFAULT ''"),
+                ("verification_records", "reason", "TEXT NOT NULL DEFAULT ''"),
+            ):
+                columns = {
+                    row[1]
+                    for row in connection.execute(f"PRAGMA table_info({table})")
+                }
+                if column not in columns:
+                    connection.execute(
+                        f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"
+                    )
             connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
     # ---------------------------------------------------------------- writes
@@ -578,7 +646,7 @@ class EvidenceGraphStore:
                             now,
                         ),
                     )
-            self._record_relations(connection, ledger, observed, now)
+            self._record_relations(connection, ledger, observed, now, run_id=run_id)
 
         counts = {
             "snapshots": len(ledger.sources),
@@ -592,7 +660,10 @@ class EvidenceGraphStore:
         }
         for claim in ledger.claims.values():
             self.verify_claim(
-                claim.claim_id, window=window, supported_ids=supported_ids
+                claim.claim_id,
+                window=window,
+                supported_ids=supported_ids,
+                run_id=run_id,
             )
         return counts
 
@@ -747,6 +818,8 @@ class EvidenceGraphStore:
         ledger: EvidenceLedger,
         observed: dict[str, datetime | None],
         now: str,
+        *,
+        run_id: str = "",
     ) -> None:
         claims = sorted(ledger.claims.values(), key=lambda item: item.claim_id)
         for index, left in enumerate(claims):
@@ -761,13 +834,14 @@ class EvidenceGraphStore:
                     continue
                 connection.execute(
                     "INSERT OR IGNORE INTO claim_relations"
-                    " (from_claim_id, to_claim_id, relation, rationale, created_at)"
-                    " VALUES (?, ?, ?, ?, ?)",
+                    " (from_claim_id, to_claim_id, relation, rationale, run_id, created_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         relation.from_claim_id,
                         relation.to_claim_id,
                         relation.relation.value,
                         relation.rationale,
+                        run_id,
                         now,
                     ),
                 )
@@ -923,7 +997,7 @@ class EvidenceGraphStore:
             content_hash=row["content_hash"],
         )
 
-    def get_chain(self, claim_id: str) -> ClaimChain:
+    def get_chain(self, claim_id: str, *, run_id: str = "") -> ClaimChain:
         claim = self.get_claim(claim_id)
         if claim is None:
             raise KeyError(f"unknown claim: {claim_id}")
@@ -933,17 +1007,31 @@ class EvidenceGraphStore:
                 " ORDER BY relation, span_id",
                 (claim_id,),
             ).fetchall()
-            relation_rows = connection.execute(
-                "SELECT * FROM claim_relations"
-                " WHERE from_claim_id = ? OR to_claim_id = ?"
-                " ORDER BY from_claim_id, to_claim_id, relation",
-                (claim_id, claim_id),
-            ).fetchall()
-            verification_row = connection.execute(
-                "SELECT * FROM verification_records WHERE claim_id = ?"
-                " ORDER BY created_at DESC LIMIT 1",
-                (claim_id,),
-            ).fetchone()
+            if run_id:
+                relation_rows = connection.execute(
+                    "SELECT * FROM claim_relations"
+                    " WHERE (from_claim_id = ? OR to_claim_id = ?) AND run_id = ?"
+                    " ORDER BY from_claim_id, to_claim_id, relation",
+                    (claim_id, claim_id, run_id),
+                ).fetchall()
+                verification_row = connection.execute(
+                    "SELECT * FROM verification_records"
+                    " WHERE claim_id = ? AND run_id = ?"
+                    " ORDER BY created_at DESC LIMIT 1",
+                    (claim_id, run_id),
+                ).fetchone()
+            else:
+                relation_rows = connection.execute(
+                    "SELECT * FROM claim_relations"
+                    " WHERE from_claim_id = ? OR to_claim_id = ?"
+                    " ORDER BY from_claim_id, to_claim_id, relation",
+                    (claim_id, claim_id),
+                ).fetchall()
+                verification_row = connection.execute(
+                    "SELECT * FROM verification_records WHERE claim_id = ?"
+                    " ORDER BY created_at DESC LIMIT 1",
+                    (claim_id,),
+                ).fetchone()
             links: list[EvidenceLink] = []
             for edge_row in edge_rows:
                 span_row = connection.execute(
@@ -985,6 +1073,13 @@ class EvidenceGraphStore:
             if verification_row is not None
             else None
         )
+        if verification is not None and run_id:
+            claim = claim.model_copy(
+                update={
+                    "verification_status": verification.status.value.lower(),
+                    "verification_reason": verification.reason,
+                }
+            )
         return ClaimChain(
             claim=claim, links=links, relations=relations, verification=verification
         )
@@ -1017,8 +1112,9 @@ class EvidenceGraphStore:
         verifier_version: str = DETERMINISTIC_VERIFIER_VERSION,
         window: tuple[date | None, date | None] | None = None,
         supported_ids: set[str] | None = None,
+        run_id: str = "",
     ) -> VerificationRecord:
-        chain = self.get_chain(claim_id)
+        chain = self.get_chain(claim_id, run_id=run_id)
         claim = chain.claim
         checks: dict[str, Any] = {"edges": len(chain.links)}
         if window is not None:
@@ -1083,7 +1179,12 @@ class EvidenceGraphStore:
             )
 
         status, reason = self._decide_status(
-            claim, chain, checks, window=window, supported_ids=supported_ids
+            claim,
+            chain,
+            checks,
+            window=window,
+            supported_ids=supported_ids,
+            run_id=run_id,
         )
         record = VerificationRecord(
             record_id=hashlib.sha256(
@@ -1093,6 +1194,8 @@ class EvidenceGraphStore:
             status=status,
             deterministic_checks=checks,
             verifier_version=verifier_version,
+            run_id=run_id,
+            reason=reason,
         )
         self.save_verification(record, reason=reason)
         return record
@@ -1124,11 +1227,10 @@ class EvidenceGraphStore:
         *,
         window: tuple[date | None, date | None] | None = None,
         supported_ids: set[str] | None = None,
+        run_id: str = "",
     ) -> tuple[VerificationStatus, str]:
-        superseded = any(
-            relation.relation is ClaimRelationKind.SUPERSEDES
-            and relation.to_claim_id == claim.claim_id
-            for relation in chain.relations
+        superseded = self._has_supported_superseder(
+            claim, chain, supported_ids=supported_ids, run_id=run_id
         )
         if superseded:
             return VerificationStatus.OUTDATED, "superseded_by_newer_claim"
@@ -1146,7 +1248,7 @@ class EvidenceGraphStore:
         if claim.value and not claim.period:
             return VerificationStatus.NOT_COMPARABLE, "numeric_value_without_period"
         supported_conflicts = self._supported_claim_conflicts(
-            claim, chain, supported_ids=supported_ids
+            claim, chain, supported_ids=supported_ids, run_id=run_id
         )
         checks["contradicting_supported_claims"] = supported_conflicts
         own_support = self._has_objective_support(chain)
@@ -1171,15 +1273,70 @@ class EvidenceGraphStore:
         start, end = window
         if start is None and end is None:
             return ""
-        years = _years(claim.period)
+        period = claim.period.strip()
+        if not period:
+            return "claim_period_missing_for_window"
+        full_date = re.search(
+            r"(?<!\d)(\d{4})-(\d{1,2})(?:-(\d{1,2}))?(?!\d)", period
+        )
+        if full_date:
+            try:
+                value = date(
+                    int(full_date.group(1)),
+                    int(full_date.group(2)),
+                    int(full_date.group(3) or 1),
+                )
+            except ValueError:
+                value = None
+            if value is not None:
+                if start is not None and value < start:
+                    return f"outside_requested_window:{value.isoformat()}"
+                if end is not None and value > end:
+                    return f"outside_requested_window:{value.isoformat()}"
+                return ""
+        month_match = re.search(r"(?<!\d)(\d{4})年(\d{1,2})月", period)
+        if month_match:
+            year_month = (int(month_match.group(1)), int(month_match.group(2)))
+            if start is not None and year_month < (start.year, start.month):
+                return f"outside_requested_window:{year_month[0]}-{year_month[1]:02d}"
+            if end is not None and year_month > (end.year, end.month):
+                return f"outside_requested_window:{year_month[0]}-{year_month[1]:02d}"
+            return ""
+        years = [int(year) for year in _years(period)]
         if not years:
             return "claim_period_missing_for_window"
-        year = int(years[0])
-        if start is not None and year < start.year:
-            return f"outside_requested_window:{year}"
-        if end is not None and year > end.year:
-            return f"outside_requested_window:{year}"
-        return ""
+        low = start.year if start is not None else -9999
+        high = end.year if end is not None else 9999
+        if any(low <= year <= high for year in years):
+            return ""
+        return f"outside_requested_window:{min(years)}"
+
+    def _has_supported_superseder(
+        self,
+        claim: AtomicClaim,
+        chain: ClaimChain,
+        *,
+        supported_ids: set[str] | None = None,
+        run_id: str = "",
+    ) -> bool:
+        for relation in chain.relations:
+            if (
+                relation.relation is not ClaimRelationKind.SUPERSEDES
+                or relation.to_claim_id != claim.claim_id
+            ):
+                continue
+            superseder = relation.from_claim_id
+            if supported_ids is not None:
+                if superseder in supported_ids:
+                    return True
+                continue
+            try:
+                other_chain = self.get_chain(superseder, run_id=run_id)
+            except KeyError:
+                continue
+            if self._has_objective_support(other_chain):
+                return True
+        return False
 
     def _supported_claim_conflicts(
         self,
@@ -1187,6 +1344,7 @@ class EvidenceGraphStore:
         chain: ClaimChain,
         *,
         supported_ids: set[str] | None = None,
+        run_id: str = "",
     ) -> list[str]:
         """Claim ids that contradict this claim *and* have objective support.
 
@@ -1211,7 +1369,7 @@ class EvidenceGraphStore:
                 if other_id in supported_ids:
                     conflicts.append(other_id)
                 continue
-            other_chain = self.get_chain(other_id)
+            other_chain = self.get_chain(other_id, run_id=run_id)
             if self._has_objective_support(other_chain):
                 conflicts.append(other_id)
         return sorted(set(conflicts))
@@ -1221,7 +1379,6 @@ class EvidenceGraphStore:
         claim: AtomicClaim, ledger: EvidenceLedger
     ) -> bool:
         """Pure support test over an in-memory ledger (no database round-trips)."""
-        supporting_quotes: list[str] = []
         for chunk_id in claim.evidence_chunk_ids:
             chunk = ledger.chunks.get(chunk_id)
             if chunk is None:
@@ -1237,59 +1394,41 @@ class EvidenceGraphStore:
                 content=source.content,
                 content_hash=source.content_hash,
             )
-            if ok:
-                supporting_quotes.append(chunk.text)
-        if not supporting_quotes:
-            return False
-        quote = "\n".join(supporting_quotes)
-        if claim.value:
-            if not _quote_contains_value(quote, claim.value, claim.unit):
-                return False
-            if not claim.statement and not claim.metric_id:
+            if ok and _claim_supported_by_quote(
+                claim,
+                chunk.text,
+                title=source.source_title,
+                url=source.canonical_url,
+            ):
                 return True
-            statement_ok = (
-                _normalize_ws(claim.statement) in _normalize_ws(quote)
-                if claim.statement
-                else False
-            )
-            metric_ok = bool(claim.metric_id) and claim.metric_id in quote
-            return statement_ok or metric_ok
-        return _normalize_ws(claim.statement) in _normalize_ws(quote)
+        return False
 
     def _has_objective_support(self, chain: ClaimChain) -> bool:
         claim = chain.claim
-        supporting = []
         for link in chain.links:
             if link.edge.relation is EdgeRelation.CONTRADICTS:
                 continue
             ok, _ = self._check_span_integrity(link.span, link.snapshot)
-            if ok:
-                supporting.append(link)
-        if not supporting:
-            return False
-        quote = "\n".join(link.span.quote for link in supporting)
-        if claim.value:
-            if not _quote_contains_value(quote, claim.value, claim.unit):
-                return False
-            if not claim.statement and not claim.metric_id:
+            if ok and _claim_supported_by_quote(
+                claim,
+                link.span.quote,
+                title=link.snapshot.title,
+                url=link.snapshot.canonical_url,
+            ):
                 return True
-            return (
-                _normalize_ws(claim.statement) in _normalize_ws(quote)
-                if claim.statement
-                else False
-            ) or (bool(claim.metric_id) and claim.metric_id in quote)
-        return _normalize_ws(claim.statement) in _normalize_ws(quote)
+        return False
 
     def save_verification(
         self, record: VerificationRecord, *, reason: str = ""
     ) -> None:
+        effective_reason = reason or record.reason
         with self._connect() as connection:
             connection.execute(
                 "INSERT OR REPLACE INTO verification_records"
                 " (record_id, claim_id, status, deterministic_checks_json,"
                 " judge_assessment_json, uncertainty, human_review_json,"
-                " verifier_version, created_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " verifier_version, run_id, reason, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     record.record_id,
                     record.claim_id,
@@ -1303,13 +1442,15 @@ class EvidenceGraphStore:
                     if record.human_review is not None
                     else None,
                     record.verifier_version,
+                    record.run_id,
+                    effective_reason,
                     record.created_at.isoformat(),
                 ),
             )
             connection.execute(
                 "UPDATE claims SET verification_status = ?, verification_reason = ?"
                 " WHERE claim_id = ?",
-                (record.status.value, reason, record.claim_id),
+                (record.status.value, effective_reason, record.claim_id),
             )
 
     @staticmethod
@@ -1327,6 +1468,8 @@ class EvidenceGraphStore:
             if row["human_review_json"]
             else None,
             verifier_version=row["verifier_version"],
+            run_id=row["run_id"],
+            reason=row["reason"],
             created_at=_parse_datetime(row["created_at"]) or _utcnow(),
         )
 
@@ -1334,6 +1477,7 @@ class EvidenceGraphStore:
 
     def save_findings(self, run_id: str, findings: list[FindingRecord]) -> None:
         with self._connect() as connection:
+            connection.execute("DELETE FROM findings WHERE run_id = ?", (run_id,))
             for finding in findings:
                 connection.execute(
                     "INSERT OR REPLACE INTO findings"
@@ -1368,9 +1512,29 @@ class EvidenceGraphStore:
                 created_at=_parse_datetime(row["created_at"]) or _utcnow(),
             )
             findings.append(
-                VerifiedFinding(finding=finding, chain=self.get_chain(row["claim_id"]))
+                VerifiedFinding(
+                    finding=finding,
+                    chain=self.get_chain(row["claim_id"], run_id=run_id),
+                )
             )
         return findings
+
+    def clear_run(self, run_id: str) -> None:
+        """Remove findings, run-source links, relations and verification for a run.
+
+        Used when a durable job is resumed so a later attempt cannot serve
+        results produced by an earlier attempt.
+        """
+        with self._connect() as connection:
+            for table in (
+                "findings",
+                "run_snapshots",
+                "claim_relations",
+                "verification_records",
+            ):
+                connection.execute(
+                    f"DELETE FROM {table} WHERE run_id = ?", (run_id,)
+                )
 
     # --------------------------------------------------------------- integrity
 

@@ -84,6 +84,8 @@ def test_health_and_capabilities(tmp_path):
     body = capabilities.json()
     assert body["mode_label"] == "MOCK"
     assert body["live_enabled"] is False
+    assert body["enforced_caps"] == ["deadline_seconds"]
+    assert body["bounded_per_call_caps"] == ["max_tokens", "max_documents"]
     assert "max_cost" in body["unenforced_caps"]
 
 
@@ -335,3 +337,25 @@ def test_outcome_never_sufficient_without_supported_claims():
 
     assert outcome is ResearchOutcome.NO_PROGRESS
     assert reason == "no_supported_claims"
+
+
+def test_startup_resubmits_queued_jobs(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = store.create_job(
+        ResearchContract(objective="排队恢复", regions=["德清县"]), mode_label="MOCK"
+    )
+    runner = FakeRunner()
+    app = create_app(
+        settings=_settings(tmp_path),
+        store=store,
+        runner=runner,  # type: ignore[arg-type]
+        live_enabled=False,
+        data_dir=tmp_path / "data",
+        reports_dir=tmp_path / "reports",
+        evidence_db_path=tmp_path / "evidence.sqlite",
+    )
+
+    with TestClient(app):
+        pass
+
+    assert job.job_id in runner.submitted

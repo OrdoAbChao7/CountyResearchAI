@@ -36,9 +36,9 @@ Open <http://127.0.0.1:8000>. The header shows `MOCK` and `API v1`.
    `2024-01-01 ~ 2024-12-31`. Press **开始研究**.
 2. **Timeline (20 s).** The job runs `collect → discover → evidence → analyze →
    report`. Point out the events and the `MOCK` badge. The budget panel shows
-   which caps were enforced (`deadline_seconds`, `max_documents`) and which are
-   not enforced on this workflow path (`max_steps`, `max_search_calls`,
-   `max_cost`).
+   what is enforced (`deadline_seconds`), what is bounded per call
+   (`max_tokens`, `max_documents`), and what is not enforced on this workflow
+   path (`max_steps`, `max_search_calls`, `max_cost`).
 3. **Evidence (35 s).** Open the 证据 tab. Expand a `已支持` conclusion, then click
    **查看来源**. The right panel opens the immutable source snapshot and
    highlights the exact quote. Expand a `不可比` conclusion: its period (2025 or

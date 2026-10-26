@@ -17,7 +17,7 @@ baselines is made.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **662 passed**, 1 Starlette deprecation warning |
+| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **674 passed**, 1 Starlette deprecation warning |
 | Frontend typecheck | `cd web; npm run typecheck` | clean |
 | Frontend tests | `cd web; npm test` | 4 passed |
 | Frontend build | `cd web; npm run build` | 40 modules, 160.8 kB JS / 8.9 kB CSS |
@@ -66,23 +66,23 @@ Both sides see the same extracted claims and source text. Zero provider calls.
 | Runs / documents / spans | 18 / 34 / 295 |
 | Extracted claims | 1,275 |
 | Legacy `verified` | 495 |
-| Deterministic objective support (hash/offset + value/statement) | 1,243 |
-| Deterministic `SUPPORTED` after conflict resolution | 173 |
-| Withheld by a supported conflict (`NEEDS_REVIEW`) | 998 |
-| Downgraded (legacy verified → not supported) | 417 |
-| Upgraded (legacy unverified → supported) | 95 |
+| Deterministic objective support (single-span hash/offset + value/statement + region/period) | 985 |
+| Deterministic `SUPPORTED` after conflict resolution | 113 |
+| Withheld by a supported conflict (`NEEDS_REVIEW`) | 872 |
+| Downgraded (legacy verified → not supported) | 465 |
+| Upgraded (legacy unverified → supported) | 83 |
 
-Reason counts: `conflicting_supported_evidence` 998, `statement_exact_in_span`
-134, `numeric_value_without_period` 72, `value_and_span_verified` 39,
-`statement_not_in_span` 30, `no_evidence` 2.
+Reason counts: `conflicting_supported_evidence` 872, `statement_not_in_span`
+216, `statement_exact_in_span` 84, `numeric_value_without_period` 72,
+`value_and_span_verified` 29, `no_evidence` 2.
 
-What this shows: the hash/offset/value layer passes most extracted claims, but
-legacy claim identity is too coarse — many different statements share
-metric/period/scope/caliber — so the conflict layer conservatively withholds
-them. This is **not** a verifier quality win. It identifies claim-identity
-extraction as the next bottleneck. The verifier is intentionally conservative
-here; loosening the identity rule to raise the supported count would be a
-metric-gaming change.
+What this shows: the single-span hash/offset/value/region/period checks pass
+985 claims, but legacy claim identity is too coarse — many different statements
+share metric/period/scope/caliber — so the conflict layer conservatively
+withholds 872. This is **not** a verifier quality win. It identifies
+claim-identity extraction as the next bottleneck. The verifier is intentionally
+conservative here; loosening the identity rule to raise the supported count
+would be a metric-gaming change.
 
 ## What was not measured
 

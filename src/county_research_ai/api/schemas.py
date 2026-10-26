@@ -251,5 +251,6 @@ class CapabilitiesOut(BaseModel):
     mode_label: str
     live_enabled: bool
     enforced_caps: list[str]
+    bounded_per_call_caps: list[str]
     unenforced_caps: list[str]
     docs_url: str

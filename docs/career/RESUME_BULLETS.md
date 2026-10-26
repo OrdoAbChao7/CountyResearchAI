@@ -11,7 +11,7 @@ legacy baselines; the current offline sample does not support it.
 - Implemented deterministic claim verification (hash/offset integrity, value and
   unit presence, period/scope/caliber compatibility, requested date window) with
   disjoint `SUPPORTED` / `CONTRADICTED` / `INSUFFICIENT` / `NOT_COMPARABLE` /
-  `OUTDATED` / `NEEDS_REVIEW` states and negative-control tests; 662 Python tests
+  `OUTDATED` / `NEEDS_REVIEW` states and negative-control tests; 674 Python tests
   pass.
 - Rebuilt multi-baseline evaluation over a frozen 48-run / 240-observation corpus
   with zero provider calls; reported an honest negative result (legacy group C
@@ -38,7 +38,7 @@ legacy baselines; the current offline sample does not support it.
   brief export) backed by a typed FastAPI service; TypeScript check, 4 Vitest
   tests, and production build pass.
 - Converged legacy and new contracts through compatibility adapters while
-  preserving the original CLI and three research modes; 662-test suite covers
+  preserving the original CLI and three research modes; 674-test suite covers
   both paths.
 - Documented architecture, ADRs, a 90-second demo script, evaluation design, and
   an acceptance ledger that records PASS / FAIL / BLOCKED_EXTERNAL statuses

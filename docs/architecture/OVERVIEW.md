@@ -109,6 +109,8 @@ The API's `mode_label` is visible on every task and in every brief.
 
 - `max_steps`, `max_search_calls`, and `max_cost` are not enforced on the legacy
   workflow path; the API reports them as `not_enforced_on_workflow_path`.
+  `max_tokens` and `max_documents` are per-call/per-collection bounds, not
+  cumulative quotas; only `deadline_seconds` can produce `BUDGET_EXHAUSTED`.
 - The deterministic verifier does not recognize semantic paraphrase or aliases.
 - Long-history period routing can exclude evidence outside the contemporary
   boundary (documented in `PHASE6_EFFICIENCY_OPTIMIZATION_REPORT.md`).

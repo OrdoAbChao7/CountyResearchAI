@@ -67,3 +67,24 @@ fill the gap. (2026-10-26)
 `AXIOMSCOPE_API_LIVE` must be explicitly true, plus both provider keys present,
 before a job can reach a paid provider. This prevents accidental spend from a
 local demo. (2026-10-26)
+
+## D-011 — One span must support a claim
+
+Support cannot be assembled from separate spans (metric in one, value in
+another). The verifier requires a single quote plus source metadata to contain
+region, period, value/unit, and statement or metric. This is stricter and
+reduces recall, deliberately. (2026-10-26)
+
+## D-012 — Verification and relations are run-scoped
+
+Claims are content-derived and repeat across jobs. `verification_records` and
+`claim_relations` carry `run_id`; findings read the chain for their own run, and
+a resumed job clears prior findings/relations/verification for its run before
+re-verifying. (2026-10-26)
+
+## D-013 — Only the deadline is a cumulative enforced cap
+
+`max_tokens` and `max_documents` bound a single call/collection, not the total
+run. The API reports them as `bounded_per_call`; `capabilities` no longer lists
+them as enforced. Claiming cumulative enforcement without token accounting would
+be false. (2026-10-26)

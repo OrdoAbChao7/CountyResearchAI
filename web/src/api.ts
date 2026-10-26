@@ -130,6 +130,7 @@ export interface Capabilities {
   mode_label: string;
   live_enabled: boolean;
   enforced_caps: string[];
+  bounded_per_call_caps: string[];
   unenforced_caps: string[];
   docs_url: string;
 }
