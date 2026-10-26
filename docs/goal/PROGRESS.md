@@ -25,6 +25,58 @@ with `.venv\Scripts\python.exe` on Windows.
   strategies, fail-closed behavior, and the reported metadata.
 - Full suite after fix: `598 passed in 4.36s`, 0 failed.
 
+## 2026-10-26 — M1/M2 contract and persistent evidence graph
+
+- Added `ResearchContract` (objective, regions, inclusive date window, required
+  questions, evidence thresholds, budget caps, output spec, domain adapter) with
+  field-specific validation and ResearchSpec adapters. 9 tests.
+- Added deterministic BM25 `LexicalIndex` with CJK bigram/ASCII tokenization,
+  canonical-URL/content dedupe, stable corpus fingerprints, and negative-control
+  tests (unrelated query → no results; metric term changes ranking). 10 tests.
+- Added `EvidenceGraphStore` in SQLite: append-only `source_snapshots` and
+  `evidence_spans`, `claims`, `claim_evidence_edges`, `claim_relations`,
+  `verification_records`, `findings`, `run_snapshots`. Reload equality is
+  tested; snapshot id collisions with different content raise.
+- Deterministic verification: hash/offset integrity, value/unit presence,
+  region/period/scope/caliber/version compatibility, independent-source count by
+  canonical URL, disjoint statuses, symmetric conflict resolution. 18 tests.
+- Full suite: `616 passed`.
+- Commit: `b2c933f` (graph) and `a79a8fb` (contract + BM25).
+
+## 2026-10-26 — M4 API, web workspace, and window fix
+
+- Added FastAPI `/api/v1`: tasks, cancel, resume, JSON events, SSE stream, findings,
+  claim chains, sources, brief, report, health, capabilities. Consistent error
+  envelope; ID validation; report-path containment; CORS for Vite.
+- Durable `JobStore` (jobs + events) and `JobRunner` (bounded in-process pool).
+  Startup marks abandoned `RUNNING` jobs `INTERRUPTED`; resume is explicit.
+  Disjoint outcomes prevent budget exhaustion from becoming `SUFFICIENT`.
+- Added React + Vite workspace with task form, live timeline, evidence explorer
+  (quote-highlighted immutable snapshot), and brief download.
+- Live smoke exposed a false `SUPPORTED` 2027 planning target inside a 2024
+  window. Verification now enforces the contract date window; claims outside the
+  window or without a period are `NOT_COMPARABLE`.
+- Reinstalled the editable package at the current checkout after discovering the
+  venv `.pth` still pointed at the pre-rename path.
+- Results: 659 Python tests, 4 Vitest tests, `tsc` clean, Vite build 160.8 kB JS;
+  live API on :8011 returned `SUCCEEDED`/`SUFFICIENT` (MOCK), 3 sources, 6
+  findings, 4,213-byte brief, and SSE frames.
+- Commit: `e8a3304`.
+
+## 2026-10-26 — M5 evaluation harness and release docs
+
+- Added `scripts/run_multi_baseline_offline.py`, which aggregates the frozen v5
+  matched-budget observations (48 runs / 240 observations, 0 provider calls)
+  into per-group metrics with numerators/denominators and paired A/B vs C
+  comparisons. Output: `experiments/evaluation/20261026_multi_baseline_offline/`.
+- Result unchanged and negative: C trails A and B on GT recall/support precision
+  and costs more. D, live, ablations, Judge, and the 40–60 task holdout are
+  explicitly NOT_RUN / BLOCKED_EXTERNAL.
+- Added `docs/evaluation/DESIGN.md`, `docs/evaluation/FINAL_REPORT.md`,
+  rebranded `README.md`, `docs/career/RESUME_BULLETS.md`, and
+  `docs/career/INTERVIEW_QA.md`.
+
+
 ## Prior phases (inherited, uncommitted)
 
 Summarized from `GOAL_EVIDENCE_FIRST_V2.md`; see the phase reports for detail.
