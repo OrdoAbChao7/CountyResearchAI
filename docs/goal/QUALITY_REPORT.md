@@ -107,3 +107,13 @@ remaining 860 are unlabelled.
 
 Q0 PASS. Q1 PASS (diagnosis complete; unlabelled items labelled as such).
 Q2–Q6 remain. No quality improvement is claimed yet.
+
+## Later gates
+
+Q2–Q4 are detailed in [`Q3_Q4_REPORT.md`](Q3_Q4_REPORT.md) and
+[`DATASET.md`](DATASET.md). Summary: measure identity + period inference +
+verified answer cut withholding 872→203 and raised dev GT E2E 3/90→15/90; the
+blind pilot is 2 tasks/10 facts (D 4/10), so no generalization is claimed.
+Q5 reliability and browser E2E are in [`Q5_REPORT.md`](Q5_REPORT.md); Q6 final
+acceptance and remaining blockers are in
+[`Q6_FINAL_ACCEPTANCE.md`](Q6_FINAL_ACCEPTANCE.md).

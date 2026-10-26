@@ -88,13 +88,15 @@ reports root; model keys and stack traces are never returned.
 ## Execution and durability
 
 Jobs are stored in SQLite (`jobs`, `job_events`) and executed by a small
-in-process thread pool. This is a single-node demo queue, not a distributed
-scheduler. If the process dies, startup marks `RUNNING` jobs `INTERRUPTED`;
-`POST /resume` re-queues them explicitly. Cancellation and deadline checks run
-between stages, not inside a single provider call. **Two API processes must not
-share one job database**: there is no lease, and one process's startup recovery
-can mark the other process's live `RUNNING` jobs `INTERRUPTED`. Run one API
-process per data directory.
+in-process thread pool. This is a local queue, not a distributed scheduler.
+Execution uses a lease (`lease_owner`, `lease_expires_at`) plus a monotonic
+`fencing_token`: a worker renews the lease from a heartbeat thread, terminal
+writes require the matching owner/token, and a stale worker cannot overwrite a
+newer attempt. Startup recovers only `RUNNING` jobs with an empty or expired
+lease; live leases are left alone, so multiple API processes may share a job
+database. Cancellation and deadline checks run between stages, not inside a
+single provider call. A test-only `AXIOMSCOPE_MOCK_STAGE_DELAY_SECONDS` (MOCK
+only, max 10 s) makes browser cancel/resume tests deterministic.
 
 Outcomes never conflate budget exhaustion with sufficiency: `SUFFICIENT`,
 `BUDGET_EXHAUSTED`, `NO_PROGRESS`, `CONFLICT_UNRESOLVED`,

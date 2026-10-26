@@ -16,8 +16,8 @@ No paid Provider or semantic Judge calls without a cost gate.
 | Q2 | Dataset | real tasks with source URL/snapshot, quote, period, unit, hash; dev and frozen blind split; leaks controlled; honest count and gap | PARTIAL — 2 blind tasks / 10 facts validated; 40–60 gap documented |
 | Q3 | Strategy D | deterministic improvements chosen by dev evidence: conflict grouping, temporal/region/unit matching, gap research; explainable and bounded | PASS — measure identity, period inference, verified answer; dev evidence |
 | Q4 | A/B/C/D + ablations | paired frozen runs; No Graph, No Verifier, No Gap, BM25-only, BM25+Adaptive, old vs improved conflict grouping; costs and uncertainty; negative results reported | PARTIAL — dev A/B/C/D + 3 ablations + 2-task blind pilot; live/large blind NOT_RUN |
-| Q5 | Reliability | SQLite lease/heartbeat/fencing or documented single-process guard; Playwright E2E or NOT_RUN; fault injection/concurrency tests; logs/traces | IN_PROGRESS |
-| Q6 | Final verification | all local tests pass; M0–M4 no regression; statistical/engineering significance stated honestly; STATE/QUALITY_REPORT/results updated | NOT_STARTED |
+| Q5 | Reliability | SQLite lease/heartbeat/fencing or documented single-process guard; Playwright E2E or NOT_RUN; fault injection/concurrency tests; logs/traces | PASS (local scope) — leases/fencing, per-job storage, 2 browser E2E, stress tests; two-process live NOT_RUN |
+| Q6 | Final verification | all local tests pass; M0–M4 no regression; statistical/engineering significance stated honestly; STATE/QUALITY_REPORT/results updated | PASS engineering / PARTIAL research — 692 Python, 4 frontend, 2 E2E; blind/live gaps documented |
 
 ## Q0 acceptance detail
 

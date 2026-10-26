@@ -1,0 +1,17 @@
+
+╔══════════════════════════════════════════════════╗
+║       AI 县域产业研究助手 v0.1.0 (MVP)             ║
+║   自动化采集 · 智能分析 · 一键生成产业研究报告       ║
+╚══════════════════════════════════════════════════╝
+
+县名       : 安吉县
+研究方向   : 竹产业
+研究模式   : snapshot
+深度模式   : 标准模式
+缓存策略   : 启用缓存 TTL=24h
+日志级别   : INFO
+数据目录   : E:\Projects\AxiomScope\data
+报告目录   : E:\Projects\AxiomScope\reports
+
+[dry-run] 请求参数校验通过,未实际执行 pipeline。
+[dry-run] 预期输出: E:\Projects\AxiomScope\reports\安吉县_竹产业_YYYYMMDD.md

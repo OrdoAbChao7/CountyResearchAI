@@ -200,3 +200,22 @@ Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
   retrieval coverage, coarse measure identity, decontextualized extraction,
   verified findings disconnected from answer, extraction misses, unlabelled
   false-support audit.
+
+## 2026-10-26 — Q5 reliability and Q6 final verification
+
+- SQLite jobs now use execution leases (`lease_owner`, `lease_expires_at`) and
+  monotonic fencing tokens. Heartbeat renews every lease/3; `finish_job` writes
+  terminal state + event atomically and rejects stale workers; startup recovers
+  only empty/expired leases; concurrent claims have one winner.
+- API jobs write isolated raw/report directories per job, preventing concurrent
+  overwrite. New tests cover live-lease recovery blocking, expired takeover with
+  stale rejection, concurrent claims, and distinct report paths.
+- Playwright 1.64.1 + Chromium installed; 2 E2E tests pass in ~15 s: create →
+  SSE timeline → evidence quote → brief download; and create → cancel → resume.
+  Artifacts under `experiments/quality/20261026_q5_e2e/` (log, traces,
+  screenshots). A MOCK-only env delay makes cancel deterministic.
+- Final local verification: `692 passed` Python, scoped ruff clean, 4 Vitest,
+  typecheck/build, 2 Playwright, legacy CLI dry-run exit 0.
+- Wrote `docs/goal/Q5_REPORT.md`, `docs/goal/Q6_FINAL_ACCEPTANCE.md`,
+  `docs/architecture/ADR-004-execution-leases.md`; updated README/acceptance/
+  final report.

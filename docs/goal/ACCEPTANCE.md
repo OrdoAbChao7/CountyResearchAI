@@ -7,7 +7,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 
 | Check | Status | Command / artifact | Observed |
 | --- | --- | --- | --- |
-| Python suite | PASS | `python -m pytest --no-cov -q` | `675 passed in 27.04s`, exit 0 |
+| Python suite | PASS | `python -m pytest --no-cov -q` | `692 passed in 9.92s`, exit 0 |
 | Relocated manifest audit | PASS | `tests/test_audit_path_resolution.py` | 4 passed |
 | Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
 | Frontend tests | PASS | `cd web; npm test` | 4 passed |
@@ -18,7 +18,10 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | Cancellation | PASS | `test_cancel_requested_before_execution_stops_job` | `CANCELLED` |
 | Resume | PASS | `test_resume_requeues_and_resubmits` | QUEUED + resubmitted |
 | Date-window false support | PASS | graph + API evidence tests | 2027 claim `NOT_COMPARABLE` in 2024 window |
-| Browser screenshot / E2E | NOT_RUN | — | no browser automation installed |
+| Browser E2E | PASS | `cd web; npm run test:e2e` | 2 passed (create/SSE/evidence/brief; cancel/resume); traces + screenshots |
+| API storage isolation | PASS | `test_jobs_do_not_overwrite_each_others_reports` | distinct report paths |
+| Lease/fencing | PASS | `test_live_lease_blocks_recovery_and_takeover`, `test_expired_lease_takeover_rejects_stale_terminal_write`, `test_concurrent_claims_have_exactly_one_winner` | 3 passed |
+| Legacy CLI | PASS | `python -m county_research_ai.cli --county 安吉县 --dry-run` | exit 0 |
 
 ## Milestone gates
 
@@ -28,8 +31,8 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | M1 retrieval/snapshot/eval foundation | PARTIAL | snapshots/BM25/contract/negative controls done; live Recall@K/replay not run |
 | M2 temporal evidence graph | PASS | persistence, navigation, conflict/temporal/false-reference/reload tests |
 | M3 durable orchestration | PASS (workflow path) | resume/cancel/deadline tested; agent-path checkpoints opt-in |
-| M4 API + web workspace | PASS (screenshot NOT_RUN) | endpoints, SSE, UI, brief, build and live smoke verified |
-| M5 multi-baseline evaluation + release | FAIL / PARTIAL | offline A/B/C report and docs exist; D, 40–60 tasks, ablations, live, Judge missing |
+| M4 API + web workspace | PASS | endpoints, SSE, UI, brief, build, live smoke, Playwright E2E |
+| M5 multi-baseline evaluation + release | FAIL / PARTIAL | D measured offline; 2-task blind pilot; 40–60 tasks, live, Judge, full ablations missing |
 
 ## Evaluation evidence
 
@@ -39,16 +42,29 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | Offline A/B/C aggregation | PASS | `experiments/evaluation/20261026_multi_baseline_offline/summary.json` |
 | Verifier ablation (C raw archives) | PASS | `experiments/evaluation/20261026_verifier_ablation/summary.json` |
 | Observational hash | PASS | `4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e` |
-| Strategy D measurement | NOT_RUN | — |
-| Independent 40–60 task set | NOT_RUN | inherited frozen corpus only |
+| Strategy D measurement | PASS (dev + 2-task blind) | `experiments/quality/20261026_q3_strategy_d/`, `20261026_q4_blind_pilot/` |
+| Independent task set | PARTIAL | 2 blind tasks / 10 facts; 40–60 gap documented |
 | Live end-to-end | BLOCKED_EXTERNAL | no cost gate |
-| Ablations | NOT_RUN | — |
+| Ablations | PARTIAL | no-verifier, BM25/adaptive, old/new grouping; no-gap NOT_RUN |
 | Semantic Judge | NOT_RUN | — |
 | Human rubric/adjudication | NOT_RUN | — |
+
+## Quality Recovery gates
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Q0 baseline | PASS | 675 tests at Q0; logs under `experiments/quality/20261026_baseline/` |
+| Q1 failure attribution | PASS | baseline funnel: 21/90 retrieved, 2 supported, 0 E2E; 872 withheld review |
+| Q2 dataset | PARTIAL | 2 blind tasks / 10 exact-quote facts validated; gap documented |
+| Q3 Strategy D | PASS (dev) | measure identity, period inference, verified answer; dev E2E 3→15/90 |
+| Q4 A/B/C/D + ablations | PARTIAL | dev + 2-task blind; live/large blind NOT_RUN |
+| Q5 reliability | PASS (local) | leases/fencing, storage isolation, 2 Playwright tests; two-process stress NOT_RUN |
+| Q6 final acceptance | PASS engineering / PARTIAL research | 692 tests, all local checks; see Q6 report |
 
 ## Never claimed
 
 - That Evidence-First v2 outperforms the baselines. The measured offline C group
   trails A/B on this small sample.
 - Semantic entailment, statistical significance, or token savings.
-- Screenshots, live-provider runs, or ablations that were not executed.
+- Live-provider runs, a comprehensive blind benchmark, or ablations that were not
+  executed.

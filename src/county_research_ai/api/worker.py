@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
+import threading
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -34,6 +37,10 @@ class _Cancelled(Exception):
 
 
 class _BudgetExceeded(Exception):
+    pass
+
+
+class _LeaseLost(Exception):
     pass
 
 
@@ -91,9 +98,26 @@ class JobRunner:
         if job is None or job.status.terminal:
             return
         started = time.monotonic()
+        owner = f"worker:{uuid.uuid4().hex}"
+        lease_seconds = max(
+            30.0,
+            min(300.0, float(job.contract.budget.deadline_seconds or 60.0)),
+        )
+        fencing_token = self.store.claim_for_execution(
+            job_id, owner=owner, lease_seconds=lease_seconds
+        )
+        if fencing_token is None:
+            return
+        lost = threading.Event()
+        stop_heartbeat = threading.Event()
+        heartbeat = threading.Thread(
+            target=self._heartbeat,
+            args=(job_id, owner, fencing_token, lease_seconds, stop_heartbeat, lost),
+            name=f"lease-heartbeat-{job_id}",
+            daemon=True,
+        )
+        heartbeat.start()
         try:
-            if not self.store.claim_for_execution(job_id):
-                return
             self.store.append_event(
                 job_id, "job.started", {"mode_label": job.mode_label}
             )
@@ -107,20 +131,21 @@ class JobRunner:
                     options={**job.contract.options, "no_cache": True},
                 )
             )
-            container = self._container(job.contract)
+            container = self._container(job)
             app = container.application
+            self._demo_delay(job, started, lost)
             context = self._stage(
-                job, "collect", context, app.collect_materials, started, lambda ctx: {
+                job, "collect", context, app.collect_materials, started, lost, lambda ctx: {
                     "documents": len(ctx.raw_docs)
                 }
             )
             context = self._stage(
-                job, "discover", context, app.discover_focus, started, lambda ctx: {
+                job, "discover", context, app.discover_focus, started, lost, lambda ctx: {
                     "focus": ctx.focus
                 }
             )
             context = self._stage(
-                job, "evidence", context, app.build_evidence, started, lambda ctx: {
+                job, "evidence", context, app.build_evidence, started, lost, lambda ctx: {
                     "packs": len(ctx.evidence_packs),
                     "chunks": len(ctx.evidence_ledger.chunks) if ctx.evidence_ledger else 0,
                 }
@@ -128,28 +153,27 @@ class JobRunner:
             summary = self._persist(job, graph, context)
             self.store.append_event(job_id, "evidence.persisted", summary)
             context = self._stage(
-                job, "analyze", context, app.analyze, started, lambda ctx: {
+                job, "analyze", context, app.analyze, started, lost, lambda ctx: {
                     "sections": len(ctx.report.sections) if ctx.report else 0
                 }
             )
             result = self._stage(
-                job, "report", context, app.render_report, started, lambda res: {
+                job, "report", context, app.render_report, started, lost, lambda res: {
                     "report_path": str(res.report_path)
                 }
             )
-            self._ensure_active(job_id, started)
+            self._ensure_active(job_id, started, lost)
             enforcement = self._budget_enforcement(job, started)
             outcome, reason = self._outcome(job, summary)
-            self.store.append_event(
-                job_id,
-                "job.completed",
-                {"outcome": outcome.value, "reason": reason},
-            )
-            self.store.mark_terminal(
+            finished = self.store.finish_job(
                 job_id,
                 JobStatus.SUCCEEDED,
                 outcome=outcome,
                 outcome_reason=reason,
+                event_type="job.completed",
+                event_payload={"outcome": outcome.value, "reason": reason},
+                owner=owner,
+                fencing_token=fencing_token,
                 report_path=str(result.report_path),
                 result={
                     "evidence": summary,
@@ -158,51 +182,98 @@ class JobRunner:
                 },
                 budget_enforcement=enforcement,
             )
+            if not finished:
+                logger.warning("stale worker result ignored for job %s", job_id)
+        except _LeaseLost:
+            logger.warning("lease lost for job %s; result ignored", job_id)
         except _Cancelled:
-            self.store.append_event(
-                job_id, "job.cancelled", {"reason": "cancel_requested"}
-            )
-            self.store.mark_terminal(
+            self._finish_lease(
                 job_id,
                 JobStatus.CANCELLED,
                 outcome=ResearchOutcome.CANCELLED,
                 outcome_reason="cancel_requested",
+                event_type="job.cancelled",
+                event_payload={"reason": "cancel_requested"},
+                owner=owner,
+                fencing_token=fencing_token,
             )
         except _BudgetExceeded:
-            self.store.append_event(
-                job_id, "budget.exhausted", {"reason": "deadline_exceeded"}
-            )
-            self.store.mark_terminal(
+            self._finish_lease(
                 job_id,
                 JobStatus.BUDGET_EXHAUSTED,
                 outcome=ResearchOutcome.BUDGET_EXHAUSTED,
                 outcome_reason="deadline_exceeded",
+                event_type="budget.exhausted",
+                event_payload={"reason": "deadline_exceeded"},
                 budget_enforcement=self._budget_enforcement(job, started),
+                owner=owner,
+                fencing_token=fencing_token,
             )
         except Exception as exc:  # noqa: BLE001
             logger.exception("research job %s failed", job_id)
-            try:
-                self.store.append_event(
-                    job_id,
-                    "job.failed",
-                    {"code": type(exc).__name__},
-                )
-                self.store.mark_terminal(
-                    job_id,
-                    JobStatus.FAILED,
-                    outcome=ResearchOutcome.FAILED,
-                    outcome_reason="execution_error",
-                    error_code=type(exc).__name__,
-                    error_message=str(exc)[:500],
-                    budget_enforcement=self._budget_enforcement(job, started),
-                )
-            except Exception:  # noqa: BLE001
-                logger.exception("could not record failure for job %s", job_id)
+            self._finish_lease(
+                job_id,
+                JobStatus.FAILED,
+                outcome=ResearchOutcome.FAILED,
+                outcome_reason="execution_error",
+                event_type="job.failed",
+                event_payload={"code": type(exc).__name__},
+                error_code=type(exc).__name__,
+                error_message=str(exc)[:500],
+                budget_enforcement=self._budget_enforcement(job, started),
+                owner=owner,
+                fencing_token=fencing_token,
+            )
+        finally:
+            stop_heartbeat.set()
+            heartbeat.join(timeout=1.0)
 
-    def _container(self, contract):
+    def _demo_delay(
+        self, job: JobRecord, started: float, lost: threading.Event
+    ) -> None:
+        """Optional MOCK-only stage delay for deterministic browser cancel tests."""
+        raw = os.getenv("AXIOMSCOPE_MOCK_STAGE_DELAY_SECONDS", "0")
+        try:
+            delay = min(10.0, max(0.0, float(raw)))
+        except ValueError:
+            delay = 0.0
+        if delay <= 0 or job.mode_label != "MOCK":
+            return
+        end = time.monotonic() + delay
+        while time.monotonic() < end:
+            self._ensure_active(job.job_id, started, lost)
+            time.sleep(0.1)
+
+    def _heartbeat(
+        self,        job_id: str,
+        owner: str,
+        fencing_token: int,
+        lease_seconds: float,
+        stop: threading.Event,
+        lost: threading.Event,
+    ) -> None:
+        interval = max(1.0, lease_seconds / 3.0)
+        while not stop.wait(interval):
+            if not self.store.renew_lease(
+                job_id,
+                owner=owner,
+                fencing_token=fencing_token,
+                lease_seconds=lease_seconds,
+            ):
+                lost.set()
+                return
+
+    def _finish_lease(self, job_id: str, status: JobStatus, **kwargs) -> None:
+        if not self.store.finish_job(job_id, status, **kwargs):
+            logger.warning("stale worker terminal write ignored for job %s", job_id)
+
+    def _container(self, job: JobRecord):
+        contract = job.contract
         settings = self.settings
         if not self.live_enabled:
             settings = force_mock_settings(settings)
+        job_data_dir = self.data_dir / "api_jobs" / job.job_id
+        job_reports_dir = self.reports_dir / "api_jobs" / job.job_id
         llm = settings.llm
         if contract.budget.max_tokens:
             llm = llm.model_copy(
@@ -210,16 +281,16 @@ class JobRunner:
             )
         storage = settings.storage.model_copy(
             update={
-                "data_dir": str(self.data_dir),
-                "reports_dir": str(self.reports_dir),
+                "data_dir": str(job_data_dir),
+                "reports_dir": str(job_reports_dir),
             }
         )
         settings = settings.model_copy(
             update={
                 "llm": llm,
                 "storage": storage,
-                "data_dir": self.data_dir,
-                "reports_dir": self.reports_dir,
+                "data_dir": job_data_dir,
+                "reports_dir": job_reports_dir,
             }
         )
         container = create_app_container(settings=settings)
@@ -262,9 +333,10 @@ class JobRunner:
         context: Any,
         function,
         started: float,
+        lost: threading.Event,
         summarize,
     ):
-        self._ensure_active(job.job_id, started)
+        self._ensure_active(job.job_id, started, lost)
         self.store.append_event(job.job_id, f"stage.{name}.started", {})
         began = time.monotonic()
         value = function(context)
@@ -276,7 +348,14 @@ class JobRunner:
         )
         return value
 
-    def _ensure_active(self, job_id: str, started: float) -> None:
+    def _ensure_active(
+        self,
+        job_id: str,
+        started: float,
+        lost: threading.Event | None = None,
+    ) -> None:
+        if lost is not None and lost.is_set():
+            raise _LeaseLost
         if self.store.is_cancel_requested(job_id):
             raise _Cancelled
         job = self.store.get_job(job_id)

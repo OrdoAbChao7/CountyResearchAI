@@ -95,16 +95,18 @@ county-research agent -c 安吉县 --max-steps 8
 ```powershell
 .venv\Scripts\python.exe -m pytest --no-cov -q          # Python 测试
 cd web; npm run typecheck; npm test; npm run build      # 前端检查
+cd web; npm run test:e2e                                # Playwright 浏览器 E2E
 .venv\Scripts\python.exe scripts\run_multi_baseline_offline.py
 ```
 
 当前实测：
 
-- Python 测试 **675 passed**；前端 4 tests、`tsc` 与 Vite build 通过（2026-10-26）。
+- Python 测试 **692 passed**；前端 4 tests、`tsc` 与 Vite build 通过；Playwright 2/2 通过（创建/SSE/证据/简报、取消/恢复）。
 - 本地 `MOCK` 端到端：任务 `SUCCEEDED` / `SUFFICIENT`，3 个来源、6 条结构化结论；2025/2027 结论在 2024 时间窗内被正确判为 `NOT_COMPARABLE`。
-- 冻结 matched-budget 离线 A/B/C 复算：C 组在现有小样本上落后 A/B 且资源消耗更高。**不能**据此得出 v2 优于基线的结论；D 组、40–60 独立任务、消融、真实 Provider 与语义 Judge 均未运行/未获授权。
+- 冻结 matched-budget 离线 A/B/C 复算：C 组在现有小样本上落后 A/B 且资源消耗更高。**不能**据此得出 v2 优于基线的结论。
+- Quality Recovery dev-replay：measure-aware Strategy D 将 GT 端到端覆盖从 C 的 3/90 提升到 15/90；这是**开发集**结果（McNemar p=0.000488，仅 dev），检索仍缺 69/90。盲测 pilot 仅 2 任务/10 facts（D 4/10），不足以支持泛化结论。
 
-完整、区分 offline/fixture/replay/live 的报告见 [docs/evaluation/FINAL_REPORT.md](docs/evaluation/FINAL_REPORT.md)。评测设计见 [docs/evaluation/DESIGN.md](docs/evaluation/DESIGN.md)。
+完整、区分 offline/fixture/replay/live 的报告见 [docs/evaluation/FINAL_REPORT.md](docs/evaluation/FINAL_REPORT.md)，Quality Recovery 见 [Q3/Q4](docs/goal/Q3_Q4_REPORT.md)、[Q5](docs/goal/Q5_REPORT.md)、[Q6](docs/goal/Q6_FINAL_ACCEPTANCE.md)。评测设计见 [docs/evaluation/DESIGN.md](docs/evaluation/DESIGN.md)。
 
 ## 代码结构
 
@@ -127,7 +129,7 @@ docs/           架构、ADR、Demo、评测、目标状态
 - 范围是县域/区域产业研究；不提供医疗、法律、证券投资建议，也不是通用 Agent。
 - `max_steps`、`max_search_calls`、`max_cost` 在旧 workflow 路径未强制执行；API 会如实报告 `not_enforced_on_workflow_path`。`max_tokens`/`max_documents` 是单次调用/单次采集上限，不是累计配额；只有 `deadline_seconds` 会触发 `BUDGET_EXHAUSTED`。
 - 确定性校验不识别语义改写/别名；未命中的正确结论会保持 `INSUFFICIENT`。
-- 单进程线程池适合本地 Demo，不是分布式任务队列。
+- 任务执行带 SQLite lease、心跳与 fencing token；过期/空 lease 才会被恢复，陈旧 worker 不能覆盖新结果。每个 API 任务使用独立 raw/report 目录。仍是单机 SQLite，不是分布式队列。
 
 ## 许可
 

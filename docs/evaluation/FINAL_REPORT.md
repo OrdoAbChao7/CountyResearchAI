@@ -17,7 +17,7 @@ baselines is made.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **675 passed**, 1 Starlette deprecation warning |
+| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **692 passed**, 1 Starlette deprecation warning |
 | Frontend typecheck | `cd web; npm run typecheck` | clean |
 | Frontend tests | `cd web; npm test` | 4 passed |
 | Frontend build | `cd web; npm run build` | 40 modules, 160.8 kB JS / 8.9 kB CSS |
@@ -88,15 +88,15 @@ would be a metric-gaming change.
 
 | Item | Status | Why |
 | --- | --- | --- |
-| Strategy D on the same corpus | NOT_RUN | requires running the full v2 path on the frozen inputs; not done |
-| 40–60 independent locked tasks | NOT_RUN | the inherited corpus is not a newly curated holdout |
+| Strategy D on the same corpus | PASS (dev + pilot) | `experiments/quality/20261026_q3_strategy_d/`; D E2E 15/90 dev, 4/10 blind pilot |
+| 40–60 independent locked tasks | PARTIAL | 2 blind tasks / 10 exact-quote facts; gap documented |
 | Live end-to-end retrieval/synthesis | BLOCKED_EXTERNAL | no fresh provider/Judge cost authorization |
-| Ablations | PARTIAL | verifier ablation executed on C archives; no-graph, no-gap-research, BM25-vs-adaptive, single-vs-multi-agent NOT_RUN |
+| Ablations | PARTIAL | no-verifier, BM25/adaptive, old/new grouping done; no-gap, single-vs-multi-agent NOT_RUN |
 | Independent semantic Judge | NOT_RUN | not authorized/executed |
 | Human rubric adjudication | NOT_RUN | not executed |
-| Retrieval Recall@K on a real query | NOT_RUN | offline replay is 6 RawDocs and tied |
+| Retrieval Recall@K on a real query | NOT_RUN | archived replay is tied; live recall not run |
 | Long-history token/cost improvement | NOT_RUN | only prompt characters were counted |
-| Browser screenshots | NOT_RUN | no browser automation installed |
+| Browser screenshots / E2E | PASS | Playwright 2/2; `experiments/quality/20261026_q5_e2e/` |
 
 ## Reproduction
 
@@ -106,6 +106,11 @@ would be a metric-gaming change.
 
 # Offline A/B/C aggregation (no provider calls)
 .venv\Scripts\python.exe scripts\run_multi_baseline_offline.py
+
+# Quality Recovery: Q3 Strategy D, Q4 blind pilot, Q5 browser E2E
+.venv\Scripts\python.exe -m scripts.evaluate_strategy_d_offline
+.venv\Scripts\python.exe -m scripts.evaluate_blind_pilot
+cd web; npm run test:e2e; cd ..
 
 # API + built workspace
 cd web; npm install; npm run build; cd ..
@@ -121,13 +126,13 @@ cd web; npm install; npm run build; cd ..
 | M1 retrieval/snapshot/eval foundation | PARTIAL — contract, snapshots, BM25, negative controls done; live replay/Recall@K not run |
 | M2 temporal evidence graph | PASS — persistence, navigation, conflict/temporal/false-reference tests |
 | M3 durable orchestration | PASS for the workflow path — resume/cancel/deadline tested; agent-path durable checkpoints remain opt-in |
-| M4 API + workspace | PASS functionally; screenshot inspection NOT_RUN |
-| M5 multi-baseline research acceptance | FAIL / PARTIAL — design and offline A/B/C report exist; D, 40–60 tasks, ablations, live and Judge are missing |
+| M4 API + workspace | PASS — Playwright E2E, leases/fencing, per-job storage |
+| M5 multi-baseline research acceptance | FAIL / PARTIAL — D measured on dev + 2-task blind; 40–60 tasks, live, Judge, no-gap ablation missing |
 
 ## Outstanding work
 
-1. Curate and lock a 40–60 task independent set with expected evidence quotes.
-2. Run D on the same frozen inputs; then paired A/B/C/D offline.
-3. Execute the pre-registered ablations on a dev split.
-4. Obtain an explicit cost gate for a budgeted live run and a semantic Judge.
-5. Capture screenshots/recording with installed browser automation.
+1. Curate and lock 38–58 additional independent tasks with expected evidence quotes.
+2. Implement and measure gap-driven/temporal retrieval; retrieval remains 69/90 missing on dev.
+3. Obtain an explicit cost gate for a budgeted live run and a semantic Judge.
+4. Run a two-process lease/fencing stress test; current invariants are store-tested.
+5. Label a false-support/false-rejection audit sample; current samples are unlabelled.

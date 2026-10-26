@@ -12,7 +12,7 @@ Repository: `E:\Projects\AxiomScope` (formerly `E:\Projects\CountyResearchAI`)
 | Legacy baseline | `52a6ed0f5164721cece221ffb9e7f67f73ac3dd7` on `codex/experiment-superiority` (frozen) |
 | Python | 3.13.7 (`.venv`), FastAPI 0.162.0, uvicorn 0.54.0 |
 | Node | 24.19.0, npm 11.17.0 |
-| Python tests | `675 passed` (`pytest --no-cov -q`) |
+| Python tests | `692 passed` (`pytest --no-cov -q`) |
 | Frontend | `tsc --noEmit` clean, 4 Vitest tests, Vite build 160.8 kB JS |
 | Live smoke | `MOCK` run: `SUCCEEDED`/`SUFFICIENT`, 3 sources, 6 findings, 4,213-byte brief |
 
@@ -75,11 +75,16 @@ Plan and acceptance: `docs/goal/TASKS.md`; results: `docs/goal/QUALITY_REPORT.md
 | Q2 dataset | PARTIAL | 2 blind tasks / 10 exact-quote facts validated; disjoint from dev; 40–60 gap documented in `docs/goal/DATASET.md` |
 | Q3 Strategy D | PASS (dev) | measure identity + period inference + verified extractive answer; withheld 872→203; supported 2→15; dev E2E 3→15 of 90 |
 | Q4 A/B/C/D + ablations | PARTIAL | dev A/B/C/D + no-verifier + BM25/adaptive + old/new grouping; blind pilot 2 tasks / 10 facts (D 4/10, A/B 0/4, C NOT_RUN); live NOT_RUN |
-| Q5 reliability | NOT_STARTED | lease/fencing or documented guard; Playwright or NOT_RUN |
-| Q6 final verification | NOT_STARTED | no paid calls; live remains BLOCKED_EXTERNAL |
+| Q5 reliability | PASS (local scope) | leases/fencing/heartbeat, atomic terminal event, per-job storage; Playwright 2/2 pass with traces/screenshots; two-process live stress NOT_RUN |
+| Q6 final verification | PASS engineering / PARTIAL research | 692 Python tests, 4 frontend, 2 Playwright, CLI dry-run; `docs/goal/Q6_FINAL_ACCEPTANCE.md` |
 
 Largest measured bottleneck: retrieval coverage (69/90 facts absent from C's
-archived docs; long-history 0/30). Largest verifier-side issue: coarse,
-decontextualized claim identity (872/1,275 withheld; 351 different-measure-only
-conflicts). Verified findings are not used in the final answer (2 supported,
-0 reported).
+archived docs; long-history 0/30). The verifier-side coarse-identity issue was
+reduced from 872 to 203 withheld claims by measure identity + period inference;
+the remaining 203 are not labelled false rejections. Dev Strategy D E2E is
+15/90 vs C 3/90; the blind pilot is only 2 tasks/10 facts (D 4/10) and does not
+support a generalization claim.
+
+Remaining before research acceptance: 38–58 additional blind tasks, live
+end-to-end + semantic Judge (cost gate), gap/temporal retrieval, two-process
+lease stress, and a labelled false-support audit.
