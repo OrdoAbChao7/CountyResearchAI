@@ -306,8 +306,9 @@ class JobRunner:
         if status_counts.get(VerificationStatus.NEEDS_REVIEW.value, 0):
             return ResearchOutcome.CONFLICT_UNRESOLVED, "conflicting_supported_evidence"
         met, failures = thresholds_met(job.contract, summary)
-        if met:
+        supported = int(summary.get("supported_claims", 0))
+        if met and supported > 0:
             return ResearchOutcome.SUFFICIENT, "evidence_thresholds_met"
-        if summary.get("supported_claims", 0) == 0:
+        if supported == 0:
             return ResearchOutcome.NO_PROGRESS, "no_supported_claims"
         return ResearchOutcome.NEEDS_HUMAN_REVIEW, ";".join(failures)

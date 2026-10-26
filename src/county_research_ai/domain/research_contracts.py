@@ -260,7 +260,7 @@ class EvidenceThresholds(BaseModel):
     """What must be true before a run may finish as SUFFICIENT."""
 
     min_independent_sources: int = Field(default=1, ge=0)
-    min_supported_claims: int = Field(default=0, ge=0)
+    min_supported_claims: int = Field(default=1, ge=0)
     min_supported_ratio: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_requirement: str = ""
 

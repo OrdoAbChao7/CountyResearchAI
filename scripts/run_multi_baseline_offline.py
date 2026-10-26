@@ -271,6 +271,45 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def build_dataset_manifest(
+    runs: dict[str, dict[str, Any]], observations: Path
+) -> dict[str, Any]:
+    rows = [
+        {
+            "run_id": run_id,
+            "group": run.get("group"),
+            "region": run.get("region"),
+            "task_id": run.get("task_id"),
+            "repeat": run.get("repeat"),
+            "status": run.get("status"),
+            "duration_seconds": run.get("duration_seconds"),
+            "resource_usage": run.get("resource_usage", {}),
+        }
+        for run_id, run in sorted(runs.items())
+    ]
+    return {
+        "evidence_kind": "OFFLINE_REPLAY",
+        "observations_path": str(observations),
+        "observations_sha256": sha256_file(observations),
+        "ground_truth_path": str(GROUND_TRUTH),
+        "ground_truth_sha256": sha256_file(GROUND_TRUTH)
+        if GROUND_TRUTH.is_file()
+        else None,
+        "task_keys": sorted(
+            {
+                (str(run.get("region")), str(run.get("task_id")), int(run.get("repeat", 1)))
+                for run in runs.values()
+            }
+        ),
+        "groups": sorted({str(run.get("group")) for run in runs.values()}),
+        "runs": rows,
+        "note": (
+            "Inherited frozen corpus, not a newly curated independent holdout. "
+            "Task keys are reused across strategies for pairing."
+        ),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--observations", type=Path, default=DEFAULT_OBSERVATIONS)
@@ -281,7 +320,12 @@ def main() -> int:
     )
     args = parser.parse_args()
     report = build_report(args.observations)
+    runs = load_runs(args.observations)
     args.output.mkdir(parents=True, exist_ok=True)
+    (args.output / "dataset_manifest.json").write_text(
+        json.dumps(build_dataset_manifest(runs, args.observations), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     (args.output / "summary.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

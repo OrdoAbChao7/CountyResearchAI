@@ -1,6 +1,6 @@
 # Verifier ablation on frozen C archives
 
-Generated: 2026-10-26T09:54:53.095055+00:00
+Generated: 2026-10-26T10:03:11.067886+00:00
 Evidence kind: `OFFLINE_VERIFIER_ABLATION` · provider calls: 0
 
 > Same extracted claims and raw text; compares legacy verification with the deterministic v2 verifier. Not an end-to-end quality result.

@@ -220,10 +220,26 @@ def _value_forms(value: str, unit: str) -> set[str]:
 
 
 def _quote_contains_value(quote: str, value: str, unit: str) -> bool:
-    """Check a numeric value without requiring identical formatting."""
+    """Check a numeric value without requiring identical formatting.
+
+    Substring matching is boundary-aware: a claim value of ``20`` must not match
+    ``200``. Numeric tokens are then compared with unit conversion support.
+    """
     normalized_quote = _normalize_ws(quote)
-    if any(form in normalized_quote for form in _value_forms(value, unit)):
-        return True
+    for form in _value_forms(value, unit):
+        start = normalized_quote.find(form)
+        while start != -1:
+            end = start + len(form)
+            before = normalized_quote[start - 1] if start > 0 else ""
+            after = normalized_quote[end] if end < len(normalized_quote) else ""
+            if (
+                not before.isdigit()
+                and before != "."
+                and not after.isdigit()
+                and after != "."
+            ):
+                return True
+            start = normalized_quote.find(form, start + 1)
     target = _decimal(value)
     if target is None:
         return False
@@ -1134,7 +1150,7 @@ class EvidenceGraphStore:
         )
         checks["contradicting_supported_claims"] = supported_conflicts
         own_support = self._has_objective_support(chain)
-        if own_support and supported_conflicts:
+        if own_support and (supported_conflicts or contradicts):
             return VerificationStatus.NEEDS_REVIEW, "conflicting_supported_evidence"
         if contradicts and not own_support:
             return VerificationStatus.CONTRADICTED, "contradicting_evidence"

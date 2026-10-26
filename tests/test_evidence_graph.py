@@ -11,6 +11,7 @@ from county_research_ai.domain.research_contracts import (
     SourceDocument,
 )
 from county_research_ai.evidence.graph import (
+    ClaimEvidenceEdgeRecord,
     ClaimRelationKind,
     EdgeRelation,
     EvidenceGraphStore,
@@ -156,6 +157,46 @@ def test_supported_claim_requires_value_in_quote(tmp_path):
     assert good.deterministic_checks["independent_support"] == 1
     assert bad.status is VerificationStatus.INSUFFICIENT
     assert bad.deterministic_checks["value_present"] is False
+
+
+def test_value_prefix_does_not_match_a_larger_number(tmp_path):
+    content = "德清县2024年地区生产总值为200亿元。"
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(
+        _ledger(
+            _source("snap-1", content=content),
+            claims=[
+                _claim(
+                    "claim-20",
+                    value="20",
+                    statement="德清县2024年地区生产总值为20亿元",
+                )
+            ],
+        )
+    )
+
+    record = store.verify_claim("claim-20")
+
+    assert record.status is VerificationStatus.INSUFFICIENT
+    assert record.deterministic_checks["value_present"] is False
+
+
+def test_explicit_contradicting_edge_forces_review(tmp_path):
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.add_edge(
+        ClaimEvidenceEdgeRecord(
+            claim_id="claim-1",
+            span_id="snap-1:chunk:1",
+            relation=EdgeRelation.CONTRADICTS,
+            rationale="test_conflict",
+        )
+    )
+
+    record = store.verify_claim("claim-1")
+
+    assert record.status is VerificationStatus.NEEDS_REVIEW
+    assert record.deterministic_checks["contradicting_edges"] == 1
 
 
 def test_false_offset_reference_is_rejected(tmp_path):

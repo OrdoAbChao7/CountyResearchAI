@@ -1,0 +1,731 @@
+{
+  "evidence_kind": "OFFLINE_REPLAY",
+  "observations_path": "experiments\\independent_comparison\\claim_scores\\continuation_matched_budget_deepseek_flash_20261019_v5_replay_20261019\\claim_observations.jsonl",
+  "observations_sha256": "4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e",
+  "ground_truth_path": "experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019.jsonl",
+  "ground_truth_sha256": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+  "task_keys": [
+    [
+      "临泽县",
+      "long-history",
+      1
+    ],
+    [
+      "临泽县",
+      "rise-fall",
+      1
+    ],
+    [
+      "临泽县",
+      "snapshot",
+      1
+    ],
+    [
+      "于都县",
+      "long-history",
+      1
+    ],
+    [
+      "于都县",
+      "rise-fall",
+      1
+    ],
+    [
+      "于都县",
+      "snapshot",
+      1
+    ],
+    [
+      "德清县",
+      "long-history",
+      1
+    ],
+    [
+      "德清县",
+      "rise-fall",
+      1
+    ],
+    [
+      "德清县",
+      "snapshot",
+      1
+    ],
+    [
+      "攀枝花市",
+      "long-history",
+      1
+    ],
+    [
+      "攀枝花市",
+      "rise-fall",
+      1
+    ],
+    [
+      "攀枝花市",
+      "snapshot",
+      1
+    ],
+    [
+      "白山市",
+      "long-history",
+      1
+    ],
+    [
+      "白山市",
+      "rise-fall",
+      1
+    ],
+    [
+      "白山市",
+      "snapshot",
+      1
+    ],
+    [
+      "长汀县",
+      "long-history",
+      1
+    ],
+    [
+      "长汀县",
+      "rise-fall",
+      1
+    ],
+    [
+      "长汀县",
+      "snapshot",
+      1
+    ]
+  ],
+  "groups": [
+    "A",
+    "B",
+    "C"
+  ],
+  "runs": [
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_A",
+      "group": "A",
+      "region": "德清县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 40.488347,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 5967,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_B",
+      "group": "B",
+      "region": "德清县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 40.384059,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7799,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_A",
+      "group": "A",
+      "region": "德清县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 40.064227,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7197,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_B",
+      "group": "B",
+      "region": "德清县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.882917,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7352,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_C",
+      "group": "C",
+      "region": "德清县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 87.488932,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 43746,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_A",
+      "group": "A",
+      "region": "德清县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 39.438902,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 4877,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_B",
+      "group": "B",
+      "region": "德清县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 39.732712,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 5805,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+      "group": "C",
+      "region": "德清县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 67.139894,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 8990,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_A",
+      "group": "A",
+      "region": "长汀县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 43.922136,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6570,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_B",
+      "group": "B",
+      "region": "长汀县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.33695,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6889,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_A",
+      "group": "A",
+      "region": "长汀县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 44.215409,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7110,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_B",
+      "group": "B",
+      "region": "长汀县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.980045,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6623,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_C",
+      "group": "C",
+      "region": "长汀县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 92.099149,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 36649,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_A",
+      "group": "A",
+      "region": "长汀县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.899624,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 5814,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_B",
+      "group": "B",
+      "region": "长汀县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.832136,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7162,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_C",
+      "group": "C",
+      "region": "长汀县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 69.22179,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7959,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_A",
+      "group": "A",
+      "region": "于都县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.181294,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7966,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_B",
+      "group": "B",
+      "region": "于都县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 44.36249,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7230,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_A",
+      "group": "A",
+      "region": "于都县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.75249,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7731,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_B",
+      "group": "B",
+      "region": "于都县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 40.442078,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7756,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_C",
+      "group": "C",
+      "region": "于都县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 83.789772,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 27676,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_A",
+      "group": "A",
+      "region": "于都县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 39.579101,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 4724,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_B",
+      "group": "B",
+      "region": "于都县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 43.702828,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7356,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_C",
+      "group": "C",
+      "region": "于都县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 66.638813,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 8601,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_A",
+      "group": "A",
+      "region": "攀枝花市",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.536407,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6694,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_B",
+      "group": "B",
+      "region": "攀枝花市",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.873265,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7220,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_A",
+      "group": "A",
+      "region": "攀枝花市",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.30536,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7799,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_B",
+      "group": "B",
+      "region": "攀枝花市",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 44.983776,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7165,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_C",
+      "group": "C",
+      "region": "攀枝花市",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 89.640155,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 44395,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_A",
+      "group": "A",
+      "region": "攀枝花市",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.774722,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6352,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_B",
+      "group": "B",
+      "region": "攀枝花市",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 39.905262,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 5947,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_C",
+      "group": "C",
+      "region": "攀枝花市",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 67.21671,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 10549,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_A",
+      "group": "A",
+      "region": "白山市",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.784331,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 5836,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_B",
+      "group": "B",
+      "region": "白山市",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.736018,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7963,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_A",
+      "group": "A",
+      "region": "白山市",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.704607,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 8012,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_B",
+      "group": "B",
+      "region": "白山市",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.733995,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6010,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+      "group": "C",
+      "region": "白山市",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 91.251645,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 38108,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_A",
+      "group": "A",
+      "region": "白山市",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 38.732841,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6054,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_B",
+      "group": "B",
+      "region": "白山市",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 40.643307,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 3854,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_C",
+      "group": "C",
+      "region": "白山市",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 66.706796,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6942,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_A",
+      "group": "A",
+      "region": "临泽县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.406577,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6934,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_B",
+      "group": "B",
+      "region": "临泽县",
+      "task_id": "long-history",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.318107,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 8478,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_A",
+      "group": "A",
+      "region": "临泽县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 40.490707,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6540,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_B",
+      "group": "B",
+      "region": "临泽县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.748193,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 7231,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_C",
+      "group": "C",
+      "region": "临泽县",
+      "task_id": "rise-fall",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 84.040643,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 27961,
+        "tavily:search:search": 6
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_A",
+      "group": "A",
+      "region": "临泽县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 41.503797,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6773,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_B",
+      "group": "B",
+      "region": "临泽县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 42.596407,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 6273,
+        "tavily:search:search": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+      "group": "C",
+      "region": "临泽县",
+      "task_id": "snapshot",
+      "repeat": 1,
+      "status": "VALID_OFFLINE",
+      "duration_seconds": 66.974007,
+      "resource_usage": {
+        "deepseek:deepseek-flash:llm": 10244,
+        "tavily:search:search": 6
+      }
+    }
+  ],
+  "note": "Inherited frozen corpus, not a newly curated independent holdout. Task keys are reused across strategies for pairing."
+}

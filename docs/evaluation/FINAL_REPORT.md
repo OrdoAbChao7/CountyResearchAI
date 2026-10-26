@@ -17,7 +17,7 @@ baselines is made.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **659 passed**, 1 Starlette deprecation warning |
+| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **662 passed**, 1 Starlette deprecation warning |
 | Frontend typecheck | `cd web; npm run typecheck` | clean |
 | Frontend tests | `cd web; npm test` | 4 passed |
 | Frontend build | `cd web; npm run build` | 40 modules, 160.8 kB JS / 8.9 kB CSS |
@@ -34,9 +34,11 @@ correctly excluded and only the 2024 claim remained supported.
 
 ## Offline multi-baseline comparison
 
-Source: frozen matched-budget corpus, 48 unique runs / 240 claim observations.
-Report: `experiments/evaluation/20261026_multi_baseline_offline/summary.json`
-(observations SHA-256 `4341ea07…2d5c1e`). Zero provider calls.
+Source: frozen matched-budget corpus, 48 unique runs / 240 claim observations
+across 18 task keys. Report:
+`experiments/evaluation/20261026_multi_baseline_offline/summary.json` and
+`dataset_manifest.json` (observations SHA-256 `4341ea07…2d5c1e`). Zero provider
+calls.
 
 | Group | Valid runs | GT recall (mean) | Support precision (pooled) | Fact accuracy | Error rate | LLM units/run | Seconds/run |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |

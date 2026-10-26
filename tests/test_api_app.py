@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
 from county_research_ai.api.app import create_app
-from county_research_ai.api.jobs import JobStatus, JobStore
+from county_research_ai.api.jobs import JobRecord, JobStatus, JobStore
 from county_research_ai.api.worker import JobRunner
 from county_research_ai.config import Settings
 from county_research_ai.domain.outcomes import ResearchOutcome
@@ -304,3 +305,33 @@ def test_cancel_requested_before_execution_stops_job(tmp_path):
     assert loaded.status is JobStatus.CANCELLED
     assert loaded.outcome is ResearchOutcome.CANCELLED
     assert store.list_events(job.job_id)[-1].event_type == "job.cancelled"
+
+
+def test_outcome_never_sufficient_without_supported_claims():
+    now = datetime.now(timezone.utc)
+    contract = ResearchContract(
+        objective="零支持不能算充分",
+        regions=["德清县"],
+        evidence_thresholds={"min_supported_claims": 0, "min_supported_ratio": 0},
+    )
+    job = JobRecord(
+        job_id="job-zero-support",
+        status=JobStatus.RUNNING,
+        contract=contract,
+        created_at=now,
+        updated_at=now,
+    )
+
+    outcome, reason = JobRunner._outcome(
+        job,
+        {
+            "claims": 5,
+            "supported_claims": 0,
+            "independent_sources": 3,
+            "supported_ratio": 0.0,
+            "status_counts": {"NOT_COMPARABLE": 5},
+        },
+    )
+
+    assert outcome is ResearchOutcome.NO_PROGRESS
+    assert reason == "no_supported_claims"

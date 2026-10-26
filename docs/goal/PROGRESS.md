@@ -108,3 +108,16 @@ Summarized from `GOAL_EVIDENCE_FIRST_V2.md`; see the phase reports for detail.
   the legacy extractor, not a verifier quality win. Report:
   `experiments/evaluation/20261026_verifier_ablation/`.
 - Full suite after optimization: `659 passed`; ruff clean on changed files.
+
+## 2026-10-26 — correctness hardening before close
+
+- Fixed substring numeric matching: claim value `20` no longer matches a quote
+  containing `200`; value forms now require digit/decimal boundaries before the
+  regex fallback. Regression: `test_value_prefix_does_not_match_a_larger_number`.
+- Explicit contradicting edges now force `NEEDS_REVIEW` even when the claim also
+  has supporting evidence. Regression: `test_explicit_contradicting_edge_forces_review`.
+- `SUFFICIENT` now requires at least one supported claim, and the default
+  `min_supported_claims` is 1. A contract with zero support can no longer finish
+  as sufficient. Regression: `test_outcome_never_sufficient_without_supported_claims`.
+- Full suite: `662 passed`; ruff clean on changed files. Ablation re-run is
+  unchanged (the frozen corpus has no prefix-collision case).
