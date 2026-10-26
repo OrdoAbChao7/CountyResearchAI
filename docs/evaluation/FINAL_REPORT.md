@@ -17,7 +17,7 @@ baselines is made.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **674 passed**, 1 Starlette deprecation warning |
+| Python suite | `.venv\Scripts\python.exe -m pytest --no-cov -q` | **675 passed**, 1 Starlette deprecation warning |
 | Frontend typecheck | `cd web; npm run typecheck` | clean |
 | Frontend tests | `cd web; npm test` | 4 passed |
 | Frontend build | `cd web; npm run build` | 40 modules, 160.8 kB JS / 8.9 kB CSS |

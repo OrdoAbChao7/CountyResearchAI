@@ -676,3 +676,39 @@ def test_month_level_window_rejects_out_of_window_date(tmp_path):
     assert store.get_claim("claim-month").verification_reason == (
         "outside_requested_window:2026-01-15"
     )
+
+
+def test_old_claim_relations_schema_is_rebuilt_with_run_id(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "graph.sqlite"
+    connection = sqlite3.connect(path)
+    try:
+        connection.executescript(
+            """
+            CREATE TABLE claim_relations (
+                from_claim_id TEXT NOT NULL,
+                to_claim_id TEXT NOT NULL,
+                relation TEXT NOT NULL,
+                rationale TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (from_claim_id, to_claim_id, relation)
+            );
+            INSERT INTO claim_relations
+                (from_claim_id, to_claim_id, relation, rationale, created_at)
+            VALUES ('a', 'b', 'related', 'old', 'now');
+            """
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    store = EvidenceGraphStore(path)
+    with store._connect() as reopened:
+        columns = {
+            row[1] for row in reopened.execute("PRAGMA table_info(claim_relations)")
+        }
+        row = reopened.execute("SELECT * FROM claim_relations").fetchone()
+
+    assert "run_id" in columns
+    assert row["run_id"] == ""

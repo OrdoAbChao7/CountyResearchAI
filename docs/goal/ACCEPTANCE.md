@@ -7,13 +7,13 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 
 | Check | Status | Command / artifact | Observed |
 | --- | --- | --- | --- |
-| Python suite | PASS | `python -m pytest --no-cov -q` | `674 passed in 28.95s`, exit 0 |
+| Python suite | PASS | `python -m pytest --no-cov -q` | `675 passed in 27.04s`, exit 0 |
 | Relocated manifest audit | PASS | `tests/test_audit_path_resolution.py` | 4 passed |
 | Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
 | Frontend tests | PASS | `cd web; npm test` | 4 passed |
 | Frontend build | PASS | `cd web; npm run build` | 40 modules, 160.8 kB JS |
-| API live smoke | PASS | `python -m county_research_ai.api` :8011 | health, capabilities, UI, SSE 200 |
-| End-to-end MOCK task | PASS | live POST + poll | `SUCCEEDED`/`SUFFICIENT`, 3 sources, 6 findings, 4,213 B brief |
+| API live smoke | PASS | `python -m county_research_ai.api` :8013 | health, capabilities, built UI, SSE 200; honest budget labels |
+| End-to-end MOCK task | PASS | live POST + poll | `SUCCEEDED`/`SUFFICIENT`, 3 sources, 6 findings (1 supported, 5 window-excluded) |
 | Deadline exhaustion | PASS | `test_deadline_exhaustion_is_not_reported_as_sufficient` | `BUDGET_EXHAUSTED` |
 | Cancellation | PASS | `test_cancel_requested_before_execution_stops_job` | `CANCELLED` |
 | Resume | PASS | `test_resume_requeues_and_resubmits` | QUEUED + resubmitted |

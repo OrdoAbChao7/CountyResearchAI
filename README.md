@@ -100,7 +100,7 @@ cd web; npm run typecheck; npm test; npm run build      # 前端检查
 
 当前实测：
 
-- Python 测试 **674 passed**；前端 4 tests、`tsc` 与 Vite build 通过（2026-10-26）。
+- Python 测试 **675 passed**；前端 4 tests、`tsc` 与 Vite build 通过（2026-10-26）。
 - 本地 `MOCK` 端到端：任务 `SUCCEEDED` / `SUFFICIENT`，3 个来源、6 条结构化结论；2025/2027 结论在 2024 时间窗内被正确判为 `NOT_COMPARABLE`。
 - 冻结 matched-budget 离线 A/B/C 复算：C 组在现有小样本上落后 A/B 且资源消耗更高。**不能**据此得出 v2 优于基线的结论；D 组、40–60 独立任务、消融、真实 Provider 与语义 Judge 均未运行/未获授权。
 

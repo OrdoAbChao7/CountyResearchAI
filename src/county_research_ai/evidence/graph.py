@@ -589,8 +589,33 @@ class EvidenceGraphStore:
                 CREATE INDEX IF NOT EXISTS idx_run_snapshots_run ON run_snapshots(run_id);
                 """
             )
+            relation_columns = {
+                row[1]
+                for row in connection.execute("PRAGMA table_info(claim_relations)")
+            }
+            if "run_id" not in relation_columns:
+                connection.execute("PRAGMA foreign_keys = OFF")
+                connection.executescript(
+                    """
+                    ALTER TABLE claim_relations RENAME TO claim_relations_old;
+                    CREATE TABLE claim_relations (
+                        from_claim_id TEXT NOT NULL REFERENCES claims(claim_id),
+                        to_claim_id TEXT NOT NULL REFERENCES claims(claim_id),
+                        relation TEXT NOT NULL,
+                        rationale TEXT NOT NULL DEFAULT '',
+                        run_id TEXT NOT NULL DEFAULT '',
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (from_claim_id, to_claim_id, relation, run_id)
+                    );
+                    INSERT INTO claim_relations
+                        (from_claim_id, to_claim_id, relation, rationale, run_id, created_at)
+                    SELECT from_claim_id, to_claim_id, relation, rationale, '', created_at
+                    FROM claim_relations_old;
+                    DROP TABLE claim_relations_old;
+                    """
+                )
+                connection.execute("PRAGMA foreign_keys = ON")
             for table, column, ddl in (
-                ("claim_relations", "run_id", "TEXT NOT NULL DEFAULT ''"),
                 ("verification_records", "run_id", "TEXT NOT NULL DEFAULT ''"),
                 ("verification_records", "reason", "TEXT NOT NULL DEFAULT ''"),
             ):

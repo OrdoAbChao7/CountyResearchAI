@@ -172,3 +172,12 @@ Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
   `max_tokens`/`max_documents` as `bounded_per_call`, and
   `max_steps`/`max_search_calls`/`max_cost` as not enforced.
 - `capabilities` exposes `bounded_per_call_caps`.
+
+## 2026-10-26 — claim_relations schema migration
+
+- Existing `claim_relations` tables created before run scoping would keep the old
+  primary key and drop relations for a second run. Initialization now rebuilds
+  the table with `(from, to, relation, run_id)` when `run_id` is absent, copying
+  old rows with `run_id=''`. Regression:
+  `test_old_claim_relations_schema_is_rebuilt_with_run_id`.
+- Full suite: `675 passed`.
