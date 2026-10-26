@@ -1,0 +1,102 @@
+[
+  {
+    "project": "synthetic-v1",
+    "source": {
+      "canonical_url": "synthetic:new",
+      "content": "SYNTHETIC ONLY 2024 bamboo output 120 亿元 scope=county region=330523",
+      "metadata": {
+        "synthetic": true
+      }
+    },
+    "facts": [
+      {
+        "region_id": "330523",
+        "metric_id": "output",
+        "original_name": "output",
+        "value": "120",
+        "unit": "亿元",
+        "period": "2024",
+        "scope": "county",
+        "caliber": "all",
+        "price_basis": "current",
+        "excerpt": "SYNTHETIC ONLY 2024 bamboo output 120 亿元 scope=county region=330523",
+        "start": 0
+      }
+    ]
+  },
+  {
+    "project": "synthetic-v1",
+    "source": {
+      "canonical_url": "synthetic:a",
+      "content": "SYNTHETIC ONLY 2022 bamboo output 101 亿元 scope=county region=330523",
+      "metadata": {
+        "synthetic": true
+      }
+    },
+    "facts": [
+      {
+        "region_id": "330523",
+        "metric_id": "output",
+        "original_name": "output",
+        "value": "101",
+        "unit": "亿元",
+        "period": "2022",
+        "scope": "county",
+        "caliber": "all",
+        "price_basis": "current",
+        "excerpt": "SYNTHETIC ONLY 2022 bamboo output 101 亿元 scope=county region=330523",
+        "start": 0
+      }
+    ]
+  },
+  {
+    "project": "synthetic-v1",
+    "source": {
+      "canonical_url": "synthetic:park",
+      "content": "SYNTHETIC ONLY 2023 bamboo output 50 亿元 scope=park region=330523",
+      "metadata": {
+        "synthetic": true
+      }
+    },
+    "facts": [
+      {
+        "region_id": "330523",
+        "metric_id": "output",
+        "original_name": "output",
+        "value": "50",
+        "unit": "亿元",
+        "period": "2023",
+        "scope": "park",
+        "caliber": "all",
+        "price_basis": "current",
+        "excerpt": "SYNTHETIC ONLY 2023 bamboo output 50 亿元 scope=park region=330523",
+        "start": 0
+      }
+    ]
+  },
+  {
+    "project": "synthetic-v1",
+    "source": {
+      "canonical_url": "synthetic:repost",
+      "content": "SYNTHETIC ONLY 2022 bamboo output 100 亿元 scope=county region=330523",
+      "metadata": {
+        "synthetic": true
+      }
+    },
+    "facts": [
+      {
+        "region_id": "330523",
+        "metric_id": "output",
+        "original_name": "output",
+        "value": "100",
+        "unit": "亿元",
+        "period": "2022",
+        "scope": "county",
+        "caliber": "all",
+        "price_basis": "current",
+        "excerpt": "SYNTHETIC ONLY 2022 bamboo output 100 亿元 scope=county region=330523",
+        "start": 0
+      }
+    ]
+  }
+]

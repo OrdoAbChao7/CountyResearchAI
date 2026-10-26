@@ -1,0 +1,1 @@
+{"affected": ["report#growth-anji", "report#text-anji"], "confirmed": 4, "duplicate_repost_added_facts": 0, "first_values": ["100", "110", "200", "220"], "idempotent": true, "provider_calls": 0, "scope_attempts": 1, "scope_errors": 0, "synthetic": true, "traceable": 4, "unaffected_pending": false, "user_time_reduction": null}

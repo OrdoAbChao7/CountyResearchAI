@@ -1,0 +1,28 @@
+{
+  "example_final": {
+    "sources": 2,
+    "facts": 4,
+    "calculations": 0,
+    "archive_integrity": true,
+    "excerpt_integrity": true,
+    "historical_calculations_reproduced": true
+  },
+  "offline_final": {
+    "sources": 8,
+    "facts": 7,
+    "calculations": 3,
+    "archive_integrity": true,
+    "excerpt_integrity": true,
+    "historical_calculations_reproduced": true
+  },
+  "tests": {
+    "passed": 117,
+    "new_cases": 16,
+    "scope": "table and related workflow/CLI/pipeline regression"
+  },
+  "ruff": "passed",
+  "provider_calls": 0,
+  "external_validation": "not_run",
+  "product_benefit": "NOT_VALIDATED",
+  "temporary_runs_cleaned": true
+}
