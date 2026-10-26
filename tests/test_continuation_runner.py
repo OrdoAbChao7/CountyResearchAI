@@ -32,6 +32,11 @@ def test_stage_a_specs_match_regions_modes_and_groups():
     assert {spec.county for spec in specs} == {"德清县", "长汀县"}
     assert {spec.mode for spec in specs} == {"snapshot", "rise-fall", "long-history"}
     assert {spec.group for spec in specs} == {"A", "B", "C"}
+    assert {spec.group: spec.config["architecture_version"] for spec in specs[:3]} == {
+        "A": "traditional_search_baseline",
+        "B": "general_ai_baseline",
+        "C": "evidence_first_v2",
+    }
     assert all(spec.config["execution_policy"] == "natural" for spec in specs)
     assert all(spec.config["formal_target"] is True for spec in specs)
     assert all(spec.config["ground_truth_claim_quota"] == 5 for spec in specs)

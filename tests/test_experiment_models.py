@@ -9,6 +9,7 @@ from county_research_ai.evaluation.experiment_models import (
     RunArtifact,
     RunManifest,
     RunStatus,
+    architecture_version_for_group,
     config_hash,
 )
 
@@ -23,7 +24,7 @@ def test_manifest_enforces_valid_lifecycle_and_persists_json(tmp_path):
         mode="snapshot",
         model="gemini-3.1-flash-lite",
         search_provider="tavily",
-        config={"temperature": 0.1, "max_searches": 2},
+        config={"temperature": 0.1, "max_searches": 2, "architecture_version": "evidence_first_v2"},
     )
 
     manifest.transition(RunStatus.RUNNING)
@@ -34,7 +35,10 @@ def test_manifest_enforces_valid_lifecycle_and_persists_json(tmp_path):
     loaded = json.loads(path.read_text(encoding="utf-8"))
     assert loaded["status"] == "VALID"
     assert loaded["formal_target"] is False
-    assert loaded["config_hash"] == config_hash({"temperature": 0.1, "max_searches": 2})
+    assert loaded["architecture_version"] == "evidence_first_v2"
+    assert loaded["config_hash"] == config_hash(
+        {"temperature": 0.1, "max_searches": 2, "architecture_version": "evidence_first_v2"}
+    )
 
     with pytest.raises(ValueError):
         manifest.transition(RunStatus.RUNNING)
@@ -50,13 +54,20 @@ def test_manifest_persists_formal_target_scope(tmp_path):
         mode="snapshot",
         model="gemini-3.1-flash-lite",
         search_provider="tavily",
-        config={"formal_target": True},
+        config={"formal_target": True, "architecture_version": "deep_legacy"},
     )
 
     path = tmp_path / "manifest.json"
     manifest.write(path)
 
     assert json.loads(path.read_text(encoding="utf-8"))["formal_target"] is True
+    assert json.loads(path.read_text(encoding="utf-8"))["architecture_version"] == "deep_legacy"
+
+
+def test_experiment_groups_declare_the_actual_researcher_architecture():
+    assert architecture_version_for_group("A") == "traditional_search_baseline"
+    assert architecture_version_for_group("B") == "general_ai_baseline"
+    assert architecture_version_for_group("C") == "evidence_first_v2"
 
 
 def test_artifact_writes_json_and_returns_sha256(tmp_path):

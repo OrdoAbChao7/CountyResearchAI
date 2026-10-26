@@ -15,6 +15,8 @@
 """
 from __future__ import annotations
 
+from ...domain.research_contracts import EvidencePack
+from ...evidence.bound_verifier import EvidenceBoundVerifier
 from ...evidence.store import EvidenceStore
 from ...evidence.verifier import FactVerifier
 from ...models import AnalysisResult, CountyInfo, EvidenceGap
@@ -35,36 +37,48 @@ class ResearchSynthesizer:
         industry_out: IndustryAnalysisOutput,
         evidence_store: EvidenceStore,
         gaps: list[EvidenceGap] | None = None,
+        evidence_packs: list[EvidencePack] | None = None,
     ) -> list[AnalysisResult]:
         """将多 Agent 分析结果合成标准 AnalysisResult 列表并注入事实核验标记。"""
-        verifier = FactVerifier(evidence_store)
         c_name = county.display()
         f_name = focus or "特色产业"
 
+        def verify(markdown: str):
+            if evidence_packs:
+                return EvidenceBoundVerifier().verify_markdown(
+                    markdown, evidence_packs, county=county.name
+                )
+            return FactVerifier(evidence_store).verify_text_content(markdown, county=c_name)
+
         # 1. 现状分析章节（合成经济与实物规模）
         status_raw = economic_out.markdown_content
-        status_annotated, rep1 = verifier.verify_text_content(status_raw, county=c_name)
+        status_annotated, rep1 = verify(status_raw)
 
         # 2. 优势与政策章节
         policy_raw = policy_out.markdown_content
-        policy_annotated, rep2 = verifier.verify_text_content(policy_raw, county=c_name)
+        policy_annotated, rep2 = verify(policy_raw)
 
         # 3. 产业链、企业与短板章节
         industry_raw = industry_out.markdown_content
-        industry_annotated, rep3 = verifier.verify_text_content(industry_raw, county=c_name)
+        industry_annotated, rep3 = verify(industry_raw)
 
         # 4. 发展建议与治理对策
         rec_lines = [
             f"### 四、{c_name}{f_name}高质量发展建议与破局路径",
             "",
-            "基于对当前产业经济、政策与竞争格局的深度综合研判，提出以下实施路径：",
-            "",
-            "1. **科技创新赋能与全产业链升级**：深化与科研院所及高校产学研合作，重点攻克精深加工与核心技术短板，以技术跃升抵御劳动力成本上涨压力；",
-            "2. **链主企业引育与空间集群优化**：依托国家级与省级现代产业园，实施“强链补链延链”招商，加大对专精特新及规上龙头企业的扶持倾斜；",
-            "3. **品牌护城河构建与数字营销拓展**：规范区域公共品牌授权与溯源监管机制，借力电商直播、展会外贸构建多层次销售渠道矩阵；",
-            "4. **绿色低碳循环与要素机制保障**：完善用地、金融及用工保障机制，积极争取上级产业扶持基金与试点政策支持。",
+            "以下内容为研究建议，不作为已发生事实：",
             "",
         ]
+        if industry_out.bottlenecks_and_risks:
+            rec_lines.extend(
+                f"- 针对已记录的风险，建议先核实其影响范围与可行应对措施：{risk}"
+                for risk in industry_out.bottlenecks_and_risks[:5]
+            )
+        else:
+            rec_lines.append(
+                "- 当前材料未支持县域特定的产业建议；应先补齐可追溯的风险、市场与政策原文。"
+            )
+        rec_lines.append("")
         rec_content = "\n".join(rec_lines)
 
         # 5. 生成专业审计附录：数据冲突说明 + 资料缺口说明 + 参考文献表
@@ -80,7 +94,7 @@ class ResearchSynthesizer:
             for g in gaps:
                 appendix_lines.append(f"- ⚠ {g.description}")
         else:
-            appendix_lines.append("- 本次研究材料充分，未发现阻碍结论成立的重大资料缺口。")
+            appendix_lines.append("- 未生成结构化缺口记录；这不代表现有证据已充分。")
 
         appendix_lines.extend([
             "",
@@ -96,25 +110,25 @@ class ResearchSynthesizer:
                 task="industry_status",
                 content=status_annotated,
                 model="deep-multi-agent-v2",
-                tokens_used=1200,
+                tokens_used=0,
             ),
             AnalysisResult(
                 task="advantages",
                 content=policy_annotated,
                 model="deep-multi-agent-v2",
-                tokens_used=1000,
+                tokens_used=0,
             ),
             AnalysisResult(
                 task="shortcomings",
                 content=industry_annotated,
                 model="deep-multi-agent-v2",
-                tokens_used=1100,
+                tokens_used=0,
             ),
             AnalysisResult(
                 task="recommendations",
                 content=f"{rec_content}\n\n{appendix_content}",
                 model="deep-multi-agent-v2",
-                tokens_used=1300,
+                tokens_used=0,
             ),
         ]
         return results
@@ -128,10 +142,19 @@ class ResearchSynthesizer:
         """生成面向决策者的执行摘要。"""
         c_name = county.display()
         f_name = focus or "特色产业"
+        supported = [
+            line.strip()
+            for analysis in analyses
+            for line in analysis.content.splitlines()
+            if "[证据：" in line or "^[来源:" in line
+        ]
+        if not supported:
+            return (
+                f"**{c_name}{f_name}研究摘要：**当前没有可复述的、已关联来源的核验事实。"
+                "现有结论应视为待核实，需补齐具体原文证据后再作县域判断。"
+            )
         return (
-            f"本报告系统梳理了**{c_name}**围绕**{f_name}**的发展脉络与最新现状。"
-            f"通过整合国民经济统计公报、重点政策规划及行业公开资料，多智能体协同评估显示："
-            f"{c_name}{f_name}产业基础扎实，已形成较为完整的产业链雏形；在政策规划与龙头带动下具备良好发展韧性，"
-            f"但仍需重点突破要素成本、精深加工和品牌附加值等结构性瓶颈。"
-            f"本报告全部核心数据均经过多来源交叉核验与来源追溯，详见正文及审计附录。"
+            f"**{c_name}{f_name}研究摘要：**\n"
+            + "\n".join(f"- {line}" for line in supported[:3])
+            + "\n\n摘要仅摘录已关联来源的事实；建议与推断不代表已发生事实。"
         )

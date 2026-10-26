@@ -61,3 +61,16 @@ def test_source_contract_preserves_truncation_audit_fields():
     assert record["content_original_length"] == 1000
     assert record["content_truncated"] is True
     assert record["truncation_reason"] == "max_evidence_length:10"
+
+
+def test_source_contract_carries_observed_credibility_for_later_verification():
+    record = serialize_source_documents([
+        RawDoc(
+            title="低可信来源",
+            url="https://example.com/post",
+            content="一段足够长的证据材料，用于保存来源的实际可信度分数并在核验时识别低可信材料。",
+            credibility_score=0.32,
+        )
+    ])[0]
+
+    assert record["metadata"]["credibility_score"] == 0.32

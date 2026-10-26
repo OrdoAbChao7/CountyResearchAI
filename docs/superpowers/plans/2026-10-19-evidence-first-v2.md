@@ -99,10 +99,10 @@
 - Produces Pydantic contracts for `ResearchSpec`, `SourceDocument`, `EvidenceChunk`, `AtomicClaim`, `QuestionSlot`, and `EvidencePack`.
 - Provides adapter functions from legacy `RawDoc`/`ProcessedData` and a ledger path that is actually consumed by the research workflow.
 
-- [ ] Write schema and round-trip tests first, including unit normalization, multiple sources, same-source repost detection, missing evidence, and versioned/revised values.
-- [ ] Implement the contracts with explicit unknown/limited-offset states; never fabricate source offsets.
-- [ ] Implement ledger insertion, relation lookup, verification status, and EvidencePack selection under a token budget.
-- [ ] Integrate one real legacy workflow path and prove the ledger output reaches analysis/report generation.
+- [x] Write schema and round-trip tests first, including unit normalization, multiple sources, same-source repost detection, missing evidence, and versioned/revised values.
+- [x] Implement the contracts with explicit unknown/limited-offset states; never fabricate source offsets.
+- [x] Implement ledger insertion, relation lookup, verification status, and EvidencePack selection under a token budget.
+- [x] Integrate one real legacy workflow path and prove the ledger output reaches analysis/report generation.
 
 ### Task 4: Phase 4 task-driven adaptive retrieval
 
@@ -115,10 +115,12 @@
 - Consumes `ResearchSpec`/`QuestionSlot` and EvidencePack coverage.
 - Produces mode-specific query plans, relevance/diversity scores, gap-linked follow-up queries, and stop reasons with resource usage.
 
-- [ ] Add offline tests showing different plans for `snapshot`, `rise-fall`, and `long-history`.
-- [ ] Add deterministic ranking tests for task relevance, region/period/metric match, reliability, novelty, and repost deduplication.
-- [ ] Implement feedback-driven follow-up and stop conditions for quality, budget, and zero marginal evidence.
-- [ ] Replay saved searches and compare task-relevant recall against the legacy plan without new Provider calls.
+- [x] Add offline tests showing different plans for `snapshot`, `rise-fall`, and `long-history`.
+- [x] Add deterministic ranking tests for task relevance, region/period/metric match, reliability, novelty, and repost deduplication.
+- [x] Implement feedback-driven follow-up and stop conditions for quality, budget, and zero marginal evidence; expose the maximum-round stop explicitly.
+- [x] Replay saved searches and compare task-relevant recall against legacy ranking without new Provider calls; result is tied on a six-document corpus and inconclusive for effectiveness.
+
+**Phase 4 gate:** Engineering complete; offline performance evidence is insufficient to claim improvement. See `PHASE4_ADAPTIVE_RETRIEVAL_REPORT.md`.
 
 ### Task 5: Phase 5 evidence-bound analysis and verification
 
@@ -130,9 +132,11 @@
 - Consumes EvidencePack and verified AtomicClaims.
 - Produces findings tagged as fact, supported fact, inference, hypothesis, or gap; every material conclusion maps to Claim → Chunk → Source.
 
-- [ ] Add failing hallucination tests for unsupported county attributes, unsupported numbers, same-value/different-metric citations, and low-confidence missing evidence.
-- [ ] Implement claim-bound generation and conservative uncertainty rendering while keeping legacy output available.
-- [ ] Verify reports and sources through the archived evidence graph, not URL presence alone.
+- [x] Add failing hallucination tests for unsupported county attributes, unsupported numbers, different region/period/metric, low-confidence sources, and missing canonical source URL.
+- [x] Implement claim-bound verification and conservative uncertainty rendering while keeping legacy verifier fallback available.
+- [x] Verify numeric reports and sources through the archived evidence graph, including source chunk excerpts, not URL presence alone; non-numeric unlinked statements are marked as unverified.
+
+**Phase 5 gate:** Engineering complete with deterministic matching limitations; no research-quality lift is claimed. See `PHASE5_EVIDENCE_BOUND_SYNTHESIS_REPORT.md`.
 
 ### Task 6: Phase 6 efficiency and mode routing
 
@@ -144,8 +148,8 @@
 - Supports `workflow_legacy`, `deep_legacy`, and `evidence_first_v2` with manifest-visible architecture versions.
 - Records actual Search/Fetch/LLM usage, latency, retries, new evidence, and budget stop state.
 
-- [ ] Add tests for architecture-version routing, missing/unknown Usage, budget exhaustion, and long-history checkpoint reuse.
-- [ ] Implement timeline/period EvidencePacks and independent period analysis with one final synthesis.
+- [x] Add tests for architecture-version routing, budget exhaustion, and long-history checkpoint reuse. Unknown/missing Usage remains represented as unknown; no fabricated usage is added.
+- [x] Implement timeline/period EvidencePacks and independent period analysis with one final synthesis.
 - [ ] Replay long-history inputs and report actual token/call changes; treat 30% reduction as a target, not an assumption.
 
 ### Task 7: Phase 7/8 offline replay, independent evaluation, and delivery
@@ -157,8 +161,8 @@
 **Interfaces:**
 - Produces reproducible legacy vs Evidence-First replay tables, optional authorized smoke-test records, module ablations, engineering acceptance, research acceptance, known limitations, and next actions.
 
-- [ ] Run all offline replays before any new real Provider call; compare fact retention, claim precision/recall, evidence support, error rate, calls, tokens, and latency.
-- [ ] Run real Provider smoke tests only when an explicit current cost gate permits them; preserve every failure and usage record.
-- [ ] Audit public CLI compatibility, unused modules, hard-coded usage, source traceability, and actual ledger participation.
-- [ ] Complete final documents and mark the Goal `ENGINEERING_COMPLETE_RESEARCH_PENDING` when independent research evidence is insufficient.
+- [x] Run available offline replays before any new real Provider call; compare archived claim metrics, exact evidence retention, prompt characters, calls, and latency where archived. Token comparison remains unavailable.
+- [x] No real Provider smoke test: no current explicit cost gate was available; historical failures and usage records remain preserved.
+- [x] Audit public CLI compatibility, hard-coded usage, source traceability, and actual ledger participation. Legacy CLI paths remain in place; synthetic token usage was removed; period packs carry source/chunk IDs. No evidence of a quality lift was found.
+- [x] Complete final architecture/migration/report documents and mark the Goal `ENGINEERING_COMPLETE_RESEARCH_PENDING`; independent research acceptance remains unmet.
 

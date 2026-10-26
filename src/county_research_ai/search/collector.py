@@ -21,6 +21,12 @@ from concurrent.futures import TimeoutError as _TimeoutError
 from ..config import Settings, get_settings
 from ..exceptions import SearchError
 from ..models import RawDoc
+from .adaptive_retrieval import (
+    AdaptiveCollectionResult,
+    AdaptiveQueryPlan,
+    AdaptiveRetrievalController,
+    rank_documents_for_slot,
+)
 from .base import SearchProvider
 from .content_extractor import (
     calculate_content_fingerprint,
@@ -202,6 +208,60 @@ class SearchCollector(SearchProvider):
 
         docs = self._run_tasks(tasks)
         return self._dedup_and_rank(docs, top=max_results, keywords=queries)
+
+    def collect_adaptive(
+        self,
+        plan: AdaptiveQueryPlan,
+        *,
+        controller: AdaptiveRetrievalController | None = None,
+        max_results: int = 0,
+    ) -> AdaptiveCollectionResult:
+        """Execute a bounded plan while returning explicit search/fetch usage."""
+        unique_queries = {item.query.strip(): item for item in plan.queries if item.query.strip()}
+        # A controller reserves queries when it creates the plan; applying its
+        # remaining budget here would charge the same queries a second time.
+        queries = list(unique_queries.values())
+        tasks: list[tuple[SearchProvider, str]] = []
+        for generated in queries:
+            if generated.target_channel == "gov" and self._gov is not None:
+                tasks.append((self._gov, generated.query))
+            elif self._web is not None:
+                tasks.append((self._web, generated.query))
+        if not tasks:
+            return AdaptiveCollectionResult(
+                documents=(),
+                usage={"search_queries": 0, "fetched_documents": 0},
+                stop_reason="no_gap_query",
+            )
+        raw_docs = self._run_tasks(tasks)
+        if controller:
+            controller.record_fetches(len(raw_docs))
+        slots = {slot.slot_id: slot for slot in plan.spec.question_slots}
+        ranked_by_url: dict[str, tuple[float, RawDoc]] = {}
+        for generated in queries:
+            slot = slots.get(generated.slot_id)
+            if slot is None:
+                continue
+            for item in rank_documents_for_slot(
+                raw_docs,
+                slot,
+                query=generated.query,
+            ):
+                key = normalize_url(item.document.url) or item.fingerprint or item.document.title
+                current = ranked_by_url.get(key)
+                if current is None or item.score > current[0]:
+                    ranked_by_url[key] = (item.score, item.document)
+        ranked = [item for _, item in sorted(
+            ranked_by_url.values(), key=lambda pair: (-pair[0], pair[1].url, pair[1].title)
+        )[: max_results or self._max_results]]
+        return AdaptiveCollectionResult(
+            documents=tuple(ranked),
+            usage={
+                "search_queries": len(tasks),
+                "fetched_documents": len(raw_docs),
+                "returned_documents": len(ranked),
+            },
+        )
 
     def _run_tasks(self, tasks: list[tuple[SearchProvider, str]]) -> list[RawDoc]:
         """并发执行任务。"""

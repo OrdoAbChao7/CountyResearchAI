@@ -6,7 +6,7 @@ from ..application.context import ResearchContext
 from ..models import CountyLongHistoryAnalysis
 from ..ports.analysis import LongHistoryAnalyzerPort
 from ..ports.reporting import LongHistoryRendererPort
-from .base import RenderedReport
+from .base import RenderedReport, audit_markdown, render_evidence_pack_appendix
 from .rise_fall import _compatibility_report
 
 _TITLES = [
@@ -35,13 +35,20 @@ class LongHistoryModeHandler:
         if context.processed is None:
             raise ValueError("processed evidence is required before analysis")
         focus = context.focus or self.default_focus
+        analyzer = self.analyzer
+        checkpoint_path = context.request.options.get("analysis_checkpoint_path")
+        if checkpoint_path:
+            configure_checkpoint = getattr(analyzer, "with_checkpoint", None)
+            if not callable(configure_checkpoint):
+                raise TypeError("long-history analyzer does not support checkpoints")
+            analyzer = configure_checkpoint(checkpoint_path)
         if context.request.options.get("deep_research"):
             from ..research_agent.coordinator import DeepResearchCoordinator
 
             collector = getattr(self.search, "collector", getattr(self.search, "provider", self.search))
             coordinator = DeepResearchCoordinator(
                 search_collector=collector,
-                long_history_analyzer=self.analyzer,
+                long_history_analyzer=analyzer,
             )
             docs = context.processed.docs if context.processed else context.raw_docs
             result = coordinator.run_deep_research(
@@ -50,20 +57,42 @@ class LongHistoryModeHandler:
                 mode="long-history",
                 existing_docs=docs,
             )
+            research_packs = list(result.evidence_packs or context.evidence_packs)
+            period_packs = (
+                result.long_history_analysis.evidence_packs
+                if result.long_history_analysis is not None
+                else []
+            )
+            seen_pack_ids = {pack.pack_id for pack in research_packs}
+            research_packs.extend(
+                pack for pack in period_packs if pack.pack_id not in seen_pack_ids
+            )
             return context.model_copy(
                 update={
                     "focus": focus,
                     "long_history_analysis": result.long_history_analysis,
                     "raw_docs": result.all_raw_docs,
+                    "research_spec": result.research_spec or context.research_spec,
+                    "evidence_packs": research_packs,
+                    "evidence_pack": (research_packs[0] if research_packs else context.evidence_pack),
                 }
             )
         else:
-            analysis = self.analyzer.analyze(
+            analysis = analyzer.analyze(
                 county=context.county,
                 data=context.processed,
             )
             return context.model_copy(
-                update={"focus": focus, "long_history_analysis": analysis}
+                update={
+                    "focus": focus,
+                    "long_history_analysis": analysis,
+                    "evidence_packs": analysis.evidence_packs or context.evidence_packs,
+                    "evidence_pack": (
+                        analysis.evidence_packs[0]
+                        if analysis.evidence_packs
+                        else context.evidence_pack
+                    ),
+                }
             )
 
     def render(self, context: ResearchContext) -> RenderedReport:
@@ -74,6 +103,7 @@ class LongHistoryModeHandler:
         docs = context.processed.docs if context.processed else context.raw_docs
         report = _compatibility_report(context.county, focus, _TITLES)
         rendered_md = self.renderer.render(analysis, docs)
+        rendered_md = audit_markdown(context, rendered_md)
         if context.request.options.get("deep_research"):
             from ..evidence.store import EvidenceStore
             store = EvidenceStore()
@@ -84,6 +114,7 @@ class LongHistoryModeHandler:
                 f"#### 核心参考文献与证据溯源表\n{store.render_citations_table()}\n"
             )
             rendered_md = f"{rendered_md}{appendix}"
+        rendered_md = f"{rendered_md}{render_evidence_pack_appendix(context)}"
         return RenderedReport(
             report=report,
             markdown=rendered_md,

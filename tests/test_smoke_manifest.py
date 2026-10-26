@@ -33,6 +33,11 @@ def test_smoke_specs_cover_two_development_regions_and_three_groups():
     assert {spec.group for spec in specs} == {"A", "B", "C"}
     assert {spec.county for spec in specs} == {"安吉县", "信丰县"}
     assert all(spec.experiment_id == "E1" for spec in specs)
+    assert {spec.group: spec.config["architecture_version"] for spec in specs[:3]} == {
+        "A": "traditional_search_baseline",
+        "B": "general_ai_baseline",
+        "C": "evidence_first_v2",
+    }
 
 
 def test_smoke_settings_support_a_low_budget_probe():

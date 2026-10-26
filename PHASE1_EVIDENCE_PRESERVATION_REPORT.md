@@ -7,7 +7,7 @@
 
 Phase 1 的第一道证据保真门已通过：真实德清 snapshot C 的四个目标事实在离线重放中从 RawDoc 经 ProcessedData、EvidenceStore 和有预算的 LLM context 一直保留，并可由新的 Source Contract 重新生成带正文、哈希、来源元数据和 chunk 映射的 `sources.json`。
 
-本阶段仍保持 `IN_PROGRESS`，因为当前 Source Contract 是面向 legacy `RawDoc` 的确定性 adapter，不是 Phase 3 的最终 Pydantic 证据架构；历史 C 产物没有被迁移，旧的任务级 report 仍然可能缺少事实。这份报告记录的是新写出路径和离线重放的工程验证，不宣称已有 Provider 独立实验效果提升。
+本阶段的 Source Contract 保真门已完成。它仍作为面向 legacy `RawDoc` 的确定性 JSON adapter 保留；Phase 3 已补充最终 Pydantic 证据架构，历史 C 产物没有被迁移，旧的任务级 report 仍然可能缺少事实。这份报告记录的是新写出路径和离线重放的工程验证，不宣称已有 Provider 独立实验效果提升。
 
 ## 真实产物重放
 
@@ -72,7 +72,7 @@ All checks passed!
 
 ## 剩余限制与下一阶段边界
 
-1. Source Contract 目前是 dict-based legacy adapter，尚未提供 Phase 3 所需的 `SourceDocument`、`EvidenceChunk`、`AtomicClaim`、`QuestionSlot` 和 `EvidencePack` Pydantic contracts。
+1. Source Contract 仍是 dict-based legacy archival adapter；canonical `SourceDocument`、`EvidenceChunk`、`AtomicClaim`、`QuestionSlot` 和 `EvidencePack` 已由 Phase 3 contracts 与 Ledger 提供。
 2. chunk offsets 是序列化后正文的确定性 offset；当上游只提供 snippet 或经过清洗时，尚未有 raw-to-clean offset mapping，也不会伪造该映射。
 3. 当前上下文 renderer 是预算感知的保真止损层，不是按 Claim/QuestionSlot 选择证据的完整 EvidencePack；任务相关选择和独立评价留给 Phase 2–4。
 4. 历史 report、sources archive 和历史 score 不被回写；历史结果需要在 Phase 2 通过新 contract 离线重评分并写入新版本输出。

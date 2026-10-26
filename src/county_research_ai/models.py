@@ -200,14 +200,19 @@ class ProcessedData(BaseModel):
     total_chars: int = 0  # 全部文档总字符数(用于估算 token 与截断)
     processed_at: datetime = Field(default_factory=_utcnow)
     render_audit: ContextRenderAudit = Field(default_factory=ContextRenderAudit)
+    # EvidencePack is attached by the Evidence-First adapter. ``Any`` keeps the
+    # legacy model import graph acyclic while allowing cached dict payloads.
+    evidence_pack: Any = None
 
     def render_for_llm(self, max_chars: int = 0) -> str:
         """Build a bounded, source-diverse evidence context for LLMs.
 
-        When evidence exceeds the budget, keep a bounded excerpt from *each*
-        document instead of discarding entire later sources. More selective
-        metric-aware chunk retrieval is handled by a future evidence-pack layer.
+        When a task-specific EvidencePack is attached, render its selected
+        chunks first. Otherwise keep a bounded excerpt from *each* document
+        instead of discarding entire later sources.
         """
+        if self.evidence_pack is not None:
+            return self._render_evidence_pack(max_chars)
         if not self.docs:
             self.render_audit = ContextRenderAudit(max_chars=max_chars)
             return ""
@@ -288,6 +293,90 @@ class ProcessedData(BaseModel):
             exclusion_reasons=exclusion_reasons,
         )
         return rendered[:max_chars]
+
+    def _render_evidence_pack(self, max_chars: int) -> str:
+        """Render the selected EvidencePack so analyzers consume ledger output."""
+        pack = self.evidence_pack
+        chunks = getattr(pack, "selected_chunks", None)
+        if chunks is None and isinstance(pack, dict):
+            chunks = pack.get("selected_chunks", [])
+        chunks = chunks or []
+        if not chunks:
+            return ""
+        source_map = getattr(pack, "source_map", None)
+        if source_map is None and isinstance(pack, dict):
+            source_map = pack.get("source_map", {})
+        source_map = source_map or {}
+
+        grouped: dict[str, list[tuple[str, str, str]]] = {}
+        for chunk in chunks:
+            source_id = getattr(chunk, "document_id", None)
+            chunk_id = getattr(chunk, "chunk_id", "")
+            parent_chunk_id = getattr(chunk, "parent_chunk_id", "")
+            text = getattr(chunk, "text", "")
+            if isinstance(chunk, dict):
+                source_id = chunk.get("document_id", chunk.get("source_id", ""))
+                chunk_id = chunk.get("chunk_id", "")
+                parent_chunk_id = chunk.get("parent_chunk_id", "")
+                text = chunk.get("text", "")
+            grouped.setdefault(str(source_id or ""), []).append(
+                (str(chunk_id), str(parent_chunk_id), str(text))
+            )
+
+        rendered_parts: list[str] = []
+        selected_by_id = {getattr(chunk, "chunk_id", ""): chunk for chunk in chunks}
+        omitted = getattr(pack, "excluded_evidence_reasons", None)
+        if isinstance(pack, dict):
+            omitted = pack.get("excluded_evidence_reasons", omitted)
+        exclusion_reasons = {str(key): value for key, value in (omitted or {}).items()}
+        allocated_chars: dict[str, int] = {}
+        used_chars = 0
+        rendered_source_ids: set[str] = set()
+        for source_id, source_chunks in grouped.items():
+            source = source_map.get(source_id) if isinstance(source_map, dict) else None
+            title = getattr(source, "source_title", "") if source else ""
+            url = getattr(source, "canonical_url", "") if source else ""
+            if isinstance(source, dict):
+                title = source.get("source_title", source.get("title", ""))
+                url = source.get("canonical_url", source.get("url", ""))
+            source_label = source_id[:8] if len(source_id) > 8 else source_id
+            source_header = f"[{source_label}] {title}\n来源: {url}"
+            for chunk_id, _, text in source_chunks:
+                chunk = selected_by_id.get(chunk_id)
+                start = getattr(chunk, "start_offset", None) if chunk else None
+                end = getattr(chunk, "end_offset", None) if chunk else None
+                span = f"{start}-{end}" if start is not None and end is not None else chunk_id[:12]
+                chunk_prefix = f"\n[片段 {span}]\n"
+                separator = "\n\n---\n\n" if rendered_parts else ""
+                header = source_header if source_id not in rendered_source_ids else ""
+                prefix = separator + header + chunk_prefix
+                if max_chars <= 0 or used_chars + len(prefix) + len(text) <= max_chars:
+                    rendered_parts.append(prefix + text)
+                    used_chars += len(prefix) + len(text)
+                    allocated_chars[chunk_id] = len(text)
+                    rendered_source_ids.add(source_id)
+                    continue
+
+                if max_chars > 0:
+                    marker = "…[预算截断]"
+                    available = max_chars - used_chars - len(prefix)
+                    if available > len(marker):
+                        excerpt = text[: available - len(marker)] + marker
+                        rendered_parts.append(prefix + excerpt)
+                        used_chars += len(prefix) + len(excerpt)
+                        allocated_chars[chunk_id] = len(excerpt)
+                        exclusion_reasons[chunk_id] = "budget_truncated"
+                        rendered_source_ids.add(source_id)
+                    else:
+                        exclusion_reasons[chunk_id] = "budget_exceeded"
+
+        rendered = "".join(rendered_parts)
+        self.render_audit = ContextRenderAudit(
+            max_chars=max_chars,
+            allocated_chars=allocated_chars,
+            exclusion_reasons=exclusion_reasons,
+        )
+        return rendered
 
     def _render_priority(self, doc: RawDoc) -> float:
         """Prefer county-local and explicitly prioritized documents."""
@@ -644,6 +733,7 @@ class CountyLongHistoryAnalysis(BaseModel):
 
     long_history_pattern: LongHistoryPattern = Field(default_factory=LongHistoryPattern)
     summary: str = ""
+    evidence_packs: list[Any] = Field(default_factory=list)
     analyzed_at: datetime = Field(default_factory=_utcnow)
 
 

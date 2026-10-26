@@ -17,7 +17,10 @@ from county_research_ai.evaluation.experiment_agents import (
     GeneralPurposeAIResearcher,
     TraditionalSearchResearcher,
 )
-from county_research_ai.evaluation.experiment_models import RunArtifact
+from county_research_ai.evaluation.experiment_models import (
+    RunArtifact,
+    architecture_version_for_group,
+)
 from county_research_ai.evaluation.experiment_runner import (
     ExecutionOutcome,
     ExperimentRunner,
@@ -52,6 +55,7 @@ def build_smoke_specs(*, model: str, search_provider: str, batch_id: str) -> lis
                     model=model,
                     search_provider=search_provider,
                     config={
+                        "architecture_version": architecture_version_for_group(group),
                         "batch_id": batch_id,
                         "model": model,
                         "search_provider": search_provider,
@@ -77,6 +81,7 @@ def build_c_probe_spec(*, model: str, search_provider: str, batch_id: str) -> Ex
         model=model,
         search_provider=search_provider,
         config={
+            "architecture_version": architecture_version_for_group("C"),
             "batch_id": batch_id,
             "model": model,
             "search_provider": search_provider,
@@ -103,6 +108,7 @@ def build_pilot_specs(*, model: str, search_provider: str, batch_id: str) -> lis
             model=model,
             search_provider=search_provider,
             config={
+                "architecture_version": architecture_version_for_group(group),
                 "batch_id": batch_id,
                 "model": model,
                 "search_provider": search_provider,

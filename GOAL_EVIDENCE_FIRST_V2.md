@@ -1,6 +1,6 @@
 # CountyResearchAI Evidence-First v2 Goal
 
-状态：`IN_PROGRESS / PHASE_1_EVIDENCE_PRESERVATION`
+状态：`ENGINEERING_COMPLETE_RESEARCH_PENDING`
 
 本文件是现有 `GOAL.md`（上一轮真实效能验证 Goal）的独立续作管理文件，不覆盖旧 Goal 历史。完整目标原文保留在用户提供的粘贴文件：
 
@@ -23,14 +23,14 @@
 | Phase | Objective | Status | Evidence |
 | --- | --- | --- | --- |
 | 0 | Baseline freeze, corpus inventory, reproducible loss audit | COMPLETE | `ARCHITECTURE_BASELINE_AUDIT.md`, `tests/test_evidence_preservation_regression.py` |
-| 1 | Evidence preservation and unified Source Contract | IN_PROGRESS | `PHASE1_EVIDENCE_PRESERVATION_REPORT.md`, `src/county_research_ai/evidence/source_contract.py`, `ARCHITECTURE_BASELINE_AUDIT.md` |
+| 1 | Evidence preservation and unified Source Contract | COMPLETE | `PHASE1_EVIDENCE_PRESERVATION_REPORT.md`, `src/county_research_ai/evidence/source_contract.py`, `PHASE3_EVIDENCE_ARCHITECTURE.md` |
 | 2 | Claim classification and independent metrics | COMPLETE | `PHASE2_EVALUATION_AUDIT.md`, `experiments/independent_comparison/claim_scores/continuation_matched_budget_deepseek_flash_20261019_v4_offline/` |
-| 3 | Structured Evidence Ledger and contracts | NOT_STARTED | `PHASE3_EVIDENCE_ARCHITECTURE.md` |
-| 4 | QuestionSlot-driven adaptive retrieval | NOT_STARTED | `PHASE4_ADAPTIVE_RETRIEVAL_REPORT.md` |
-| 5 | Evidence-bound analysis and verification | NOT_STARTED | `PHASE5_EVIDENCE_BOUND_SYNTHESIS_REPORT.md` |
-| 6 | Efficiency, architecture versions, long-history routing | NOT_STARTED | `PHASE6_EFFICIENCY_OPTIMIZATION_REPORT.md` |
-| 7 | Offline replay and authorized independent comparison | NOT_STARTED | `PHASE7_EXPERIMENTAL_EVALUATION.md` |
-| 8 | Final engineering/research acceptance | NOT_STARTED | `REFACTOR_FINAL_REPORT.md` |
+| 3 | Structured Evidence Ledger and contracts | COMPLETE | `PHASE3_EVIDENCE_ARCHITECTURE.md`, `src/county_research_ai/domain/research_contracts.py`, `src/county_research_ai/evidence/ledger.py` |
+| 4 | QuestionSlot-driven adaptive retrieval | ENGINEERING_COMPLETE / REPLAY_INCONCLUSIVE | `PHASE4_ADAPTIVE_RETRIEVAL_REPORT.md` |
+| 5 | Evidence-bound analysis and verification | ENGINEERING_COMPLETE / DETERMINISTIC_LIMITS | `PHASE5_EVIDENCE_BOUND_SYNTHESIS_REPORT.md` |
+| 6 | Efficiency, architecture versions, long-history routing | ENGINEERING_COMPLETE / TOKEN_EFFECT_PENDING | `PHASE6_EFFICIENCY_OPTIMIZATION_REPORT.md` |
+| 7 | Offline replay and authorized independent comparison | OFFLINE_REPLAY_PARTIAL / RESEARCH_ACCEPTANCE_NOT_MET | `PHASE7_EXPERIMENTAL_EVALUATION.md` |
+| 8 | Final engineering/research acceptance | ENGINEERING_COMPLETE / RESEARCH_PENDING | `experiments/independent_comparison/reports/REFACTOR_FINAL_REPORT.md` |
 
 ## Phase 0 known facts
 
@@ -45,7 +45,7 @@
 - `RawDoc` records content length/truncation state; `ProcessedData` records context budget allocations, included/truncated/excluded documents, and exclusion reasons.
 - The national GDP negative case is covered: national GDP is `全国范围`, while Deqing GDP is `县域本级`.
 - Validation: `pytest --no-cov -q` → `502 passed` with one Windows `.pytest_cache` permission warning; scoped Ruff for changed files is clean.
-- Phase 1 remains open until the adapter is replaced or complemented by the Phase 3 Pydantic contracts and historical offline rescore path is versioned.
+- Phase 1 acceptance is complete: the deterministic Source Contract remains the archival JSON boundary, while Phase 3 adds the canonical Pydantic contracts and Ledger adapter without rewriting historical artifacts.
 
 ## Phase 2 progress
 
@@ -53,6 +53,54 @@
 - Twelve negative classification cases cover year, region, metric, unit, caliber, version, scope, wrong value, URL-only support, missing mention, disputed source, and percentage value mismatch.
 - The frozen continuation corpus was rescored offline into `continuation_matched_budget_deepseek_flash_20261019_v4_offline`: 48 runs, 240 claim observations, 28 classification changes, 0 Provider calls, and 0 semantic Judge calls.
 - Phase 2 acceptance is limited to deterministic/offline evaluation. It does not claim improved model quality or authorize a new real Provider experiment.
+
+## Phase 3 progress
+
+- Canonical Pydantic contracts now cover `ResearchSpec`, `SourceDocument`, `EvidenceChunk`, `AtomicClaim`, `QuestionSlot`, and `EvidencePack`; unknown offsets remain explicit.
+- `EvidenceLedger` preserves source/chunk/claim relations, detects same-source reposts, selects EvidencePack content under budget, rejects evidence-free `verified`, and normalizes supported 亿元/万元 values for equivalence checks.
+- The legacy application attaches the Ledger and EvidencePack on both cache-hit and fresh-processing paths. LLM context rendering and all three legacy report modes consume the selected pack and expose missing requirements/source mapping.
+- Phase 3 focused validation: 18 tests passed with one Windows `.pytest_cache` permission warning; full suite is 527 passed; changed-file Ruff is clean. No Provider calls were made.
+
+## Phase 4 progress
+
+- Adaptive slot-based plans, explainable local/period/metric/reliability/novelty ranking, gap-linked follow-ups, budget and marginal-evidence stop conditions are connected to `DeepResearchCoordinator`; legacy Collector fallback remains intact.
+- The result now exposes ResearchSpec, EvidencePacks, stop reason and observed Collector output counts. The Fetch budget records actual observed document counts instead of clipping over-budget usage.
+- Offline archived replay (6 RawDocs across 3 modes) yielded top-3 required-metric recall of snapshot 19.44% vs 19.44%, rise-fall 21.67% vs 21.67%, and long-history 41.67% vs 41.67% for legacy vs slot-aware ranking. This isolates ranking only, uses extremely small samples, and shows no measured lift.
+- Validation: focused adaptive/deep-research tests 13 passed; full suite 532 passed with one Windows `.pytest_cache` permission warning; changed-scope Ruff clean. No Provider/Judge calls.
+- Engineering gate passes; research-effectiveness gate remains inconclusive and is explicitly not claimed as a gain. See `PHASE4_ADAPTIVE_RETRIEVAL_REPORT.md` and offline runner `scripts/evaluate_adaptive_retrieval_offline.py`.
+
+## Phase 5 progress
+
+- Evidence-bound verification is connected to the deep synthesizer and all three mode renderers. It checks region, metric/alias, exact value and unit, nearest preceding year, declared statistical caliber/series version, linked original chunk, canonical source URL, and recorded source credibility; numeric citations include original text and are idempotent.
+- Non-numeric material statements are supported only by exact Claim → Chunk → Source mapping; unmapped statements are tagged, and gaps/recommendations receive explicit labels. Empty-evidence specialized analysis no longer emits generic factual claims or a fabricated positive executive summary.
+- Validation: full suite 546 passed, 1 Windows `.pytest_cache` permission warning; changed-scope Ruff clean. No Provider/Judge calls.
+- This deterministic verifier is conservative and not semantic entailment proof. Missing source quality or uncertain paraphrases remain unverified; no quality lift is claimed. Details: `PHASE5_EVIDENCE_BOUND_SYNTHESIS_REPORT.md`.
+
+## Phase 6 progress
+
+- Experiment manifests persist architecture version and reject new runs with an unspecified version; prior artifacts remain untouched.
+- Architecture contracts normalize and validate the supported versions (`workflow_legacy`, `deep_legacy`, `evidence_first_v2`); experiment A/B/C specs are tagged as traditional-search baseline, general-AI baseline, and Evidence-First v2 respectively. Unknown experiment architecture labels are invalid.
+- Long-history now builds six source-traced, year-aware period EvidencePacks from sentence children and exposes their IDs/URLs/gaps in the report audit appendix. Parsed extracted HistoricalPeriod windows now narrow task evidence routing, with fallback to the predefined period when extraction is absent/unparseable/non-overlapping; explicit task years boost matching passages. The rerun across three archives retained 2020 and 30/31 legacy-visible configured terms; 2000 remains outside the contemporary period boundary. First-seven-prompt characters are 52,215 vs 185,103 legacy (-71.8% weighted); this is not gold-evidence recall or provider token measurement, so no quality/token gain is claimed.
+- Existing matched-budget long-history sample: 52,561 LLM tokens, 136.231s elapsed against a 120s cap (`BUDGET_EXHAUSTED`). No per-prompt token trace exists to support an old/new token comparison.
+- Replaced hard-coded synthetic token usage in deterministic report synthesis with 0 actual LLM tokens.
+- Validation before final review fixes: full suite 569 passed; dynamic-period routing, interrupted-checkpoint resume, and mode-level checkpoint option propagation tests pass; changed-file Ruff passes; full repository Ruff still reports 75 findings across existing/other-scope files; no Provider/Judge calls. Actual Usage comparison remains pending. See `PHASE6_EFFICIENCY_OPTIMIZATION_REPORT.md` and `scripts/evaluate_long_history_efficiency_offline.py`.
+
+- Final defect review found ASCII decimal splitting in derived period chunks; fixed with a regression for decimal integrity and source offsets. Full suite is now 570 passed. The exact frozen excerpt retention replay is documented in Phase 7; it does not change the evidence that actual token comparison is pending.
+
+## Phase 7 progress
+
+- Frozen matched-budget corpus was rescored into a new v5 replay directory (48 valid runs / 240 observations / 0 Provider calls); compared against v4 by `(run_id, claim_id)`, all statuses, error types, and metrics match (0 differences). v4 remains unchanged.
+- Reconfirmed the existing negative result: current valid C-group quality metrics trail the baselines and its observed LLM units/search/time are higher; six C long-history runs exceeded the 120s budget. This is small-sample evidence, not a statistical-significance claim.
+- Adaptive ranking replay remains only 6 RawDocs with no measured top-3 recall lift; long-history prompt replay counts characters only. No complete module ablation or independent semantic judging has been performed; research acceptance remains unmet.
+- Details and exact artifact paths: `PHASE7_EXPERIMENTAL_EVALUATION.md`.
+
+- Frozen raw-input exact excerpt retention: 17/60 at RawDoc, ProcessedData, and period Ledger stages; 13/60 in both 6k/18k EvidencePacks. Four ledger-present excerpts are excluded as `period_only_fallback` because current metric-term matching does not recognize the frozen metric label; the 43 remaining excerpts are not exact matches in the available RawDocs.
+
+## Phase 8 acceptance
+
+- Engineering acceptance is complete for the scoped implementation and current deterministic checks: after correcting six review findings and two related decimal/empty-pack edge cases, full test suite 578 passed, changed-path Ruff passed, and diff whitespace checks passed. Public CLI and legacy models remain available through existing compatibility paths; no historical experiment data was overwritten.
+- Added architecture and migration guides plus a final report. Research acceptance remains pending because quality metrics on the observed C sample trail baselines, retrieval replay is small and tied, long-history token/cost improvement is unmeasured, and no independent semantic Judge or complete ablation was run.
+- No new Provider/Judge calls, commits, or merges were made. Continue only with offline metric-alias coverage work until a fresh real-provider cost gate is explicitly authorized.
 
 ## Milestone gate rule
 

@@ -5,7 +5,9 @@
 """
 from __future__ import annotations
 
+from ..domain.research_contracts import QuestionSlot, ResearchSpec
 from ..models import QuestionTree, ResearchQuestion
+from ..search.query_engine import QueryEngine
 
 
 def build_question_tree(
@@ -23,6 +25,37 @@ def build_question_tree(
         return _build_long_history_tree(c_name, f_name)
     else:
         return _build_snapshot_tree(c_name, f_name)
+
+
+def build_research_spec(
+    county: str,
+    focus: str | None = None,
+    mode: str = "snapshot",
+    *,
+    budget_chars: int = 12000,
+) -> ResearchSpec:
+    """Build the canonical ResearchSpec alongside the legacy QuestionTree."""
+    return QueryEngine().generate_research_spec(
+        county,
+        focus,
+        mode,
+        budget_chars=budget_chars,
+    )
+
+
+def build_question_slots(
+    county: str,
+    focus: str | None = None,
+    mode: str = "snapshot",
+    *,
+    budget_chars: int = 12000,
+) -> list[QuestionSlot]:
+    return build_research_spec(
+        county,
+        focus,
+        mode,
+        budget_chars=budget_chars,
+    ).question_slots
 
 
 def _build_snapshot_tree(county: str, focus: str) -> QuestionTree:

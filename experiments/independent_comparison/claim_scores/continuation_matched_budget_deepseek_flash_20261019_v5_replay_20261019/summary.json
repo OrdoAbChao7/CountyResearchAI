@@ -1,0 +1,14 @@
+{
+  "status": "OK_OFFLINE",
+  "rescore_version": "continuation_matched_budget_deepseek_flash_20261019_v5_replay_20261019",
+  "runs": 48,
+  "valid_observations": 240,
+  "provider_calls": 0,
+  "source_material_status_counts": {
+    "archived_source_contract": 36,
+    "rebuilt_from_saved_raw_docs": 12
+  },
+  "classification_changes": 0,
+  "classification_change_counts": {},
+  "baseline_path": "experiments\\independent_comparison\\claim_scores\\continuation_matched_budget_deepseek_flash_20261019_v4_offline\\claim_observations.jsonl"
+}

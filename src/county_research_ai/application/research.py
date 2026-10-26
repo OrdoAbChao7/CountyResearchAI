@@ -7,7 +7,10 @@ from socket import timeout as SocketTimeout
 from typing import NoReturn
 
 from ..domain.modes import normalize_mode
+from ..domain.research_contracts import QuestionSlot, ResearchSpec
+from ..evidence.ledger import build_evidence_ledger
 from ..exceptions import ResearchStageError
+from ..models import ProcessedData
 from ..modes.registry import ModeRegistry
 from ..ports.discovery import DiscoveryPort
 from ..ports.processing import ProcessingPort
@@ -88,18 +91,61 @@ class ResearchApplication:
                     max_age_hours=cache_hours,
                 )
                 if cached is not None:
-                    return context.model_copy(update={"focus": focus, "processed": cached})
+                    return self._attach_structured_evidence(context, cached, focus)
 
             processed = self.processor.process(
                 context.raw_docs,
                 county=context.county,
                 focus=focus,
             )
+            structured_context = self._attach_structured_evidence(context, processed, focus)
             self.storage.save_raw(context.county.name, context.raw_docs)
-            self.storage.save_processed(context.county.name, focus, processed)
-            return context.model_copy(update={"focus": focus, "processed": processed})
+            self.storage.save_processed(
+                context.county.name,
+                focus,
+                structured_context.processed or processed,
+            )
+            return structured_context
         except Exception as exc:  # noqa: BLE001
             self._raise_stage("process", context, exc)
+
+    @staticmethod
+    def _attach_structured_evidence(
+        context: ResearchContext,
+        processed: ProcessedData,
+        focus: str,
+    ) -> ResearchContext:
+        mode = normalize_mode(context.request.mode)
+        research_spec = ResearchSpec(
+            region_id=context.county.name,
+            region_name=context.county.name,
+            research_focus=focus,
+            mode=mode,
+            architecture_version="evidence_first_v2",
+            required_question_slots=[
+                QuestionSlot(
+                    slot_id=f"legacy:{mode}:overview",
+                    research_question=f"{context.county.name} 的 {focus} 研究概览",
+                    region=context.county.name,
+                    budget_chars=12000,
+                )
+            ],
+        )
+        evidence_ledger = build_evidence_ledger(processed)
+        evidence_pack = evidence_ledger.select_evidence_pack(
+            research_spec.required_question_slots[0]
+        )
+        processed = processed.model_copy(update={"evidence_pack": evidence_pack})
+        return context.model_copy(
+            update={
+                "focus": focus,
+                "processed": processed,
+                "research_spec": research_spec,
+                "evidence_ledger": evidence_ledger,
+                "evidence_pack": evidence_pack,
+                "evidence_packs": [evidence_pack],
+            }
+        )
 
     def analyze(self, context: ResearchContext) -> ResearchContext:
         try:

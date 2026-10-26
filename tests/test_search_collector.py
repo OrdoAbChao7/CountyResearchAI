@@ -6,8 +6,13 @@
 from __future__ import annotations
 
 from county_research_ai.models import RawDoc
+from county_research_ai.search.adaptive_retrieval import (
+    AdaptiveRetrievalController,
+    RetrievalBudget,
+)
 from county_research_ai.search.base import SearchProvider
 from county_research_ai.search.collector import SearchCollector
+from county_research_ai.search.query_engine import GeneratedQuery, QueryEngine, QueryIntent
 
 
 class MockWebProvider(SearchProvider):
@@ -90,6 +95,8 @@ class TestDedupAndRank:
             SearchCollector, docs, top=10, keywords=["安吉县"],
         )
         assert len(ranked) == 1
+
+
         assert ranked[0].content == "更长的内容更长的内容"
 
     def test_rank_by_keyword_frequency(self):
@@ -129,3 +136,34 @@ class TestDedupAndRank:
             SearchCollector, docs, top=10, keywords=[],
         )
         assert len(ranked) == 1
+
+
+def test_collect_adaptive_executes_queries_already_reserved_by_controller(tmp_settings):
+    class CountingProvider(SearchProvider):
+        name = "counting"
+
+        def __init__(self):
+            self.calls = []
+
+        def search(self, query, max_results=10):
+            self.calls.append(query)
+            return [RawDoc(title="县统计公报", url="https://gov.cn/report", snippet="德清县 GDP")]
+
+    class OneQueryEngine(QueryEngine):
+        def generate_research_queries(self, *args, **kwargs):
+            return [GeneratedQuery(query="德清县 GDP", intent=QueryIntent.ECONOMIC_SCALE, slot_id="snapshot:economic_scale")]
+
+    provider = CountingProvider()
+    controller = AdaptiveRetrievalController(
+        OneQueryEngine().generate_research_spec("德清县", "经济", "snapshot"),
+        query_engine=OneQueryEngine(),
+        budget=RetrievalBudget(max_queries=1),
+    )
+    plan = controller.initial_plan()
+    collector = SearchCollector(web_provider=provider, gov_provider=provider, settings=tmp_settings)
+
+    result = collector.collect_adaptive(plan, controller=controller)
+
+    assert len(plan.queries) == 1
+    assert provider.calls == ["德清县 GDP"]
+    assert result.usage["search_queries"] == 1

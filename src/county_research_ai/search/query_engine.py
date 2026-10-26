@@ -8,10 +8,11 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
 
+from ..domain.research_contracts import QuestionSlot, ResearchSpec
 from .disambiguation import disambiguate_region
 
 
@@ -32,6 +33,36 @@ class GeneratedQuery:
     target_channel: str = "web"  # web / gov
     priority: int = 1            # 优先级（1 最高）
     explanation: str = ""
+    slot_id: str = ""
+    expected_metrics: tuple[str, ...] = ()
+    gap_id: str = ""
+
+
+_MODE_SLOT_DEFINITIONS: dict[str, tuple[tuple[str, str, tuple[str, ...], int], ...]] = {
+    "snapshot": (
+        ("economic_scale", "目标年度经济规模与增速", ("地区生产总值", "总产值", "增加值", "增速"), 1),
+        ("industry_structure", "产业结构与县域贡献", ("产业结构", "规上工业", "产业占比"), 1),
+        ("supply_chain", "龙头企业与产业链", ("龙头企业", "产业链", "园区"), 1),
+        ("policy", "政策、园区与规划", ("政策", "规划", "十四五"), 2),
+        ("market", "市场渠道与品牌竞争", ("市场", "销售", "品牌"), 2),
+        ("risk", "现状风险与发展瓶颈", ("风险", "瓶颈", "挑战"), 2),
+    ),
+    "rise-fall": (
+        ("origin", "兴起条件与早期产业", ("起家", "资源", "起源", "历史"), 1),
+        ("growth", "重要增长节点与产业高峰", ("增长", "高峰", "鼎盛", "产值"), 1),
+        ("decline", "衰退或转型迹象", ("衰退", "转型", "拐点", "关停"), 1),
+        ("structural", "兴衰的结构性原因", ("原因", "冲击", "资源", "环保"), 2),
+        ("adjustment", "当前调整措施", ("调整", "接续产业", "规划"), 2),
+    ),
+    "long-history": (
+        ("administration", "历史时期与行政区划", ("建县", "沿革", "区划", "县志"), 1),
+        ("geography", "地理与交通条件", ("地理", "交通", "驿道", "水运"), 1),
+        ("traditional", "传统经济基础", ("传统", "农业", "商贸", "地方志"), 1),
+        ("industrialization", "工业化历史", ("近代", "工业", "商业", "铁路"), 2),
+        ("planned", "计划经济阶段", ("计划经济", "国营", "工矿", "水利"), 2),
+        ("reform", "改革开放影响与现代转型", ("改革开放", "民营", "产业集群", "转型"), 2),
+    ),
+}
 
 
 class QueryEngine:
@@ -64,7 +95,116 @@ class QueryEngine:
 
         # 按优先级排序并截断
         queries.sort(key=lambda q: q.priority)
-        return queries[:max_queries]
+        return self._annotate_queries(queries[:max_queries], clean_county, focus_term, mode)
+
+    def generate_question_slots(
+        self,
+        county: str,
+        focus: str | None = None,
+        mode: str = "snapshot",
+        *,
+        budget_chars: int = 12000,
+    ) -> list[QuestionSlot]:
+        """Return explicit, mode-specific evidence requirements."""
+        county_name = disambiguate_region(county).clean_name
+        focus_name = (focus or "主导产业").strip()
+        definitions = _MODE_SLOT_DEFINITIONS.get(mode, _MODE_SLOT_DEFINITIONS["snapshot"])
+        return [
+            QuestionSlot(
+                slot_id=f"{mode}:{slot_key}",
+                research_question=f"{county_name}{focus_name}{question}",
+                required_metrics=list(metrics),
+                region=county_name,
+                priority=priority,
+                evidence_requirement="至少有一条可追溯原文片段和来源",
+                budget_chars=budget_chars,
+            )
+            for slot_key, question, metrics, priority in definitions
+        ]
+
+    def generate_research_spec(
+        self,
+        county: str,
+        focus: str | None = None,
+        mode: str = "snapshot",
+        *,
+        budget_chars: int = 12000,
+    ) -> ResearchSpec:
+        county_name = disambiguate_region(county).clean_name
+        return ResearchSpec(
+            region_id=county_name,
+            region_name=county_name,
+            mode=mode,
+            research_focus=(focus or "").strip(),
+            architecture_version="evidence_first_v2",
+            required_question_slots=self.generate_question_slots(
+                county_name, focus, mode, budget_chars=budget_chars
+            ),
+            budget=budget_chars,
+        )
+
+    def generate_gap_queries(
+        self,
+        spec: ResearchSpec,
+        missing_slots: list[str] | None = None,
+        *,
+        max_queries: int = 5,
+    ) -> list[GeneratedQuery]:
+        """Create follow-up queries linked to concrete missing QuestionSlots."""
+        wanted = set(missing_slots or [slot.slot_id for slot in spec.question_slots])
+        queries: list[GeneratedQuery] = []
+        for slot in spec.question_slots:
+            if slot.slot_id not in wanted:
+                continue
+            generated = self.generate_reflection_queries(
+                spec.region_name,
+                spec.research_focus,
+                [{"description": f"{slot.research_question} {' '.join(slot.required_metrics)}"}],
+                max_queries=1,
+            )
+            for query in generated:
+                queries.append(
+                    replace(
+                        query,
+                        slot_id=slot.slot_id,
+                        expected_metrics=tuple(slot.required_metrics),
+                        gap_id=f"gap:{slot.slot_id}",
+                        priority=slot.priority,
+                    )
+                )
+        return sorted(queries, key=lambda item: (item.priority, item.slot_id, item.query))[:max_queries]
+
+    @staticmethod
+    def _annotate_queries(
+        queries: list[GeneratedQuery],
+        county: str,
+        focus: str,
+        mode: str,
+    ) -> list[GeneratedQuery]:
+        definitions = _MODE_SLOT_DEFINITIONS.get(mode, _MODE_SLOT_DEFINITIONS["snapshot"])
+        slot_by_intent = {
+            QueryIntent.ECONOMIC_SCALE: [item for item in definitions if item[0] in {"economic_scale", "growth", "decline"}],
+            QueryIntent.POLICY_PLANNING: [item for item in definitions if item[0] in {"policy", "adjustment", "reform"}],
+            QueryIntent.SUPPLY_CHAIN: [item for item in definitions if item[0] in {"supply_chain", "structural", "industrialization"}],
+            QueryIntent.MARKET_CHANNELS: [item for item in definitions if item[0] in {"market", "traditional"}],
+            QueryIntent.HISTORICAL_MILESTONES: [item for item in definitions if item[0] in {"origin", "administration", "geography", "planned", "traditional"}],
+            QueryIntent.RISK_BOTTLENECK: [item for item in definitions if item[0] in {"risk", "decline", "structural"}],
+        }
+        counters: dict[QueryIntent, int] = {}
+        annotated: list[GeneratedQuery] = []
+        for query in queries:
+            candidates = slot_by_intent.get(query.intent, list(definitions)) or list(definitions)
+            index = counters.get(query.intent, 0)
+            definition = candidates[index % len(candidates)]
+            counters[query.intent] = index + 1
+            annotated.append(
+                replace(
+                    query,
+                    slot_id=f"{mode}:{definition[0]}",
+                    expected_metrics=tuple(definition[2]),
+                )
+            )
+        return annotated
 
     def generate_reflection_queries(
         self,

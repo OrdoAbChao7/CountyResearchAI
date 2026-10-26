@@ -47,6 +47,11 @@ def test_formal_specs_are_balanced_across_three_isolated_groups():
     assert all(spec.experiment_id == "E1" for spec in specs)
     assert all(spec.config["formal_target"] is True for spec in specs)
     assert all(spec.config["max_llm_tokens"] == 512 for spec in specs)
+    assert {spec.group: spec.config["architecture_version"] for spec in specs[:3]} == {
+        "A": "traditional_search_baseline",
+        "B": "general_ai_baseline",
+        "C": "evidence_first_v2",
+    }
 
 
 def test_formal_worker_command_uses_independent_process(tmp_path):

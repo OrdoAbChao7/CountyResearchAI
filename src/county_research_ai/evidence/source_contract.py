@@ -77,7 +77,10 @@ def serialize_source_documents(docs: Iterable[RawDoc]) -> list[dict[str, Any]]:
                 "content_original_length": doc.content_original_length,
                 "content_truncated": doc.content_truncated,
                 "truncation_reason": doc.truncation_reason,
-                "metadata": dict(doc.metadata),
+                "metadata": {
+                    **dict(doc.metadata),
+                    "credibility_score": doc.credibility_score,
+                },
                 "chunks": _text_chunks(content, doc_id),
             }
         )
