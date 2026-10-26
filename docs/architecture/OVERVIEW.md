@@ -91,7 +91,10 @@ Jobs are stored in SQLite (`jobs`, `job_events`) and executed by a small
 in-process thread pool. This is a single-node demo queue, not a distributed
 scheduler. If the process dies, startup marks `RUNNING` jobs `INTERRUPTED`;
 `POST /resume` re-queues them explicitly. Cancellation and deadline checks run
-between stages, not inside a single provider call.
+between stages, not inside a single provider call. **Two API processes must not
+share one job database**: there is no lease, and one process's startup recovery
+can mark the other process's live `RUNNING` jobs `INTERRUPTED`. Run one API
+process per data directory.
 
 Outcomes never conflate budget exhaustion with sufficiency: `SUFFICIENT`,
 `BUDGET_EXHAUSTED`, `NO_PROGRESS`, `CONFLICT_UNRESOLVED`,
