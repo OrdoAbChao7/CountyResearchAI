@@ -1,11 +1,11 @@
 """Canonical Evidence-First contracts with legacy workflow compatibility."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class EvidenceChunk(BaseModel):
@@ -230,6 +230,164 @@ class ResearchSpec(BaseModel):
     @property
     def contract_version(self) -> str:
         return self.architecture_version
+
+
+class DateWindow(BaseModel):
+    """Inclusive research window. ``None`` means unbounded on that side."""
+
+    start: date | None = None
+    end: date | None = None
+
+    @model_validator(mode="after")
+    def _ordered(self) -> DateWindow:
+        if self.start is not None and self.end is not None and self.start > self.end:
+            raise ValueError("date_window.start must not be after date_window.end")
+        return self
+
+    @property
+    def is_set(self) -> bool:
+        return self.start is not None or self.end is not None
+
+    def contains(self, value: date) -> bool:
+        if self.start is not None and value < self.start:
+            return False
+        if self.end is not None and value > self.end:
+            return False
+        return True
+
+
+class EvidenceThresholds(BaseModel):
+    """What must be true before a run may finish as SUFFICIENT."""
+
+    min_independent_sources: int = Field(default=1, ge=0)
+    min_supported_claims: int = Field(default=0, ge=0)
+    min_supported_ratio: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_requirement: str = ""
+
+
+class BudgetCaps(BaseModel):
+    """Hard caps. Zero means "not set" except max_steps, which must be positive."""
+
+    max_steps: int = Field(default=8, ge=1)
+    max_search_calls: int = Field(default=3, ge=0)
+    max_tokens: int = Field(default=0, ge=0)
+    max_cost: float = Field(default=0.0, ge=0.0)
+    deadline_seconds: float = Field(default=0.0, ge=0.0)
+    max_documents: int = Field(default=0, ge=0)
+
+
+class RequestedOutput(BaseModel):
+    format: Literal["decision_brief", "report", "json"] = "decision_brief"
+    language: Literal["zh", "en"] = "zh"
+    include_evidence_appendix: bool = True
+    max_words: int = Field(default=0, ge=0)
+
+
+class ResearchContract(BaseModel):
+    """User-facing research contract with explicit scope, thresholds, and caps.
+
+    ``ResearchSpec`` remains the internal planning representation. This model is
+    the validated boundary used by the API and evaluation harnesses so a run
+    cannot silently ignore its budget, scope, or evidence requirements.
+    """
+
+    objective: str = Field(min_length=1)
+    regions: list[str] = Field(min_length=1)
+    date_window: DateWindow = Field(default_factory=DateWindow)
+    required_questions: list[str] = Field(default_factory=list)
+    evidence_thresholds: EvidenceThresholds = Field(default_factory=EvidenceThresholds)
+    budget: BudgetCaps = Field(default_factory=BudgetCaps)
+    requested_output: RequestedOutput = Field(default_factory=RequestedOutput)
+    domain_adapter: str = Field(default="county_industry", min_length=1)
+    mode: str = "snapshot"
+    research_focus: str = ""
+    options: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("objective", "domain_adapter")
+    @classmethod
+    def _non_empty_text(cls, value: str, info: Any) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError(f"{info.field_name} must not be blank")
+        return stripped
+
+    @field_validator("regions")
+    @classmethod
+    def _valid_regions(cls, value: list[str]) -> list[str]:
+        cleaned: list[str] = []
+        for region in value:
+            stripped = region.strip()
+            if not stripped:
+                raise ValueError("regions must not contain blank entries")
+            if stripped not in cleaned:
+                cleaned.append(stripped)
+        if not cleaned:
+            raise ValueError("regions must contain at least one region")
+        return cleaned
+
+    @field_validator("required_questions")
+    @classmethod
+    def _valid_questions(cls, value: list[str]) -> list[str]:
+        cleaned = [question.strip() for question in value]
+        if any(not question for question in cleaned):
+            raise ValueError("required_questions must not contain blank entries")
+        return cleaned
+
+    def to_research_spec(self) -> ResearchSpec:
+        region_name = self.regions[0]
+        focus = self.research_focus or self.objective
+        slots = [
+            QuestionSlot(
+                slot_id=f"contract:{index}",
+                research_question=question,
+                region=region_name,
+                time_period=_period_label(self.date_window),
+                priority=index,
+                evidence_requirement=self.evidence_thresholds.evidence_requirement,
+                budget_chars=self.budget.max_tokens or 12000,
+            )
+            for index, question in enumerate(self.required_questions)
+        ]
+        return ResearchSpec(
+            region_id=region_name,
+            region_name=region_name,
+            research_focus=focus,
+            mode=self.mode,
+            target_years=_window_years(self.date_window),
+            required_question_slots=slots,
+            budget=self.budget.max_tokens or 12000,
+            architecture_version="evidence_first_v2",
+        )
+
+    @classmethod
+    def from_research_spec(cls, spec: ResearchSpec) -> ResearchContract:
+        return cls(
+            objective=spec.research_focus or f"{spec.region_name} 研究",
+            regions=[spec.region_name],
+            required_questions=[slot.research_question for slot in spec.required_question_slots],
+            budget=BudgetCaps(max_tokens=spec.budget),
+            mode=spec.mode,
+            research_focus=spec.research_focus,
+        )
+
+
+def _window_years(window: DateWindow) -> list[str]:
+    years: list[str] = []
+    if window.start is not None:
+        years.append(str(window.start.year))
+    if window.end is not None and str(window.end.year) not in years:
+        years.append(str(window.end.year))
+    return years
+
+
+def _period_label(window: DateWindow) -> str:
+    if window.start is not None and window.end is not None:
+        return f"{window.start.isoformat()}~{window.end.isoformat()}"
+    if window.start is not None:
+        return f"{window.start.isoformat()}~"
+    if window.end is not None:
+        return f"~{window.end.isoformat()}"
+    return ""
 
 
 class EvidencePack(BaseModel):
