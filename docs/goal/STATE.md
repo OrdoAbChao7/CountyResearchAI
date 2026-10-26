@@ -88,3 +88,21 @@ support a generalization claim.
 Remaining before research acceptance: 38–58 additional blind tasks, live
 end-to-end + semantic Judge (cost gate), gap/temporal retrieval, two-process
 lease stress, and a labelled false-support audit.
+
+## Quality Recovery stop condition (2026-10-26)
+
+Local engineering work is complete and verified: Q0–Q6 engineering gates pass,
+692 Python tests + 4 frontend + 2 Playwright pass, and M0–M4 behavior is
+retained. Research acceptance remains **PARTIAL** because:
+
+- 38–58 additional independent blind tasks are required; only 2 disjoint
+  exact-quote tasks could be built without new retrieval/annotation.
+- Live end-to-end evaluation and a semantic Judge are `BLOCKED_EXTERNAL` until a
+  paid-provider cost gate is explicitly authorized (`docs/goal/COST_GATE.md`).
+- Gap-driven/temporal retrieval is not implemented; 69/90 dev GT facts remain
+  outside the archived documents.
+- Two-process live lease stress and a labelled false-support audit are NOT_RUN.
+
+Do not resume by loosening the verifier or reusing the blind pilot for tuning.
+The next safe actions are dataset curation from new authorized sources, gap/temporal
+retrieval implementation on a dev split, then one locked blind run.
