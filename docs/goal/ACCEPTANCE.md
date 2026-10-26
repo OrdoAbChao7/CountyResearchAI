@@ -7,7 +7,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 
 | Check | Status | Command / artifact | Observed |
 | --- | --- | --- | --- |
-| Python suite | PASS | `python -m pytest --no-cov -q` | `692 passed in 9.92s`, exit 0 |
+| Python suite | PASS | `python -m pytest --no-cov -q` | `702 passed in 10.99s`, exit 0 |
 | Relocated manifest audit | PASS | `tests/test_audit_path_resolution.py` | 4 passed |
 | Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
 | Frontend tests | PASS | `cd web; npm test` | 4 passed |
@@ -68,3 +68,18 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 - Semantic entailment, statistical significance, or token savings.
 - Live-provider runs, a comprehensive blind benchmark, or ablations that were not
   executed.
+
+## Q7 Retrieval Recovery evidence
+
+| Check | Status | Artifact / observed |
+| --- | --- | --- |
+| Pooled archive diagnosis | PASS | 47/90 retrieved; 26/69 missing facts recovered |
+| Autonomous free-web recovery | PARTIAL | long-history 6/30 (4 exact, 2 value-metric); rise-fall 0/12 |
+| Oracle source availability | PASS (diagnostic) | 17/30 long-history sources fetchable/present |
+| Strategy D pooled E2E | PASS (dev) | 33/90 (36.7%); pooled+free 31/90 |
+| Task-clustered bootstrap | PASS (dev) | D pooled − C +0.333, 95% [0.156, 0.522], 9/9/0 |
+| Verifier audit | PARTIAL | 25 assistant labels; false support 30% (3/10), false rejection 26.7% (4/15) |
+| Human verifier labels | BLOCKED_HUMAN_ANNOTATION | no human adjudication |
+| Sealed 40–60 task holdout | NOT_MET | 2 PILOT tasks; 0 SEALED |
+| Two-process lease stress | PASS | one success/job, stale rejected, takeover + crash recovery |
+| Q7 tests / regressions | PASS | 702 Python, 4 frontend, 2 Playwright |

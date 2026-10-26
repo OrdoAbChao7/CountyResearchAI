@@ -387,9 +387,12 @@ class JobStore:
         where = "job_id = ?"
         where_params: list[Any] = [job_id]
         if owner and fencing_token is not None:
-            where += " AND status = ? AND lease_owner = ? AND fencing_token = ?"
+            where += (
+                " AND status = ? AND lease_owner = ? AND fencing_token = ?"
+                " AND lease_expires_at >= ?"
+            )
             where_params.extend(
-                [JobStatus.RUNNING.value, owner, int(fencing_token)]
+                [JobStatus.RUNNING.value, owner, int(fencing_token), now]
             )
         values: list[Any] = [
             status.value,

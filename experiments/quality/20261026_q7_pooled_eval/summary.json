@@ -1,0 +1,281 @@
+{
+  "generated_at": "2026-10-26T14:18:59.416800+00:00",
+  "evidence_kind": "OFFLINE_CORPUS_POOL",
+  "provider_calls": 0,
+  "corpus_documents": {
+    "临泽县": 10,
+    "于都县": 13,
+    "信丰县": 3,
+    "安吉县": 3,
+    "德清县": 17,
+    "攀枝花市": 9,
+    "白山市": 10,
+    "长汀县": 11
+  },
+  "overall": {
+    "claims": 90,
+    "retrieved": 47,
+    "retrieval_rate": 0.5222,
+    "extracted": 38,
+    "supported": 35,
+    "answered": 35,
+    "e2e": 33,
+    "e2e_rate": 0.3667,
+    "funnel": {
+      "not_extracted": 9,
+      "not_in_answer": 2,
+      "not_retrieved": 43,
+      "not_supported": 3,
+      "success": 33
+    }
+  },
+  "by_mode": {
+    "long-history": {
+      "claims": 30,
+      "retrieved": 0,
+      "retrieval_rate": 0.0,
+      "extracted": 0,
+      "supported": 0,
+      "answered": 0,
+      "e2e": 0,
+      "e2e_rate": 0.0,
+      "funnel": {
+        "not_retrieved": 30
+      }
+    },
+    "rise-fall": {
+      "claims": 30,
+      "retrieved": 18,
+      "retrieval_rate": 0.6,
+      "extracted": 9,
+      "supported": 9,
+      "answered": 10,
+      "e2e": 8,
+      "e2e_rate": 0.2667,
+      "funnel": {
+        "not_extracted": 9,
+        "not_in_answer": 1,
+        "not_retrieved": 12,
+        "success": 8
+      }
+    },
+    "snapshot": {
+      "claims": 30,
+      "retrieved": 29,
+      "retrieval_rate": 0.9667,
+      "extracted": 29,
+      "supported": 26,
+      "answered": 25,
+      "e2e": 25,
+      "e2e_rate": 0.8333,
+      "funnel": {
+        "not_in_answer": 1,
+        "not_retrieved": 1,
+        "not_supported": 3,
+        "success": 25
+      }
+    }
+  },
+  "cases": [
+    {
+      "region": "临泽县",
+      "mode": "long-history",
+      "documents": 10,
+      "extracted_claims": 165,
+      "supported_claims": 142,
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "region": "临泽县",
+      "mode": "rise-fall",
+      "documents": 10,
+      "extracted_claims": 165,
+      "supported_claims": 132,
+      "funnel": {
+        "success": 3,
+        "not_retrieved": 1,
+        "not_extracted": 1
+      }
+    },
+    {
+      "region": "临泽县",
+      "mode": "snapshot",
+      "documents": 10,
+      "extracted_claims": 165,
+      "supported_claims": 132,
+      "funnel": {
+        "success": 5
+      }
+    },
+    {
+      "region": "于都县",
+      "mode": "long-history",
+      "documents": 13,
+      "extracted_claims": 283,
+      "supported_claims": 34,
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "region": "于都县",
+      "mode": "rise-fall",
+      "documents": 13,
+      "extracted_claims": 283,
+      "supported_claims": 25,
+      "funnel": {
+        "not_in_answer": 1,
+        "not_retrieved": 3,
+        "not_extracted": 1
+      }
+    },
+    {
+      "region": "于都县",
+      "mode": "snapshot",
+      "documents": 13,
+      "extracted_claims": 283,
+      "supported_claims": 25,
+      "funnel": {
+        "not_in_answer": 1,
+        "not_supported": 3,
+        "success": 1
+      }
+    },
+    {
+      "region": "德清县",
+      "mode": "long-history",
+      "documents": 17,
+      "extracted_claims": 266,
+      "supported_claims": 0,
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "region": "德清县",
+      "mode": "rise-fall",
+      "documents": 17,
+      "extracted_claims": 266,
+      "supported_claims": 85,
+      "funnel": {
+        "not_extracted": 5
+      }
+    },
+    {
+      "region": "德清县",
+      "mode": "snapshot",
+      "documents": 17,
+      "extracted_claims": 266,
+      "supported_claims": 76,
+      "funnel": {
+        "success": 5
+      }
+    },
+    {
+      "region": "攀枝花市",
+      "mode": "long-history",
+      "documents": 9,
+      "extracted_claims": 192,
+      "supported_claims": 161,
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "region": "攀枝花市",
+      "mode": "rise-fall",
+      "documents": 9,
+      "extracted_claims": 192,
+      "supported_claims": 161,
+      "funnel": {
+        "not_extracted": 1,
+        "not_retrieved": 4
+      }
+    },
+    {
+      "region": "攀枝花市",
+      "mode": "snapshot",
+      "documents": 9,
+      "extracted_claims": 192,
+      "supported_claims": 94,
+      "funnel": {
+        "success": 5
+      }
+    },
+    {
+      "region": "白山市",
+      "mode": "long-history",
+      "documents": 10,
+      "extracted_claims": 66,
+      "supported_claims": 45,
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "region": "白山市",
+      "mode": "rise-fall",
+      "documents": 10,
+      "extracted_claims": 66,
+      "supported_claims": 16,
+      "funnel": {
+        "success": 4,
+        "not_extracted": 1
+      }
+    },
+    {
+      "region": "白山市",
+      "mode": "snapshot",
+      "documents": 10,
+      "extracted_claims": 66,
+      "supported_claims": 16,
+      "funnel": {
+        "success": 4,
+        "not_retrieved": 1
+      }
+    },
+    {
+      "region": "长汀县",
+      "mode": "long-history",
+      "documents": 11,
+      "extracted_claims": 247,
+      "supported_claims": 151,
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "region": "长汀县",
+      "mode": "rise-fall",
+      "documents": 11,
+      "extracted_claims": 247,
+      "supported_claims": 146,
+      "funnel": {
+        "success": 1,
+        "not_retrieved": 4
+      }
+    },
+    {
+      "region": "长汀县",
+      "mode": "snapshot",
+      "documents": 11,
+      "extracted_claims": 247,
+      "supported_claims": 146,
+      "funnel": {
+        "success": 5
+      }
+    }
+  ],
+  "baselines": {
+    "q3_d_archived_e2e": 15,
+    "q3_c_legacy_e2e": 3,
+    "note": "from experiments/quality/20261026_q3_strategy_d/summary.json"
+  },
+  "caveats": [
+    "Offline archived corpus pooling, not live retrieval.",
+    "Different runs may contain duplicated or superseded sources; verification window applies.",
+    "No provider or judge calls."
+  ]
+}

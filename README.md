@@ -101,12 +101,13 @@ cd web; npm run test:e2e                                # Playwright 浏览器 E
 
 当前实测：
 
-- Python 测试 **692 passed**；前端 4 tests、`tsc` 与 Vite build 通过；Playwright 2/2 通过（创建/SSE/证据/简报、取消/恢复）。
+- Python 测试 **702 passed**；前端 4 tests、`tsc` 与 Vite build 通过；Playwright 2/2 通过（创建/SSE/证据/简报、取消/恢复）。
 - 本地 `MOCK` 端到端：任务 `SUCCEEDED` / `SUFFICIENT`，3 个来源、6 条结构化结论；2025/2027 结论在 2024 时间窗内被正确判为 `NOT_COMPARABLE`。
 - 冻结 matched-budget 离线 A/B/C 复算：C 组在现有小样本上落后 A/B 且资源消耗更高。**不能**据此得出 v2 优于基线的结论。
 - Quality Recovery dev-replay：measure-aware Strategy D 将 GT 端到端覆盖从 C 的 3/90 提升到 15/90；这是**开发集**结果（McNemar p=0.000488，仅 dev），检索仍缺 69/90。盲测 pilot 仅 2 任务/10 facts（D 4/10），不足以支持泛化结论。
+- Q7 retrieval recovery：聚合所有归档 run 找回 26/69 缺失事实，D pooled dev E2E 33/90；免费公开网页在 long-history 找回 6/30（决策级仍 0/30）；oracle 探测显示 17/30 来源仍可访问，瓶颈是发现/抽取而非来源消失。Verifier 审计（assistant 标注）假支持 3/10、假拒绝 4/15；无 sealed 40–60 任务集，不能声称独立泛化。
 
-完整、区分 offline/fixture/replay/live 的报告见 [docs/evaluation/FINAL_REPORT.md](docs/evaluation/FINAL_REPORT.md)，Quality Recovery 见 [Q3/Q4](docs/goal/Q3_Q4_REPORT.md)、[Q5](docs/goal/Q5_REPORT.md)、[Q6](docs/goal/Q6_FINAL_ACCEPTANCE.md)。评测设计见 [docs/evaluation/DESIGN.md](docs/evaluation/DESIGN.md)。
+完整、区分 offline/fixture/replay/live 的报告见 [docs/evaluation/FINAL_REPORT.md](docs/evaluation/FINAL_REPORT.md)，Quality Recovery 见 [Q3/Q4](docs/goal/Q3_Q4_REPORT.md)、[Q5](docs/goal/Q5_REPORT.md)、[Q6](docs/goal/Q6_FINAL_ACCEPTANCE.md)、[Q7](docs/goal/Q7_REPORT.md)。评测设计见 [docs/evaluation/DESIGN.md](docs/evaluation/DESIGN.md)。
 
 ## 代码结构
 

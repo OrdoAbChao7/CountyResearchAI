@@ -1,0 +1,146 @@
+{
+  "generated_at": "2026-10-26T14:27:49.013217+00:00",
+  "evidence_kind": "TASK_CLUSTER_BOOTSTRAP_DEV",
+  "iterations": 4000,
+  "conditions": {
+    "C_legacy": "legacy C report/status",
+    "D_archived": "D on the C run's own archived docs",
+    "D_pooled": "D on all archived docs for the region",
+    "D_pooled_free": "D on pooled archived + autonomous free-web hits"
+  },
+  "comparisons": {
+    "D_pooled_minus_C": {
+      "tasks": 18,
+      "mean_difference": 0.3333,
+      "bootstrap_95": [
+        0.1556,
+        0.5222
+      ],
+      "left_mean": 0.3667,
+      "right_mean": 0.0333,
+      "left_wins": 9,
+      "ties": 9,
+      "right_wins": 0
+    },
+    "D_archived_minus_C": {
+      "tasks": 18,
+      "mean_difference": 0.1333,
+      "bootstrap_95": [
+        0.0222,
+        0.2778
+      ],
+      "left_mean": 0.1667,
+      "right_mean": 0.0333,
+      "left_wins": 5,
+      "ties": 13,
+      "right_wins": 0
+    },
+    "D_pooled_free_minus_C": {
+      "tasks": 18,
+      "mean_difference": 0.3111,
+      "bootstrap_95": [
+        0.1444,
+        0.4889
+      ],
+      "left_mean": 0.3444,
+      "right_mean": 0.0333,
+      "left_wins": 9,
+      "ties": 9,
+      "right_wins": 0
+    },
+    "D_pooled_minus_D_archived": {
+      "tasks": 18,
+      "mean_difference": 0.2,
+      "bootstrap_95": [
+        0.0667,
+        0.3667
+      ],
+      "left_mean": 0.3667,
+      "right_mean": 0.1667,
+      "left_wins": 6,
+      "ties": 12,
+      "right_wins": 0
+    },
+    "D_pooled_free_minus_D_pooled": {
+      "tasks": 18,
+      "mean_difference": -0.0222,
+      "bootstrap_95": [
+        -0.0667,
+        0.0
+      ],
+      "left_mean": 0.3444,
+      "right_mean": 0.3667,
+      "left_wins": 0,
+      "ties": 17,
+      "right_wins": 1
+    }
+  },
+  "task_rates": {
+    "C": {
+      "临泽县|long-history": 0.0,
+      "临泽县|rise-fall": 0.0,
+      "临泽县|snapshot": 0.2,
+      "于都县|long-history": 0.0,
+      "于都县|rise-fall": 0.0,
+      "于都县|snapshot": 0.0,
+      "德清县|long-history": 0.0,
+      "德清县|rise-fall": 0.0,
+      "德清县|snapshot": 0.0,
+      "攀枝花市|long-history": 0.0,
+      "攀枝花市|rise-fall": 0.0,
+      "攀枝花市|snapshot": 0.0,
+      "白山市|long-history": 0.0,
+      "白山市|rise-fall": 0.4,
+      "白山市|snapshot": 0.0,
+      "长汀县|long-history": 0.0,
+      "长汀县|rise-fall": 0.0,
+      "长汀县|snapshot": 0.0
+    },
+    "D_archived": {
+      "临泽县|long-history": 0.0,
+      "临泽县|rise-fall": 0.0,
+      "临泽县|snapshot": 1.0,
+      "于都县|long-history": 0.0,
+      "于都县|rise-fall": 0.0,
+      "于都县|snapshot": 0.2,
+      "德清县|long-history": 0.0,
+      "德清县|rise-fall": 0.0,
+      "德清县|snapshot": 1.0,
+      "攀枝花市|long-history": 0.0,
+      "攀枝花市|rise-fall": 0.0,
+      "攀枝花市|snapshot": 0.0,
+      "白山市|long-history": 0.0,
+      "白山市|rise-fall": 0.6,
+      "白山市|snapshot": 0.0,
+      "长汀县|long-history": 0.0,
+      "长汀县|rise-fall": 0.0,
+      "长汀县|snapshot": 0.2
+    },
+    "D_pooled": {
+      "临泽县|long-history": 0.0,
+      "临泽县|rise-fall": 0.6,
+      "临泽县|snapshot": 1.0,
+      "于都县|long-history": 0.0,
+      "于都县|rise-fall": 0.0,
+      "于都县|snapshot": 0.2,
+      "德清县|long-history": 0.0,
+      "德清县|rise-fall": 0.0,
+      "德清县|snapshot": 1.0,
+      "攀枝花市|long-history": 0.0,
+      "攀枝花市|rise-fall": 0.0,
+      "攀枝花市|snapshot": 1.0,
+      "白山市|long-history": 0.0,
+      "白山市|rise-fall": 0.8,
+      "白山市|snapshot": 0.8,
+      "长汀县|long-history": 0.0,
+      "长汀县|rise-fall": 0.2,
+      "长汀县|snapshot": 1.0
+    }
+  },
+  "caveats": [
+    "18 task clusters, dev replay only; not a sealed holdout.",
+    "Task-level E2E is the mean of correlated facts within the task.",
+    "Bootstrap over tasks; small n means intervals are wide.",
+    "No paid provider or judge calls."
+  ]
+}

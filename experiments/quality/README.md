@@ -18,3 +18,19 @@ The baseline directories were restored from commit `3a07aea`; later reruns write
 to the Q3 directories. `summary.json` files include generation timestamps and
 hashes. Do not treat the two funnel files as one time series without checking
 the directory names.
+
+## Q7 directories
+
+| Directory | Meaning |
+| --- | --- |
+| `20261026_q7_corpus/` | full archived corpus coverage and missing-fact list |
+| `20261026_q7_retrieval/` | autonomous free-web search, query logs, hit snapshots |
+| `20261026_q7_oracle_probe/` | GT-URL source-availability ceiling (diagnostic only) |
+| `20261026_q7_verifier_audit/` | stratified sample, assistant labels, confusion matrix |
+| `20261026_q7_pooled_eval/` | Strategy D over pooled archived corpus |
+| `20261026_q7_pooled_free_eval/` | pooled corpus + free-web hits |
+| `20261026_q7_bootstrap/` | task-clustered bootstrap, dev only |
+| `20261026_q7_stress/` | two-process lease/fencing stress log and summary |
+
+Q7 retrieval cache directories are gitignored; summaries and hit snapshots are
+committed. Assistant audit labels are not human ground truth.

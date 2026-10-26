@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-10-26T14:10:29.926440+00:00",
+  "evidence_kind": "INDEPENDENT_SAMPLE_AUDIT",
+  "sample_size": 25,
+  "labelers": {
+    "assistant_manual_review": 25
+  },
+  "human_ground_truth": false,
+  "human_annotation_status": "BLOCKED_HUMAN_ANNOTATION",
+  "confusion_matrix": {
+    "INSUFFICIENT": {
+      "incorrect": 4,
+      "correct": 1
+    },
+    "NEEDS_REVIEW": {
+      "correct": 10
+    },
+    "SUPPORTED": {
+      "incorrect": 3,
+      "correct": 7
+    }
+  },
+  "false_support": {
+    "sample": 10,
+    "incorrect": 3,
+    "rate": 0.3,
+    "wilson_95": [
+      0.1078,
+      0.6032
+    ]
+  },
+  "false_rejection": {
+    "sample": 15,
+    "incorrect": 4,
+    "rate": 0.2667,
+    "wilson_95": [
+      0.109,
+      0.5195
+    ]
+  },
+  "error_types": {
+    "false_rejection_period_metadata": 2,
+    "false_rejection_wrong_span_link": 2,
+    "false_support_fragment_wrong_measure": 1,
+    "false_support_period_mismatch": 1,
+    "false_support_sign_measure_mismatch": 1
+  },
+  "caveats": [
+    "Labels are assistant manual review, not human ground truth.",
+    "Stratified sample (10 SUPPORTED, 15 rejected); not population-weighted.",
+    "Rates describe this sample and do not estimate the full claim population.",
+    "The sample frame had no OUTDATED or NOT_COMPARABLE claims."
+  ]
+}

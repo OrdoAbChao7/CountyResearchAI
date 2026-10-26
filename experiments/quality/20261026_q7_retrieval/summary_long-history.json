@@ -1,0 +1,243 @@
+{
+  "generated_at": "2026-10-26T14:19:52.416303+00:00",
+  "evidence_kind": "FREE_PUBLIC_WEB_RETRIEVAL",
+  "provider_calls_paid": 0,
+  "mode": "long-history",
+  "facts": 30,
+  "recovered": 6,
+  "recovered_exact_excerpt": 4,
+  "recovered_value_metric": 2,
+  "value_context_candidates": 0,
+  "recovery_rate": 0.2,
+  "official_recovered": 1,
+  "request_count": 121,
+  "elapsed_seconds": 654.74,
+  "by_mode": {
+    "long-history": {
+      "miss": 24,
+      "hit": 6
+    }
+  },
+  "by_region": {
+    "临泽县": {
+      "miss": 5
+    },
+    "于都县": {
+      "hit": 2,
+      "miss": 3
+    },
+    "德清县": {
+      "miss": 3,
+      "hit": 2
+    },
+    "攀枝花市": {
+      "miss": 5
+    },
+    "白山市": {
+      "hit": 2,
+      "miss": 3
+    },
+    "长汀县": {
+      "miss": 5
+    }
+  },
+  "missing": [
+    {
+      "claim_id": "continuation_efe2bd675c7d",
+      "region": "德清县",
+      "metric": "二产比重",
+      "year": "2006",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_fd393319eb21",
+      "region": "德清县",
+      "metric": "工业总产值",
+      "year": "2006",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_3c74f07d1c21",
+      "region": "德清县",
+      "metric": "四大特色主导产业占工业经济总量比重",
+      "year": "2006",
+      "best_score": 3,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_e467752dac4c",
+      "region": "长汀县",
+      "metric": "工业集中区设立",
+      "year": "1995年",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_9ed6c6e9bb24",
+      "region": "长汀县",
+      "metric": "铁路交通开通",
+      "year": "2004年",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_51c6cfa835db",
+      "region": "长汀县",
+      "metric": "亿元企业突破",
+      "year": "2003年",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_62f92364d090",
+      "region": "长汀县",
+      "metric": "规模工业产值",
+      "year": "2011年",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_b38e0d3ffb77",
+      "region": "长汀县",
+      "metric": "工业增加值",
+      "year": "2017年",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_2c43bcd05c57",
+      "region": "于都县",
+      "metric": "工业园区建设",
+      "year": "未明确年份（原文为2012年前后经济段落）",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_9bb8cb64920f",
+      "region": "于都县",
+      "metric": "主要工业产品产量",
+      "year": "2005年与1978年对比",
+      "best_score": 0,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_ede40834b5cc",
+      "region": "于都县",
+      "metric": "规模以上工业增加值及分行业主营业务收入",
+      "year": "2012年",
+      "best_score": 3,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_11edd755436f",
+      "region": "攀枝花市",
+      "metric": "历史沿革与行政区划名称变化",
+      "year": "1965年、1987年",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_e690f25db7d4",
+      "region": "攀枝花市",
+      "metric": "开发建设阶段与产业变迁",
+      "year": "1965年以来60年",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_967fdf968b1a",
+      "region": "攀枝花市",
+      "metric": "工业起步与三线建设定位",
+      "year": "20世纪60年代",
+      "best_score": 0,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_84c08afef615",
+      "region": "攀枝花市",
+      "metric": "钢铁基地建设关键节点",
+      "year": "1970年",
+      "best_score": 0,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_d70f3edba9a9",
+      "region": "攀枝花市",
+      "metric": "产业转型与产值结构变化",
+      "year": "2023年",
+      "best_score": 3,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_ca4ba4ffd05d",
+      "region": "白山市",
+      "metric": "资源枯竭型城市认定",
+      "year": "2008年3月",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_96809bb48370",
+      "region": "白山市",
+      "metric": "二产中资源型工业与高新技术和精深加工产业占比变化",
+      "year": "2012年（对比2005年）",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_9932c2f8131b",
+      "region": "白山市",
+      "metric": "地区生产总值、固定资产投资、财政收入和社会消费品零售总额相对2007年倍数",
+      "year": "2015年（对比2007年）",
+      "best_score": 5,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_44e0a2ba9d2b",
+      "region": "临泽县",
+      "metric": "企业产权制度改革",
+      "year": "2000～2003年",
+      "best_score": 3,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_4900cf8c323f",
+      "region": "临泽县",
+      "metric": "规模以上工业增加值及工业结构",
+      "year": "2004年",
+      "best_score": 3,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_6553ad1105be",
+      "region": "临泽县",
+      "metric": "资源型城市产业转型政策",
+      "year": "2007年",
+      "best_score": 3,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_6d0034433695",
+      "region": "临泽县",
+      "metric": "工业门类",
+      "year": "1991年以来",
+      "best_score": 2,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_e7aa35798dd6",
+      "region": "临泽县",
+      "metric": "资源枯竭产业萎缩",
+      "year": "1991年以来20余年",
+      "best_score": 2,
+      "best_mode": ""
+    }
+  ],
+  "notes": [
+    "Public DuckDuckGo HTML search + direct page fetch; no paid API.",
+    "Queries are derived from region/metric/year, not the GT URL.",
+    "Recovery is excerpt exact or value+metric+region; not a quality claim."
+  ]
+}

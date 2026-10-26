@@ -236,3 +236,22 @@ def test_concurrent_claims_have_exactly_one_winner(tmp_path):
 
     assert sum(result is not None for result in results) == 1
     assert store.get_job(job.job_id).status is JobStatus.RUNNING
+
+
+def test_expired_lease_without_takeover_rejects_terminal_write(tmp_path):
+    store = _store(tmp_path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    token = store.claim_for_execution(job.job_id, owner="worker-a", lease_seconds=0.1)
+    time.sleep(0.15)
+
+    finished = store.finish_job(
+        job.job_id,
+        JobStatus.SUCCEEDED,
+        outcome=ResearchOutcome.SUFFICIENT,
+        event_type="job.completed",
+        owner="worker-a",
+        fencing_token=token,
+    )
+
+    assert finished is False
+    assert store.get_job(job.job_id).status is JobStatus.RUNNING

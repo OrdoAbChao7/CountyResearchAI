@@ -219,3 +219,25 @@ Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
 - Wrote `docs/goal/Q5_REPORT.md`, `docs/goal/Q6_FINAL_ACCEPTANCE.md`,
   `docs/architecture/ADR-004-execution-leases.md`; updated README/acceptance/
   final report.
+
+## 2026-10-26 — Q7 retrieval recovery and validation
+
+- Built a bounded free public-web adapter (`search/public_web.py`, DuckDuckGo
+  HTML + direct fetch, cached/hashed; no paid API) and a region/metric/year query
+  planner with metric aliases and year constraints (`q7_retrieve_missing.py`).
+  Fixed UTF-8/GBK charset selection (UTF-8 pages were previously mojibake).
+- Pooled all archived raw docs by region: 47/90 GT facts retrieved; 26 of the 69
+  C-missing facts recovered. D pooled dev E2E 33/90 vs D archived 15/90 vs C
+  3/90. Task-clustered bootstrap: D pooled − C +0.333 [0.156, 0.522].
+- Long-history: autonomous free web recovered 6/30 (4 exact, 2 value+metric);
+  oracle GT-URL probe recovered 17/30, proving source availability and isolating
+  discovery as the bottleneck. D long-history E2E remains 0/30 because extracted
+  claims/answer integration do not consume the recovered pages.
+- Verifier audit: 25 assistant-labeled claims; false support 3/10 (30%, Wilson
+  10.8–60.3%), false rejection 4/15 (26.7%, Wilson 10.9–52.0%); human annotation
+  BLOCKED_HUMAN_ANNOTATION. Errors: wrong span links, period metadata, fragmented
+  measure, sign/measure mismatch.
+- Q7.3: 2 PILOT tasks / 10 facts; 0 SEALED; 40–60 gap not padded.
+- Q7.5: two-process stress (6 jobs, 2 workers) — one success per job, stale
+  finish rejected, expired-lease takeover, crash + recovery. `3.0 s`.
+- Tests: `702 passed`; frontend 4, Playwright 2; scoped ruff clean.

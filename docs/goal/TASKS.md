@@ -41,3 +41,14 @@ Funnel gaps are assigned to: `not_retrieved`, `not_extracted`,
 `wrongly_rejected`, or `not_in_answer`. `wrongly_rejected` is only asserted when
 the expected fact and quote match independently; otherwise it is labelled
 `withheld_unlabelled` and remains a review item.
+
+## Q7 — Retrieval Recovery & Generalization Validation
+
+| ID | Milestone | Acceptance | Status |
+| --- | --- | --- | --- |
+| Q7.1 | Retrieval recovery | missing-fact diagnosis; temporal/gap queries; pooled/free recovery; long-history | PARTIAL — 32/69 recovered; long-history retrieval 6/30, E2E 0/30; oracle 17/30 |
+| Q7.2 | Verifier audit | independent labels, confusion matrix, false support/rejection | PARTIAL — 25 assistant labels; 30% false support, 26.7% false rejection; human labels BLOCKED |
+| Q7.3 | Independent holdout | 40–60 sealed tasks with quotes/hashes | NOT_MET — 2 PILOT tasks, 0 SEALED |
+| Q7.4 | Evaluation | A/B/C/D + ablations + cluster bootstrap | PARTIAL — dev cluster bootstrap + pooled D; no sealed A/B/C/D |
+| Q7.5 | Reliability | two-process lease/fencing stress + regressions | PASS — 2 workers, 6 jobs, takeover/stale/crash/recovery; regressions green |
+| Q7.6 | Final acceptance | answer 7 questions; no hidden failures | PARTIAL — see Q7_REPORT.md |

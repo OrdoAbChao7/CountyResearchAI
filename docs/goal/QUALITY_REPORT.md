@@ -117,3 +117,12 @@ blind pilot is 2 tasks/10 facts (D 4/10), so no generalization is claimed.
 Q5 reliability and browser E2E are in [`Q5_REPORT.md`](Q5_REPORT.md); Q6 final
 acceptance and remaining blockers are in
 [`Q6_FINAL_ACCEPTANCE.md`](Q6_FINAL_ACCEPTANCE.md).
+
+## Q7
+
+Retrieval recovery and generalization validation are detailed in
+[`Q7_REPORT.md`](Q7_REPORT.md). Headline: 26/69 missing facts recovered by
+pooling archived runs, 6/30 long-history facts recovered by bounded free web,
+but long-history D E2E remains 0/30; verifier audit shows 30% false support and
+26.7% false rejection on a 25-claim assistant sample; no sealed 40–60 holdout
+exists, so independent generalization is not established.

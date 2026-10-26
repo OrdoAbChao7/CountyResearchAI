@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-10-26T14:19:29.903312+00:00",
+  "evidence_kind": "TWO_PROCESS_LEASE_STRESS",
+  "workers": 2,
+  "jobs": 6,
+  "elapsed_seconds": 3.0,
+  "all_terminal": true,
+  "statuses": {
+    "crash-job": "SUCCEEDED",
+    "lease-expiry-job": "SUCCEEDED",
+    "normal-3": "SUCCEEDED",
+    "normal-2": "SUCCEEDED",
+    "normal-1": "SUCCEEDED",
+    "normal-0": "SUCCEEDED"
+  },
+  "claims_per_job": {
+    "crash-job": 1,
+    "lease-expiry-job": 2,
+    "normal-0": 1,
+    "normal-1": 1,
+    "normal-2": 1,
+    "normal-3": 1
+  },
+  "successful_terminal_writes": {
+    "crash-job": 1,
+    "lease-expiry-job": 1,
+    "normal-0": 1,
+    "normal-1": 1,
+    "normal-2": 1,
+    "normal-3": 1
+  },
+  "exactly_one_success_per_job": true,
+  "stale_finish_attempts": [
+    {
+      "event": "stale_finish",
+      "job_id": "lease-expiry-job",
+      "owner": "worker-a",
+      "accepted": false
+    }
+  ],
+  "stale_rejected": true,
+  "crash_events": [
+    {
+      "event": "crash",
+      "job_id": "crash-job",
+      "owner": "worker-a"
+    }
+  ],
+  "recovery_events": [
+    {
+      "event": "recovered",
+      "count": 1
+    }
+  ],
+  "takeovers": [
+    "lease-expiry-job"
+  ],
+  "event_count": 16
+}

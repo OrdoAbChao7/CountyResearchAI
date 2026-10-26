@@ -12,7 +12,7 @@ Repository: `E:\Projects\AxiomScope` (formerly `E:\Projects\CountyResearchAI`)
 | Legacy baseline | `52a6ed0f5164721cece221ffb9e7f67f73ac3dd7` on `codex/experiment-superiority` (frozen) |
 | Python | 3.13.7 (`.venv`), FastAPI 0.162.0, uvicorn 0.54.0 |
 | Node | 24.19.0, npm 11.17.0 |
-| Python tests | `692 passed` (`pytest --no-cov -q`) |
+| Python tests | `702 passed` (`pytest --no-cov -q`) |
 | Frontend | `tsc --noEmit` clean, 4 Vitest tests, Vite build 160.8 kB JS |
 | Live smoke | `MOCK` run: `SUCCEEDED`/`SUFFICIENT`, 3 sources, 6 findings, 4,213-byte brief |
 
@@ -76,7 +76,7 @@ Plan and acceptance: `docs/goal/TASKS.md`; results: `docs/goal/QUALITY_REPORT.md
 | Q3 Strategy D | PASS (dev) | measure identity + period inference + verified extractive answer; withheld 872→203; supported 2→15; dev E2E 3→15 of 90 |
 | Q4 A/B/C/D + ablations | PARTIAL | dev A/B/C/D + no-verifier + BM25/adaptive + old/new grouping; blind pilot 2 tasks / 10 facts (D 4/10, A/B 0/4, C NOT_RUN); live NOT_RUN |
 | Q5 reliability | PASS (local scope) | leases/fencing/heartbeat, atomic terminal event, per-job storage; Playwright 2/2 pass with traces/screenshots; two-process live stress NOT_RUN |
-| Q6 final verification | PASS engineering / PARTIAL research | 692 Python tests, 4 frontend, 2 Playwright, CLI dry-run; `docs/goal/Q6_FINAL_ACCEPTANCE.md` |
+| Q6 final verification | PASS engineering / PARTIAL research | 702 Python tests, 4 frontend, 2 Playwright, CLI dry-run; `docs/goal/Q6_FINAL_ACCEPTANCE.md` |
 
 Largest measured bottleneck: retrieval coverage (69/90 facts absent from C's
 archived docs; long-history 0/30). The verifier-side coarse-identity issue was
@@ -92,7 +92,7 @@ lease stress, and a labelled false-support audit.
 ## Quality Recovery stop condition (2026-10-26)
 
 Local engineering work is complete and verified: Q0–Q6 engineering gates pass,
-692 Python tests + 4 frontend + 2 Playwright pass, and M0–M4 behavior is
+702 Python tests + 4 frontend + 2 Playwright pass, and M0–M4 behavior is
 retained. Research acceptance remains **PARTIAL** because:
 
 - 38–58 additional independent blind tasks are required; only 2 disjoint
@@ -106,3 +106,18 @@ retained. Research acceptance remains **PARTIAL** because:
 Do not resume by loosening the verifier or reusing the blind pilot for tuning.
 The next safe actions are dataset curation from new authorized sources, gap/temporal
 retrieval implementation on a dev split, then one locked blind run.
+
+## Q7 Retrieval Recovery goal (2026-10-26)
+
+| Sub-phase | Status | Evidence |
+| --- | --- | --- |
+| Q7.1 retrieval recovery | PARTIAL | 32/69 missing facts recovered at retrieval level (26 pooled archive + 6 free web); D pooled E2E 33/90; long-history retrieval 6/30 but E2E 0/30; oracle 17/30 sources available |
+| Q7.2 verifier audit | PARTIAL | 25 assistant labels; false support 30% (3/10), false rejection 26.7% (4/15); human labels BLOCKED |
+| Q7.3 independent holdout | NOT_MET | 2 PILOT tasks, 0 SEALED; 38–58 task gap documented |
+| Q7.4 evaluation | PARTIAL | task-clustered bootstrap (18 tasks): D pooled − C +0.333 [0.156,0.522]; no sealed A/B/C/D |
+| Q7.5 reliability | PASS | two-worker stress: one success/job, stale rejected, takeover + crash recovery; 702 tests, E2E 2/2 |
+| Q7.6 final acceptance | PARTIAL | `docs/goal/Q7_REPORT.md`; research generalization not established |
+
+Q7 full report: `docs/goal/Q7_REPORT.md`. Stop reason: no sealed 40–60 task set,
+no human annotation, no paid live/Judge cost gate. Do not reclassify PILOT as
+SEALED or loosen the verifier.
