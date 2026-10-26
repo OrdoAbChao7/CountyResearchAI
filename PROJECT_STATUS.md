@@ -2,9 +2,14 @@
 
 This document records the boundary between what this repository is intended to demonstrate, what has been verified in the repository, and what still needs evidence. It is deliberately more specific than a feature list.
 
+> **Current status (2026-10-26):** the project is now branded **AxiomScope** (formerly CountyResearchAI) and includes the Evidence-First v2 Pydantic contracts, SQLite evidence graph, deterministic claim verification, FastAPI `/api/v1` service, and React/Vite workspace. See [`docs/goal/STATE.md`](docs/goal/STATE.md) for the current gate map and [`docs/evaluation/FINAL_REPORT.md`](docs/evaluation/FINAL_REPORT.md) for measured results. The legacy multi-agent description below is retained as historical context; it is not the current acceptance status.
+
 ## Current stage
 
-**Deep Research Multi-Agent Architecture (Refactored Prototype)**
+**AxiomScope v2 — Evidence-Native Research Platform**
+Engineering gates M0–M4 are verified. M5 research acceptance is open: strategy D,
+a 40–60 task independent holdout, remaining ablations, live evaluation, and a
+semantic Judge are not measured (`NOT_RUN` / `BLOCKED_EXTERNAL`).
 
 ## Why this exists
 
@@ -45,9 +50,21 @@ The generated report is an in-depth research draft, not an official policy deter
 
 ## Verification Record
 
-- **Test Suite**: `474 passed` in the continuation full-suite run; pytest cache has a Windows permission warning.
-- **Static Analysis**: the changed/new experiment files pass scoped `ruff check`; full-tree lint remains non-clean because legacy `scripts/_verify_*.py` files contain 73 pre-existing findings.
-- **Resource safety regression**: settlement `overrun` usage is now included in subsequent capacity checks, so a run that exceeds its limit cannot reserve more work from the same persisted budget; covered by `test_overrun_usage_blocks_later_reservations`.
+- **Python Test Suite**: `662 passed` on 2026-10-26 (`pytest --no-cov -q`); one
+  Windows `.pytest_cache` permission warning.
+- **Frontend**: `tsc --noEmit` clean, 4 Vitest tests, Vite production build
+  160.8 kB JS.
+- **Live local API smoke**: `SUCCEEDED` / `SUFFICIENT` (MOCK), 3 sources, 6
+  findings, 4.2 kB brief; SSE verified; screenshot inspection NOT_RUN.
+- **Evaluation**: offline A/B/C aggregation (48 runs / 240 observations) and a
+  verifier ablation (1,275 claims) with zero provider calls; see
+  `experiments/evaluation/`.
+- **Static Analysis**: changed files pass scoped `ruff check`; full-tree lint
+  still includes historical `scripts/_verify_*.py` findings.
+- **Resource safety regression**: settlement `overrun` usage is included in
+  subsequent capacity checks, so a run that exceeds its limit cannot reserve
+  more work from the same persisted budget; covered by
+  `test_overrun_usage_blocks_later_reservations`.
 - **Historical Offline Benchmark** (not evidence for real efficacy):
   - Case A (Anji): Recall@K improved from 40% to 100%, evidence support rate at 100%.
   - Case B (Xinfeng): Recall@K improved from 20% to 100%, successfully detected 1 scope divergence.
