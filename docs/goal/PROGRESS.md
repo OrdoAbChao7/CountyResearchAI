@@ -92,3 +92,19 @@ Summarized from `GOAL_EVIDENCE_FIRST_V2.md`; see the phase reports for detail.
   prompt reduction (-71.8%), token effect unmeasured.
 - Phase 7: frozen matched-budget rescore reproducible (0/240 field differences);
   current C-group metrics trail baselines on a small, non-significant sample.
+
+## 2026-10-26 — verifier ablation and performance fix
+
+- Added `scripts/evaluate_evidence_verifier_offline.py`, comparing legacy
+  verification with the deterministic v2 verifier on all 18 archived C runs
+  (34 documents, 295 spans, 1,275 claims, 0 provider calls).
+- First run took >10 minutes and was stopped. Root cause: 11,272 spurious
+  legacy conflicts caused per-claim chain reloads. Precomputed objective support
+  once over the in-memory ledger and reused it; `save_ledger` dropped from 156 s
+  to 2.5 s for a 231-claim run.
+- Ablation result: legacy verified 495; objective support 1,243; supported after
+  conflict resolution 173; withheld as a supported conflict 998; 417 downgraded;
+  95 upgraded. The mass withholding is a claim-identity coarseness finding about
+  the legacy extractor, not a verifier quality win. Report:
+  `experiments/evaluation/20261026_verifier_ablation/`.
+- Full suite after optimization: `659 passed`; ruff clean on changed files.

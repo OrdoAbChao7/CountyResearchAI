@@ -29,7 +29,7 @@ Note: the venv editable install pointed at the pre-rename path
 | M2 temporal evidence graph | persistent typed graph, finding→claim→span→snapshot, conflict/temporal semantics | **PASS** | `evidence/graph.py`, 19 graph tests incl false reference, window, reload equality | semantic entailment explicitly out of scope |
 | M3 durable orchestration | bounded loop, restart/resume, cancellation, disjoint finish states | **PASS (workflow path)** | `api/jobs.py`, `api/worker.py`, resume/cancel/deadline tests | agent-path checkpoints remain opt-in; no distributed queue |
 | M4 API + web workspace | FastAPI `/api/v1`, SSE, cancel/resume, evidence explorer, brief export, React app | **PASS (screenshot NOT_RUN)** | `src/.../api/`, `web/`, 10 API app tests, live smoke | browser E2E/screenshots not automated |
-| M5 multi-baseline evaluation + release docs | A/B/C/D paired eval, locked task set, ablations, final report, brand docs | **FAIL / PARTIAL** | design + offline A/B/C report + README/ADR/demo/career docs | D not measured; 40–60 independent tasks, ablations, live, semantic Judge, human adjudication missing |
+| M5 multi-baseline evaluation + release docs | A/B/C/D paired eval, locked task set, ablations, final report, brand docs | **FAIL / PARTIAL** | design + offline A/B/C report + verifier ablation + README/ADR/demo/career docs | D not measured; 40–60 independent tasks, remaining ablations, live, semantic Judge, human adjudication missing |
 
 ## Constraints in force
 

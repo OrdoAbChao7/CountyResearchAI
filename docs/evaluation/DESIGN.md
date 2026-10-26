@@ -105,9 +105,10 @@ evaluation/results/<run-id>/
 | --- | --- |
 | Design fixed | PASS (this document) |
 | Offline A/B/C aggregation on frozen corpus | PASS, `experiments/evaluation/20261026_multi_baseline_offline/` |
+| Verifier ablation on C raw archives | PASS, `experiments/evaluation/20261026_verifier_ablation/` |
 | D measured on the same corpus | NOT_RUN |
 | 40–60 independent locked tasks | NOT_RUN |
 | Live end-to-end evaluation | BLOCKED_EXTERNAL |
-| Ablations | NOT_RUN |
+| Remaining ablations (no graph, no gap research, BM25 vs adaptive, agent count) | NOT_RUN |
 | Independent semantic Judge | NOT_RUN |
 | Human rubric/adjudication | NOT_RUN |

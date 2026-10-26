@@ -37,6 +37,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | --- | --- | --- |
 | Pre-registered design | PASS | `docs/evaluation/DESIGN.md` |
 | Offline A/B/C aggregation | PASS | `experiments/evaluation/20261026_multi_baseline_offline/summary.json` |
+| Verifier ablation (C raw archives) | PASS | `experiments/evaluation/20261026_verifier_ablation/summary.json` |
 | Observational hash | PASS | `4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e` |
 | Strategy D measurement | NOT_RUN | — |
 | Independent 40–60 task set | NOT_RUN | inherited frozen corpus only |

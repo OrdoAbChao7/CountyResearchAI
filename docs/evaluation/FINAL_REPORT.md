@@ -53,6 +53,35 @@ Interpretation: on this inherited sample, C is worse and more expensive. Six C
 long-history runs exceeded the 120 s budget and are excluded from the means.
 The sample is small, not re-curated, and not statistically conclusive.
 
+## Verifier ablation on frozen C raw archives
+
+Source: all 18 archived group-C runs with raw documents. Report:
+`experiments/evaluation/20261026_verifier_ablation/summary.json`.
+Both sides see the same extracted claims and source text. Zero provider calls.
+
+| Metric | Value |
+| --- | ---: |
+| Runs / documents / spans | 18 / 34 / 295 |
+| Extracted claims | 1,275 |
+| Legacy `verified` | 495 |
+| Deterministic objective support (hash/offset + value/statement) | 1,243 |
+| Deterministic `SUPPORTED` after conflict resolution | 173 |
+| Withheld by a supported conflict (`NEEDS_REVIEW`) | 998 |
+| Downgraded (legacy verified → not supported) | 417 |
+| Upgraded (legacy unverified → supported) | 95 |
+
+Reason counts: `conflicting_supported_evidence` 998, `statement_exact_in_span`
+134, `numeric_value_without_period` 72, `value_and_span_verified` 39,
+`statement_not_in_span` 30, `no_evidence` 2.
+
+What this shows: the hash/offset/value layer passes most extracted claims, but
+legacy claim identity is too coarse — many different statements share
+metric/period/scope/caliber — so the conflict layer conservatively withholds
+them. This is **not** a verifier quality win. It identifies claim-identity
+extraction as the next bottleneck. The verifier is intentionally conservative
+here; loosening the identity rule to raise the supported count would be a
+metric-gaming change.
+
 ## What was not measured
 
 | Item | Status | Why |
@@ -60,7 +89,7 @@ The sample is small, not re-curated, and not statistically conclusive.
 | Strategy D on the same corpus | NOT_RUN | requires running the full v2 path on the frozen inputs; not done |
 | 40–60 independent locked tasks | NOT_RUN | the inherited corpus is not a newly curated holdout |
 | Live end-to-end retrieval/synthesis | BLOCKED_EXTERNAL | no fresh provider/Judge cost authorization |
-| Ablations (no graph, no verifier, no gap research, BM25 vs adaptive) | NOT_RUN | not executed |
+| Ablations | PARTIAL | verifier ablation executed on C archives; no-graph, no-gap-research, BM25-vs-adaptive, single-vs-multi-agent NOT_RUN |
 | Independent semantic Judge | NOT_RUN | not authorized/executed |
 | Human rubric adjudication | NOT_RUN | not executed |
 | Retrieval Recall@K on a real query | NOT_RUN | offline replay is 6 RawDocs and tied |

@@ -242,6 +242,31 @@ def _quote_contains_value(quote: str, value: str, unit: str) -> bool:
     return False
 
 
+def _integrity_check(
+    *,
+    quote: str,
+    start_offset: int | None,
+    end_offset: int | None,
+    span_hash: str,
+    content: str,
+    content_hash: str,
+) -> tuple[bool, str]:
+    actual_hash = _sha256(content)
+    if content_hash and content_hash != actual_hash:
+        return False, "snapshot_hash_mismatch"
+    if span_hash and span_hash != _sha256(quote):
+        return False, "span_hash_mismatch"
+    if start_offset is not None and end_offset is not None:
+        if not (0 <= start_offset <= end_offset <= len(content)):
+            return False, "offset_out_of_range"
+        if content[start_offset:end_offset] == quote:
+            return True, "exact_offset"
+        return False, "offset_quote_mismatch"
+    if quote and quote in content:
+        return True, "quote_substring_unknown_offset"
+    return False, "quote_not_in_snapshot"
+
+
 def claim_identity(claim: AtomicClaim) -> tuple[str, ...]:
     return (
         claim.region_id,
@@ -544,8 +569,15 @@ class EvidenceGraphStore:
             "spans": len(ledger.chunks),
             "claims": len(ledger.claims),
         }
+        supported_ids = {
+            claim_id
+            for claim_id, claim in ledger.claims.items()
+            if self._ledger_objective_support(claim, ledger)
+        }
         for claim in ledger.claims.values():
-            self.verify_claim(claim.claim_id, window=window)
+            self.verify_claim(
+                claim.claim_id, window=window, supported_ids=supported_ids
+            )
         return counts
 
     def _insert_snapshot(
@@ -968,6 +1000,7 @@ class EvidenceGraphStore:
         *,
         verifier_version: str = DETERMINISTIC_VERIFIER_VERSION,
         window: tuple[date | None, date | None] | None = None,
+        supported_ids: set[str] | None = None,
     ) -> VerificationRecord:
         chain = self.get_chain(claim_id)
         claim = chain.claim
@@ -1033,7 +1066,9 @@ class EvidenceGraphStore:
                 }
             )
 
-        status, reason = self._decide_status(claim, chain, checks, window=window)
+        status, reason = self._decide_status(
+            claim, chain, checks, window=window, supported_ids=supported_ids
+        )
         record = VerificationRecord(
             record_id=hashlib.sha256(
                 f"{claim_id}|{verifier_version}|{_utcnow().isoformat()}".encode()
@@ -1049,20 +1084,14 @@ class EvidenceGraphStore:
     def _check_span_integrity(
         self, span: EvidenceSpanRecord, snapshot: SourceSnapshotRecord
     ) -> tuple[bool, str]:
-        actual_hash = _sha256(snapshot.content)
-        if snapshot.content_hash and snapshot.content_hash != actual_hash:
-            return False, "snapshot_hash_mismatch"
-        if span.content_hash and span.content_hash != _sha256(span.quote):
-            return False, "span_hash_mismatch"
-        if span.start_offset is not None and span.end_offset is not None:
-            if not (0 <= span.start_offset <= span.end_offset <= len(snapshot.content)):
-                return False, "offset_out_of_range"
-            if snapshot.content[span.start_offset : span.end_offset] == span.quote:
-                return True, "exact_offset"
-            return False, "offset_quote_mismatch"
-        if span.quote and span.quote in snapshot.content:
-            return True, "quote_substring_unknown_offset"
-        return False, "quote_not_in_snapshot"
+        return _integrity_check(
+            quote=span.quote,
+            start_offset=span.start_offset,
+            end_offset=span.end_offset,
+            span_hash=span.content_hash,
+            content=snapshot.content,
+            content_hash=snapshot.content_hash,
+        )
 
     @staticmethod
     def _independent_source_count(links: list[EvidenceLink]) -> int:
@@ -1078,6 +1107,7 @@ class EvidenceGraphStore:
         checks: dict[str, Any],
         *,
         window: tuple[date | None, date | None] | None = None,
+        supported_ids: set[str] | None = None,
     ) -> tuple[VerificationStatus, str]:
         superseded = any(
             relation.relation is ClaimRelationKind.SUPERSEDES
@@ -1099,7 +1129,9 @@ class EvidenceGraphStore:
             return VerificationStatus.NOT_COMPARABLE, "numeric_value_without_unit"
         if claim.value and not claim.period:
             return VerificationStatus.NOT_COMPARABLE, "numeric_value_without_period"
-        supported_conflicts = self._supported_claim_conflicts(claim, chain)
+        supported_conflicts = self._supported_claim_conflicts(
+            claim, chain, supported_ids=supported_ids
+        )
         checks["contradicting_supported_claims"] = supported_conflicts
         own_support = self._has_objective_support(chain)
         if own_support and supported_conflicts:
@@ -1134,13 +1166,19 @@ class EvidenceGraphStore:
         return ""
 
     def _supported_claim_conflicts(
-        self, claim: AtomicClaim, chain: ClaimChain
+        self,
+        claim: AtomicClaim,
+        chain: ClaimChain,
+        *,
+        supported_ids: set[str] | None = None,
     ) -> list[str]:
         """Claim ids that contradict this claim *and* have objective support.
 
         A claim whose value cannot be found in its own quote must not override a
         supported claim. Symmetry is required: both sides are evaluated with the
-        same deterministic support test, independent of stored status.
+        same deterministic support test, independent of stored status. When
+        ``supported_ids`` is supplied (batch persistence), no per-claim chain
+        reload is needed.
         """
         conflicts: list[str] = []
         for relation in chain.relations:
@@ -1153,10 +1191,54 @@ class EvidenceGraphStore:
             )
             if other_id == claim.claim_id:
                 continue
+            if supported_ids is not None:
+                if other_id in supported_ids:
+                    conflicts.append(other_id)
+                continue
             other_chain = self.get_chain(other_id)
             if self._has_objective_support(other_chain):
                 conflicts.append(other_id)
         return sorted(set(conflicts))
+
+    @staticmethod
+    def _ledger_objective_support(
+        claim: AtomicClaim, ledger: EvidenceLedger
+    ) -> bool:
+        """Pure support test over an in-memory ledger (no database round-trips)."""
+        supporting_quotes: list[str] = []
+        for chunk_id in claim.evidence_chunk_ids:
+            chunk = ledger.chunks.get(chunk_id)
+            if chunk is None:
+                continue
+            source = ledger.sources.get(chunk.document_id)
+            if source is None:
+                continue
+            ok, _ = _integrity_check(
+                quote=chunk.text,
+                start_offset=chunk.start_offset,
+                end_offset=chunk.end_offset,
+                span_hash=chunk.content_hash,
+                content=source.content,
+                content_hash=source.content_hash,
+            )
+            if ok:
+                supporting_quotes.append(chunk.text)
+        if not supporting_quotes:
+            return False
+        quote = "\n".join(supporting_quotes)
+        if claim.value:
+            if not _quote_contains_value(quote, claim.value, claim.unit):
+                return False
+            if not claim.statement and not claim.metric_id:
+                return True
+            statement_ok = (
+                _normalize_ws(claim.statement) in _normalize_ws(quote)
+                if claim.statement
+                else False
+            )
+            metric_ok = bool(claim.metric_id) and claim.metric_id in quote
+            return statement_ok or metric_ok
+        return _normalize_ws(claim.statement) in _normalize_ws(quote)
 
     def _has_objective_support(self, chain: ClaimChain) -> bool:
         claim = chain.claim
