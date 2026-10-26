@@ -47,3 +47,18 @@ Note: the venv editable install pointed at the pre-rename path
 3. Execute the pre-registered ablations on a dev split.
 4. Request an explicit cost gate for a budgeted live run and semantic Judge.
 5. Install browser automation and capture the demo screenshots/E2E.
+
+## Stop condition (2026-10-26)
+
+Stopped with M0–M4 verified and M5 partial because the remaining work requires
+external prerequisites, not more code:
+
+- strategy D quality, live end-to-end evaluation, and a semantic Judge require a
+  fresh explicit paid-provider cost gate (currently forbidden);
+- a 40–60 task independent holdout requires curating/locking new real tasks and
+  expected evidence, which is not authorized by the current corpus;
+- human rubric adjudication and browser automation are not installed/authorized.
+
+Safe offline work completed instead: A/B/C aggregation and the deterministic
+verifier ablation. `.claude/` is intentionally left untracked (local harness
+configuration).
