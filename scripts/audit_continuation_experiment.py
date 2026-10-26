@@ -54,10 +54,17 @@ def audit_batch(batch_root: Path) -> dict[str, Any]:
     planned_set = set(planned)
     actual_set = {str(row.get("run_id")) for row in rows}
     missing = sorted(planned_set - actual_set)
-    resource_db = Path(batch_manifest.get("resource_db", ""))
-    if not resource_db.is_absolute():
-        resource_db = (Path.cwd() / resource_db).resolve()
-    resource = _audit_resource_db(resource_db)
+    recorded_resource_db = Path(batch_manifest.get("resource_db", ""))
+    resource_db, resource_path_source = _resolve_recorded_path(
+        recorded_resource_db,
+        search_dir=batch_root.parent,
+        repo_root=batch_root.parents[3],
+    )
+    resource = _audit_resource_db(
+        resource_db,
+        recorded_path=recorded_resource_db,
+        path_source=resource_path_source,
+    )
     failed_rows = [
         {
             "run_id": row.get("run_id"),
@@ -89,9 +96,54 @@ def audit_batch(batch_root: Path) -> dict[str, Any]:
     }
 
 
-def _audit_resource_db(path: Path) -> dict[str, Any]:
+def _resolve_recorded_path(
+    recorded: Path,
+    *,
+    search_dir: Path,
+    repo_root: Path,
+) -> tuple[Path, str]:
+    """Resolve a path stored in a frozen manifest against the current checkout.
+
+    Committed experiment manifests record absolute paths from the machine that
+    produced them. When the repository is relocated or renamed those absolute
+    paths no longer exist even though the artifact is present. Resolve in order:
+    as recorded, relative to the current checkout, then by matching the
+    ``experiments/...`` suffix or the bare file name inside the current runs
+    directory. The returned source label keeps the audit honest about which
+    path was used.
+    """
+    recorded = Path(recorded)
+    if recorded.is_file():
+        return recorded.resolve(), "recorded"
+    if not recorded.is_absolute():
+        candidate = (Path.cwd() / recorded).resolve()
+        if candidate.is_file():
+            return candidate, "relative_to_cwd"
+    parts = recorded.parts
+    for index, part in enumerate(parts):
+        if part.lower() == "experiments":
+            candidate = (repo_root / Path(*parts[index:])).resolve()
+            if candidate.is_file():
+                return candidate, "relocated_repo_relative"
+    candidate = (search_dir / recorded.name).resolve()
+    if candidate.is_file():
+        return candidate, "relocated_by_name"
+    return recorded, "missing"
+
+
+def _audit_resource_db(
+    path: Path,
+    *,
+    recorded_path: Path | None = None,
+    path_source: str = "recorded",
+) -> dict[str, Any]:
     if not path.is_file():
-        return {"status": "MISSING", "path": str(path)}
+        return {
+            "status": "MISSING",
+            "path": str(path),
+            "recorded_path": str(recorded_path) if recorded_path is not None else str(path),
+            "path_source": "missing",
+        }
     connection = sqlite3.connect(path)
     try:
         rows = connection.execute(
@@ -108,9 +160,10 @@ def _audit_resource_db(path: Path) -> dict[str, Any]:
         for status, count, units in rows
     }
     active = int(by_status.get("reserved", {}).get("leases", 0))
-    return {
+    result = {
         "status": "CLOSED" if active == 0 else "ACTIVE_LEASES",
         "path": str(path),
+        "path_source": path_source,
         "by_status": by_status,
         "active_leases": active,
         "limits": {
@@ -121,6 +174,9 @@ def _audit_resource_db(path: Path) -> dict[str, Any]:
             for provider, model, kind, capacity_units, billing_class in limits
         },
     }
+    if recorded_path is not None and Path(recorded_path) != path:
+        result["recorded_path"] = str(recorded_path)
+    return result
 
 
 def main() -> int:
