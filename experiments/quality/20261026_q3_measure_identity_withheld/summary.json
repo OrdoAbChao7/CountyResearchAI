@@ -1,0 +1,60 @@
+{
+  "generated_at": "2026-10-26T11:30:39.005370+00:00",
+  "evidence_kind": "OFFLINE_WITHHELD_REVIEW",
+  "provider_calls": 0,
+  "runs": 18,
+  "withheld_needs_review": 203,
+  "categories": {
+    "different_measure_grouped_conflict": 23,
+    "same_measure_value_conflict": 180
+  },
+  "conflict_count_distribution": {
+    "1": 49,
+    "2": 12,
+    "4": 4,
+    "5": 6,
+    "19": 19,
+    "34": 35,
+    "56": 1,
+    "76": 77
+  },
+  "by_mode": {
+    "long-history": {
+      "different_measure_grouped_conflict": 4
+    },
+    "rise-fall": {
+      "same_measure_value_conflict": 123
+    },
+    "snapshot": {
+      "same_measure_value_conflict": 57,
+      "different_measure_grouped_conflict": 19
+    }
+  },
+  "by_region": {
+    "临泽县": {
+      "different_measure_grouped_conflict": 2,
+      "same_measure_value_conflict": 2
+    },
+    "于都县": {
+      "different_measure_grouped_conflict": 17,
+      "same_measure_value_conflict": 40
+    },
+    "德清县": {
+      "different_measure_grouped_conflict": 4,
+      "same_measure_value_conflict": 115
+    },
+    "白山市": {
+      "same_measure_value_conflict": 17
+    },
+    "长汀县": {
+      "same_measure_value_conflict": 6
+    }
+  },
+  "supported_by_metric_only": 0,
+  "supported_sample_size": 0,
+  "notes": [
+    "different_measure_grouped_conflict means the conflicting claims share region/metric/period/scope/caliber identity but state different measures; this is a coarse-identity grouping problem, not proof of a false rejection in every case.",
+    "supported_by_metric_only lists SUPPORTED claims whose exact statement was not found in the quote (metric-only support); these are candidates for false support, not confirmed errors.",
+    "No human labels or semantic judge were used."
+  ]
+}

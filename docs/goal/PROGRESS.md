@@ -191,11 +191,11 @@ Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
 - Added `scripts/diagnose_quality_funnel.py`: 90 GT facts over 18 archived C
   runs → 21 retrieved (23.3%), 15 extracted, 2 supported, 4 reported, 0
   end-to-end. Long-history retrieval 0/30. Outputs under
-  `experiments/quality/20261026_q1_funnel/`.
+  `experiments/quality/20261026_q1_funnel_baseline/`.
 - Added `scripts/review_withheld_claims.py`: reproduced 872 withheld claims;
   351 different-measure grouped conflicts, 521 same-string measure conflicts;
   0 supported claims with statement absent from quote (30-sample review).
-  Outputs under `experiments/quality/20261026_q1_withheld_review/`.
+  Outputs under `experiments/quality/20261026_q1_withheld_review_baseline/`.
 - Wrote `docs/goal/QUALITY_REPORT.md`, `TASKS.md`, `COST_GATE.md`. Ranked defects:
   retrieval coverage, coarse measure identity, decontextualized extraction,
   verified findings disconnected from answer, extraction misses, unlabelled

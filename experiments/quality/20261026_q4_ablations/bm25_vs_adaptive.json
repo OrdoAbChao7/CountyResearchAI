@@ -1,0 +1,32 @@
+{
+  "offline_only": true,
+  "cases": [
+    {
+      "mode": "snapshot",
+      "region": "临泽县",
+      "archive": "experiments\\independent_comparison\\runs\\continuation_matched_budget_deepseek_flash_20261019\\continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C\\data\\raw\\临泽县\\20261018\\raw_docs.json",
+      "documents": 2,
+      "slots": 6,
+      "legacy_top3_metric_recall": 0.1944,
+      "adaptive_top3_metric_recall": 0.1944
+    },
+    {
+      "mode": "rise-fall",
+      "region": "临泽县",
+      "archive": "experiments\\independent_comparison\\runs\\continuation_matched_budget_deepseek_flash_20261019\\continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_C\\data\\raw\\临泽县\\20261018\\raw_docs.json",
+      "documents": 2,
+      "slots": 5,
+      "legacy_top3_metric_recall": 0.2167,
+      "adaptive_top3_metric_recall": 0.2167
+    },
+    {
+      "mode": "long-history",
+      "region": "于都县",
+      "archive": "experiments\\independent_comparison\\runs\\continuation_matched_budget_deepseek_flash_20261019\\continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_C\\data\\raw\\于都县\\20261018\\raw_docs.json",
+      "documents": 2,
+      "slots": 6,
+      "legacy_top3_metric_recall": 0.4167,
+      "adaptive_top3_metric_recall": 0.4167
+    }
+  ]
+}

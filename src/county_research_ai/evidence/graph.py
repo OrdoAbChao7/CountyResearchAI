@@ -37,6 +37,7 @@ from ..domain.research_contracts import (
     SourceDocument,
 )
 from .ledger import EvidenceLedger
+from .measure import derive_measure_key
 
 SCHEMA_VERSION = 1
 DETERMINISTIC_VERIFIER_VERSION = "deterministic_v1"
@@ -346,12 +347,19 @@ def claim_identity(claim: AtomicClaim) -> tuple[str, ...]:
     )
 
 
+def claim_measure_key(claim: AtomicClaim) -> str:
+    if claim.measure_id:
+        return claim.measure_id
+    return derive_measure_key(claim.statement, value=claim.value)
+
+
 def classify_claim_relation(
     left: AtomicClaim,
     right: AtomicClaim,
     *,
     left_observed: datetime | None = None,
     right_observed: datetime | None = None,
+    use_measure_identity: bool = True,
 ) -> ClaimRelationRecord | None:
     """Classify ``left`` relative to ``right`` using deterministic identity rules."""
     if left.claim_id == right.claim_id:
@@ -364,6 +372,20 @@ def classify_claim_relation(
             to_claim_id=right.claim_id,
             relation=ClaimRelationKind.RELATED,
             rationale="shared_metric_different_region",
+        )
+    left_measure = claim_measure_key(left)
+    right_measure = claim_measure_key(right)
+    if (
+        use_measure_identity
+        and left_measure
+        and right_measure
+        and left_measure != right_measure
+    ):
+        return ClaimRelationRecord(
+            from_claim_id=left.claim_id,
+            to_claim_id=right.claim_id,
+            relation=ClaimRelationKind.RELATED,
+            rationale=f"different_measure:{left_measure}|{right_measure}",
         )
     if left.period != right.period:
         return ClaimRelationRecord(
@@ -524,6 +546,7 @@ class EvidenceGraphStore:
                     statement TEXT NOT NULL DEFAULT '',
                     subject TEXT NOT NULL DEFAULT '',
                     predicate TEXT NOT NULL DEFAULT '',
+                    measure_id TEXT NOT NULL DEFAULT '',
                     value TEXT NOT NULL DEFAULT '',
                     unit TEXT NOT NULL DEFAULT '',
                     normalized_unit TEXT NOT NULL DEFAULT '',
@@ -616,6 +639,7 @@ class EvidenceGraphStore:
                 )
                 connection.execute("PRAGMA foreign_keys = ON")
             for table, column, ddl in (
+                ("claims", "measure_id", "TEXT NOT NULL DEFAULT ''"),
                 ("verification_records", "run_id", "TEXT NOT NULL DEFAULT ''"),
                 ("verification_records", "reason", "TEXT NOT NULL DEFAULT ''"),
             ):
@@ -637,6 +661,7 @@ class EvidenceGraphStore:
         *,
         run_id: str = "",
         window: tuple[date | None, date | None] | None = None,
+        use_measure_identity: bool = True,
     ) -> dict[str, int]:
         """Persist a ledger, classify claim relations, and record verification."""
         now = _utcnow().isoformat()
@@ -671,7 +696,14 @@ class EvidenceGraphStore:
                             now,
                         ),
                     )
-            self._record_relations(connection, ledger, observed, now, run_id=run_id)
+            self._record_relations(
+                connection,
+                ledger,
+                observed,
+                now,
+                run_id=run_id,
+                use_measure_identity=use_measure_identity,
+            )
 
         counts = {
             "snapshots": len(ledger.sources),
@@ -776,14 +808,15 @@ class EvidenceGraphStore:
         normalized_unit = self._normalized_unit(claim)
         connection.execute(
             "INSERT INTO claims"
-            " (claim_id, statement, subject, predicate, value, unit, normalized_unit,"
-            " region_id, scope, valid_time, observed_time, methodology, qualifier,"
-            " verification_status, verification_reason, source_ids_json,"
+            " (claim_id, statement, subject, predicate, measure_id, value, unit,"
+            " normalized_unit, region_id, scope, valid_time, observed_time, methodology,"
+            " qualifier, verification_status, verification_reason, source_ids_json,"
             " evidence_chunk_ids_json, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             " ON CONFLICT(claim_id) DO UPDATE SET"
             " statement=excluded.statement, subject=excluded.subject,"
-            " predicate=excluded.predicate, value=excluded.value, unit=excluded.unit,"
+            " predicate=excluded.predicate, measure_id=excluded.measure_id,"
+            " value=excluded.value, unit=excluded.unit,"
             " normalized_unit=excluded.normalized_unit,"
             " region_id=excluded.region_id, scope=excluded.scope,"
             " valid_time=excluded.valid_time, observed_time=excluded.observed_time,"
@@ -797,6 +830,7 @@ class EvidenceGraphStore:
                 claim.statement,
                 claim.region_id,
                 claim.metric_id,
+                claim.measure_id,
                 claim.value,
                 claim.unit,
                 normalized_unit,
@@ -845,6 +879,7 @@ class EvidenceGraphStore:
         now: str,
         *,
         run_id: str = "",
+        use_measure_identity: bool = True,
     ) -> None:
         claims = sorted(ledger.claims.values(), key=lambda item: item.claim_id)
         for index, left in enumerate(claims):
@@ -854,6 +889,7 @@ class EvidenceGraphStore:
                     right,
                     left_observed=observed.get(left.claim_id),
                     right_observed=observed.get(right.claim_id),
+                    use_measure_identity=use_measure_identity,
                 )
                 if relation is None:
                     continue
@@ -927,6 +963,7 @@ class EvidenceGraphStore:
             statement=row["statement"],
             region_id=row["region_id"],
             metric_id=row["predicate"],
+            measure_id=row["measure_id"],
             value=row["value"],
             unit=row["unit"],
             period=row["valid_time"],
@@ -990,6 +1027,18 @@ class EvidenceGraphStore:
                 (run_id,),
             ).fetchall()
         return [self._snapshot_from_row(row) for row in rows]
+
+    def list_run_claims(self, run_id: str) -> list[AtomicClaim]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT c.* FROM claims c JOIN ("
+                "  SELECT claim_id, MAX(created_at) AS latest"
+                "  FROM verification_records WHERE run_id = ? GROUP BY claim_id"
+                ") latest ON latest.claim_id = c.claim_id"
+                " ORDER BY c.claim_id",
+                (run_id,),
+            ).fetchall()
+        return [self._claim_from_row(row) for row in rows]
 
     @staticmethod
     def _snapshot_from_row(row: sqlite3.Row) -> SourceSnapshotRecord:

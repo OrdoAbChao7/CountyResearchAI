@@ -71,10 +71,10 @@ Plan and acceptance: `docs/goal/TASKS.md`; results: `docs/goal/QUALITY_REPORT.md
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | Q0 baseline | PASS | 675 Python tests; scoped ruff clean; frontend checks; `experiments/quality/20261026_baseline/` |
-| Q1 failure attribution | PASS | 90 GT facts: 21 retrieved, 15 extracted, 2 supported, 4 reported, 0 end-to-end; `experiments/quality/20261026_q1_funnel/`; 872 withheld review |
-| Q2 dataset | IN_PROGRESS | next |
-| Q3 Strategy D | NOT_STARTED | evidence-driven order: conflict identity → answer integration → retrieval |
-| Q4 A/B/C/D + ablations | NOT_STARTED | offline first |
+| Q1 failure attribution | PASS | 90 GT facts: 21 retrieved, 15 extracted, 2 supported, 4 reported, 0 end-to-end; `experiments/quality/20261026_q1_funnel_baseline/`; 872 withheld review |
+| Q2 dataset | PARTIAL | 2 blind tasks / 10 exact-quote facts validated; disjoint from dev; 40–60 gap documented in `docs/goal/DATASET.md` |
+| Q3 Strategy D | PASS (dev) | measure identity + period inference + verified extractive answer; withheld 872→203; supported 2→15; dev E2E 3→15 of 90 |
+| Q4 A/B/C/D + ablations | PARTIAL | dev A/B/C/D + no-verifier + BM25/adaptive + old/new grouping; blind pilot 2 tasks / 10 facts (D 4/10, A/B 0/4, C NOT_RUN); live NOT_RUN |
 | Q5 reliability | NOT_STARTED | lease/fencing or documented guard; Playwright or NOT_RUN |
 | Q6 final verification | NOT_STARTED | no paid calls; live remains BLOCKED_EXTERNAL |
 

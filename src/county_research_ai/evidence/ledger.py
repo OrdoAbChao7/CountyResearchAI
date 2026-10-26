@@ -12,6 +12,7 @@ from ..domain.research_contracts import (
     SourceDocument,
 )
 from ..models import ProcessedData
+from .measure import derive_measure_key, infer_period
 from .source_contract import serialize_source_documents
 from .store import EvidenceStore
 
@@ -376,6 +377,23 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
                 or (item.claim and item.claim in chunk.text)
             ]
         value_match = re.search(r"(\d+(?:\.\d+)?)(\s*(?:亿元|万元|万人|亩|%))", item.claim)
+        value = value_match.group(1) if value_match else ""
+        unit = value_match.group(2).strip() if value_match else ""
+        chunk_text = "\n".join(
+            ledger.chunks[chunk_id].text
+            for chunk_id in evidence_chunk_ids
+            if chunk_id in ledger.chunks
+        )
+        if not chunk_text and source is not None:
+            chunk_text = source.content
+        period = item.year or infer_period(
+            item.claim,
+            chunk_text=chunk_text,
+            value=value,
+            title=source.source_title if source is not None else "",
+            published_at=source.publish_date if source is not None else None,
+            content_prefix=source.content if source is not None else "",
+        )
         source_ids = [source.doc_id] if source is not None else []
         for repost_url in item.corroborating_sources:
             repost = source_by_url.get(repost_url)
@@ -386,9 +404,12 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
             statement=item.claim,
             region_id=processed.county.name,
             metric_id=item.indicator_caliber or item.topic,
-            value=value_match.group(1) if value_match else "",
-            unit=value_match.group(2).strip() if value_match else "",
-            period=item.year or "",
+            measure_id=derive_measure_key(
+                item.claim, chunk_text=chunk_text, value=value
+            ),
+            value=value,
+            unit=unit,
+            period=period,
             administrative_scope=item.administrative_scope,
             statistical_caliber=item.indicator_caliber,
             source_ids=source_ids,

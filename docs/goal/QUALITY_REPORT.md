@@ -21,7 +21,7 @@ M0–M4 code paths were not rewritten; `.claude/` was left untouched.
 
 Inputs: 18 archived C runs (6 regions × 3 modes), 90 frozen ground-truth facts,
 archived raw documents and final reports. Output:
-`experiments/quality/20261026_q1_funnel/`.
+`experiments/quality/20261026_q1_funnel_baseline/`.
 
 | Stage | Count | Rate |
 | --- | ---: | ---: |
@@ -73,7 +73,7 @@ success 0.
 
 ### Withheld review
 
-`experiments/quality/20261026_q1_withheld_review/summary.json`:
+`experiments/quality/20261026_q1_withheld_review_baseline/summary.json`:
 - withheld `NEEDS_REVIEW`: 872
 - different-measure grouped conflicts: 351
 - same-string measure conflicts: 521

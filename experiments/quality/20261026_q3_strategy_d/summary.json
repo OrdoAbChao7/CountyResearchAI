@@ -1,0 +1,503 @@
+{
+  "generated_at": "2026-10-26T11:53:07.687680+00:00",
+  "evidence_kind": "OFFLINE_STRATEGY_D",
+  "provider_calls": 0,
+  "ground_truth_sha256": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+  "conditions": {
+    "C_legacy_report": "legacy C report and legacy claim status",
+    "D_old_grouping": "verified extractive answer, measure identity disabled",
+    "D_measure_aware": "verified extractive answer, context-aware measure identity",
+    "D_no_verifier": "extractive answer over all extracted claims (precision-risk upper bound)"
+  },
+  "overall": {
+    "claims": 90,
+    "retrieved": 21,
+    "retrieval_rate": 0.2333,
+    "c_legacy_verified": 8,
+    "c_answered": 4,
+    "c_e2e": 0.0333,
+    "d_old_supported": 2,
+    "d_old_answered": 2,
+    "d_old_e2e": 0.0222,
+    "d_new_supported": 15,
+    "d_new_answered": 16,
+    "d_new_e2e": 0.1667,
+    "d_new_funnel": {
+      "not_extracted": 6,
+      "not_retrieved": 69,
+      "success": 15
+    },
+    "nv_answered": 16,
+    "nv_answer_rate": 0.1778,
+    "nv_unsupported_included": 655
+  },
+  "by_mode": {
+    "long-history": {
+      "claims": 30,
+      "retrieved": 0,
+      "retrieval_rate": 0.0,
+      "c_legacy_verified": 0,
+      "c_answered": 0,
+      "c_e2e": 0.0,
+      "d_old_supported": 0,
+      "d_old_answered": 0,
+      "d_old_e2e": 0.0,
+      "d_new_supported": 0,
+      "d_new_answered": 0,
+      "d_new_e2e": 0.0,
+      "d_new_funnel": {
+        "not_retrieved": 30
+      },
+      "nv_answered": 0,
+      "nv_answer_rate": 0.0,
+      "nv_unsupported_included": 135
+    },
+    "rise-fall": {
+      "claims": 30,
+      "retrieved": 5,
+      "retrieval_rate": 0.1667,
+      "c_legacy_verified": 3,
+      "c_answered": 2,
+      "c_e2e": 0.0667,
+      "d_old_supported": 0,
+      "d_old_answered": 0,
+      "d_old_e2e": 0.0,
+      "d_new_supported": 3,
+      "d_new_answered": 3,
+      "d_new_e2e": 0.1,
+      "d_new_funnel": {
+        "not_extracted": 2,
+        "not_retrieved": 25,
+        "success": 3
+      },
+      "nv_answered": 3,
+      "nv_answer_rate": 0.1,
+      "nv_unsupported_included": 187
+    },
+    "snapshot": {
+      "claims": 30,
+      "retrieved": 16,
+      "retrieval_rate": 0.5333,
+      "c_legacy_verified": 5,
+      "c_answered": 2,
+      "c_e2e": 0.0333,
+      "d_old_supported": 2,
+      "d_old_answered": 2,
+      "d_old_e2e": 0.0667,
+      "d_new_supported": 12,
+      "d_new_answered": 13,
+      "d_new_e2e": 0.4,
+      "d_new_funnel": {
+        "not_extracted": 4,
+        "not_retrieved": 14,
+        "success": 12
+      },
+      "nv_answered": 13,
+      "nv_answer_rate": 0.4333,
+      "nv_unsupported_included": 333
+    }
+  },
+  "withheld_by_mode": {
+    "long-history": {
+      "INSUFFICIENT": 12,
+      "SUPPORTED": 5
+    },
+    "rise-fall": {
+      "NOT_COMPARABLE": 15
+    },
+    "snapshot": {
+      "SUPPORTED": 128,
+      "NEEDS_REVIEW": 4,
+      "INSUFFICIENT": 1
+    }
+  },
+  "cases": [
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_long-history_r1_C",
+      "region": "德清县",
+      "mode": "long-history",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 101,
+      "d_new_supported_total": 0,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "NOT_COMPARABLE": 101
+      },
+      "d_old_status_counts": {
+        "NOT_COMPARABLE": 101
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_rise-fall_r1_C",
+      "region": "德清县",
+      "mode": "rise-fall",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 153,
+      "d_new_supported_total": 37,
+      "d_old_supported_total": 11,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 1,
+        "NEEDS_REVIEW": 115,
+        "SUPPORTED": 37
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 1,
+        "NEEDS_REVIEW": 141,
+        "SUPPORTED": 11
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+      "region": "德清县",
+      "mode": "snapshot",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 231,
+      "d_new_supported_total": 83,
+      "d_old_supported_total": 6,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 117,
+        "SUPPORTED": 83
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 117,
+        "NEEDS_REVIEW": 77,
+        "SUPPORTED": 6
+      },
+      "funnel": {
+        "success": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_long-history_r1_C",
+      "region": "长汀县",
+      "mode": "long-history",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 3,
+      "d_new_supported_total": 0,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 3
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 3
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_rise-fall_r1_C",
+      "region": "长汀县",
+      "mode": "rise-fall",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 33,
+      "d_new_supported_total": 2,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "NOT_COMPARABLE": 31,
+        "SUPPORTED": 2
+      },
+      "d_old_status_counts": {
+        "NEEDS_REVIEW": 2,
+        "NOT_COMPARABLE": 31
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_C",
+      "region": "长汀县",
+      "mode": "snapshot",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 178,
+      "d_new_supported_total": 172,
+      "d_old_supported_total": 26,
+      "d_new_status_counts": {
+        "NEEDS_REVIEW": 6,
+        "SUPPORTED": 172
+      },
+      "d_old_status_counts": {
+        "NEEDS_REVIEW": 152,
+        "SUPPORTED": 26
+      },
+      "funnel": {
+        "not_retrieved": 4,
+        "success": 1
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_long-history_r1_C",
+      "region": "于都县",
+      "mode": "long-history",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 6,
+      "d_new_supported_total": 2,
+      "d_old_supported_total": 2,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 4,
+        "SUPPORTED": 2
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 4,
+        "SUPPORTED": 2
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_C",
+      "region": "于都县",
+      "mode": "rise-fall",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 2,
+      "d_new_supported_total": 0,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "NOT_COMPARABLE": 2
+      },
+      "d_old_status_counts": {
+        "NOT_COMPARABLE": 2
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_C",
+      "region": "于都县",
+      "mode": "snapshot",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 91,
+      "d_new_supported_total": 33,
+      "d_old_supported_total": 10,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 1,
+        "NEEDS_REVIEW": 57,
+        "SUPPORTED": 33
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 1,
+        "NEEDS_REVIEW": 80,
+        "SUPPORTED": 10
+      },
+      "funnel": {
+        "not_retrieved": 4,
+        "success": 1
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_long-history_r1_C",
+      "region": "攀枝花市",
+      "mode": "long-history",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 11,
+      "d_new_supported_total": 5,
+      "d_old_supported_total": 5,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 6,
+        "SUPPORTED": 5
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 6,
+        "SUPPORTED": 5
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_rise-fall_r1_C",
+      "region": "攀枝花市",
+      "mode": "rise-fall",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 16,
+      "d_new_supported_total": 7,
+      "d_old_supported_total": 7,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 9,
+        "SUPPORTED": 7
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 9,
+        "SUPPORTED": 7
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_04_snapshot_r1_C",
+      "region": "攀枝花市",
+      "mode": "snapshot",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 43,
+      "d_new_supported_total": 0,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "NOT_COMPARABLE": 43
+      },
+      "d_old_status_counts": {
+        "NOT_COMPARABLE": 43
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_long-history_r1_C",
+      "region": "白山市",
+      "mode": "long-history",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 32,
+      "d_new_supported_total": 23,
+      "d_old_supported_total": 2,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 9,
+        "SUPPORTED": 23
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 9,
+        "NEEDS_REVIEW": 21,
+        "SUPPORTED": 2
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+      "region": "白山市",
+      "mode": "rise-fall",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 129,
+      "d_new_supported_total": 115,
+      "d_old_supported_total": 13,
+      "d_new_status_counts": {
+        "NEEDS_REVIEW": 8,
+        "NOT_COMPARABLE": 6,
+        "SUPPORTED": 115
+      },
+      "d_old_status_counts": {
+        "NEEDS_REVIEW": 110,
+        "NOT_COMPARABLE": 6,
+        "SUPPORTED": 13
+      },
+      "funnel": {
+        "not_extracted": 2,
+        "success": 3
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_C",
+      "region": "白山市",
+      "mode": "snapshot",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 81,
+      "d_new_supported_total": 0,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "NOT_COMPARABLE": 81
+      },
+      "d_old_status_counts": {
+        "NOT_COMPARABLE": 81
+      },
+      "funnel": {
+        "not_extracted": 4,
+        "not_retrieved": 1
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_long-history_r1_C",
+      "region": "临泽县",
+      "mode": "long-history",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 17,
+      "d_new_supported_total": 5,
+      "d_old_supported_total": 3,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 12,
+        "SUPPORTED": 5
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 12,
+        "NEEDS_REVIEW": 2,
+        "SUPPORTED": 3
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_rise-fall_r1_C",
+      "region": "临泽县",
+      "mode": "rise-fall",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 15,
+      "d_new_supported_total": 0,
+      "d_old_supported_total": 0,
+      "d_new_status_counts": {
+        "NOT_COMPARABLE": 15
+      },
+      "d_old_status_counts": {
+        "NOT_COMPARABLE": 15
+      },
+      "funnel": {
+        "not_retrieved": 5
+      }
+    },
+    {
+      "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+      "region": "临泽县",
+      "mode": "snapshot",
+      "claims": 5,
+      "documents": 2,
+      "extracted_claims": 133,
+      "d_new_supported_total": 128,
+      "d_old_supported_total": 19,
+      "d_new_status_counts": {
+        "INSUFFICIENT": 1,
+        "NEEDS_REVIEW": 4,
+        "SUPPORTED": 128
+      },
+      "d_old_status_counts": {
+        "INSUFFICIENT": 1,
+        "NEEDS_REVIEW": 113,
+        "SUPPORTED": 19
+      },
+      "funnel": {
+        "success": 5
+      }
+    }
+  ],
+  "caveats": [
+    "D answers are deterministic extracts, not fluent reports; this measures fact coverage, not prose quality.",
+    "Retrieval is fixed to the archived documents; D cannot recover facts the collector never fetched.",
+    "Dev replay only; the blind pilot was not read and cannot be used for tuning.",
+    "No provider or semantic judge was used."
+  ]
+}

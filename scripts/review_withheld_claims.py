@@ -32,7 +32,7 @@ RUNS_ROOT = Path(
     "experiments/independent_comparison/runs/"
     "continuation_matched_budget_deepseek_flash_20261019"
 )
-OUTPUT = Path("experiments/quality/20261026_q1_withheld_review")
+OUTPUT = Path("experiments/quality/20261026_q3_measure_identity_withheld")
 _WS = re.compile(r"\s+")
 _NON_MEASURE = re.compile(r"[\d.,%‰（）()亿元万元万亿亩人年增减为是的了]")
 

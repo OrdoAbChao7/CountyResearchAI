@@ -44,7 +44,7 @@ RUNS_ROOT = Path(
     "experiments/independent_comparison/runs/"
     "continuation_matched_budget_deepseek_flash_20261019"
 )
-OUTPUT = Path("experiments/quality/20261026_q1_funnel")
+OUTPUT = Path("experiments/quality/20261026_q3_measure_identity_funnel")
 
 _NUMBER_RE = re.compile(
     r"(?<![\d.])(\d[\d,]*(?:\.\d+)?)\s*(亿元|万元|亿|万|%|‰|亩|万人|人|万吨|万)?"
