@@ -181,3 +181,22 @@ Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
   old rows with `run_id=''`. Regression:
   `test_old_claim_relations_schema_is_rebuilt_with_run_id`.
 - Full suite: `675 passed`.
+
+## 2026-10-26 — Quality Recovery Q0/Q1
+
+- Created `codex/quality-recovery` and tag `checkpoint-m4-pass-20261026`;
+  `.claude/` untouched.
+- Q0 reproduced: 675 Python tests, scoped ruff clean, frontend typecheck/4
+  tests/build pass. Saved under `experiments/quality/20261026_baseline/`.
+- Added `scripts/diagnose_quality_funnel.py`: 90 GT facts over 18 archived C
+  runs → 21 retrieved (23.3%), 15 extracted, 2 supported, 4 reported, 0
+  end-to-end. Long-history retrieval 0/30. Outputs under
+  `experiments/quality/20261026_q1_funnel/`.
+- Added `scripts/review_withheld_claims.py`: reproduced 872 withheld claims;
+  351 different-measure grouped conflicts, 521 same-string measure conflicts;
+  0 supported claims with statement absent from quote (30-sample review).
+  Outputs under `experiments/quality/20261026_q1_withheld_review/`.
+- Wrote `docs/goal/QUALITY_REPORT.md`, `TASKS.md`, `COST_GATE.md`. Ranked defects:
+  retrieval coverage, coarse measure identity, decontextualized extraction,
+  verified findings disconnected from answer, extraction misses, unlabelled
+  false-support audit.

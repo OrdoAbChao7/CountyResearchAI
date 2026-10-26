@@ -62,3 +62,24 @@ external prerequisites, not more code:
 Safe offline work completed instead: A/B/C aggregation and the deterministic
 verifier ablation. `.claude/` is intentionally left untracked (local harness
 configuration).
+
+## Quality Recovery goal (2026-10-26)
+
+Branch: `codex/quality-recovery`; checkpoint tag `checkpoint-m4-pass-20261026`.
+Plan and acceptance: `docs/goal/TASKS.md`; results: `docs/goal/QUALITY_REPORT.md`.
+
+| Stage | Status | Evidence |
+| --- | --- | --- |
+| Q0 baseline | PASS | 675 Python tests; scoped ruff clean; frontend checks; `experiments/quality/20261026_baseline/` |
+| Q1 failure attribution | PASS | 90 GT facts: 21 retrieved, 15 extracted, 2 supported, 4 reported, 0 end-to-end; `experiments/quality/20261026_q1_funnel/`; 872 withheld review |
+| Q2 dataset | IN_PROGRESS | next |
+| Q3 Strategy D | NOT_STARTED | evidence-driven order: conflict identity → answer integration → retrieval |
+| Q4 A/B/C/D + ablations | NOT_STARTED | offline first |
+| Q5 reliability | NOT_STARTED | lease/fencing or documented guard; Playwright or NOT_RUN |
+| Q6 final verification | NOT_STARTED | no paid calls; live remains BLOCKED_EXTERNAL |
+
+Largest measured bottleneck: retrieval coverage (69/90 facts absent from C's
+archived docs; long-history 0/30). Largest verifier-side issue: coarse,
+decontextualized claim identity (872/1,275 withheld; 351 different-measure-only
+conflicts). Verified findings are not used in the final answer (2 supported,
+0 reported).

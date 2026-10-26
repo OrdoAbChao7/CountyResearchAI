@@ -1,0 +1,1128 @@
+I001 [*] Import block is un-sorted or un-formatted
+ --> scripts\_verify_imports.py:1:1
+  |
+1 | import sys
+  | ^^^^^^^^^^
+2 | missing = []
+  |
+help: Organize imports
+  |
+1 | import sys
+2 +
+3 | missing = []
+  |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:9:55
+   |
+ 7 |     print(f'[OK] __init__ version={__version__}')
+ 8 | except Exception as e:
+ 9 |     print(f'[FAIL] __init__: {type(e).__name__}: {e}'); missing.append('__init__')
+   |                                                       ^
+10 |
+11 | try:
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_imports.py:12:5
+   |
+11 | try:
+12 |     from county_research_ai.exceptions import CountyResearchAIError, ConfigError, SearchError
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     e = ConfigError('test', context={'a':1})
+14 |     print(f'[OK] exceptions: str={e}')
+   |
+help: Organize imports
+   |
+11 | try:
+   -     from county_research_ai.exceptions import CountyResearchAIError, ConfigError, SearchError
+12 +     from county_research_ai.exceptions import ConfigError, CountyResearchAIError, SearchError
+13 |     e = ConfigError('test', context={'a':1})
+   |
+
+F401 [*] `county_research_ai.exceptions.CountyResearchAIError` imported but unused
+  --> scripts\_verify_imports.py:12:47
+   |
+11 | try:
+12 |     from county_research_ai.exceptions import CountyResearchAIError, ConfigError, SearchError
+   |                                               ^^^^^^^^^^^^^^^^^^^^^
+13 |     e = ConfigError('test', context={'a':1})
+14 |     print(f'[OK] exceptions: str={e}')
+   |
+help: Remove unused import
+   |
+11 | try:
+   -     from county_research_ai.exceptions import CountyResearchAIError, ConfigError, SearchError
+12 +     from county_research_ai.exceptions import ConfigError
+13 |     e = ConfigError('test', context={'a':1})
+   |
+
+F401 [*] `county_research_ai.exceptions.SearchError` imported but unused
+  --> scripts\_verify_imports.py:12:83
+   |
+11 | try:
+12 |     from county_research_ai.exceptions import CountyResearchAIError, ConfigError, SearchError
+   |                                                                                   ^^^^^^^^^^^
+13 |     e = ConfigError('test', context={'a':1})
+14 |     print(f'[OK] exceptions: str={e}')
+   |
+help: Remove unused import
+   |
+11 | try:
+   -     from county_research_ai.exceptions import CountyResearchAIError, ConfigError, SearchError
+12 +     from county_research_ai.exceptions import ConfigError
+13 |     e = ConfigError('test', context={'a':1})
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:16:57
+   |
+14 |     print(f'[OK] exceptions: str={e}')
+15 | except Exception as e:
+16 |     print(f'[FAIL] exceptions: {type(e).__name__}: {e}'); missing.append('exceptions')
+   |                                                         ^
+17 |
+18 | try:
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_imports.py:19:5
+   |
+18 |   try:
+19 | /     from county_research_ai.models import (
+20 | |         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+21 | |         AnalysisResult, ReportSection,
+22 | |     )
+   | |_____^
+23 |       ci = CountyInfo.from_name('安吉县')
+24 |       print(f'[OK] models: county display={ci.display()}')
+   |
+help: Organize imports
+   |
+19 |     from county_research_ai.models import (
+   -         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+   -         AnalysisResult, ReportSection,
+20 +         AnalysisResult,
+21 +         CountyInfo,
+22 +         ProcessedData,
+23 +         RawDoc,
+24 +         ReportSection,
+25 +         ResearchReport,
+26 +         ResearchRequest,
+27 |     )
+   |
+
+F401 [*] `county_research_ai.models.ResearchReport` imported but unused
+  --> scripts\_verify_imports.py:20:61
+   |
+18 | try:
+19 |     from county_research_ai.models import (
+20 |         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+   |                                                             ^^^^^^^^^^^^^^
+21 |         AnalysisResult, ReportSection,
+22 |     )
+   |
+help: Remove unused import
+   |
+19 |     from county_research_ai.models import (
+   -         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+   -         AnalysisResult, ReportSection,
+20 +         CountyInfo, RawDoc, ProcessedData, ResearchRequest,
+21 |     )
+   |
+
+F401 [*] `county_research_ai.models.AnalysisResult` imported but unused
+  --> scripts\_verify_imports.py:21:9
+   |
+19 |     from county_research_ai.models import (
+20 |         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+21 |         AnalysisResult, ReportSection,
+   |         ^^^^^^^^^^^^^^
+22 |     )
+23 |     ci = CountyInfo.from_name('安吉县')
+   |
+help: Remove unused import
+   |
+19 |     from county_research_ai.models import (
+   -         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+   -         AnalysisResult, ReportSection,
+20 +         CountyInfo, RawDoc, ProcessedData, ResearchRequest,
+21 |     )
+   |
+
+F401 [*] `county_research_ai.models.ReportSection` imported but unused
+  --> scripts\_verify_imports.py:21:25
+   |
+19 |     from county_research_ai.models import (
+20 |         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+21 |         AnalysisResult, ReportSection,
+   |                         ^^^^^^^^^^^^^
+22 |     )
+23 |     ci = CountyInfo.from_name('安吉县')
+   |
+help: Remove unused import
+   |
+19 |     from county_research_ai.models import (
+   -         CountyInfo, RawDoc, ProcessedData, ResearchRequest, ResearchReport,
+   -         AnalysisResult, ReportSection,
+20 +         CountyInfo, RawDoc, ProcessedData, ResearchRequest,
+21 |     )
+   |
+
+I001 Import block is un-sorted or un-formatted
+  --> scripts\_verify_imports.py:33:5
+   |
+31 |     print(f'[OK] ProcessedData.render_for_llm(50) len={len(text)}')
+32 | except Exception as e:
+33 |     import traceback; traceback.print_exc()
+   |     ^^^^^^^^^^^^^^^^
+34 |     print(f'[FAIL] models: {type(e).__name__}: {e}'); missing.append('models')
+   |
+help: Organize imports
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:33:21
+   |
+31 |     print(f'[OK] ProcessedData.render_for_llm(50) len={len(text)}')
+32 | except Exception as e:
+33 |     import traceback; traceback.print_exc()
+   |                     ^
+34 |     print(f'[FAIL] models: {type(e).__name__}: {e}'); missing.append('models')
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:34:53
+   |
+32 | except Exception as e:
+33 |     import traceback; traceback.print_exc()
+34 |     print(f'[FAIL] models: {type(e).__name__}: {e}'); missing.append('models')
+   |                                                     ^
+35 |
+36 | # 2. 三个 base.py
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:43:58
+   |
+41 |     print(f'[OK] search.base: abstract search={has_s}, name={has_n}')
+42 | except Exception as e:
+43 |     print(f'[FAIL] search.base: {type(e).__name__}: {e}'); missing.append('search.base')
+   |                                                          ^
+44 |
+45 | try:
+   |
+
+F401 [*] `county_research_ai.llm.base.LLMClient` imported but unused
+  --> scripts\_verify_imports.py:46:45
+   |
+45 | try:
+46 |     from county_research_ai.llm.base import LLMClient, LLMResponse
+   |                                             ^^^^^^^^^
+47 |     print(f'[OK] llm.base: LLMResponse fields={sorted(LLMResponse.model_fields.keys())}')
+48 | except Exception as e:
+   |
+help: Remove unused import: `county_research_ai.llm.base.LLMClient`
+   |
+45 | try:
+   -     from county_research_ai.llm.base import LLMClient, LLMResponse
+46 +     from county_research_ai.llm.base import LLMResponse
+47 |     print(f'[OK] llm.base: LLMResponse fields={sorted(LLMResponse.model_fields.keys())}')
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:49:55
+   |
+47 |     print(f'[OK] llm.base: LLMResponse fields={sorted(LLMResponse.model_fields.keys())}')
+48 | except Exception as e:
+49 |     print(f'[FAIL] llm.base: {type(e).__name__}: {e}'); missing.append('llm.base')
+   |                                                       ^
+50 |
+51 | try:
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:57:59
+   |
+55 |     print(f'[OK] storage.base: missing_methods={missing_methods}')
+56 | except Exception as e:
+57 |     print(f'[FAIL] storage.base: {type(e).__name__}: {e}'); missing.append('storage.base')
+   |                                                           ^
+58 |
+59 | # 3. pipeline
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_imports.py:61:5
+   |
+59 |   # 3. pipeline
+60 |   try:
+61 | /     from county_research_ai.pipeline import (
+62 | |         ResearchPipeline, create_default_pipeline,
+63 | |         MockSearchProvider, MockStorage, MockLLMClient,
+64 | |     )
+   | |_____^
+65 |       pipe = create_default_pipeline()
+66 |       print(f'[OK] pipeline: create_default_pipeline OK')
+   |
+help: Organize imports
+   |
+61 |     from county_research_ai.pipeline import (
+   -         ResearchPipeline, create_default_pipeline,
+   -         MockSearchProvider, MockStorage, MockLLMClient,
+62 +         MockLLMClient,
+63 +         MockSearchProvider,
+64 +         MockStorage,
+65 +         ResearchPipeline,
+66 +         create_default_pipeline,
+67 |     )
+   |
+
+F401 [*] `county_research_ai.pipeline.ResearchPipeline` imported but unused
+  --> scripts\_verify_imports.py:62:9
+   |
+60 | try:
+61 |     from county_research_ai.pipeline import (
+62 |         ResearchPipeline, create_default_pipeline,
+   |         ^^^^^^^^^^^^^^^^
+63 |         MockSearchProvider, MockStorage, MockLLMClient,
+64 |     )
+   |
+help: Remove unused import
+   |
+61 |     from county_research_ai.pipeline import (
+   -         ResearchPipeline, create_default_pipeline,
+   -         MockSearchProvider, MockStorage, MockLLMClient,
+62 +         create_default_pipeline,
+63 |     )
+   |
+
+F401 [*] `county_research_ai.pipeline.MockSearchProvider` imported but unused
+  --> scripts\_verify_imports.py:63:9
+   |
+61 |     from county_research_ai.pipeline import (
+62 |         ResearchPipeline, create_default_pipeline,
+63 |         MockSearchProvider, MockStorage, MockLLMClient,
+   |         ^^^^^^^^^^^^^^^^^^
+64 |     )
+65 |     pipe = create_default_pipeline()
+   |
+help: Remove unused import
+   |
+61 |     from county_research_ai.pipeline import (
+   -         ResearchPipeline, create_default_pipeline,
+   -         MockSearchProvider, MockStorage, MockLLMClient,
+62 +         create_default_pipeline,
+63 |     )
+   |
+
+F401 [*] `county_research_ai.pipeline.MockStorage` imported but unused
+  --> scripts\_verify_imports.py:63:29
+   |
+61 |     from county_research_ai.pipeline import (
+62 |         ResearchPipeline, create_default_pipeline,
+63 |         MockSearchProvider, MockStorage, MockLLMClient,
+   |                             ^^^^^^^^^^^
+64 |     )
+65 |     pipe = create_default_pipeline()
+   |
+help: Remove unused import
+   |
+61 |     from county_research_ai.pipeline import (
+   -         ResearchPipeline, create_default_pipeline,
+   -         MockSearchProvider, MockStorage, MockLLMClient,
+62 +         create_default_pipeline,
+63 |     )
+   |
+
+F401 [*] `county_research_ai.pipeline.MockLLMClient` imported but unused
+  --> scripts\_verify_imports.py:63:42
+   |
+61 |     from county_research_ai.pipeline import (
+62 |         ResearchPipeline, create_default_pipeline,
+63 |         MockSearchProvider, MockStorage, MockLLMClient,
+   |                                          ^^^^^^^^^^^^^
+64 |     )
+65 |     pipe = create_default_pipeline()
+   |
+help: Remove unused import
+   |
+61 |     from county_research_ai.pipeline import (
+   -         ResearchPipeline, create_default_pipeline,
+   -         MockSearchProvider, MockStorage, MockLLMClient,
+62 +         create_default_pipeline,
+63 |     )
+   |
+
+F541 [*] f-string without any placeholders
+  --> scripts\_verify_imports.py:66:11
+   |
+64 |     )
+65 |     pipe = create_default_pipeline()
+66 |     print(f'[OK] pipeline: create_default_pipeline OK')
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+67 |     # Mock 各组件返回类型
+68 |     docs = pipe.search.search('安吉县 竹产业', max_results=2)
+   |
+help: Remove extraneous `f` prefix
+   |
+65 |     pipe = create_default_pipeline()
+   -     print(f'[OK] pipeline: create_default_pipeline OK')
+66 +     print('[OK] pipeline: create_default_pipeline OK')
+67 |     # Mock 各组件返回类型
+   |
+
+I001 Import block is un-sorted or un-formatted
+  --> scripts\_verify_imports.py:73:5
+   |
+71 |     print(f'[OK] MockLLM complete len={len(resp)}')
+72 | except Exception as e:
+73 |     import traceback; traceback.print_exc()
+   |     ^^^^^^^^^^^^^^^^
+74 |     print(f'[FAIL] pipeline: {type(e).__name__}: {e}'); missing.append('pipeline')
+   |
+help: Organize imports
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:73:21
+   |
+71 |     print(f'[OK] MockLLM complete len={len(resp)}')
+72 | except Exception as e:
+73 |     import traceback; traceback.print_exc()
+   |                     ^
+74 |     print(f'[FAIL] pipeline: {type(e).__name__}: {e}'); missing.append('pipeline')
+   |
+
+E702 Multiple statements on one line (semicolon)
+  --> scripts\_verify_imports.py:74:55
+   |
+72 | except Exception as e:
+73 |     import traceback; traceback.print_exc()
+74 |     print(f'[FAIL] pipeline: {type(e).__name__}: {e}'); missing.append('pipeline')
+   |                                                       ^
+75 |
+76 | print()
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_llm.py:20:1
+   |
+18 | sys.path.insert(0, str(ROOT / "src"))
+19 |
+20 | from county_research_ai.config import get_settings, reset_settings
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+22 | from county_research_ai.llm.base import LLMClient, LLMResponse
+   |
+help: Move module level imports to top of file
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_llm.py:20:1
+   |
+18 |   sys.path.insert(0, str(ROOT / "src"))
+19 |
+20 | / from county_research_ai.config import get_settings, reset_settings
+21 | | from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+22 | | from county_research_ai.llm.base import LLMClient, LLMResponse
+23 | | from county_research_ai.llm.prompt_loader import PromptLoader
+24 | | from county_research_ai.models import (
+25 | |     AnalysisResult, CountyInfo, ProcessedData, RawDoc,
+26 | | )
+27 | | from typing import Any
+   | |______________________^
+help: Organize imports
+   |
+19 |
+20 + from typing import Any
+21 +
+22 | from county_research_ai.config import get_settings, reset_settings
+--------------------------------------------------------------------------------
+26 | from county_research_ai.models import (
+   -     AnalysisResult, CountyInfo, ProcessedData, RawDoc,
+27 +     AnalysisResult,
+28 +     CountyInfo,
+29 +     ProcessedData,
+30 +     RawDoc,
+31 | )
+   - from typing import Any
+32 |
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_llm.py:21:1
+   |
+20 | from county_research_ai.config import get_settings, reset_settings
+21 | from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 | from county_research_ai.llm.base import LLMClient, LLMResponse
+23 | from county_research_ai.llm.prompt_loader import PromptLoader
+   |
+help: Move module level imports to top of file
+
+F401 [*] `county_research_ai.llm.analyzer.TaskConfig` imported but unused
+  --> scripts\_verify_llm.py:21:58
+   |
+20 | from county_research_ai.config import get_settings, reset_settings
+21 | from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+   |                                                          ^^^^^^^^^^
+22 | from county_research_ai.llm.base import LLMClient, LLMResponse
+23 | from county_research_ai.llm.prompt_loader import PromptLoader
+   |
+help: Remove unused import: `county_research_ai.llm.analyzer.TaskConfig`
+   |
+20 | from county_research_ai.config import get_settings, reset_settings
+   - from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+21 + from county_research_ai.llm.analyzer import LLMAnalyzer
+22 | from county_research_ai.llm.base import LLMClient, LLMResponse
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_llm.py:22:1
+   |
+20 | from county_research_ai.config import get_settings, reset_settings
+21 | from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+22 | from county_research_ai.llm.base import LLMClient, LLMResponse
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+23 | from county_research_ai.llm.prompt_loader import PromptLoader
+24 | from county_research_ai.models import (
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_llm.py:23:1
+   |
+21 | from county_research_ai.llm.analyzer import LLMAnalyzer, TaskConfig
+22 | from county_research_ai.llm.base import LLMClient, LLMResponse
+23 | from county_research_ai.llm.prompt_loader import PromptLoader
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | from county_research_ai.models import (
+25 |     AnalysisResult, CountyInfo, ProcessedData, RawDoc,
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_llm.py:24:1
+   |
+22 |   from county_research_ai.llm.base import LLMClient, LLMResponse
+23 |   from county_research_ai.llm.prompt_loader import PromptLoader
+24 | / from county_research_ai.models import (
+25 | |     AnalysisResult, CountyInfo, ProcessedData, RawDoc,
+26 | | )
+   | |_^
+27 |   from typing import Any
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_llm.py:27:1
+   |
+25 |     AnalysisResult, CountyInfo, ProcessedData, RawDoc,
+26 | )
+27 | from typing import Any
+   | ^^^^^^^^^^^^^^^^^^^^^^
+help: Move module level imports to top of file
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_llm.py:128:19
+    |
+126 |             loader.get_template("nonexistent_xyz")
+127 |             failures.append("get_template 不应成功的模板未抛异常")
+128 |             print(f"[FAIL] 4. 应抛 LLMError 但未抛")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+129 |         except LLMError as e:
+130 |             assert "nonexistent_xyz" in str(e), f"错误信息应含模板名: {e}"
+    |
+help: Remove extraneous `f` prefix
+    |
+127 |             failures.append("get_template 不应成功的模板未抛异常")
+    -             print(f"[FAIL] 4. 应抛 LLMError 但未抛")
+128 +             print("[FAIL] 4. 应抛 LLMError 但未抛")
+129 |         except LLMError as e:
+    |
+
+I001 Import block is un-sorted or un-formatted
+   --> scripts\_verify_llm.py:167:9
+    |
+165 |         print(f"[OK] 5. analyzer.analyze | tasks={actual_tasks} | calls={mock_llm.call_count}")
+166 |     except Exception as e:
+167 |         import traceback; traceback.print_exc()
+    |         ^^^^^^^^^^^^^^^^
+168 |         failures.append(f"analyzer.analyze: {type(e).__name__}: {e}")
+169 |         print(f"[FAIL] 5. {type(e).__name__}: {e}")
+    |
+help: Organize imports
+
+E702 Multiple statements on one line (semicolon)
+   --> scripts\_verify_llm.py:167:25
+    |
+165 |         print(f"[OK] 5. analyzer.analyze | tasks={actual_tasks} | calls={mock_llm.call_count}")
+166 |     except Exception as e:
+167 |         import traceback; traceback.print_exc()
+    |                         ^
+168 |         failures.append(f"analyzer.analyze: {type(e).__name__}: {e}")
+169 |         print(f"[FAIL] 5. {type(e).__name__}: {e}")
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_llm.py:180:15
+    |
+178 |         assert any("核心优势" in c for c in mock_llm.calls), \
+179 |             f"advantages 应使用 fallback(含'核心优势'), calls={mock_llm.calls}"
+180 |         print(f"[OK] 6. task→模板映射 | industry_status用模板, advantages用fallback")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+181 |     except Exception as e:
+182 |         failures.append(f"task mapping: {type(e).__name__}: {e}")
+    |
+help: Remove extraneous `f` prefix
+    |
+179 |             f"advantages 应使用 fallback(含'核心优势'), calls={mock_llm.calls}"
+    -         print(f"[OK] 6. task→模板映射 | industry_status用模板, advantages用fallback")
+180 +         print("[OK] 6. task→模板映射 | industry_status用模板, advantages用fallback")
+181 |     except Exception as e:
+    |
+
+I001 Import block is un-sorted or un-formatted
+   --> scripts\_verify_llm.py:207:9
+    |
+205 |         print(f"[OK] 7. generate_summary | len={len(summary)} | 含模板渲染")
+206 |     except Exception as e:
+207 |         import traceback; traceback.print_exc()
+    |         ^^^^^^^^^^^^^^^^
+208 |         failures.append(f"generate_summary: {type(e).__name__}: {e}")
+209 |         print(f"[FAIL] 7. {type(e).__name__}: {e}")
+    |
+help: Organize imports
+
+E702 Multiple statements on one line (semicolon)
+   --> scripts\_verify_llm.py:207:25
+    |
+205 |         print(f"[OK] 7. generate_summary | len={len(summary)} | 含模板渲染")
+206 |     except Exception as e:
+207 |         import traceback; traceback.print_exc()
+    |                         ^
+208 |         failures.append(f"generate_summary: {type(e).__name__}: {e}")
+209 |         print(f"[FAIL] 7. {type(e).__name__}: {e}")
+    |
+
+F401 [*] `time` imported but unused
+  --> scripts\_verify_local_fs.py:16:8
+   |
+14 | import sys
+15 | import tempfile
+16 | import time
+   |        ^^^^
+17 | from pathlib import Path
+   |
+help: Remove unused import: `time`
+   |
+15 | import tempfile
+   - import time
+16 | from pathlib import Path
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_local_fs.py:23:1
+   |
+21 | sys.path.insert(0, str(ROOT / "src"))
+22 |
+23 | from county_research_ai.config import Settings, StorageConfig, CacheConfig
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | from county_research_ai.exceptions import StorageError
+25 | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+   |
+help: Move module level imports to top of file
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_local_fs.py:23:1
+   |
+21 |   sys.path.insert(0, str(ROOT / "src"))
+22 |
+23 | / from county_research_ai.config import Settings, StorageConfig, CacheConfig
+24 | | from county_research_ai.exceptions import StorageError
+25 | | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+26 | | from county_research_ai.storage.local_fs import LocalFSStorage
+   | |______________________________________________________________^
+help: Organize imports
+   |
+22 |
+   - from county_research_ai.config import Settings, StorageConfig, CacheConfig
+23 + from county_research_ai.config import CacheConfig, Settings, StorageConfig
+24 | from county_research_ai.exceptions import StorageError
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_local_fs.py:24:1
+   |
+23 | from county_research_ai.config import Settings, StorageConfig, CacheConfig
+24 | from county_research_ai.exceptions import StorageError
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+26 | from county_research_ai.storage.local_fs import LocalFSStorage
+   |
+help: Move module level imports to top of file
+
+F401 [*] `county_research_ai.exceptions.StorageError` imported but unused
+  --> scripts\_verify_local_fs.py:24:43
+   |
+23 | from county_research_ai.config import Settings, StorageConfig, CacheConfig
+24 | from county_research_ai.exceptions import StorageError
+   |                                           ^^^^^^^^^^^^
+25 | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+26 | from county_research_ai.storage.local_fs import LocalFSStorage
+   |
+help: Remove unused import: `county_research_ai.exceptions.StorageError`
+   |
+23 | from county_research_ai.config import Settings, StorageConfig, CacheConfig
+   - from county_research_ai.exceptions import StorageError
+24 | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_local_fs.py:25:1
+   |
+23 | from county_research_ai.config import Settings, StorageConfig, CacheConfig
+24 | from county_research_ai.exceptions import StorageError
+25 | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 | from county_research_ai.storage.local_fs import LocalFSStorage
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_local_fs.py:26:1
+   |
+24 | from county_research_ai.exceptions import StorageError
+25 | from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
+26 | from county_research_ai.storage.local_fs import LocalFSStorage
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: Move module level imports to top of file
+
+F541 [*] f-string without any placeholders
+  --> scripts\_verify_local_fs.py:83:19
+   |
+81 |             result = storage.load_raw("不存在的县")
+82 |             assert result == [], f"应返回空列表, 实际: {result}"
+83 |             print(f"[OK] 2. load_raw 不存在 → 空列表")
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+84 |         except Exception as e:
+85 |             failures.append(f"load_raw missing: {type(e).__name__}: {e}")
+   |
+help: Remove extraneous `f` prefix
+   |
+82 |             assert result == [], f"应返回空列表, 实际: {result}"
+   -             print(f"[OK] 2. load_raw 不存在 → 空列表")
+83 +             print("[OK] 2. load_raw 不存在 → 空列表")
+84 |         except Exception as e:
+   |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_local_fs.py:119:19
+    |
+117 |             hit = storage.load_processed(county, focus, max_age_hours=24)
+118 |             assert hit is not None, "刚写入应命中缓存"
+119 |             print(f"[OK] 4a. 缓存命中(刚写入,阈值24h)")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+120 |
+121 |             # 把 mtime 改到 48 小时前,24h 阈值应过期
+    |
+help: Remove extraneous `f` prefix
+    |
+118 |             assert hit is not None, "刚写入应命中缓存"
+    -             print(f"[OK] 4a. 缓存命中(刚写入,阈值24h)")
+119 +             print("[OK] 4a. 缓存命中(刚写入,阈值24h)")
+120 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_local_fs.py:128:19
+    |
+126 |             miss = storage.load_processed(county, focus, max_age_hours=24)
+127 |             assert miss is None, f"48h前写入应过期, 实际: {miss}"
+128 |             print(f"[OK] 4b. 缓存过期(48h前写入,阈值24h)")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+129 |
+130 |             # max_age_hours=0 应不检查时效,即使旧文件也返回
+    |
+help: Remove extraneous `f` prefix
+    |
+127 |             assert miss is None, f"48h前写入应过期, 实际: {miss}"
+    -             print(f"[OK] 4b. 缓存过期(48h前写入,阈值24h)")
+128 +             print("[OK] 4b. 缓存过期(48h前写入,阈值24h)")
+129 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_local_fs.py:133:19
+    |
+131 |             no_check = storage.load_processed(county, focus, max_age_hours=0)
+132 |             assert no_check is not None, "max_age_hours=0 应跳过时效检查"
+133 |             print(f"[OK] 4c. max_age_hours=0 跳过时效检查")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+134 |         except Exception as e:
+135 |             failures.append(f"cache TTL: {type(e).__name__}: {e}")
+    |
+help: Remove extraneous `f` prefix
+    |
+132 |             assert no_check is not None, "max_age_hours=0 应跳过时效检查"
+    -             print(f"[OK] 4c. max_age_hours=0 跳过时效检查")
+133 +             print("[OK] 4c. max_age_hours=0 跳过时效检查")
+134 |         except Exception as e:
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_local_fs.py:142:19
+    |
+140 |             result = storage.load_processed("不存在的县", "无方向", max_age_hours=0)
+141 |             assert result is None, f"应返回 None, 实际: {result}"
+142 |             print(f"[OK] 5. load_processed 不存在 → None")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+143 |         except Exception as e:
+144 |             failures.append(f"load_processed missing: {type(e).__name__}: {e}")
+    |
+help: Remove extraneous `f` prefix
+    |
+141 |             assert result is None, f"应返回 None, 实际: {result}"
+    -             print(f"[OK] 5. load_processed 不存在 → None")
+142 +             print("[OK] 5. load_processed 不存在 → None")
+143 |         except Exception as e:
+    |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:19:1
+   |
+17 | sys.path.insert(0, str(ROOT / "src"))
+18 |
+19 | import httpx
+   | ^^^^^^^^^^^^
+20 |
+21 | from county_research_ai.config import Settings
+   |
+help: Move module level imports to top of file
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_search.py:19:1
+   |
+17 |   sys.path.insert(0, str(ROOT / "src"))
+18 |
+19 | / import httpx
+20 | |
+21 | | from county_research_ai.config import Settings
+22 | | from county_research_ai.exceptions import SearchError
+23 | | from county_research_ai.models import RawDoc
+24 | | from county_research_ai.search.base import SearchProvider
+25 | | from county_research_ai.search.collector import SearchCollector
+26 | | from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+27 | | from county_research_ai.search.web_search import (
+28 | |     BingSearchProvider,
+29 | |     SerperSearchProvider,
+30 | |     TavilySearchProvider,
+31 | |     create_provider,
+32 | | )
+33 | | from county_research_ai.search.web_search import PROVIDER_CLASSES
+   | |_________________________________________________________________^
+help: Organize imports
+   |
+27 | from county_research_ai.search.web_search import (
+28 +     PROVIDER_CLASSES,
+29 |     BingSearchProvider,
+--------------------------------------------------------------------------------
+33 | )
+   - from county_research_ai.search.web_search import PROVIDER_CLASSES
+34 |
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:21:1
+   |
+19 | import httpx
+20 |
+21 | from county_research_ai.config import Settings
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 | from county_research_ai.exceptions import SearchError
+23 | from county_research_ai.models import RawDoc
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:22:1
+   |
+21 | from county_research_ai.config import Settings
+22 | from county_research_ai.exceptions import SearchError
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+23 | from county_research_ai.models import RawDoc
+24 | from county_research_ai.search.base import SearchProvider
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:23:1
+   |
+21 | from county_research_ai.config import Settings
+22 | from county_research_ai.exceptions import SearchError
+23 | from county_research_ai.models import RawDoc
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | from county_research_ai.search.base import SearchProvider
+25 | from county_research_ai.search.collector import SearchCollector
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:24:1
+   |
+22 | from county_research_ai.exceptions import SearchError
+23 | from county_research_ai.models import RawDoc
+24 | from county_research_ai.search.base import SearchProvider
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 | from county_research_ai.search.collector import SearchCollector
+26 | from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:25:1
+   |
+23 | from county_research_ai.models import RawDoc
+24 | from county_research_ai.search.base import SearchProvider
+25 | from county_research_ai.search.collector import SearchCollector
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 | from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+27 | from county_research_ai.search.web_search import (
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:26:1
+   |
+24 | from county_research_ai.search.base import SearchProvider
+25 | from county_research_ai.search.collector import SearchCollector
+26 | from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+27 | from county_research_ai.search.web_search import (
+28 |     BingSearchProvider,
+   |
+help: Move module level imports to top of file
+
+F401 [*] `county_research_ai.search.gov_data.GovDomain` imported but unused
+  --> scripts\_verify_search.py:26:65
+   |
+24 | from county_research_ai.search.base import SearchProvider
+25 | from county_research_ai.search.collector import SearchCollector
+26 | from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+   |                                                                 ^^^^^^^^^
+27 | from county_research_ai.search.web_search import (
+28 |     BingSearchProvider,
+   |
+help: Remove unused import: `county_research_ai.search.gov_data.GovDomain`
+   |
+25 | from county_research_ai.search.collector import SearchCollector
+   - from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+26 + from county_research_ai.search.gov_data import GovDataProvider
+27 | from county_research_ai.search.web_search import (
+   |
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:27:1
+   |
+25 |   from county_research_ai.search.collector import SearchCollector
+26 |   from county_research_ai.search.gov_data import GovDataProvider, GovDomain
+27 | / from county_research_ai.search.web_search import (
+28 | |     BingSearchProvider,
+29 | |     SerperSearchProvider,
+30 | |     TavilySearchProvider,
+31 | |     create_provider,
+32 | | )
+   | |_^
+33 |   from county_research_ai.search.web_search import PROVIDER_CLASSES
+   |
+help: Move module level imports to top of file
+
+E402 Module level import not at top of file
+  --> scripts\_verify_search.py:33:1
+   |
+31 |     create_provider,
+32 | )
+33 | from county_research_ai.search.web_search import PROVIDER_CLASSES
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: Move module level imports to top of file
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> scripts\_verify_search.py:37:5
+   |
+36 |   def make_settings(api_key: str = "test-key", provider: str = "tavily") -> Settings:
+37 | /     from pydantic import SecretStr
+38 | |     from county_research_ai.config import (
+39 | |         SearchConfig, SearchRetryConfig, PipelineConfig, LLMConfig, AppConfig,
+40 | |         StorageConfig, CacheConfig, LoggingConfig, PipelineStages,
+41 | |     )
+   | |_____^
+42 |       return Settings(
+43 |           app=AppConfig(),
+   |
+help: Organize imports
+   |
+37 |     from pydantic import SecretStr
+38 +
+39 |     from county_research_ai.config import (
+   -         SearchConfig, SearchRetryConfig, PipelineConfig, LLMConfig, AppConfig,
+   -         StorageConfig, CacheConfig, LoggingConfig, PipelineStages,
+40 +         AppConfig,
+41 +         CacheConfig,
+42 +         LLMConfig,
+43 +         LoggingConfig,
+44 +         PipelineConfig,
+45 +         PipelineStages,
+46 +         SearchConfig,
+47 +         SearchRetryConfig,
+48 +         StorageConfig,
+49 |     )
+   |
+
+F541 [*] f-string without any placeholders
+  --> scripts\_verify_search.py:79:15
+   |
+77 |         create_provider(provider="unknown", settings=make_settings())
+78 |         failures.append("factory 未知名称应抛 SearchError")
+79 |         print(f"[FAIL] 1b. 未知名称应抛 SearchError")
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+80 |     except SearchError as e:
+81 |         print(f"[OK] 1b. 未知名称抛 SearchError | msg={e.message}")
+   |
+help: Remove extraneous `f` prefix
+   |
+78 |         failures.append("factory 未知名称应抛 SearchError")
+   -         print(f"[FAIL] 1b. 未知名称应抛 SearchError")
+79 +         print("[FAIL] 1b. 未知名称应抛 SearchError")
+80 |     except SearchError as e:
+   |
+
+F541 [*] f-string without any placeholders
+  --> scripts\_verify_search.py:90:15
+   |
+88 |         create_provider(provider="tavily", settings=s)
+89 |         failures.append("缺 key 应抛 SearchError")
+90 |         print(f"[FAIL] 1c. 缺 key 应抛 SearchError")
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+91 |     except SearchError:
+92 |         print(f"[OK] 1c. 缺 key 抛 SearchError")
+   |
+help: Remove extraneous `f` prefix
+   |
+89 |         failures.append("缺 key 应抛 SearchError")
+   -         print(f"[FAIL] 1c. 缺 key 应抛 SearchError")
+90 +         print("[FAIL] 1c. 缺 key 应抛 SearchError")
+91 |     except SearchError:
+   |
+
+F541 [*] f-string without any placeholders
+  --> scripts\_verify_search.py:92:15
+   |
+90 |         print(f"[FAIL] 1c. 缺 key 应抛 SearchError")
+91 |     except SearchError:
+92 |         print(f"[OK] 1c. 缺 key 抛 SearchError")
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+93 |     except Exception as e:
+94 |         failures.append(f"1c.: {type(e).__name__}: {e}")
+   |
+help: Remove extraneous `f` prefix
+   |
+91 |     except SearchError:
+   -         print(f"[OK] 1c. 缺 key 抛 SearchError")
+92 +         print("[OK] 1c. 缺 key 抛 SearchError")
+93 |     except Exception as e:
+   |
+
+E701 Multiple statements on one line (colon)
+   --> scripts\_verify_search.py:123:46
+    |
+121 |         def __exit__(self, *a): pass
+122 |         def post(self, url, json=None, **kw):
+123 |             if json.get("query") == "bad_429": return httpx.Response(429)
+    |                                              ^
+124 |             if json.get("query") == "bad_401": return httpx.Response(401)
+125 |             data = {"results": [
+    |
+
+E701 Multiple statements on one line (colon)
+   --> scripts\_verify_search.py:124:46
+    |
+122 |         def post(self, url, json=None, **kw):
+123 |             if json.get("query") == "bad_429": return httpx.Response(429)
+124 |             if json.get("query") == "bad_401": return httpx.Response(401)
+    |                                              ^
+125 |             data = {"results": [
+126 |                 {"title": "R1", "url": "https://a.com/1", "snippet": "S1"},
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_search.py:144:19
+    |
+142 |             p.search("bad_429")
+143 |             failures.append("429 应抛 SearchError")
+144 |             print(f"[FAIL] 2b. 429 应抛 SearchError")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+145 |         except SearchError:
+146 |             print(f"[OK] 2b. 429 抛 SearchError")
+    |
+help: Remove extraneous `f` prefix
+    |
+143 |             failures.append("429 应抛 SearchError")
+    -             print(f"[FAIL] 2b. 429 应抛 SearchError")
+144 +             print("[FAIL] 2b. 429 应抛 SearchError")
+145 |         except SearchError:
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_search.py:146:19
+    |
+144 |             print(f"[FAIL] 2b. 429 应抛 SearchError")
+145 |         except SearchError:
+146 |             print(f"[OK] 2b. 429 抛 SearchError")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+147 |
+148 |         # 401
+    |
+help: Remove extraneous `f` prefix
+    |
+145 |         except SearchError:
+    -             print(f"[OK] 2b. 429 抛 SearchError")
+146 +             print("[OK] 2b. 429 抛 SearchError")
+147 |
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_search.py:152:19
+    |
+150 |             p.search("bad_401")
+151 |             failures.append("401 应抛 SearchError")
+152 |             print(f"[FAIL] 2c. 401 应抛 SearchError")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+153 |         except SearchError:
+154 |             print(f"[OK] 2c. 401 抛 SearchError")
+    |
+help: Remove extraneous `f` prefix
+    |
+151 |             failures.append("401 应抛 SearchError")
+    -             print(f"[FAIL] 2c. 401 应抛 SearchError")
+152 +             print("[FAIL] 2c. 401 应抛 SearchError")
+153 |         except SearchError:
+    |
+
+F541 [*] f-string without any placeholders
+   --> scripts\_verify_search.py:154:19
+    |
+152 |             print(f"[FAIL] 2c. 401 应抛 SearchError")
+153 |         except SearchError:
+154 |             print(f"[OK] 2c. 401 抛 SearchError")
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+155 |     finally:
+156 |         httpx.Client = orig  # type: ignore[assignment]
+    |
+help: Remove extraneous `f` prefix
+    |
+153 |         except SearchError:
+    -             print(f"[OK] 2c. 401 抛 SearchError")
+154 +             print("[OK] 2c. 401 抛 SearchError")
+155 |     finally:
+    |
+
+Found 73 errors.
+[*] 37 fixable with the `--fix` option.
