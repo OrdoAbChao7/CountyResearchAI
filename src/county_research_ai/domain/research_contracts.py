@@ -268,12 +268,12 @@ class EvidenceThresholds(BaseModel):
 class BudgetCaps(BaseModel):
     """Hard caps. Zero means "not set" except max_steps, which must be positive."""
 
-    max_steps: int = Field(default=8, ge=1)
-    max_search_calls: int = Field(default=3, ge=0)
-    max_tokens: int = Field(default=0, ge=0)
-    max_cost: float = Field(default=0.0, ge=0.0)
-    deadline_seconds: float = Field(default=0.0, ge=0.0)
-    max_documents: int = Field(default=0, ge=0)
+    max_steps: int = Field(default=8, ge=1, le=50)
+    max_search_calls: int = Field(default=3, ge=0, le=100)
+    max_tokens: int = Field(default=0, ge=0, le=1_000_000)
+    max_cost: float = Field(default=0.0, ge=0.0, le=10_000.0)
+    deadline_seconds: float = Field(default=0.0, ge=0.0, le=86_400.0)
+    max_documents: int = Field(default=0, ge=0, le=500)
 
 
 class RequestedOutput(BaseModel):
@@ -291,10 +291,10 @@ class ResearchContract(BaseModel):
     cannot silently ignore its budget, scope, or evidence requirements.
     """
 
-    objective: str = Field(min_length=1)
-    regions: list[str] = Field(min_length=1)
+    objective: str = Field(min_length=1, max_length=2000)
+    regions: list[str] = Field(min_length=1, max_length=10)
     date_window: DateWindow = Field(default_factory=DateWindow)
-    required_questions: list[str] = Field(default_factory=list)
+    required_questions: list[str] = Field(default_factory=list, max_length=20)
     evidence_thresholds: EvidenceThresholds = Field(default_factory=EvidenceThresholds)
     budget: BudgetCaps = Field(default_factory=BudgetCaps)
     requested_output: RequestedOutput = Field(default_factory=RequestedOutput)
@@ -331,6 +331,8 @@ class ResearchContract(BaseModel):
         cleaned = [question.strip() for question in value]
         if any(not question for question in cleaned):
             raise ValueError("required_questions must not contain blank entries")
+        if any(len(question) > 500 for question in cleaned):
+            raise ValueError("each required_question must be at most 500 characters")
         return cleaned
 
     def to_research_spec(self) -> ResearchSpec:

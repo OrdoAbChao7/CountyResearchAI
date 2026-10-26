@@ -97,3 +97,9 @@ video_template/out/
 video_template/.remotion/
 *.mp4
 *.srt
+
+# ===== AxiomScope 本地 API 与前端 =====
+data/api/
+web/node_modules/
+web/dist/
+

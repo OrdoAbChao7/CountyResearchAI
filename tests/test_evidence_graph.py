@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import pytest
 
@@ -326,6 +326,34 @@ def test_different_metric_is_not_related():
     right = _claim("right", metric="规上工业增加值")
 
     assert classify_claim_relation(left, right) is None
+
+
+def test_requested_window_excludes_out_of_period_and_missing_period(tmp_path):
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    window = (date(2024, 1, 1), date(2024, 12, 31))
+    store.save_ledger(
+        _ledger(
+            _source("snap-1"),
+            claims=[
+                _claim("claim-2027", period="2027"),
+                _claim("claim-nodate", period=""),
+            ],
+        ),
+        window=window,
+    )
+
+    out_of_period = store.verify_claim("claim-2027", window=window)
+    missing_period = store.verify_claim("claim-nodate", window=window)
+
+    assert out_of_period.status is VerificationStatus.NOT_COMPARABLE
+    assert out_of_period.deterministic_checks["requested_window"] == [
+        "2024-01-01",
+        "2024-12-31",
+    ]
+    assert missing_period.status is VerificationStatus.NOT_COMPARABLE
+    assert store.get_claim("claim-2027").verification_reason == (
+        "outside_requested_window:2027"
+    )
 
 
 def test_numeric_claim_without_unit_is_not_comparable(tmp_path):

@@ -23,7 +23,7 @@ import re
 import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from pathlib import Path
@@ -483,15 +483,27 @@ class EvidenceGraphStore:
                     status TEXT NOT NULL DEFAULT 'INSUFFICIENT',
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS run_snapshots (
+                    run_id TEXT NOT NULL,
+                    snapshot_id TEXT NOT NULL REFERENCES source_snapshots(snapshot_id),
+                    PRIMARY KEY (run_id, snapshot_id)
+                );
                 CREATE INDEX IF NOT EXISTS idx_findings_run ON findings(run_id);
                 CREATE INDEX IF NOT EXISTS idx_spans_snapshot ON evidence_spans(snapshot_id);
+                CREATE INDEX IF NOT EXISTS idx_run_snapshots_run ON run_snapshots(run_id);
                 """
             )
             connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
     # ---------------------------------------------------------------- writes
 
-    def save_ledger(self, ledger: EvidenceLedger, *, run_id: str = "") -> dict[str, int]:
+    def save_ledger(
+        self,
+        ledger: EvidenceLedger,
+        *,
+        run_id: str = "",
+        window: tuple[date | None, date | None] | None = None,
+    ) -> dict[str, int]:
         """Persist a ledger, classify claim relations, and record verification."""
         now = _utcnow().isoformat()
         observed = {
@@ -501,6 +513,12 @@ class EvidenceGraphStore:
         with self._connect() as connection:
             for source in ledger.sources.values():
                 self._insert_snapshot(connection, source, now)
+                if run_id:
+                    connection.execute(
+                        "INSERT OR IGNORE INTO run_snapshots (run_id, snapshot_id)"
+                        " VALUES (?, ?)",
+                        (run_id, source.doc_id),
+                    )
             for chunk in ledger.chunks.values():
                 self._insert_span(connection, chunk)
             for claim in ledger.claims.values():
@@ -527,7 +545,7 @@ class EvidenceGraphStore:
             "claims": len(ledger.claims),
         }
         for claim in ledger.claims.values():
-            self.verify_claim(claim.claim_id)
+            self.verify_claim(claim.claim_id, window=window)
         return counts
 
     def _insert_snapshot(
@@ -816,6 +834,16 @@ class EvidenceGraphStore:
             ).fetchall()
         return [self._snapshot_from_row(row) for row in rows]
 
+    def list_run_snapshots(self, run_id: str) -> list[SourceSnapshotRecord]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT n.* FROM source_snapshots n"
+                " JOIN run_snapshots r ON r.snapshot_id = n.snapshot_id"
+                " WHERE r.run_id = ? ORDER BY n.snapshot_id",
+                (run_id,),
+            ).fetchall()
+        return [self._snapshot_from_row(row) for row in rows]
+
     @staticmethod
     def _snapshot_from_row(row: sqlite3.Row) -> SourceSnapshotRecord:
         return SourceSnapshotRecord(
@@ -935,11 +963,20 @@ class EvidenceGraphStore:
             )
 
     def verify_claim(
-        self, claim_id: str, *, verifier_version: str = DETERMINISTIC_VERIFIER_VERSION
+        self,
+        claim_id: str,
+        *,
+        verifier_version: str = DETERMINISTIC_VERIFIER_VERSION,
+        window: tuple[date | None, date | None] | None = None,
     ) -> VerificationRecord:
         chain = self.get_chain(claim_id)
         claim = chain.claim
         checks: dict[str, Any] = {"edges": len(chain.links)}
+        if window is not None:
+            checks["requested_window"] = [
+                window[0].isoformat() if window[0] else None,
+                window[1].isoformat() if window[1] else None,
+            ]
         integrity_ok: list[EvidenceLink] = []
         integrity_failures: list[str] = []
         for link in chain.links:
@@ -996,7 +1033,7 @@ class EvidenceGraphStore:
                 }
             )
 
-        status, reason = self._decide_status(claim, chain, checks)
+        status, reason = self._decide_status(claim, chain, checks, window=window)
         record = VerificationRecord(
             record_id=hashlib.sha256(
                 f"{claim_id}|{verifier_version}|{_utcnow().isoformat()}".encode()
@@ -1035,7 +1072,12 @@ class EvidenceGraphStore:
         return len(origins)
 
     def _decide_status(
-        self, claim: AtomicClaim, chain: ClaimChain, checks: dict[str, Any]
+        self,
+        claim: AtomicClaim,
+        chain: ClaimChain,
+        checks: dict[str, Any],
+        *,
+        window: tuple[date | None, date | None] | None = None,
     ) -> tuple[VerificationStatus, str]:
         superseded = any(
             relation.relation is ClaimRelationKind.SUPERSEDES
@@ -1044,6 +1086,9 @@ class EvidenceGraphStore:
         )
         if superseded:
             return VerificationStatus.OUTDATED, "superseded_by_newer_claim"
+        window_issue = self._window_issue(claim, window)
+        if window_issue:
+            return VerificationStatus.NOT_COMPARABLE, window_issue
         supports = int(checks.get("supporting_edges") or 0)
         contradicts = int(checks.get("contradicting_edges") or 0)
         if not supports:
@@ -1068,6 +1113,25 @@ class EvidenceGraphStore:
         if checks.get("value_present") is False:
             return VerificationStatus.INSUFFICIENT, "value_not_in_quote"
         return VerificationStatus.INSUFFICIENT, "statement_not_in_span"
+
+    @staticmethod
+    def _window_issue(
+        claim: AtomicClaim, window: tuple[date | None, date | None] | None
+    ) -> str:
+        if window is None:
+            return ""
+        start, end = window
+        if start is None and end is None:
+            return ""
+        years = _years(claim.period)
+        if not years:
+            return "claim_period_missing_for_window"
+        year = int(years[0])
+        if start is not None and year < start.year:
+            return f"outside_requested_window:{year}"
+        if end is not None and year > end.year:
+            return f"outside_requested_window:{year}"
+        return ""
 
     def _supported_claim_conflicts(
         self, claim: AtomicClaim, chain: ClaimChain
