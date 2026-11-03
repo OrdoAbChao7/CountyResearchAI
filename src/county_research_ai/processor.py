@@ -100,30 +100,33 @@ class DocumentProcessor:
                 url_deduped.append(doc)
 
         # Pass 2: 标题相似度去重(相似度 > 0.85 视为重复)
-        seen_titles: list[tuple[str, int]] = []  # 存储 (title, length)
+        seen_titles: list[str] = []
         title_deduped: list[RawDoc] = []
-        matcher = SequenceMatcher()
         for doc in url_deduped:
             title = doc.title.strip()
             if not title:
                 continue
-            len_title = len(title)
-            matcher.set_seq2(title)
             is_dup = False
-            for seen, len_seen in seen_titles:
-                # 1. 快速判断长度差异 (相当于 real_quick_ratio)
-                if 2.0 * min(len_title, len_seen) / (len_title + len_seen) <= 0.85:
+            matcher = SequenceMatcher(None, title)
+            len_t = len(title)
+            for seen in seen_titles:
+                # ⚡ Bolt: Fast exact match check
+                if title == seen:
+                    is_dup = True
+                    break
+                # ⚡ Bolt: Mathematical bound check before expensive SequenceMatcher
+                # The maximum possible ratio is 2.0 * min(len(a), len(b)) / (len(a) + len(b))
+                # If the max possible ratio <= 0.85, we can safely skip SequenceMatcher
+                len_s = len(seen)
+                max_ratio = 2.0 * min(len_t, len_s) / (len_t + len_s) if (len_t + len_s) > 0 else 0
+                if max_ratio <= 0.85:
                     continue
-                # 2. 较快的字符重合度判断 (quick_ratio)
-                matcher.set_seq1(seen)
-                if matcher.quick_ratio() <= 0.85:
-                    continue
-                # 3. 最终的精准相似度判断 (ratio, O(N^2))
-                if matcher.ratio() > 0.85:
+                matcher.set_seq2(seen)
+                if matcher.quick_ratio() > 0.85 and matcher.ratio() > 0.85:
                     is_dup = True
                     break
             if not is_dup:
-                seen_titles.append((title, len_title))
+                seen_titles.append(title)
                 title_deduped.append(doc)
 
         # Pass 3: 内容 hash 去重(仅对有实质性 content 的文档,短文本跳过)
