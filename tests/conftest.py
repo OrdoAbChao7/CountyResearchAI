@@ -211,3 +211,36 @@ def sample_processed_data(sample_county, sample_docs) -> ProcessedData:
         docs=sample_docs,
         total_chars=200,
     )
+
+
+@pytest.fixture
+def tool_context(tmp_settings: Settings, mock_llm, sample_docs):
+    from county_research_ai.agent.tools import ResearchToolContext
+    from county_research_ai.llm.analyzer import LLMAnalyzer
+    from county_research_ai.llm.long_history_analyzer import LongHistoryAnalyzer
+    from county_research_ai.llm.rise_fall_analyzer import RiseFallAnalyzer
+    from county_research_ai.processor import DocumentProcessor
+    from county_research_ai.reporting import ReportRenderer
+    from county_research_ai.reporting.long_history_renderer import LongHistoryReportRenderer
+    from county_research_ai.reporting.rise_fall_renderer import RiseFallReportRenderer
+    from county_research_ai.search.base import SearchProvider
+    from county_research_ai.storage.local_fs import LocalFSStorage
+
+    class StaticSearch(SearchProvider):
+        name = "static"
+
+        def search(self, query: str, max_results: int = 10):
+            return sample_docs[:max_results]
+
+    return ResearchToolContext(
+        search=StaticSearch(),
+        storage=LocalFSStorage(settings=tmp_settings),
+        processor=DocumentProcessor(quality_config=tmp_settings.quality),
+        analyzer=LLMAnalyzer(llm=mock_llm, settings=tmp_settings),
+        rise_fall_analyzer=RiseFallAnalyzer(llm=mock_llm, settings=tmp_settings),
+        long_history_analyzer=LongHistoryAnalyzer(llm=mock_llm, settings=tmp_settings),
+        renderer=ReportRenderer(),
+        rise_fall_renderer=RiseFallReportRenderer(),
+        long_history_renderer=LongHistoryReportRenderer(),
+        settings=tmp_settings,
+    )

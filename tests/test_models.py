@@ -15,6 +15,16 @@ from county_research_ai.models import (
     ResearchRequest,
 )
 
+
+def test_default_models_do_not_export_video_content_types():
+    import county_research_ai.models as models
+
+    for name in (
+        "ContentAngle", "ScriptSegment", "VideoScript", "FactCheckItem",
+        "FactCheckResult", "StoryLine", "TopicCandidate", "ContentPackage",
+    ):
+        assert not hasattr(models, name)
+
 # ===== CountyInfo =====
 
 
