@@ -120,7 +120,8 @@ class DocumentProcessor:
                 max_ratio = 2.0 * min(len_t, len_s) / (len_t + len_s) if (len_t + len_s) > 0 else 0
                 if max_ratio <= 0.85:
                     continue
-                if SequenceMatcher(None, title, seen).ratio() > 0.85:
+                matcher = SequenceMatcher(None, title, seen)
+                if matcher.quick_ratio() > 0.85 and matcher.ratio() > 0.85:
                     is_dup = True
                     break
             if not is_dup:
