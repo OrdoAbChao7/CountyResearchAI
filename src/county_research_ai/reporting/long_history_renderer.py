@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TypedDict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -43,15 +42,6 @@ _SOURCE_TYPE_PRIORITY: dict[str, int] = {
 }
 
 
-class _SourceItem(TypedDict):
-    """报告来源条目的固定字段类型。"""
-
-    title: str
-    url: str
-    domain_type: str
-    credibility: float
-
-
 class LongHistoryReportRenderer:
     """县域长周期兴衰史报告渲染器。"""
 
@@ -71,7 +61,7 @@ class LongHistoryReportRenderer:
         raw_docs: list[RawDoc] | None = None,
     ) -> str:
         """渲染为 9 节固定 Markdown 报告。"""
-        pattern = analysis.long_history_pattern
+        p = analysis.long_history_pattern
         periods = analysis.periods
 
         # 历史阶段表信息(供总论引用)
@@ -81,7 +71,7 @@ class LongHistoryReportRenderer:
         # 从 periods / geo_factors 提取各阶段一句话(用于第九节结论摘要)
         geo_line = ""
         if analysis.geo_factors:
-            impacts = [factor.impact for factor in analysis.geo_factors[:2] if factor.impact]
+            impacts = [f.impact for f in analysis.geo_factors[:2] if f.impact]
             if impacts:
                 geo_line = " / ".join(impacts)
         traditional_logic = periods[0].dominant_logic if periods else ""
@@ -92,20 +82,14 @@ class LongHistoryReportRenderer:
         modern_shock_var = ""
         state_effect = ""
         reform_key = ""
-        for period in periods:
-            name = period.name or ""
+        for p in periods:
+            name = p.name or ""
             if ("近代" in name or "民国" in name or "1911" in name or "1949" in name):
-                modern_shock_var = period.dominant_logic or (
-                    period.summary[:60] if period.summary else ""
-                )
+                modern_shock_var = p.dominant_logic or (p.summary[:60] if p.summary else "")
             elif ("计划" in name or "1949" in name or "1978" in name):
-                state_effect = period.dominant_logic or (
-                    period.summary[:60] if period.summary else ""
-                )
+                state_effect = p.dominant_logic or (p.summary[:60] if p.summary else "")
             elif ("改革" in name or "开放" in name or "1978" in name or "2000" in name):
-                reform_key = period.dominant_logic or (
-                    period.summary[:60] if period.summary else ""
-                )
+                reform_key = p.dominant_logic or (p.summary[:60] if p.summary else "")
         if not modern_shock_var:
             modern_shock_var = "(资料不足)"
         if not state_effect:
@@ -117,10 +101,10 @@ class LongHistoryReportRenderer:
         if analysis.contemporary_status and not analysis.contemporary_status.startswith("_"):
             # 取第一行非空文本(<= 80 字)
             first_line = ""
-            for raw_line in analysis.contemporary_status.splitlines():
-                clean_line = raw_line.strip().lstrip("#").strip()
-                if clean_line:
-                    first_line = clean_line
+            for line in analysis.contemporary_status.splitlines():
+                line = line.strip().lstrip("#").strip()
+                if line:
+                    first_line = line
                     break
             if first_line:
                 contemporary_fate = first_line[:80] + ("..." if len(first_line) > 80 else "")
@@ -133,12 +117,12 @@ class LongHistoryReportRenderer:
             "generated_at": analysis.analyzed_at.strftime("%Y-%m-%d %H:%M UTC"),
             "summary": analysis.summary or "(执行摘要生成失败)",
             # 一、总论 + 八、模型
-            "pattern_type": pattern.pattern_type,
-            "pattern_label": _PATTERN_LABELS.get(pattern.pattern_type, pattern.pattern_type),
-            "confidence": pattern.confidence,
-            "dominant_variables": pattern.dominant_variables,
-            "pattern_summary": pattern.summary,
-            "pattern_evidence": pattern.evidence,
+            "pattern_type": p.pattern_type,
+            "pattern_label": _PATTERN_LABELS.get(p.pattern_type, p.pattern_type),
+            "confidence": p.confidence,
+            "dominant_variables": p.dominant_variables,
+            "pattern_summary": p.summary,
+            "pattern_evidence": p.evidence,
             # 二、地理因子
             "geo_factors": [f.model_dump() for f in analysis.geo_factors],
             # 三~七
@@ -170,8 +154,8 @@ class LongHistoryReportRenderer:
         return md
 
     @staticmethod
-    def _build_sources(raw_docs: list[RawDoc]) -> list[_SourceItem]:
-        seen: dict[str, _SourceItem] = {}
+    def _build_sources(raw_docs: list[RawDoc]) -> list[dict[str, str]]:
+        seen: dict[str, dict[str, str]] = {}
         for doc in raw_docs:
             if not doc.url or doc.url in seen:
                 continue
