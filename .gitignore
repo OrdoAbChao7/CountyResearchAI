@@ -88,3 +88,12 @@ logs/
 # ===== 构建与发布 =====
 *.tar.gz
 *.whl
+
+# ===== Agent 与视频运行产物 =====
+agent_traces/
+content_outputs/
+video_template/node_modules/
+video_template/out/
+video_template/.remotion/
+*.mp4
+*.srt

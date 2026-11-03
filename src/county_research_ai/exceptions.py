@@ -70,3 +70,21 @@ class ReportError(CountyResearchAIError):
 
 class PipelineError(CountyResearchAIError):
     """Pipeline 编排错误(如阶段依赖缺失、fail_fast 触发等)。"""
+
+
+class ResearchStageError(CountyResearchAIError):
+    """带阶段、重试属性和安全上下文的研究应用错误。"""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str,
+        stage: str,
+        retryable: bool = False,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, context=context)
+        self.code = code
+        self.stage = stage
+        self.retryable = retryable
