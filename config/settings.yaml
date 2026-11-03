@@ -20,7 +20,7 @@ llm:
   max_tokens: 4096
   timeout: 60               # 单次请求超时(秒)
   retry:
-    max_attempts: 3
+    max_attempts: 5
     backoff_seconds: 2      # 指数退避起始值
   # 分析任务拆分(每个子任务独立调用LLM,降低单次prompt长度)
   tasks:
