@@ -12,7 +12,36 @@ interface Props {
   onReportLoaded?: (report: ReportView) => void;
 }
 
-type ReportTab = "verified" | "narrative";
+type ReportTab = "verified" | "disputes" | "narrative";
+
+const CONFLICT_TYPE_LABELS: Record<string, string> = {
+  contradiction: "数值矛盾",
+  year_discrepancy: "年份差异",
+  caliber_discrepancy: "口径差异",
+  value_discrepancy: "数值差异",
+  discrepancy: "来源差异",
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function asText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function asRecords(value: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(value)
+    ? value.map(asRecord).filter((item): item is Record<string, unknown> => item !== null)
+    : [];
+}
+
+function conflictLabel(value: unknown): string {
+  const raw = asText(value);
+  return CONFLICT_TYPE_LABELS[raw] ?? (raw || "来源差异");
+}
 
 export function ReportStudio({
   detail,
@@ -154,6 +183,7 @@ export function ReportStudio({
 
       <div className="report-tabs" role="tablist" aria-label="报告视图">
         <button
+          id="report-tab-verified"
           type="button"
           role="tab"
           aria-selected={tab === "verified"}
@@ -163,6 +193,20 @@ export function ReportStudio({
           核验报告
         </button>
         <button
+          id="report-tab-disputes"
+          type="button"
+          role="tab"
+          aria-selected={tab === "disputes"}
+          className={tab === "disputes" ? "active" : ""}
+          onClick={() => setTab("disputes")}
+        >
+          冲突与缺口
+          <span className="tab-note">
+            {report.conflicts.length + report.gaps.length}
+          </span>
+        </button>
+        <button
+          id="report-tab-narrative"
           type="button"
           role="tab"
           aria-selected={tab === "narrative"}
@@ -175,7 +219,12 @@ export function ReportStudio({
       </div>
 
       {tab === "verified" ? (
-        <div className="report-layout">
+        <div
+          className="report-layout"
+          role="tabpanel"
+          id="report-panel-verified"
+          aria-labelledby="report-tab-verified"
+        >
           <nav className="report-nav" aria-label="报告章节">
             <p className="nav-kicker">SECTIONS</p>
             {report.sections.map((section) => (
@@ -247,8 +296,15 @@ export function ReportStudio({
             ))}
           </div>
         </div>
+      ) : tab === "disputes" ? (
+        <DisputesPanel report={report} onCitation={onCitation} />
       ) : (
-        <div className="narrative-panel">
+        <div
+          className="narrative-panel"
+          role="tabpanel"
+          id="report-panel-narrative"
+          aria-labelledby="report-tab-narrative"
+        >
           <div className="narrative-note">
             <span className="badge badge-warn">
               {report.narrative.provenance === "native_sections"
@@ -287,5 +343,198 @@ export function ReportStudio({
         </div>
       )}
     </section>
+  );
+}
+
+function DisputesPanel({
+  report,
+  onCitation,
+}: {
+  report: ReportView;
+  onCitation: (claimId: string) => void;
+}) {
+  const conflicts = report.conflicts;
+  const claimConflicts = report.claim_conflicts;
+  const gaps = report.gaps;
+
+  return (
+    <div
+      className="disputes-panel"
+      role="tabpanel"
+      id="report-panel-disputes"
+      aria-labelledby="report-tab-disputes"
+    >
+      <section className="dispute-block wide" aria-labelledby="conflicts-title">
+        <header className="dispute-head">
+          <div>
+            <p className="section-kicker">CONFLICTS</p>
+            <h3 id="conflicts-title">多来源数值冲突</h3>
+          </div>
+          <span className="badge badge-warn">{conflicts.length}</span>
+        </header>
+        {conflicts.length === 0 ? (
+          <EmptyState
+            title="没有记录数值冲突"
+            description="这不代表来源之间不存在差异；只表示本次运行没有产生可比较的冲突记录。"
+          />
+        ) : (
+          <ul className="conflict-list">
+            {conflicts.map((conflict, index) => {
+              const claims = asRecords(conflict.claims);
+              const suggestion = asText(conflict.resolution_suggestion);
+              return (
+                <li
+                  key={`${asText(conflict.indicator)}-${index}`}
+                  className="conflict-card"
+                >
+                  <div className="conflict-head">
+                    <strong>{asText(conflict.indicator) || "未标指标"}</strong>
+                    <span className="badge badge-warn">
+                      {conflictLabel(conflict.conflict_type)}
+                    </span>
+                  </div>
+                  <p>{asText(conflict.description) || "未提供冲突描述。"}</p>
+                  {claims.length > 0 ? (
+                    <table className="conflict-claims">
+                      <caption className="sr-only">冲突来源的数值与口径</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">数值</th>
+                          <th scope="col">年份</th>
+                          <th scope="col">范围</th>
+                          <th scope="col">来源</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {claims.map((claim, claimIndex) => (
+                          <tr key={`${asText(claim.url)}-${claimIndex}`}>
+                            <td>{asText(claim.value) || "—"}</td>
+                            <td>{asText(claim.year) || "—"}</td>
+                            <td>{asText(claim.scope) || "—"}</td>
+                            <td>
+                              {asText(claim.title) || "未标来源"}
+                              {asText(claim.url) ? (
+                                <span className="conflict-source">
+                                  {asText(claim.url)}
+                                </span>
+                              ) : null}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : null}
+                  {suggestion ? (
+                    <p className="muted small">核验建议：{suggestion}</p>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section
+        className="dispute-block"
+        aria-labelledby="claim-conflicts-title"
+      >
+        <header className="dispute-head">
+          <div>
+            <p className="section-kicker">VERIFIED CLAIMS</p>
+            <h3 id="claim-conflicts-title">已核验结论冲突</h3>
+          </div>
+          <span className="badge badge-neutral">{claimConflicts.length}</span>
+        </header>
+        {claimConflicts.length === 0 ? (
+          <EmptyState
+            title="没有已核验结论互相冲突"
+            description="只有具备独立支持且数值可比的结论才会进入这里。"
+          />
+        ) : (
+          <ul className="claim-conflict-list">
+            {claimConflicts.map((item, index) => {
+              const claimId = asText(item.claim_id);
+              const conflicting = Array.isArray(item.conflicting_claim_ids)
+                ? item.conflicting_claim_ids.filter(
+                    (value): value is string => typeof value === "string",
+                  )
+                : [];
+              return (
+                <li key={claimId || index}>
+                  <div className="conflict-head">
+                    <code>{claimId || "未标结论"}</code>
+                    {claimId ? (
+                      <button
+                        type="button"
+                        className="text-button"
+                        onClick={() => onCitation(claimId)}
+                      >
+                        查看证据
+                      </button>
+                    ) : null}
+                  </div>
+                  {asText(item.reason) ? (
+                    <p className="muted small">{asText(item.reason)}</p>
+                  ) : null}
+                  {conflicting.length > 0 ? (
+                    <p className="muted small claim-conflict-refs">
+                      冲突结论：
+                      {conflicting.map((id) => (
+                        <button
+                          key={id}
+                          type="button"
+                          className="text-button"
+                          onClick={() => onCitation(id)}
+                        >
+                          {id}
+                        </button>
+                      ))}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section className="dispute-block" aria-labelledby="gaps-title">
+        <header className="dispute-head">
+          <div>
+            <p className="section-kicker">GAPS</p>
+            <h3 id="gaps-title">结构化证据缺口</h3>
+          </div>
+          <span className="badge badge-warn">{gaps.length}</span>
+        </header>
+        {gaps.length === 0 ? (
+          <EmptyState
+            title="没有记录结构化缺口"
+            description="这不代表现有证据已经充分；只表示本次运行没有产生缺口记录。"
+          />
+        ) : (
+          <table className="gap-table">
+            <caption className="sr-only">结构化证据缺口</caption>
+            <thead>
+              <tr>
+                <th scope="col">子问题</th>
+                <th scope="col">缺口</th>
+                <th scope="col">缺失方面</th>
+                <th scope="col">严重度</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gaps.map((gap, index) => (
+                <tr key={`${asText(gap.question_id)}-${index}`}>
+                  <td>{asText(gap.question_id) || "—"}</td>
+                  <td>{asText(gap.description) || "—"}</td>
+                  <td>{asText(gap.missing_aspect) || "—"}</td>
+                  <td>{asText(gap.severity) || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    </div>
   );
 }

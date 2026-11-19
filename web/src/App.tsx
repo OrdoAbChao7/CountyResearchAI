@@ -51,6 +51,7 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerFocus, setDrawerFocus] = useState<string | null>(null);
   const [reportFocus, setReportFocus] = useState<string | null>(null);
+  const [graphFocusClaim, setGraphFocusClaim] = useState<string | null>(null);
 
   const terminal = detail ? isTerminal(detail.status) : false;
 
@@ -87,6 +88,7 @@ export default function App() {
     setSelectedNode(null);
     setSelectedEvidence(null);
     setReportFocus(null);
+    setGraphFocusClaim(null);
 
     async function load() {
       try {
@@ -170,6 +172,7 @@ export default function App() {
     setDrawerFocus(null);
     setSelectedNode(null);
     setSelectedEvidence(null);
+    setGraphFocusClaim(null);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -232,9 +235,21 @@ export default function App() {
     [detail],
   );
 
+  const locateInGraph = useCallback(
+    (claimId: string) => {
+      if (!detail || !isTerminal(detail.status)) return;
+      setGraphFocusClaim(claimId);
+      setLayout("graph");
+      setStep(3);
+      setDrawerOpen(false);
+    },
+    [detail],
+  );
+
   const selectNode = useCallback((node: api.GraphNode | null) => {
     setSelectedNode(node);
     setSelectedEvidence(null);
+    setGraphFocusClaim(null);
   }, []);
 
   const handleDrawerSelect = useCallback(
@@ -294,6 +309,7 @@ export default function App() {
             jobId={detail.job_id}
             terminal={terminal}
             selectedNodeId={selectedNode?.id ?? null}
+            focusClaimId={graphFocusClaim}
             onSelectNode={selectNode}
             onEvidence={openEvidence}
             onOpenReport={openReport}
@@ -307,6 +323,7 @@ export default function App() {
               jobId={detail.job_id}
               terminal={terminal}
               selectedNodeId={selectedNode?.id ?? null}
+              focusClaimId={graphFocusClaim}
               onSelectNode={selectNode}
               onEvidence={openEvidence}
               onOpenReport={openReport}
@@ -326,6 +343,7 @@ export default function App() {
             jobId={detail.job_id}
             terminal={terminal}
             selectedNodeId={selectedNode?.id ?? null}
+            focusClaimId={graphFocusClaim}
             onSelectNode={selectNode}
             onEvidence={openEvidence}
             onOpenReport={openReport}
@@ -365,6 +383,7 @@ export default function App() {
             jobId={detail.job_id}
             terminal={terminal}
             selectedNodeId={selectedNode?.id ?? null}
+            focusClaimId={graphFocusClaim}
             onSelectNode={selectNode}
             onEvidence={openEvidence}
             onOpenReport={openReport}
@@ -398,7 +417,9 @@ export default function App() {
     detail,
     error,
     events,
+    graphFocusClaim,
     layout,
+    locateInGraph,
     openEvidence,
     openReport,
     refresh,
@@ -483,6 +504,7 @@ export default function App() {
         onStep={setStep}
         onOpenEvidence={openEvidence}
         onOpenReport={openReport}
+        onLocateGraph={locateInGraph}
       />
 
       <StatusBar
@@ -500,6 +522,7 @@ export default function App() {
         focusClaimId={drawerFocus}
         onClose={closeDrawer}
         onSelect={handleDrawerSelect}
+        onLocateGraph={locateInGraph}
       />
     </div>
   );

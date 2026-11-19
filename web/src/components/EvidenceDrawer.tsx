@@ -15,6 +15,7 @@ interface Props {
   focusClaimId: string | null;
   onClose: () => void;
   onSelect?: (item: EvidenceItemView | null) => void;
+  onLocateGraph?: (claimId: string) => void;
 }
 
 const STATUS_OPTIONS = [
@@ -33,6 +34,7 @@ export function EvidenceDrawer({
   focusClaimId,
   onClose,
   onSelect,
+  onLocateGraph,
 }: Props) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
@@ -309,9 +311,20 @@ export function EvidenceDrawer({
                 <div className="detail-block">
                   <div className="detail-heading">
                     <h3>{selected.statement}</h3>
-                    <span className={`status-dot status-${selected.status}`}>
-                      {verificationLabel(selected.status)}
-                    </span>
+                    <div className="detail-heading-actions">
+                      <span className={`status-dot status-${selected.status}`}>
+                        {verificationLabel(selected.status)}
+                      </span>
+                      {onLocateGraph ? (
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={() => onLocateGraph(selected.claim_id)}
+                        >
+                          在图谱中定位
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                   <dl className="evidence-facts">
                     <div>

@@ -24,6 +24,7 @@ interface Props {
   onStep: (step: WorkspaceStep) => void;
   onOpenEvidence: (claimId: string) => void;
   onOpenReport: (claimId: string) => void;
+  onLocateGraph: (claimId: string) => void;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -50,6 +51,7 @@ export function ContextPanel({
   onStep,
   onOpenEvidence,
   onOpenReport,
+  onLocateGraph,
 }: Props) {
   if (!detail) {
     return (
@@ -186,6 +188,12 @@ export function ContextPanel({
                 >
                   报告定位
                 </button>
+                <button
+                  type="button"
+                  onClick={() => onLocateGraph(selectedEvidence.claim_id)}
+                >
+                  图谱定位
+                </button>
               </div>
             </div>
           ) : selectedNode ? (
@@ -193,6 +201,7 @@ export function ContextPanel({
               node={selectedNode}
               onOpenEvidence={onOpenEvidence}
               onOpenReport={onOpenReport}
+              onLocateGraph={onLocateGraph}
             />
           ) : (
             <p className="muted small">
@@ -273,10 +282,12 @@ function NodeDetail({
   node,
   onOpenEvidence,
   onOpenReport,
+  onLocateGraph,
 }: {
   node: GraphNode;
   onOpenEvidence: (claimId: string) => void;
   onOpenReport: (claimId: string) => void;
+  onLocateGraph: (claimId: string) => void;
 }) {
   const data = node.data;
   const claimId = asString(data.claim_id);
@@ -314,6 +325,9 @@ function NodeDetail({
           </button>
           <button type="button" onClick={() => onOpenReport(claimId)}>
             报告定位
+          </button>
+          <button type="button" onClick={() => onLocateGraph(claimId)}>
+            图谱定位
           </button>
         </div>
       ) : null}
