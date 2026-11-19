@@ -33,6 +33,7 @@ CONFIG_DIR = PROJECT_ROOT / "config"
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
 DATA_DIR = PROJECT_ROOT / "data"
 REPORTS_DIR = PROJECT_ROOT / "reports"
+RUNS_DIR = DATA_DIR / "runs"
 
 
 # ===== 嵌套配置模型 =====
@@ -102,6 +103,7 @@ class StorageConfig(BaseModel):
     reports_dir: str = ""
     raw_subdir: str = "raw"
     processed_subdir: str = "processed"
+    runs_subdir: str = "runs"
     # 原始数据归档格式:按 {县名}/{日期}/ 组织
     archive_layout: str = "{county}/{date}"
 
@@ -127,21 +129,70 @@ class QualityConfig(BaseModel):
     min_content_length: int = 50  # 最低正文长度(字符,低于此值视为无效文档)
 
 
-class PipelineStages(BaseModel):
-    """Pipeline 阶段开关(调试时可单独关闭某阶段)。"""
+class RuntimeConfig(BaseModel):
+    """运行时容错策略(替代旧 Workflow 的 pipeline.fail_fast)。"""
 
-    search: bool = True
-    process: bool = True
-    analyze: bool = True
-    report: bool = True
+    fail_fast: bool = False  # 分析/搜索单步失败时是否抛错;默认降级继续
 
 
-class PipelineConfig(BaseModel):
-    """流程编排配置。"""
+class AgentRuntimeConfig(BaseModel):
+    """Multi-Agent 运行时预算与边界。
 
-    mode: str = "sequential"  # MVP 阶段单线程顺序执行
-    fail_fast: bool = True  # 任一阶段失败是否终止全流程
-    stages: PipelineStages = Field(default_factory=PipelineStages)
+    每个专业 Agent、Supervisor、Critic、Report Agent 都受这里约束,
+    避免无界模型调用和无限反思循环。
+    """
+
+    max_steps: int = 6              # 单个 Agent 最大工具步数
+    max_llm_calls: int = 6          # 单个 Agent 最大 LLM 调用次数
+    max_specialists: int = 6        # 单轮最多并行调度专业 Agent 数
+    max_rounds: int = 2             # Supervisor 反思补充研究最大轮数
+    max_followup_queries: int = 4   # Critic 单轮最多生成的补充检索词
+    recursion_limit: int = 120      # LangGraph 递归上限
+    agent_timeout_seconds: int = 300
+
+
+class GraphDBConfig(BaseModel):
+    """产业知识图谱配置。
+
+    backend=memory 时不依赖任何外部服务;backend=neo4j 时使用图数据库。
+    """
+
+    backend: str = "memory"  # memory / neo4j
+    uri: str = "bolt://localhost:7687"
+    user: str = "neo4j"
+    password: SecretStr = SecretStr("")
+    database: str = "neo4j"
+    max_connection_lifetime: int = 3600
+    connection_timeout: int = 10
+
+
+class APIConfig(BaseModel):
+    """FastAPI 服务配置。"""
+
+    host: str = "127.0.0.1"
+    port: int = 8000
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    max_concurrent_runs: int = 2
+    run_retention_days: int = 30
+
+
+class SimulationConfig(BaseModel):
+    """产业数字孪生(Star B)配置。
+
+    当前阶段只提供经过明确标注的基线解析引擎和 Mesa 扩展边界。
+    """
+
+    enabled: bool = True
+    engine: str = "baseline"  # baseline / mesa (mesa 为后续扩展)
+    default_horizon_years: int = 5
+    max_scenarios: int = 50
+
+
+class TemporalConfig(BaseModel):
+    """时序产业知识图谱(Star C)配置。"""
+
+    enabled: bool = True
+    default_as_of: str = ""  # 留空表示当前时点
 
 
 class LoggingConfig(BaseModel):
@@ -175,9 +226,14 @@ class Settings(BaseModel):
     search: SearchConfig = Field(default_factory=SearchConfig)
     storage: StorageConfig = Field(default_factory=StorageConfig)
     cache: CacheConfig = Field(default_factory=CacheConfig)
-    pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
     quality: QualityConfig = Field(default_factory=QualityConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
+    agents: AgentRuntimeConfig = Field(default_factory=AgentRuntimeConfig)
+    graph: GraphDBConfig = Field(default_factory=GraphDBConfig)
+    api: APIConfig = Field(default_factory=APIConfig)
+    simulation: SimulationConfig = Field(default_factory=SimulationConfig)
+    temporal: TemporalConfig = Field(default_factory=TemporalConfig)
 
     # 路径常量(运行时计算,不从配置文件读取)
     project_root: Path = PROJECT_ROOT
@@ -185,6 +241,7 @@ class Settings(BaseModel):
     prompts_dir: Path = PROMPTS_DIR
     data_dir: Path = DATA_DIR
     reports_dir: Path = REPORTS_DIR
+    runs_dir: Path = RUNS_DIR
 
 
 # ===== 加载逻辑 =====
@@ -199,7 +256,7 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data or {}
 
 
-def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:
+def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:  # noqa: C901
     """将环境变量合并进 settings 字典,env 优先级更高。
 
     LLM 与搜索 API 的密钥只从 .env 读取,绝不放进 yaml。
@@ -249,6 +306,37 @@ def _merge_env(settings_dict: dict[str, Any]) -> dict[str, Any]:
     if os.getenv("REPORTS_DIR"):
         storage["reports_dir"] = os.getenv("REPORTS_DIR")
 
+    # ---------- 知识图谱 ----------
+    graph = settings_dict.setdefault("graph", {})
+    if os.getenv("GRAPH_BACKEND"):
+        graph["backend"] = os.getenv("GRAPH_BACKEND")
+    if os.getenv("NEO4J_URI"):
+        graph["uri"] = os.getenv("NEO4J_URI")
+    if os.getenv("NEO4J_USER"):
+        graph["user"] = os.getenv("NEO4J_USER")
+    if os.getenv("NEO4J_PASSWORD"):
+        graph["password"] = os.getenv("NEO4J_PASSWORD")
+    if os.getenv("NEO4J_DATABASE"):
+        graph["database"] = os.getenv("NEO4J_DATABASE")
+
+    # ---------- API ----------
+    api = settings_dict.setdefault("api", {})
+    if os.getenv("API_HOST"):
+        api["host"] = os.getenv("API_HOST")
+    if os.getenv("API_PORT"):
+        api["port"] = int(os.getenv("API_PORT"))  # type: ignore[arg-type]
+    if os.getenv("API_MAX_CONCURRENT_RUNS"):
+        api["max_concurrent_runs"] = int(os.getenv("API_MAX_CONCURRENT_RUNS"))  # type: ignore[arg-type]
+
+    # ---------- Agent 预算 ----------
+    agents = settings_dict.setdefault("agents", {})
+    if os.getenv("AGENT_MAX_STEPS"):
+        agents["max_steps"] = int(os.getenv("AGENT_MAX_STEPS"))  # type: ignore[arg-type]
+    if os.getenv("AGENT_MAX_LLM_CALLS"):
+        agents["max_llm_calls"] = int(os.getenv("AGENT_MAX_LLM_CALLS"))  # type: ignore[arg-type]
+    if os.getenv("AGENT_MAX_ROUNDS"):
+        agents["max_rounds"] = int(os.getenv("AGENT_MAX_ROUNDS"))  # type: ignore[arg-type]
+
     # ---------- 缓存 ----------
     cache = settings_dict.setdefault("cache", {})
     if os.getenv("CACHE_TTL_HOURS"):
@@ -266,6 +354,10 @@ def _resolve_paths(settings: Settings) -> Settings:
     """根据 storage.data_dir / reports_dir 覆盖默认路径。"""
     if settings.storage.data_dir:
         settings.data_dir = Path(settings.storage.data_dir).resolve()
+    if os.getenv("RUNS_DIR"):
+        settings.runs_dir = Path(os.environ["RUNS_DIR"]).resolve()
+    else:
+        settings.runs_dir = settings.data_dir / settings.storage.runs_subdir
     if settings.storage.reports_dir:
         settings.reports_dir = Path(settings.storage.reports_dir).resolve()
     return settings

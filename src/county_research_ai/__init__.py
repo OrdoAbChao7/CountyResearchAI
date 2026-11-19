@@ -1,17 +1,21 @@
-"""AI县域产业研究助手 - 自动化采集、分析与生成县域产业研究报告。
+"""CountyResearchAI V2 · Agentic Industrial Intelligence Platform。
+
+面向中国县域产业研究的多 Agent 平台：FastAPI 业务入口 + LangGraph 编排 +
+证据约束的知识图谱。旧版固定 Workflow/CLI 已移除，设计见 ARCHITECTURE_V2.md。
 
 包结构:
-    search/      数据采集层(网络搜索 + 政府公开数据)
-    llm/         LLM 分析层(调用大模型产出结构化洞察)
-    reporting/   报告生成层(渲染 Markdown 报告)
-    storage/     存储层(本地文件系统 + 缓存)
-    pipeline.py  流程编排(串联上述四层)
-    cli.py       命令行入口
-    config.py    配置加载(yaml + env)
-    models.py    共享数据模型
-    exceptions.py 自定义异常
+    api/              FastAPI 入口、路由与传输 Schema
+    bootstrap/        组合根（配置 → 服务 → 图存储 → 运行服务）
+    orchestration/    LangGraph 图、状态、Supervisor、路由、检查点
+    agents/           专业 Agent、Critic、Report、工具注册表
+    services/         搜索/证据/文档/发现/图谱/定量/机会/报告服务
+    knowledge_graph/  本体、抽取、消歧、存储适配器、GraphRAG、时序
+    shining_stars/    Star A/B/C 领域契约与确定性实现
+    domain/           共享领域模型与事件
+    search/ llm/ reporting/ storage/   既有能力层
+    config.py         配置加载（yaml + env）
 """
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["__version__"]

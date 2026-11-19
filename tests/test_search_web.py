@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import httpx
 import pytest
+from pydantic import SecretStr
 
 from county_research_ai.exceptions import SearchError
 from county_research_ai.search.web_search import (
@@ -106,6 +107,7 @@ def _make_bing_mock(monkeypatch):
 class TestCreateProvider:
     @pytest.mark.parametrize("name", ["tavily", "serper", "bing"])
     def test_factory_returns_correct_class(self, name, tmp_settings):
+        tmp_settings.search.api_key = SecretStr("test-key")
         p = create_provider(provider=name, settings=tmp_settings)
         assert type(p) is PROVIDER_CLASSES[name]
 
@@ -119,6 +121,7 @@ class TestCreateProvider:
 
     def test_factory_reads_provider_from_settings(self, tmp_settings):
         tmp_settings.search.provider = "serper"
+        tmp_settings.search.api_key = SecretStr("test-key")
         p = create_provider(settings=tmp_settings)
         assert type(p) is SerperSearchProvider
 

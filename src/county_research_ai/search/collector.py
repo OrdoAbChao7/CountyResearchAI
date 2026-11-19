@@ -95,7 +95,7 @@ class SearchCollector(SearchProvider):
         s = self._settings.search
         self._max_results = s.max_results
         self._concurrency = max(1, s.concurrency)
-        self._fail_fast = self._settings.pipeline.fail_fast
+        self._fail_fast = self._settings.runtime.fail_fast
         self._web: SearchProvider | None = web_provider
         self._gov: SearchProvider | None = gov_provider
         if self._web is None:

@@ -1,113 +1,140 @@
+"""应用容器：装配 V2 服务、知识图谱、Agent 工具与运行服务。
+
+容器不再包含 WorkflowRunner / ResearchApplication / CLI。所有外部依赖
+缺失时自动降级为 Mock 或内存实现，保证 API 与测试可以离线运行。
+"""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from pathlib import Path
+from typing import Any
 
-from ..application.config import ResearchApplicationConfig
-from ..application.research import ResearchApplication
-from ..application.workflow import WorkflowRunner
+from ..agents.tools import build_default_tools
 from ..config import Settings, get_settings
-from ..infrastructure.search_adapter import CollectorSearchAdapter, ProviderSearchAdapter
+from ..knowledge_graph.entity_resolution.resolver import EntityResolver
+from ..knowledge_graph.extraction.entity_extractor import EntityExtractor
+from ..knowledge_graph.extraction.relation_extractor import RelationExtractor
+from ..knowledge_graph.graph_rag.query_engine import GraphRAGQueryEngine
+from ..knowledge_graph.graph_store import create_graph_store
+from ..knowledge_graph.graph_store.base import GraphStore
 from ..llm.analyzer import LLMAnalyzer
 from ..llm.client import OpenAICompatibleClient
 from ..llm.long_history_analyzer import LongHistoryAnalyzer
 from ..llm.rise_fall_analyzer import RiseFallAnalyzer
 from ..mocks.llm import MockLLMClient
-from ..mocks.search import MockSearchProvider
-from ..modes.long_history import LongHistoryModeHandler
-from ..modes.registry import ModeRegistry
-from ..modes.rise_fall import RiseFallModeHandler
-from ..modes.snapshot import SnapshotModeHandler
-from ..pipeline import ResearchPipeline
+from ..orchestration.runner import ResearchRunService
+from ..orchestration.services import OrchestrationServices
 from ..processor import DocumentProcessor
-from ..reporting import ReportRenderer
-from ..reporting.long_history_renderer import LongHistoryReportRenderer
-from ..reporting.rise_fall_renderer import RiseFallReportRenderer
-from ..search.collector import SearchCollector
+from ..services.analytics_service import AnalyticsService
+from ..services.discovery_service import DiscoveryService
+from ..services.document_service import DocumentService
+from ..services.graph_service import GraphService, ThreadLocalEvidenceLookup
+from ..services.quant_service import QuantService
+from ..services.report_service import ReportService
+from ..services.search_service import SearchService, build_search_service
+from ..shining_stars.digital_twin import DigitalTwinService
 from ..storage.local_fs import LocalFSStorage
 
-
-def _render_filename(template: str, context: dict[str, str]) -> str:
-    from jinja2 import Template
-
-    return Template(template).render(**context)
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class AppContainer:
     settings: Settings
-    llm: object
-    search: object
+    llm: Any
+    search: SearchService
     storage: LocalFSStorage
-    application: ResearchApplication
-    workflow: WorkflowRunner
-    modes: ModeRegistry
+    graph_store: GraphStore
+    services: OrchestrationServices
+    runs: ResearchRunService
+    simulation: DigitalTwinService
 
-    def pipeline(self) -> ResearchPipeline:
-        return ResearchPipeline(
-            search=self.search,
-            storage=self.storage,
-            llm=self.llm,
-            workflow_runner=self.workflow,
-        )
+    def close(self) -> None:
+        self.runs.shutdown()
+        closer = getattr(self.graph_store, "close", None)
+        if callable(closer):
+            try:
+                closer()
+            except Exception:  # noqa: BLE001
+                logger.debug("关闭图存储失败", exc_info=True)
 
-    def create_agent(self, *, max_steps: int = 8, save_trace: bool = True, trace_root: Path | None = None):
-        from ..agent.factory import _create_agent_from_container
 
-        return _create_agent_from_container(
-            self, max_steps=max_steps, save_trace=save_trace, trace_root=trace_root
-        )
+def build_llm(settings: Settings) -> Any:
+    api_key = settings.llm.api_key.get_secret_value() if settings.llm.api_key else ""
+    if not api_key:
+        logger.info("未配置 LLM_API_KEY，使用 MockLLMClient（Agent 将走确定性降级）")
+        return MockLLMClient()
+    try:
+        return OpenAICompatibleClient(settings=settings)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("LLM 客户端初始化失败，使用 MockLLMClient | err=%s", exc)
+        return MockLLMClient()
+
+
+def create_services(
+    settings: Settings | None = None,
+    *,
+    llm: Any = None,
+    search: SearchService | None = None,
+    graph_store: GraphStore | None = None,
+) -> OrchestrationServices:
+    settings = settings or get_settings()
+    llm = llm if llm is not None else build_llm(settings)
+    search = search or build_search_service(settings)
+    storage = LocalFSStorage(settings=settings)
+    graph_store = graph_store or create_graph_store(settings)
+
+    analyzer = LLMAnalyzer(llm=llm, settings=settings)
+    analytics = AnalyticsService(
+        snapshot_analyzer=analyzer,
+        rise_fall_analyzer=RiseFallAnalyzer(llm=llm, settings=settings),
+        long_history_analyzer=LongHistoryAnalyzer(llm=llm, settings=settings),
+    )
+    documents = DocumentService(
+        DocumentProcessor(quality_config=settings.quality), storage, settings
+    )
+    reports = ReportService(storage)
+    agent_llm = None if isinstance(llm, MockLLMClient) else llm
+    graph_evidence = ThreadLocalEvidenceLookup()
+    query_engine = GraphRAGQueryEngine(
+        graph_store, evidence=graph_evidence, llm=agent_llm
+    )
+    graph_service = GraphService(graph_store, query_engine)
+
+    return OrchestrationServices(
+        settings=settings,
+        llm=llm,
+        agents_llm=agent_llm,
+        search=search,
+        documents=documents,
+        analytics=analytics,
+        discovery=DiscoveryService(analyzer),
+        reports=reports,
+        graph=graph_service,
+        graph_store=graph_store,
+        graph_evidence=graph_evidence,
+        quant=QuantService(),
+        tools=build_default_tools(),
+        entity_extractor=EntityExtractor(agent_llm),
+        relation_extractor=RelationExtractor(agent_llm),
+        resolver=EntityResolver(),
+    )
 
 
 def create_app_container(settings: Settings | None = None) -> AppContainer:
     settings = settings or get_settings()
-    search_key = settings.search.api_key.get_secret_value() if settings.search.api_key else ""
-    if search_key:
-        try:
-            search = CollectorSearchAdapter(SearchCollector.from_settings(settings=settings))
-        except Exception:
-            search = ProviderSearchAdapter(MockSearchProvider())
-    else:
-        search = ProviderSearchAdapter(MockSearchProvider())
-
-    llm_key = settings.llm.api_key.get_secret_value() if settings.llm.api_key else ""
-    if llm_key:
-        try:
-            llm = OpenAICompatibleClient(settings=settings)
-        except Exception:
-            llm = MockLLMClient()
-    else:
-        llm = MockLLMClient()
-
-    storage = LocalFSStorage(settings=settings)
-    analyzer = LLMAnalyzer(llm=llm, settings=settings)
-    renderer = ReportRenderer()
-    rise_analyzer = RiseFallAnalyzer(llm=llm, settings=settings)
-    rise_renderer = RiseFallReportRenderer()
-    history_analyzer = LongHistoryAnalyzer(llm=llm, settings=settings)
-    history_renderer = LongHistoryReportRenderer()
-    modes = ModeRegistry([
-        SnapshotModeHandler(analyzer, renderer, search=search),
-        RiseFallModeHandler(rise_analyzer, rise_renderer, search=search),
-        LongHistoryModeHandler(history_analyzer, history_renderer, search=search),
-    ])
-    application = ResearchApplication(
-        search=search,
-        storage=storage,
-        processor=DocumentProcessor(quality_config=settings.quality),
-        discovery=analyzer,
-        modes=modes,
-        config=ResearchApplicationConfig(
-            max_search_results=settings.search.max_results,
-            cache_enabled=settings.cache.enabled,
-            cache_ttl_hours=settings.cache.ttl_hours,
-            report_filename_template=settings.app.report_filename_template,
-        ),
-        render_filename=_render_filename,
+    services = create_services(settings)
+    runs = ResearchRunService(services)
+    return AppContainer(
+        settings=settings,
+        llm=services.llm,
+        search=services.search,
+        storage=LocalFSStorage(settings=settings),
+        graph_store=services.graph_store,
+        services=services,
+        runs=runs,
+        simulation=DigitalTwinService(settings=settings),
     )
-    workflow = WorkflowRunner(
-        application=application,
-        stages=settings.pipeline.stages,
-        fail_fast=settings.pipeline.fail_fast,
-    )
-    return AppContainer(settings, llm, search, storage, application, workflow, modes)
+
+
+__all__ = ["AppContainer", "build_llm", "create_app_container", "create_services"]

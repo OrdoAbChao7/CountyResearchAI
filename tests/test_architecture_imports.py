@@ -1,4 +1,4 @@
-"""研究架构的轻量导入边界检查。"""
+"""V2 架构导入边界检查。"""
 from __future__ import annotations
 
 import ast
@@ -21,9 +21,73 @@ def imports_under(root: Path) -> set[str]:
 
 def test_domain_has_no_outward_dependencies():
     imports = imports_under(SRC / "domain")
-    assert not any(name.endswith(("config", "agent")) or name == "click" for name in imports)
+    forbidden = (
+        "county_research_ai.agents",
+        "county_research_ai.api",
+        "county_research_ai.bootstrap",
+        "county_research_ai.infrastructure",
+        "county_research_ai.knowledge_graph",
+        "county_research_ai.orchestration",
+        "county_research_ai.services",
+    )
+    assert not any(name.startswith(forbidden) for name in imports)
 
 
-def test_application_does_not_import_concrete_adapters():
-    imports = imports_under(SRC / "application")
-    assert not any(name.endswith(("web_search", "local_fs", "llm.client")) for name in imports)
+def test_agents_do_not_depend_on_orchestration_or_api():
+    imports = imports_under(SRC / "agents")
+    assert not any(
+        name.startswith(("county_research_ai.orchestration", "county_research_ai.api"))
+        for name in imports
+    )
+
+
+def test_knowledge_graph_is_independent_of_agents_and_orchestration():
+    imports = imports_under(SRC / "knowledge_graph")
+    assert not any(
+        name.startswith(
+            (
+                "county_research_ai.agents",
+                "county_research_ai.api",
+                "county_research_ai.orchestration",
+            )
+        )
+        for name in imports
+    )
+
+
+def test_services_do_not_depend_on_api_or_orchestration():
+    imports = imports_under(SRC / "services")
+    assert not any(
+        name.startswith(
+            (
+                "county_research_ai.agents",
+                "county_research_ai.api",
+                "county_research_ai.orchestration",
+            )
+        )
+        for name in imports
+    )
+
+
+def test_no_legacy_workflow_modules_remain():
+    for relative in (
+        "cli.py",
+        "pipeline.py",
+        "application",
+        "modes",
+        "agent",
+        "research_agent",
+        "interfaces",
+    ):
+        assert not (SRC / relative).exists(), f"legacy module still present: {relative}"
+
+
+def test_no_pipeline_config_imports_remain():
+    imports = imports_under(SRC)
+    assert not any("PipelineConfig" in name for name in imports)
+    source_hits: list[str] = []
+    for path in SRC.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        if "settings.pipeline" in text or "PipelineRunner" in text:
+            source_hits.append(str(path))
+    assert source_hits == []

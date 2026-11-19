@@ -1,109 +1,163 @@
-# CountyResearchAI
+# CountyResearchAI V2 · Agentic Industrial Intelligence Platform
 
-输入县名与可选的产业方向，采集公开资料并生成带来源链接的县域产业研究初稿。
+面向中国县域产业研究的 **多 Agent 智能研究平台**。输入一个县名与可选产业方向，平台由 Supervisor 动态拆解研究问题、并行调度多个专业 Agent、用证据约束知识图谱、审计结论可靠性，并输出可追溯的产业研究报告与补链机会。
 
-[![CI](https://github.com/OrdoAbChao7/CountyResearchAI/actions/workflows/ci.yml/badge.svg)](https://github.com/OrdoAbChao7/CountyResearchAI/actions/workflows/ci.yml) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+> V2 已从「固定 Workflow + CLI 报告生成器」重构为「LangGraph 多 Agent + FastAPI 平台」。固定流程、CLI 业务入口与 `pipeline.py` 已移除。旧版迁移说明见 [MIGRATION_V2.md](MIGRATION_V2.md)，整体设计见 [ARCHITECTURE_V2.md](ARCHITECTURE_V2.md)。
 
-这是一个研究原型。报告供人工核查和继续研究使用：公开资料的覆盖度取决于地区与搜索服务，模型生成的判断也可能遗漏背景或缺少依据。未配置 API Key 时使用 Mock 数据，只适合验证流程，不能作为研究证据。项目当前的验证边界见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
+## 核心能力
 
-## 能做什么
+| 能力 | 说明 |
+| :--- | :--- |
+| 自主研究编排 | Supervisor 理解研究目标、动态选择专业 Agent、`Send` 并行分发；Critic 审计后决定是否补充检索 |
+| 8 个专业 Agent | 宏观、产业、企业、政策、创新、地理、定量、机会；各有独立提示词、工具白名单、结构化输出 |
+| 证据约束 | 每条结论绑定 Evidence ID；未知/伪造证据会被降级为 `unverified` 并记录缺口 |
+| 知识图谱 | 13 类实体、13 类关系；`verified / inferred / pending / unverified` 四态；未验证关系默认拒绝入库 |
+| GraphRAG | 企业关系、供应链、链路、集群、园区、政策关联、证据追溯、多跳查询 |
+| Star A · 缺口雷达 | 识别缺失环节、弱本地配套、外部依赖、低区位熵，输出可解释的招商/补链机会 |
+| Star B · 数字孪生 | 已定义 `SimulationEngine` 边界与确定性基线引擎；Mesa 引擎明确未校准、不伪造结果 |
+| Star C · 时序智能 | 关系 `valid_from / valid_to / observed_at` 的 as-of 查询、差异比较与历史追溯接口 |
+| FastAPI | 异步运行、SSE 事件流、运行恢复、报告/证据/图谱/仿真 API |
 
-| 模式 | 命令参数 | 研究内容 |
-| :--- | :--- | :--- |
-| 产业现状 | `snapshot`（默认，`industry` 为别名） | 产业现状、优势、短板和建议 |
-| 产业兴衰 | `rise-fall` | 产业起源、扩张、衰退及规律 |
-| 长周期历史 | `long-history` | 从县域形成到当代的发展脉络 |
-
-不指定 `--focus` 时，程序会根据检索材料推荐候选产业方向；推荐结果仍需人工确认。固定流程由 Workflow 执行，Agent 模式则在限定步骤内规划工具调用，并可保存 JSON 执行轨迹。两者共用搜索、分析和报告能力。
+## 架构总览
 
 ```mermaid
 flowchart TD
-    A["县名、方向与模式"] --> B["问题树规划 (Question Tree)"]
-    B --> C["动态多意图检索 (QueryEngine + 消歧)"]
-    C --> D["结构化事实库 (EvidenceStore)"]
-    D --> E["反思评价与证据缺口 (ResearchCritic)"]
-    E -->|存在关键缺口| F["定向补充检索 (Supplemental Search)"]
-    F --> D
-    E -->|证据充足| G["专业智能体协同分析 (经济/政策/产业)"]
-    G --> H["事实核验与冲突消解 (FactVerifier)"]
-    H --> I["Markdown 深度研究报告 (带可信溯源角标)"]
+    API["FastAPI 业务入口<br/>POST /api/research/runs"] --> RUN["ResearchRunService<br/>后台线程 + SQLite 检查点"]
+    RUN --> GRAPH["LangGraph StateGraph"]
+    GRAPH --> INTAKE["intake<br/>采集 / 方向发现 / 证据入库"]
+    INTAKE --> SUP["Supervisor<br/>动态拆解与选择 Agent"]
+    SUP -->|"Send 并行"| A1["宏观 Agent"]
+    SUP -->|"Send 并行"| A2["产业 Agent"]
+    SUP -->|"Send 并行"| A3["企业 / 政策 / 创新 / 地理 / 定量 Agent"]
+    A1 --> AGG["aggregate<br/>结构化聚合"]
+    A2 --> AGG
+    A3 --> AGG
+    AGG --> CRITIC["Critic<br/>证据审计与缺口"]
+    CRITIC -->|"不充分且有轮次"| SUP
+    CRITIC -->|"充分 / 轮次耗尽"| KG["知识图谱构建<br/>只写 verified 关系"]
+    KG --> STAR["机会雷达 + 报告 Agent"]
+    STAR --> OUT["IntelligenceReport<br/>report.md / report.json / opportunities.json"]
 ```
+
+专业 Agent 通过统一 Tool 层访问搜索、证据、图谱与定量服务；Agent 不能直接写图，也不能把 LLM 推测当作事实关系。
 
 ## 快速开始
 
-需要 Python 3.10 或更高版本。以下命令在 PowerShell 中运行：
+需要 Python 3.10+。以下命令在 PowerShell 中运行：
 
 ```powershell
 git clone https://github.com/OrdoAbChao7/CountyResearchAI.git
 cd CountyResearchAI
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -e .
+python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
 ```
 
-在 `.env` 中填入 `LLM_API_KEY`，并为选用的搜索服务填写 `TAVILY_API_KEY`、`SERPER_API_KEY` 或 `BING_API_KEY`。模板默认使用 DeepSeek 和 Tavily；更换服务时相应调整 `LLM_PROVIDER`、`LLM_BASE_URL`、`LLM_MODEL` 和 `SEARCH_PROVIDER`。如需使用 Mock，请把模板中的 `YOUR_...` 占位值清空；空 Key 会启用对应环节的 Mock 实现。
+在 `.env` 中填入 `LLM_API_KEY` 与所选搜索服务的 Key。**没有 Key 也可以启动**：容器会使用 Mock LLM / Mock 搜索 / 内存图存储，适合验证架构与测试，但输出不能作为研究证据。
+
+启动 API：
 
 ```powershell
-county-research -c 安吉县 -f 竹产业
+uvicorn county_research_ai.api.main:app --reload --port 8000
 ```
 
-报告默认写入 `reports/`；原始资料和处理结果默认写入 `data/`。可通过 `.env` 中的 `REPORTS_DIR` 和 `DATA_DIR` 调整位置，其他运行参数见 [`config/settings.yaml`](config/settings.yaml) 和 [`config/sources.yaml`](config/sources.yaml)。
-
-## 常用命令
+提交一次研究：
 
 ```powershell
-county-research -c 安吉县                         # 自动发现产业方向 (snapshot)
-county-research workflow -c 安吉县 -f 竹产业      # 显式使用固定工作流
-county-research -c 安吉县 -f 竹产业 --deep        # 启用深度多智能体与证据核验研究
-county-research -c 鹤岗市 --mode rise-fall        # 产业兴衰规律研究
-county-research -c 信丰县 --mode long-history     # 县域长周期兴衰史研究
-county-research agent -c 安吉县 -f 竹产业 --mode snapshot  # 运行 Plan-and-Execute Agent
-county-research agent -c 安吉县 --max-steps 8 --dry-run   # 校验 Agent 参数与步数限制
+$body = @{ county = "安吉县"; focus = "竹产业" } | ConvertTo-Json
+$run = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/research/runs -ContentType "application/json" -Body $body
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/research/runs/$($run.run_id)"
 ```
 
-| 选项 | 用途 |
-| :--- | :--- |
-| `-c, --county` | 县名，运行研究时必填 |
-| `-f, --focus` | 产业方向；省略时自动发现 |
-| `-m, --mode` | 研究模式；默认 `snapshot` |
-| `--deep` | 启用深度多智能体协同研究（问题树拆解、Critic反思补检、经济/政策/产业分工及事实核验） |
-| `--historical` / `--long-history` | 固定流程中选择对应模式的快捷开关 |
-| `--no-cache` | 固定流程中跳过缓存 |
-| `--dry-run` | 只检查参数，不运行研究 |
+运行产物默认写入 `data/runs/{run_id}/`：`run.json`、`events.jsonl`、`evidence.json`、`documents.json`、`report.md`、`report.json`、`opportunities.json`。检查点位于 `data/runs/checkpoints.sqlite`。
 
-`agent` 另支持 `--max-steps` 和 `--no-trace`。执行轨迹默认保存在 `agent_traces/`。完整参数以 `county-research --help`、`county-research workflow --help` 和 `county-research agent --help` 为准。
+## API
 
-## 基准评测 (Benchmark)
+| 方法 | 路径 | 说明 |
+| :--- | :--- | :--- |
+| `POST` | `/api/research/runs` | 创建研究运行（202） |
+| `GET` | `/api/research/runs` | 列出运行 |
+| `GET` | `/api/research/runs/{run_id}` | 运行状态、计划、Agent 结果、Critic |
+| `POST` | `/api/research/runs/{run_id}/resume` | 从检查点恢复 |
+| `GET` | `/api/research/runs/{run_id}/events` | SSE：Agent/工具/进度/错误事件，结束发 `stream_end` |
+| `GET` | `/api/research/runs/{run_id}/report` | 报告 Markdown |
+| `GET` | `/api/research/agents` | 专业 Agent 能力清单 |
+| `GET` | `/api/graph/{county}` | 县域子图 |
+| `GET` | `/api/graph/query` | GraphRAG 自然语言查询 |
+| `GET` | `/api/graph/entities/{entity_id}` | 实体详情 |
+| `GET` | `/api/evidence/runs/{run_id}` | 运行证据快照 |
+| `GET` | `/api/evidence/runs/{run_id}/{evidence_id}` | 单条证据追溯 |
+| `GET` | `/api/reports` | 已生成报告的运行 |
+| `GET` | `/api/reports/{run_id}` / `/download` | 报告 JSON / Markdown 下载 |
+| `GET` | `/api/simulations/capabilities` | 仿真能力与边界 |
+| `POST` | `/api/simulations` | 基线情景仿真 |
+| `GET` | `/healthz` | 检查点/图/LLM/搜索后端 |
 
-项目内置了针对县域产业研究真实质量的客观基准评测系统（`src/county_research_ai/evaluation/`），涵盖安吉县竹产业、信丰县脐橙产业、鹤岗市产业转型三个基准案例。
+OpenAPI 文档：`http://127.0.0.1:8000/docs`。
 
-评测指标涵盖：
+## 配置
 
-- **检索质量**：Precision@K、Recall@K（核心事实覆盖率）、官方权威来源占比、内容去重率；
-- **研究深度与可靠性**：关键事实支持率（Claim-Evidence 闭环）、冲突与口径差异检出率。
+- `config/settings.yaml`：Agent 预算、图谱后端、API、仿真、时序、存储等非敏感配置。
+- `.env`：LLM 与搜索密钥、`GRAPH_BACKEND`、Neo4j 连接、`API_*`、`AGENT_*`、`RUNS_DIR`。
+- Neo4j 是可选依赖：`pip install -e ".[graph]"`，并设置 `GRAPH_BACKEND=neo4j`、`NEO4J_URI`、`NEO4J_PASSWORD`。未配置时使用 `InMemoryGraphStore`，所有测试无需真实数据库。
 
-完整评测报告与数据详见 [docs/BENCHMARK_REPORT.md](docs/BENCHMARK_REPORT.md)。评测复现命令：
+关键 Agent 预算（`config/settings.yaml`）：
+
+| 配置 | 默认 | 作用 |
+| :--- | :---: | :--- |
+| `agents.max_steps` | 6 | 单 Agent 最大工具步数 |
+| `agents.max_llm_calls` | 6 | 单 Agent 最大模型调用数 |
+| `agents.max_specialists` | 6 | 单轮最多并行 Agent 数 |
+| `agents.max_rounds` | 2 | Critic 反思补研最大轮数 |
+| `agents.recursion_limit` | 120 | LangGraph 递归上限 |
+
+## 项目结构
+
+```text
+src/county_research_ai/
+├── api/                 # FastAPI 入口、路由、依赖、Schema
+├── agents/              # 8 个专业 Agent、Critic、Report、工具与注册表
+├── orchestration/       # LangGraph 图、状态、Supervisor、路由、节点、检查点、运行服务
+├── knowledge_graph/     # 本体、抽取、消歧、图存储、GraphRAG、时序
+├── services/            # 搜索、证据、文档、发现、图谱、定量、机会、报告
+├── shining_stars/       # Star A/B/C 的领域契约与实现
+├── domain/              # 共享领域模型与事件
+├── infrastructure/      # 搜索适配器
+├── search/              # 既有采集、消歧、深度检索
+├── llm/                 # 兼容 OpenAI 的模型客户端与分析器
+├── reporting/           # Markdown 模板与渲染
+├── storage/             # 本地文件存储
+└── bootstrap/           # 应用容器与依赖装配
+```
+
+## 测试
 
 ```powershell
-python -c "from county_research_ai.evaluation.runner import BenchmarkRunner; runner = BenchmarkRunner(); reports = runner.run_all_cases(); [print(r.to_markdown()) for r in reports.values()]"
+python -m pytest -q --no-cov
 ```
 
-## 代码与验证
+测试默认使用 Mock LLM、静态搜索与内存图存储，不读取真实 Key，不依赖 Neo4j。当前测试覆盖服务、Agent、知识图谱、LangGraph 编排（含检查点恢复）、FastAPI（含 SSE）与三大 Star。详见 [docs/development/testing.md](docs/development/testing.md)。
 
-核心代码位于 `src/county_research_ai/`：`application/` 编排研究步骤，`modes/` 定义模式，`search/` 和 `llm/` 接入资料与模型，`reporting/` 生成报告，`agent/` 负责 Agent 流程。提示词位于 `prompts/`，测试位于 `tests/`。
+## 边界与限制
 
-```powershell
-python -m pip install -e ".[dev]"
-python -m pytest --no-cov -q
-```
+- 公开资料覆盖度取决于地区与搜索服务；Mock 模式只能验证流程。
+- 图谱只接受有证据的 `verified` 关系；`inferred` 机会与结论均显式标注，不能作为既成事实。
+- Star B 当前只提供确定性会计基线，不含价格、政策反馈与行为仿真；Mesa 引擎未实现。
+- Star C 提供时点查询接口；完整版本链需 Neo4j 版本节点或 Graphiti。
+- 本项目是研究辅助工具，报告需人工核查后使用。
 
-示例初稿见 [`reports/`](reports/)。这些文件展示输出形式，不代表其事实内容已经逐条核实。项目采用 Python、Click、Pydantic、httpx、Jinja2 和兼容 OpenAI API 的模型客户端；依赖清单以 [`pyproject.toml`](pyproject.toml) 为准。
+## 文档
 
-短视频内容与渲染扩展维护在 `codex/video-content` 分支，不属于默认研究流程。
+- [ARCHITECTURE_V2.md](ARCHITECTURE_V2.md)
+- [MIGRATION_V2.md](MIGRATION_V2.md)
+- [系统总览](docs/architecture/system-overview.md)
+- [多 Agent 设计](docs/architecture/multi-agent-design.md)
+- [知识图谱设计](docs/architecture/knowledge-graph-design.md)
+- [数据模型](docs/architecture/data-model.md)
+- [开发环境](docs/development/setup.md) / [测试](docs/development/testing.md)
+- [Shining Stars 路线图](docs/roadmap/shining-stars.md)
 
-## 协作与贡献
+## 协作
 
-欢迎提交 Issue 与 Pull Request 共同完善县域产业研报生成工具。
-
-本项目欢迎学术研究人员与开发者参与贡献。讨论交流请前往 [Discussions](https://github.com/OrdoAbChao7/CountyResearchAI/discussions)。
+欢迎提交 Issue 与 Pull Request。讨论交流请前往 [Discussions](https://github.com/OrdoAbChao7/CountyResearchAI/discussions)。
