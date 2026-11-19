@@ -201,6 +201,7 @@ class JobRunner:
                     "sections": result.report.section_count,
                     "mode_label": job.mode_label,
                     "deep_research": deep_projection,
+                    "report": self._report_projection(job, result),
                 },
                 budget_enforcement=enforcement,
             )
@@ -360,6 +361,7 @@ class JobRunner:
         if deep is None:
             return {"enabled": False}
         question_tree = getattr(deep, "question_tree", None)
+        evidence_store = getattr(deep, "evidence_store", None)
         return {
             "enabled": True,
             "coverage_rate": getattr(deep, "coverage_rate", None),
@@ -370,6 +372,11 @@ class JobRunner:
             "question_tree": (
                 question_tree.model_dump(mode="json") if question_tree is not None else None
             ),
+            "items": (
+                [item.model_dump(mode="json") for item in evidence_store.get_all()]
+                if evidence_store is not None
+                else []
+            ),
             "conflicts": [
                 conflict.model_dump(mode="json")
                 for conflict in getattr(deep, "conflicts", []) or []
@@ -378,6 +385,25 @@ class JobRunner:
                 gap.model_dump(mode="json")
                 for gap in getattr(deep, "gaps", []) or []
             ],
+        }
+
+    @staticmethod
+    def _report_projection(job: JobRecord, result: Any) -> dict[str, Any]:
+        report = result.report
+        return {
+            "provenance": (
+                "native_sections" if job.mode == "snapshot" else "markdown_split"
+            ),
+            "sections": [
+                {
+                    "title": section.title,
+                    "order": section.order,
+                    "content": section.content,
+                    "sources": list(section.sources),
+                }
+                for section in report.sections
+            ],
+            "markdown_chars": len(result.markdown),
         }
 
     def _stage(

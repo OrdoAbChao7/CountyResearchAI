@@ -24,6 +24,17 @@ from ..config import Settings, get_settings
 from ..evidence.graph import EvidenceGraphStore
 from .brief import render_decision_brief
 from .jobs import JobRecord, JobStatus, JobStore
+from .projections import (
+    EvidenceListResponse,
+    GraphView,
+    ProjectionUnavailable,
+    QuestionsView,
+    ReportView,
+    build_evidence_list,
+    build_graph_view,
+    build_questions_view,
+    build_report_view,
+)
 from .schemas import (
     CapabilitiesOut,
     ClaimChainOut,
@@ -262,6 +273,59 @@ async def _event_stream(
         await asyncio.sleep(0.2)
 
 
+def _projection_unavailable(exc: ProjectionUnavailable) -> HTTPException:
+    return HTTPException(
+        status_code=409,
+        detail={
+            "error": {
+                "code": "artifacts_unavailable",
+                "message": exc.message,
+                "reason": exc.reason,
+            }
+        },
+    )
+
+
+def _parse_topics(value: str) -> set[str]:
+    return {item.strip() for item in value.split(",") if item.strip()}
+
+
+def _legacy_report_text(
+    job: JobRecord, reports_dir: Path, *, required: bool
+) -> str | None:
+    if not job.report_path:
+        if required:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": {"code": "report_not_ready", "message": "no report yet"}
+                },
+            )
+        return None
+    report = Path(job.report_path).resolve()
+    root = reports_dir.resolve()
+    if root not in report.parents and report.parent != root:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": {
+                    "code": "report_outside_root",
+                    "message": "report path is outside the reports directory",
+                }
+            },
+        )
+    if not report.is_file():
+        if required:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": {"code": "report_not_found", "message": "report missing"}
+                },
+            )
+        return None
+    return report.read_text(encoding="utf-8")
+
+
 def _register_evidence_routes(
     app: FastAPI,
     *,
@@ -310,7 +374,9 @@ def _register_evidence_routes(
                     }
                 },
             )
-        return ClaimChainOut.from_chain(graph.get_chain(claim_id))
+        return ClaimChainOut.from_chain(
+            graph.get_chain(claim_id, run_id=job.job_id)
+        )
 
     @app.get(
         "/api/v1/research/tasks/{job_id}/sources",
@@ -339,6 +405,78 @@ def _register_evidence_routes(
             )
         return SourceDetailOut.from_snapshot(snapshot)
 
+    @app.get(
+        "/api/v1/research/tasks/{job_id}/questions",
+        response_model=QuestionsView,
+    )
+    def get_questions(job_id: str = PathParam(...)) -> QuestionsView:
+        job = _job_or_404(job_store, job_id)
+        try:
+            return build_questions_view(job)
+        except ProjectionUnavailable as exc:
+            raise _projection_unavailable(exc) from exc
+
+    @app.get(
+        "/api/v1/research/tasks/{job_id}/graph",
+        response_model=GraphView,
+    )
+    def get_graph(
+        job_id: str = PathParam(...),
+        max_nodes: int = Query(default=400, ge=50, le=1000),
+        max_edges: int = Query(default=800, ge=1, le=4000),
+        include_sources: bool = Query(default=True),
+        topics: str = Query(default=""),
+    ) -> GraphView:
+        job = _job_or_404(job_store, job_id)
+        try:
+            return build_graph_view(
+                job=job,
+                graph=graph,
+                max_nodes=max_nodes,
+                max_edges=max_edges,
+                include_sources=include_sources,
+                topics=_parse_topics(topics),
+            )
+        except ProjectionUnavailable as exc:
+            raise _projection_unavailable(exc) from exc
+
+    @app.get(
+        "/api/v1/research/tasks/{job_id}/evidence",
+        response_model=EvidenceListResponse,
+    )
+    def get_evidence(
+        job_id: str = PathParam(...),
+        q: str = Query(default=""),
+        status: str = Query(default=""),
+        topic: str = Query(default=""),
+        min_credibility: float = Query(default=0.0, ge=0.0, le=1.0),
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0),
+    ) -> EvidenceListResponse:
+        job = _job_or_404(job_store, job_id)
+        return build_evidence_list(
+            job=job,
+            graph=graph,
+            query=q,
+            status=status.strip().upper(),
+            topic=topic,
+            min_credibility=min_credibility,
+            limit=limit,
+            offset=offset,
+        )
+
+    @app.get(
+        "/api/v1/research/tasks/{job_id}/report.json",
+        response_model=ReportView,
+    )
+    def get_report_json(job_id: str = PathParam(...)) -> ReportView:
+        job = _job_or_404(job_store, job_id)
+        return build_report_view(
+            job=job,
+            graph=graph,
+            legacy_markdown=_legacy_report_text(job, reports_dir, required=False),
+        )
+
     @app.get("/api/v1/research/tasks/{job_id}/brief")
     def get_brief(job_id: str = PathParam(...)) -> PlainTextResponse:
         job = _job_or_404(job_store, job_id)
@@ -362,35 +500,26 @@ def _register_evidence_routes(
     @app.get("/api/v1/research/tasks/{job_id}/report")
     def get_report(job_id: str = PathParam(...)) -> PlainTextResponse:
         job = _job_or_404(job_store, job_id)
-        if not job.report_path:
-            raise HTTPException(
-                status_code=404,
-                detail={
-                    "error": {"code": "report_not_ready", "message": "no report yet"}
-                },
-            )
-        report = Path(job.report_path).resolve()
-        root = reports_dir.resolve()
-        if root not in report.parents and report.parent != root:
-            raise HTTPException(
-                status_code=403,
-                detail={
-                    "error": {
-                        "code": "report_outside_root",
-                        "message": "report path is outside the reports directory",
-                    }
-                },
-            )
-        if not report.is_file():
-            raise HTTPException(
-                status_code=404,
-                detail={
-                    "error": {"code": "report_not_found", "message": "report missing"}
-                },
-            )
+        view = build_report_view(
+            job=job,
+            graph=graph,
+            legacy_markdown=_legacy_report_text(job, reports_dir, required=False),
+        )
         return PlainTextResponse(
-            report.read_text(encoding="utf-8"),
+            view.markdown,
             media_type="text/markdown; charset=utf-8",
+        )
+
+    @app.get("/api/v1/research/tasks/{job_id}/report/draft")
+    def get_report_draft(job_id: str = PathParam(...)) -> PlainTextResponse:
+        job = _job_or_404(job_store, job_id)
+        markdown = _legacy_report_text(job, reports_dir, required=True)
+        return PlainTextResponse(
+            markdown or "",
+            media_type="text/markdown; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{job.job_id}-draft.md"'
+            },
         )
 
 
