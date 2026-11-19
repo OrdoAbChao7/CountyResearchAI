@@ -95,6 +95,9 @@ def test_verified_report_uses_only_supported_facts(tmp_path):
     assert view.verification.total == 2
     assert view.citations[0].n == 1
     assert view.citations[0].claim_id == supported.claim_id
+    assert view.citations[0].value == "120"
+    assert view.citations[0].unit == "亿元"
+    assert view.citations[0].period == "2024"
     assert view.markdown.startswith("# 安吉县竹产业研究报告")
 
 
@@ -186,6 +189,8 @@ def test_report_is_honest_when_no_claim_is_supported(tmp_path):
     assert "没有通过确定性校验" in verified.content
     assert view.verification.verified == 0
     assert view.verification.unverified == 1
+    assert "999" not in view.markdown
+    assert claim.statement not in view.markdown
 
 
 def test_split_markdown_sections_skips_title_only_preamble():
