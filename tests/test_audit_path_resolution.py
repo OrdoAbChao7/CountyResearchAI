@@ -46,13 +46,23 @@ def _repo_layout(tmp_path: Path) -> tuple[Path, Path, Path]:
     return repo_root, runs_dir, batch_root
 
 
+def _foreign_recorded(tmp_path: Path, db_name: str) -> Path:
+    """An absolute path outside the repository that is guaranteed not to exist."""
+    return (
+        tmp_path
+        / "foreign-checkout"
+        / "experiments"
+        / "independent_comparison"
+        / "runs"
+        / db_name
+    )
+
+
 def test_foreign_absolute_path_resolves_via_experiments_suffix(tmp_path: Path) -> None:
     repo_root, runs_dir, batch_root = _repo_layout(tmp_path)
     db_name = "continuation_resource_manager_20261019.sqlite"
     _make_resource_db(runs_dir / db_name)
-    recorded = Path(r"\\nonexistent-host.invalid\CountyResearchAI") / "experiments" / (
-        "independent_comparison/runs"
-    ) / db_name
+    recorded = _foreign_recorded(tmp_path, db_name)
 
     resolved, source = _resolve_recorded_path(
         recorded, search_dir=batch_root.parent, repo_root=repo_root
@@ -95,9 +105,7 @@ def test_audit_reports_relocated_path_and_closed_ledger(tmp_path: Path) -> None:
     repo_root, runs_dir, batch_root = _repo_layout(tmp_path)
     db_name = "continuation_resource_manager_20261019.sqlite"
     _make_resource_db(runs_dir / db_name)
-    recorded = Path(r"\\nonexistent-host.invalid\CountyResearchAI") / "experiments" / (
-        "independent_comparison/runs"
-    ) / db_name
+    recorded = _foreign_recorded(tmp_path, db_name)
 
     resolved, source = _resolve_recorded_path(
         recorded, search_dir=batch_root.parent, repo_root=repo_root

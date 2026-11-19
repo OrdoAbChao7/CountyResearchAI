@@ -319,6 +319,15 @@ class DeepResearchCoordinator:
                 len(reflection.followup_queries),
                 reflection.followup_queries,
             )
+            emit(
+                "retrieval.round.started",
+                stage="analyze",
+                payload={
+                    "round": turn + 1,
+                    "queries": len(reflection.followup_queries),
+                    "supplemental": True,
+                },
+            )
             supp_docs = self._collect_supp(reflection.followup_queries)
             emit(
                 "retrieval.round.completed",

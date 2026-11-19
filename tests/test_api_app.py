@@ -324,6 +324,21 @@ def test_deep_mock_pipeline_emits_fine_grained_events(tmp_path):
         "synthesis.completed",
         "report.rendered",
     } <= set(types)
+    round_started = [
+        event["payload"]["round"]
+        for event in events
+        if event["event_type"] == "retrieval.round.started"
+    ]
+    round_completed = [
+        event["payload"]["round"]
+        for event in events
+        if event["event_type"] == "retrieval.round.completed"
+    ]
+    assert round_completed
+    assert all(round_number in round_started for round_number in round_completed)
+    assert types.index("retrieval.round.started") < types.index(
+        "retrieval.round.completed"
+    )
     coverage = next(
         event for event in events if event["event_type"] == "question_tree.coverage"
     )
