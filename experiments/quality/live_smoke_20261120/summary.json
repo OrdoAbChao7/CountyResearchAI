@@ -1,0 +1,244 @@
+{
+  "date": "2026-11-20",
+  "authorization": "user: 允许付费调用 + 跑一次 Live (2026-11-20)",
+  "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
+  "provider": {
+    "llm": "deepseek",
+    "model": "deepseek-flash",
+    "base_url": "https://api.deepseek.com/v1",
+    "search": "tavily",
+    "search_depth": "basic"
+  },
+  "model_ids": [
+    "deepseek-flash",
+    "deepseek-v4-pro"
+  ],
+  "preflight": {
+    "content_chars": 7,
+    "model": "deepseek-flash",
+    "total_tokens": 13
+  },
+  "capabilities": {
+    "status": 200,
+    "mode_label": "LIVE"
+  },
+  "job_id": "d367c9b277cf47d086d28f9824d661e5",
+  "status": "SUCCEEDED",
+  "mode_label": "LIVE",
+  "outcome": "NO_PROGRESS",
+  "outcome_reason": "no_supported_claims",
+  "budget_enforcement": {
+    "enforced": [
+      "deadline_seconds"
+    ],
+    "bounded_per_call": [
+      "max_tokens",
+      "max_documents"
+    ],
+    "not_enforced_on_workflow_path": [
+      "max_steps",
+      "max_search_calls",
+      "max_cost"
+    ],
+    "elapsed_seconds": 30.597,
+    "deadline_seconds": 480.0
+  },
+  "event_count": 28,
+  "event_types": [
+    "job.queued",
+    "job.started",
+    "stage.collect.started",
+    "stage.collect.completed",
+    "stage.discover.started",
+    "stage.discover.completed",
+    "stage.evidence.started",
+    "stage.evidence.completed",
+    "stage.analyze.started",
+    "question_tree.created",
+    "evidence.ingested",
+    "question_tree.coverage",
+    "gaps.detected",
+    "conflicts.detected",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "synthesis.started",
+    "synthesis.completed",
+    "stage.analyze.completed",
+    "evidence.persisted",
+    "stage.report.started",
+    "stage.report.completed",
+    "report.rendered",
+    "job.completed"
+  ],
+  "graph": {
+    "http_status": 200,
+    "total_nodes": 273,
+    "returned_nodes": 273,
+    "total_edges": 1869,
+    "returned_edges": 800,
+    "truncated": true
+  },
+  "report": {
+    "json_status": 200,
+    "markdown_status": 200,
+    "sections": [
+      "summary",
+      "verified-facts",
+      "disputes",
+      "gaps",
+      "sources",
+      "method"
+    ],
+    "verification": {
+      "verified": 0,
+      "unverified": 239,
+      "total": 239,
+      "notes": [
+        "NOT_COMPARABLE: 239",
+        "证据不足的结论不在事实表中复述。"
+      ],
+      "per_section": {
+        "verified": 0,
+        "disputes": 239,
+        "gaps": 2
+      }
+    },
+    "citation_count": 239,
+    "conflict_count": 7,
+    "gap_count": 2
+  },
+  "sources": {
+    "http_status": 200,
+    "count": 8,
+    "items": [
+      {
+        "title": "(湖州市)2025年安吉县国民经济和社会发展统计公报-红黑统计公报库",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "published_at": "2025-01-01T00:00:00Z"
+      },
+      {
+        "title": "浙江农林大学：一根科技竹成就百姓共富大产业 - 中华人民共和国教育部政府门户网站",
+        "url": "http://moe.gov.cn/jyb_xwfb/xw_zt/moe_357/jjyzt_2022/2022_zt04/dianxing/xiangmu/shengshu/shengshu6th/202312/t20231211_1094166.html",
+        "published_at": null
+      },
+      {
+        "title": "国家统计局信息公开",
+        "url": "https://stats.gov.cn/WZWSREL3h4Z2svc2pmYi96eGZiMjAyMC8yMDI1MTAvdDIwMjUxMDIwXzE5NjE2MTEuaHRtbA==",
+        "published_at": "2025-10-20T00:00:00Z"
+      },
+      {
+        "title": "统计公报_ 数据发布_ 福建省人民政府门户网站",
+        "url": "https://fujian.gov.cn/zwgk/sjfb/tjgb",
+        "published_at": null
+      },
+      {
+        "title": "洛阳市人民政府关于印发洛阳市国民经济和社会发展第十五个五年规划纲要的通知_2026年_洛阳市人民政府",
+        "url": "https://ly.gov.cn/2026/06-17/1067947.html",
+        "published_at": "2026-06-17T00:00:00Z"
+      },
+      {
+        "title": "中华人民共和国2023年国民经济和社会发展统计公报 - 国家统计局",
+        "url": "https://stats.gov.cn/sj/zxfb/202402/t20240228_1947915.html",
+        "published_at": "2023-01-01T00:00:00Z"
+      },
+      {
+        "title": "2026年8月份规模以上工业增加值增长5.2% - 国家统计局",
+        "url": "https://stats.gov.cn/sj/zxfb/202609/t20260915_1965308.html",
+        "published_at": "2026-01-01T00:00:00Z"
+      },
+      {
+        "title": "湖南省蓝山县竹产业高质量发展规划(2026 年",
+        "url": "https://lanshan.gov.cn/lsxnyj/0300/202608/2c7925e1417147068e6eb41b442b8d1d/files/8ed7af28169b4ec0aa04151d79066aa4.pdf",
+        "published_at": null
+      }
+    ]
+  },
+  "guard": {
+    "llm_calls": 2,
+    "search_calls": 7,
+    "prompt_tokens": 2848,
+    "completion_tokens": 771,
+    "total_tokens": 3619,
+    "llm_seconds": 7.36,
+    "search_seconds": 32.73,
+    "elapsed_seconds": 47.89,
+    "violations": [],
+    "llm_events": [
+      {
+        "call": 1,
+        "model": "deepseek-flash",
+        "prompt_tokens": 10,
+        "completion_tokens": 3,
+        "total_tokens": 13,
+        "seconds": 2.78
+      },
+      {
+        "call": 2,
+        "model": "deepseek-flash",
+        "prompt_tokens": 2838,
+        "completion_tokens": 768,
+        "total_tokens": 3606,
+        "seconds": 4.58
+      }
+    ],
+    "search_events": [
+      {
+        "call": 3,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 4.3
+      },
+      {
+        "call": 4,
+        "query_chars": 22,
+        "documents": 6,
+        "seconds": 4.69
+      },
+      {
+        "call": 5,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 4.75
+      },
+      {
+        "call": 6,
+        "query_chars": 31,
+        "documents": 6,
+        "seconds": 4.12
+      },
+      {
+        "call": 7,
+        "query_chars": 25,
+        "documents": 6,
+        "seconds": 4.32
+      },
+      {
+        "call": 7,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 4.34
+      },
+      {
+        "call": 7,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 6.21
+      }
+    ]
+  },
+  "verdict": "PASS_ENGINEERING",
+  "verdict_scope": "engineering_smoke_only",
+  "verdict_reason": "live plumbing works, but the verifier accepted zero claims",
+  "research_verdict": "NO_SUPPORTED_CLAIMS",
+  "estimated_cost_usd": {
+    "llm_offpeak": 0.00089,
+    "llm_peak_worst_case": 0.00178,
+    "tavily_if_paid": 0.056,
+    "total_if_tavily_paid": 0.0578
+  },
+  "artifact_note": "verdict label scoped after the run; measured counts are unchanged"
+}

@@ -119,6 +119,24 @@ f72b9a0 feat: capture deep research results in the run context
 | 无障碍 | 同上，axe WCAG A/AA | 六个界面 0 violations |
 | MOCK 演示 | `PYTHONPATH=src python scripts/run_finish_roadmap_demo.py` | `SUCCEEDED/SUFFICIENT`，35 事件，25 节点/33 边，1 SUPPORTED / 5 NOT_COMPARABLE，2 冲突，3 缺口 |
 
+### Live smoke（2026-11-20，单次授权）
+
+| 检查 | 结果 |
+| --- | --- |
+| 命令 | `PYTHONPATH=src python scripts/run_live_smoke.py --env-file E:/Projects/CountyResearchAI/.env --confirm-paid` |
+| Job | `d367c9b277cf47d086d28f9824d661e5` |
+| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |
+| 事件 / 图谱 | 28 事件；273 节点 / 1,869 边，返回 800 边 |
+| 报告 | 0 verified / 239 `NOT_COMPARABLE`；7 冲突；2 缺口；8 来源 |
+| 用量 | 2 次 LLM、3,619 tokens；7 次 Tavily basic；0 违规；47.89s |
+| 成本 | 模型 $0.00089；Tavily 若付费 $0.056；合计 ≤ $0.0578 |
+
+结论：真实 provider、JobStore/JobRunner、事件、证据图与报告投影全部跑通，
+记为 `PASS_ENGINEERING`；研究结果为 `NO_PROGRESS`。根 `.env` 的
+Gemini 配置与 DeepSeek key 不匹配，smoke 使用进程级覆盖；发现调用用满
+768 output token，focus 从 `竹产业` 回退为 `特色农业`，检索还包含非安吉来源。
+因此这不构成 Live 质量验收，也不满足 M5。
+
 ## 6. 三个 P0 验收结果
 
 | 约束 | 结果 | 代码 | 回归测试 |
@@ -153,7 +171,7 @@ f72b9a0 feat: capture deep research results in the run context
 | 项目 | 状态 | 说明 |
 | --- | --- | --- |
 | 40–60 个独立密封任务集 | NOT_MET | M5 仍未完成；不得用 2 个 pilot 任务替代 |
-| Live 端到端评测 / 语义 Judge | BLOCKED_EXTERNAL | 需要单独付费 cost gate；本轮按规则未调用任何付费 API |
+| Live 端到端评测 / 语义 Judge | PARTIAL | 2026-11-20 执行了**一次**显式授权的受限 Live smoke（`docs/goal/LIVE_SMOKE.md`）：真实 DeepSeek + Tavily、`SUCCEEDED/LIVE`，但 `NO_PROGRESS`（0 verified / 239 NOT_COMPARABLE）。这不是 Live 评测，语义 Judge 仍未运行 |
 | 人工标注与裁决 | BLOCKED_HUMAN_ANNOTATION | 无人工标签 |
 | 真实调查的 400 节点浏览器基准 | NOT_RUN | 本轮只验证合成 400 节点/800 边投影 |
 | 章节级流式生成 / 真实 token 核算 | NOT_RUN | 报告一次性生成，界面不伪造 |
@@ -193,11 +211,11 @@ cd web && npm run typecheck && npm test && npm run build
 cd web && AXIOMSCOPE_E2E_PORT=8040 npx playwright test
 ```
 
-根目录 `.env` 已确认存在 `LLM_*` 与搜索服务配置。本轮依据 Goal 规则第 9 条未调用真实付费 LLM/搜索；默认仍为 MOCK。
+根目录 `.env` 已确认存在 `LLM_*` 与搜索服务配置。2026-11-20 在用户明确授权下执行了**一次**受限 Live smoke；默认仍为 MOCK。根 `.env` 当前把 Gemini endpoint/model 与一个 DeepSeek key 配在一起，smoke 使用进程级覆盖，未修改 `.env` 或主工作区。详见 `docs/goal/LIVE_SMOKE.md`。
 
 ## 10. 后续建议
 
-1. 在单独 cost gate 下用 DeepSeek/搜索跑一次受预算约束的 Live smoke，再决定是否进入 Live 评测；不要在默认路径开启。
+1. 先修复根 `.env` 的 provider/model 与 DeepSeek key 不匹配；再决定是否给 discovery 更高 output 额度并让显式 `research_focus` 优先。Live smoke 已证明链路可用，但检索区域相关性和期间归因仍需修复；第二次付费运行需要新的显式授权。
 2. 先补齐 40–60 个密封任务与预期引文（`docs/evaluation/DESIGN.md`），再做 Live + 语义 Judge；不要用 pilot 调参。
 3. 用真实调查数据做 400 节点浏览器基准，记录首帧、筛选、聚焦与内存；当前数字只代表合成夹具。
 4. 若需要章节级流式，单独设计“报告已完成、前端逐节展示”与“真实流式生成”的区分，避免把视觉编排说成流式。

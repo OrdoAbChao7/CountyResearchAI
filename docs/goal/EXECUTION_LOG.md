@@ -64,7 +64,7 @@ Playwright 覆盖：
 
 ## 5. 未完成 / 不计为 PASS
 
-- M5 的 40–60 个独立密封任务集、Live 端到端评测、语义 Judge、人工标注与裁决：仍未完成；付费 Live/Judge 属 `BLOCKED_EXTERNAL`。
+- M5 的 40–60 个独立密封任务集、Live 端到端评测、语义 Judge、人工标注与裁决：仍未完成。2026-11-20 只执行了一次显式授权的受限 Live smoke（见第 7 节）；它不构成 Live 评测，也不满足 M5。
 - 真实调查的 400 节点浏览器基准：`NOT_RUN`。本轮通过的是 400 节点/800 边**合成投影**的浏览器性能测试，不是真实公开资料调查。
 - 章节级流式生成与真实 token 核算：`NOT_RUN`，界面明确不伪造。
 - 真实供应链关系：未建模，图谱只投影已持久化的关系。
@@ -75,3 +75,34 @@ Playwright 覆盖：
 本轮 Goal 的完成条件已满足：T2/T3/T7/T10/T12/T13 均有验收证据，三个 P0 回归通过，核心架构保持，后端/前端/E2E 全绿，Wizard 可实际运行，图谱与报告可追溯，所有改动已提交，主工作区未受破坏。
 
 下一步只建议在获得单独授权后进行：Live + 语义 Judge 的 cost gate、密封任务集、真实 400 节点调查基准、流式章节与非证据型供应链关系。
+
+## 7. 受限 Live smoke（2026-11-20，已获用户授权）
+
+用户明确表示“允许付费调用”并“跑一次 Live”。执行了**一次**带硬上限的
+Live 任务；未执行第二次，也未启动 Live 评测、语义 Judge 或密封任务集。
+
+| 检查 | 结果 |
+| --- | --- |
+| Provider | DeepSeek `deepseek-flash`（进程级覆盖）+ Tavily basic |
+| 配置发现 | 根 `.env` 写的是 Gemini endpoint/model，但 key 是 DeepSeek key；免费 `/models` 验证 200，Gemini 端点 400。未修改根 `.env` 或主工作区 |
+| Job | `d367c9b277cf47d086d28f9824d661e5` |
+| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |
+| 事件 / 图谱 | 28 事件；273 节点 / 1,869 边，返回 800 边 |
+| 报告 | 0 verified / 239 `NOT_COMPARABLE`；7 冲突；2 缺口；8 来源 |
+| 守卫 | 2 次 LLM、7 次 Tavily；0 违规；47.89s |
+| 成本 | 模型 $0.00089；Tavily 7 credits（若付费 $0.056）；≤ $0.0578 |
+| 结论 | 工程链路 PASS；研究结果为 `NO_PROGRESS`，不构成质量 PASS |
+
+暴露的问题：
+
+- 合约指定的 `竹产业` 被自动发现覆盖为 `特色农业`；发现调用正好用满 768
+  output token，疑似 JSON 截断后回退到 handler 默认方向。
+- 检索结果包含福建、洛阳、湖南蓝山与国家统计局等非安吉来源，区域相关性不足。
+- 所有 239 条 claim 均为 `NOT_COMPARABLE`（多数为 2022/2023/2025/2026 时间窗，
+  少数缺少可用期间）；其中“2024 年竹产业产值为 6.855 亿元”被标为
+  `outside_requested_window:2026`，期间归因需要单独核查，暂不称为误拒。
+- 真实数据已产生 273 节点，说明真实调查的图谱规模会超过合成 400 节点测试的
+  假设；真实 400 节点浏览器基准仍未运行。
+
+完整记录：`docs/goal/LIVE_SMOKE.md`；预算与实际用量：
+`docs/goal/LIVE_SMOKE_COST_GATE.md`。

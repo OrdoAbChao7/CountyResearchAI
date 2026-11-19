@@ -181,3 +181,26 @@ Still not accepted: M5's 40–60 sealed tasks, live end-to-end + semantic Judge
 (cost gate), human adjudication, a real-investigation 400-node benchmark,
 section streaming/token accounting, and supply-chain relations. The 400-node
 number above is a synthetic projection test, not a real investigation.
+
+## Live smoke (2026-11-20)
+
+One explicitly authorized paid smoke ran through the real API path; no second
+run was made. Full record: `docs/goal/LIVE_SMOKE.md`; budget and actual usage:
+`docs/goal/LIVE_SMOKE_COST_GATE.md`.
+
+| Item | Result |
+| --- | --- |
+| Job | `d367c9b277cf47d086d28f9824d661e5`, `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` (`no_supported_claims`) |
+| Provider | DeepSeek `deepseek-flash` + Tavily basic |
+| Usage | 2 LLM calls / 3,619 tokens; 7 searches; 0 guard violations |
+| Cost | $0.00089 model; $0.056 if Tavily credits were paid; ≤ $0.0578 |
+| Projections | 28 events; 273 nodes / 1,869 edges (800 returned); 6 report sections |
+| Verification | 0 verified / 239 `NOT_COMPARABLE`; 7 conflicts; 2 gaps |
+
+Findings: the root `.env` has a Gemini endpoint/model paired with a DeepSeek
+key (smoke used process overrides and left `.env` untouched); the discovery call
+hit its 768-token cap and the focus fell back from `竹产业` to `特色农业`;
+retrieval returned off-region sources; all 239 claims were `NOT_COMPARABLE`
+(most outside the 2024 window, a few missing a usable period).
+This is an engineering smoke only, not Live evaluation or M5 acceptance.
