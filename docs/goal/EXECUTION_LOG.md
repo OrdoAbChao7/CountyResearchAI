@@ -58,6 +58,7 @@ Playwright 覆盖：
 ```text
 46112d0 feat(web): add dispute panels and report-graph linkage
 0adc236 perf(web): bound large-graph layout and add accessibility coverage
+63a0a0e test: record one bounded live provider smoke
 ```
 
 文档提交（本日志、最终报告、STATE/ACCEPTANCE/README）紧随其后。
