@@ -424,23 +424,37 @@ class GraphRAGQueryEngine:
             notes=list(context.notes),
         )
 
+    @staticmethod
+    def _verified(candidates: list[KGEntity]) -> list[KGEntity]:
+        return [
+            entity
+            for entity in candidates
+            if entity.verification_status == VerificationStatus.VERIFIED
+        ]
+
     def _find(
         self, entity_type: EntityType, name: str, county: str = ""
     ) -> KGEntity | None:
-        candidates = self._graph.find_entities(
-            entity_type=entity_type, name=name, county=county or None, limit=10
+        candidates = self._verified(
+            self._graph.find_entities(
+                entity_type=entity_type, name=name, county=county or None, limit=10
+            )
         )
         if candidates:
             return candidates[0]
         # 不限县域再试一次（抽取时可能未写 county）
-        candidates = self._graph.find_entities(entity_type=entity_type, name=name, limit=10)
+        candidates = self._verified(
+            self._graph.find_entities(entity_type=entity_type, name=name, limit=10)
+        )
         return candidates[0] if candidates else None
 
     def _find_any(self, name: str, county: str = "") -> KGEntity | None:
-        candidates = self._graph.find_entities(name=name, county=county or None, limit=10)
+        candidates = self._verified(
+            self._graph.find_entities(name=name, county=county or None, limit=10)
+        )
         if candidates:
             return candidates[0]
-        candidates = self._graph.find_entities(name=name, limit=10)
+        candidates = self._verified(self._graph.find_entities(name=name, limit=10))
         return candidates[0] if candidates else None
 
     def _entity_name(self, entity_id: str) -> str:

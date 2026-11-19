@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 def _iso(value: datetime | None) -> str:
-    return value.isoformat() if value else ""
+    if value is None:
+        return ""
+    if value.tzinfo is not None:
+        value = value.astimezone(timezone.utc)
+    return value.isoformat()
 
 
 def _parse_dt(value: Any) -> datetime | None:
@@ -79,7 +83,7 @@ class Neo4jGraphStore(GraphStore):
             "FOR (e:KGEntity) REQUIRE e.id IS UNIQUE",
             "CREATE INDEX kg_entity_name IF NOT EXISTS FOR (e:KGEntity) ON (e.name)",
             "CREATE INDEX kg_entity_county IF NOT EXISTS FOR (e:KGEntity) ON (e.county)",
-            "CREATE INDEX kg_entity_type IF NOT EXISTS FOR (e:KGEntity) ON (e.type)",
+            "CREATE INDEX kg_entity_type IF NOT EXISTS FOR (e:KGEntity) ON (e.entity_type)",
             "CREATE INDEX kg_entity_domain IF NOT EXISTS FOR (e:KGEntity) ON (e.domain)",
         ]
         try:
@@ -292,6 +296,17 @@ class Neo4jGraphStore(GraphStore):
         if relationship_type:
             clauses.append("r.relationship_type = $relationship_type")
             params["relationship_type"] = relationship_type.value
+        if as_of is not None:
+            # Apply the time filter in Cypher, *before* LIMIT.  Filtering after
+            # LIMIT can drop valid historical relations when the graph has more
+            # recent relations than the limit.
+            clauses.append(
+                "(r.valid_from IS NULL OR r.valid_from = '' OR r.valid_from <= $as_of)"
+            )
+            clauses.append(
+                "(r.valid_to IS NULL OR r.valid_to = '' OR r.valid_to > $as_of)"
+            )
+            params["as_of"] = _iso(as_of)
         rows = self._run(
             "MATCH (a:KGEntity)-[r:RELATED]->(b:KGEntity) "
             f"WHERE {' AND '.join(clauses)} "
@@ -306,6 +321,8 @@ class Neo4jGraphStore(GraphStore):
             payload["source_entity_id"] = row["source_entity_id"]
             payload["target_entity_id"] = row["target_entity_id"]
             rel = self._relation_from_row(payload)
+            # Defensive re-check in case a backend stores dates in another
+            # format; the Cypher filter is the primary guard.
             if as_of and not rel.is_active(as_of):
                 continue
             relations.append(rel)

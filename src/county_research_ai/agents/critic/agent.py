@@ -14,6 +14,7 @@ from ...domain.intelligence import (
     CritiqueFinding,
     CritiqueReport,
 )
+from ...evidence.support import check_claim_evidence
 from ...llm.structured import parse_json_object
 from ..base import AgentContext, AgentSpec, ToolObservation
 
@@ -95,8 +96,13 @@ class CriticAgent:
             logger.warning("Critic LLM 审计失败，使用确定性审计 | err=%s", exc)
             refined = None
         report = refined or audit
-        # 安全护栏：不允许多轮把"无证据结论"判为充分
-        if audit.unsupported_claims > 0 or audit.coverage < 0.5:
+        # 安全护栏：LLM 不得把确定性审计中的高危问题（无证据、未验证证据、
+        # 全量降级等）覆盖为"充分"。
+        if (
+            audit.unsupported_claims > 0
+            or audit.coverage < 0.5
+            or any(finding.severity == "high" for finding in audit.findings)
+        ):
             report.is_sufficient = False
         report.audited_claims = max(report.audited_claims, audit.audited_claims)
         report.unsupported_claims = max(report.unsupported_claims, audit.unsupported_claims)
@@ -120,8 +126,20 @@ class CriticAgent:
             for claim in result.claims:
                 total += 1
                 agents_with_claims.add(result.agent.value)
-                valid = [i for i in claim.evidence_ids if context.evidence.get(i) is not None]
-                if not valid:
+                check = check_claim_evidence(
+                    claim.text, claim.evidence_ids, context.evidence.get
+                )
+                if check.unknown:
+                    findings.append(
+                        CritiqueFinding(
+                            kind="invalid_evidence_ref",
+                            description=f"结论引用了不存在的证据 ID：{claim.text[:100]}",
+                            severity="high",
+                            agent=result.agent.value,
+                            evidence_ids=check.unknown,
+                        )
+                    )
+                if not check.existing:
                     unsupported += 1
                     findings.append(
                         CritiqueFinding(
@@ -133,37 +151,48 @@ class CriticAgent:
                             evidence_ids=claim.evidence_ids,
                         )
                     )
-                elif len(valid) != len(claim.evidence_ids):
+                    continue
+                if check.unsupported:
+                    unsupported += 1
                     findings.append(
                         CritiqueFinding(
-                            kind="invalid_evidence_ref",
-                            description=f"结论引用了不存在的证据 ID：{claim.text[:100]}",
+                            kind="unverified_evidence",
+                            description=(
+                                f"结论引用的证据未验证或不能直接支持该结论："
+                                f"{claim.text[:100]}"
+                            ),
                             severity="high",
                             agent=result.agent.value,
-                            evidence_ids=claim.evidence_ids,
+                            evidence_ids=check.unsupported,
+                            followup_queries=[
+                                f"{context.county} {context.focus or ''} {claim.text[:30]} 官方"
+                            ],
                         )
                     )
-                else:
+                elif check.fully_supported:
                     supported += 1
-                    weak = [
-                        i
-                        for i in valid
-                        if (item := context.evidence.get(i)) is not None
-                        and item.credibility_score < 0.4
-                    ]
-                    if weak:
-                        findings.append(
-                            CritiqueFinding(
-                                kind="weak_source",
-                                description=f"结论主要依赖低可信度来源：{claim.text[:100]}",
-                                severity="low",
-                                agent=result.agent.value,
-                                evidence_ids=weak,
-                                followup_queries=[
-                                    f"{context.county} {context.focus or ''} {claim.text[:30]} 官方"
-                                ],
-                            )
+                else:
+                    # 存在有效证据但还有未知 ID；已由 invalid_evidence_ref 阻断充分性。
+                    unsupported += 1
+                weak = [
+                    i
+                    for i in check.existing
+                    if (item := context.evidence.get(i)) is not None
+                    and item.credibility_score < 0.4
+                ]
+                if weak:
+                    findings.append(
+                        CritiqueFinding(
+                            kind="weak_source",
+                            description=f"结论依赖低可信度来源：{claim.text[:100]}",
+                            severity="low",
+                            agent=result.agent.value,
+                            evidence_ids=weak,
+                            followup_queries=[
+                                f"{context.county} {context.focus or ''} {claim.text[:30]} 官方"
+                            ],
                         )
+                    )
             if result.degraded:
                 findings.append(
                     CritiqueFinding(
@@ -196,6 +225,19 @@ class CriticAgent:
                     kind="coverage_gap",
                     description="缺少关键维度结论：" + "、".join(k.value for k in missing_agents),
                     severity="high" if len(missing_agents) >= 2 else "medium",
+                )
+            )
+        professional = [r for r in results if r.agent != AgentKind.OPPORTUNITY]
+        degraded_agents = [r.agent.value for r in professional if r.degraded]
+        if professional and len(degraded_agents) == len(professional):
+            findings.append(
+                CritiqueFinding(
+                    kind="degraded_run",
+                    description=(
+                        "全部专业 Agent 均以降级模式完成（LLM 不可用或失败），"
+                        "本轮结论不能视为充分证据"
+                    ),
+                    severity="high",
                 )
             )
         coverage = round(supported / total, 3) if total else 0.0
@@ -233,8 +275,9 @@ class CriticAgent:
             unsupported_claims=unsupported,
             round=round_no,
             reasoning=(
-                f"确定性审计：{total} 条结论，{supported} 条有有效证据，"
-                f"{unsupported} 条无有效证据；覆盖 Agent {len(agents_with_claims)} 个。"
+                f"确定性审计：{total} 条结论，{supported} 条被已验证证据完整支持，"
+                f"{unsupported} 条无有效/未验证证据；覆盖 Agent "
+                f"{len(agents_with_claims)} 个，降级 Agent {len(degraded_agents)} 个。"
             ),
         )
 

@@ -54,7 +54,7 @@ def test_evidence_store_detects_conflicts_and_explains_reasons():
 def test_evidence_store_assesses_question_tree_coverage():
     store = EvidenceStore()
     doc = RawDoc(
-        title="安吉县竹林面积统计",
+        title="2023年安吉县竹林面积统计",
         url="https://anji.gov.cn/stat",
         snippet="全县竹林面积达101万亩，竹产业总产值超280亿元。",
         domain_type="government",
@@ -286,3 +286,19 @@ def test_policy_evidence_is_the_source_clause_and_remains_traceable():
     assert len(policy) == 1
     assert policy[0].claim == "国家发展改革委等部门印发《加快“以竹代塑”发展三年行动计划》"
     assert policy[0].claim in doc.snippet
+
+
+def test_official_stat_without_year_is_not_verified():
+    """官方统计缺少年份时不得直接标记为已验证（避免过期数字变成当前事实）。"""
+    store = EvidenceStore()
+    doc = RawDoc(
+        title="安吉县竹林面积统计",
+        url="https://anji.gov.cn/stat",
+        snippet="全县竹林面积达101万亩，竹产业总产值超280亿元。",
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    items = store.ingest_documents([doc], county="安吉县", focus="竹产业")
+    economic = [item for item in items if item.topic == "economic"]
+    assert economic
+    assert all(item.verification_status != "verified" for item in economic)

@@ -30,10 +30,18 @@ class ResearchQuestionTree:
         return [branch.question for branch in self.branches]
 
     def default_tasks(self, *, round_no: int = 1, limit: int = 6) -> list[ResearchTask]:
-        tasks: list[ResearchTask] = []
-        for branch in sorted(self.branches, key=lambda b: b.priority)[:limit]:
-            tasks.append(
-                ResearchTask(
+        """Build one task per specialist.
+
+        Multiple question branches can target the same specialist (for example
+        a user objective plus the default industry branch).  They are merged
+        into one task so a duplicate node does not silently consume a
+        specialist slot at dispatch time.
+        """
+        by_agent: dict[AgentKind, ResearchTask] = {}
+        for branch in sorted(self.branches, key=lambda b: b.priority):
+            existing = by_agent.get(branch.agent)
+            if existing is None:
+                by_agent[branch.agent] = ResearchTask(
                     task_id=f"r{round_no}-{branch.agent.value}-1",
                     agent=branch.agent,
                     objective=branch.question,
@@ -41,8 +49,16 @@ class ResearchQuestionTree:
                     priority=branch.priority,
                     round=round_no,
                 )
-            )
-        return tasks
+                continue
+            existing.queries = list(
+                dict.fromkeys(existing.queries + list(branch.queries))
+            )[:4]
+            if branch.question not in existing.objective:
+                existing.objective = (
+                    f"{existing.objective}；补充目标：{branch.question}"
+                )[:1000]
+            existing.priority = min(existing.priority, branch.priority)
+        return list(by_agent.values())[:limit]
 
 
 def _queries(county: str, focus: str, *templates: str) -> list[str]:

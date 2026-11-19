@@ -80,7 +80,14 @@ class KnowledgeGraphBuilder:
             if len(text.strip()) < 20:
                 continue
             items = evidence_by_url.get(doc.url, [])
-            evidence_ids = [item.id for item in items][:5]
+            # Only verified evidence may enter the graph.  An Evidence ID that
+            # merely exists is not enough; graph facts must trace to verified
+            # source text.
+            evidence_ids = [
+                item.id for item in items if item.verification_status == "verified"
+            ][:5]
+            if not evidence_ids:
+                continue
             stats.docs_processed += 1
             try:
                 entities = self._entity_extractor.extract(
@@ -156,20 +163,51 @@ class KnowledgeGraphBuilder:
     def _bind_evidence(
         relation: KGRelation, evidence_service: EvidenceService
     ) -> KGRelation | None:
-        refs = [r for r in relation.evidence_refs() if evidence_service.get(r) is not None]
-        if not refs:
+        """Bind a relation to verified evidence whose text contains its quote.
+
+        The extractor receives one document-level Evidence ID, but the quote
+        may belong to a different evidence item from the same document.  Search
+        all verified evidence for the quote instead of blindly trusting the
+        first ID.
+        """
+        quote = (relation.quote or "").strip()
+        if not quote:
             return None
-        status = relation.verification_status
-        if status == VerificationStatus.VERIFIED and not refs:
+        verified_items = [
+            item
+            for item in evidence_service.all()
+            if item.verification_status == "verified"
+        ]
+        supporting = [
+            item
+            for item in verified_items
+            if quote in f"{item.claim}\n{item.snippet}\n{item.title}"
+        ]
+        if not supporting:
             return None
+        preferred = supporting[0]
+        for item in supporting:
+            if item.id in relation.evidence_refs():
+                preferred = item
+                break
         return relation.model_copy(
             update={
-                "source_evidence_id": relation.source_evidence_id
-                if relation.source_evidence_id in refs
-                else refs[0],
-                "evidence_ids": refs,
+                "source_evidence_id": preferred.id,
+                "evidence_ids": [item.id for item in supporting[:5]],
             }
         )
+
+
+def _evidence_text(item: object) -> str:
+    return "\n".join(
+        str(part)
+        for part in (
+            getattr(item, "claim", ""),
+            getattr(item, "snippet", ""),
+            getattr(item, "title", ""),
+        )
+        if part
+    )
 
 
 def seed_core_graph(
@@ -178,14 +216,32 @@ def seed_core_graph(
     county: str,
     focus: str,
     evidence_ids: list[str],
+    evidence_service: EvidenceService,
 ) -> None:
-    """写入县域与主导产业基础节点（仅在拥有证据时）。"""
+    """写入县域与主导产业基础节点（仅在已验证证据支持时）。
+
+    ``evidence_ids`` 仅作为候选；函数会重新检查 ID 是否存在、是否已验证、
+    以及证据文本是否真的提到县域名（和产业名）。不存在或未验证的 ID
+    绝不会生成 VERIFIED 核心关系。
+    """
     if not county or not evidence_ids:
         return
+    county_items = []
+    for evidence_id in evidence_ids:
+        item = evidence_service.get(evidence_id)
+        if (
+            item is not None
+            and item.verification_status == "verified"
+            and county in _evidence_text(item)
+        ):
+            county_items.append(item)
+    if not county_items:
+        return
+
     county_entity = KGEntity(
         type=EntityType.COUNTY,
         name=county,
-        evidence_ids=evidence_ids[:3],
+        evidence_ids=[item.id for item in county_items[:3]],
         confidence=0.9,
         verification_status=VerificationStatus.VERIFIED,
         source="core_seed",
@@ -193,11 +249,17 @@ def seed_core_graph(
     graph.upsert_entity(county_entity)
     if not focus:
         return
+
+    industry_items = [
+        item for item in county_items if focus in _evidence_text(item)
+    ]
+    if not industry_items:
+        return
     industry = KGEntity(
         type=EntityType.INDUSTRY,
         name=focus,
         county=county,
-        evidence_ids=evidence_ids[:3],
+        evidence_ids=[item.id for item in industry_items[:3]],
         confidence=0.85,
         verification_status=VerificationStatus.VERIFIED,
         source="core_seed",
@@ -207,9 +269,10 @@ def seed_core_graph(
         source_entity_id=county_entity.id,
         target_entity_id=industry.id,
         relationship_type=RelationshipType.HAS_INDUSTRY,
-        source_evidence_id=evidence_ids[0],
+        source_evidence_id=industry_items[0].id,
         confidence=0.85,
         verification_status=VerificationStatus.VERIFIED,
+        quote=(industry_items[0].snippet or industry_items[0].claim)[:300],
         extracted_by="core_seed",
     )
     try:
