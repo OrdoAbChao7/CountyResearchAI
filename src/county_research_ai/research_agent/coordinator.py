@@ -70,6 +70,8 @@ class DeepResearchResult:
     gaps: list[EvidenceGap] = field(default_factory=list)
     research_spec: ResearchSpec | None = None
     evidence_packs: list[EvidencePack] = field(default_factory=list)
+    evidence_ledger: Any | None = None
+    coverage_rate: float | None = None
     retrieval_stop_reason: str = ""
     retrieval_usage: dict[str, int] = field(default_factory=dict)
 
@@ -131,6 +133,7 @@ class DeepResearchCoordinator:
         all_docs: list[RawDoc] = list(existing_docs or [])
         research_spec: ResearchSpec | None = None
         evidence_packs: list[EvidencePack] = []
+        final_ledger = None
         retrieval_stop_reason = ""
         retrieval_usage: dict[str, int] = {}
 
@@ -195,6 +198,7 @@ class DeepResearchCoordinator:
                 ledger.select_evidence_pack(slot)
                 for slot in research_spec.question_slots
             ]
+            final_ledger = ledger
             evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
             reflection_history: list[ReflectionResult] = []
             turn = max(1, adaptive_turn)
@@ -242,6 +246,16 @@ class DeepResearchCoordinator:
             evidence_store.ingest_documents(supp_docs, county=county, focus=f_name)
             turn += 1
 
+        if final_ledger is None:
+            from ..processor import DocumentProcessor
+
+            final_ledger = build_evidence_ledger(
+                DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
+            )
+
+        coverage_rate, coverage_gaps = evidence_store.assess_question_tree_coverage(qtree)
+        gaps = _merge_gaps(last_gaps, coverage_gaps)
+
         # 5. 依据研究模式调度专业智能体或模式分析器
         if mode == "rise-fall":
             from ..llm.rise_fall_analyzer import RiseFallAnalyzer
@@ -260,9 +274,11 @@ class DeepResearchCoordinator:
                 all_raw_docs=all_docs,
                 total_turns=turn,
                 conflicts=evidence_store.get_conflicts(),
-                gaps=last_gaps,
+                gaps=gaps,
                 research_spec=research_spec,
                 evidence_packs=evidence_packs,
+                evidence_ledger=final_ledger,
+                coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
             )
@@ -283,9 +299,11 @@ class DeepResearchCoordinator:
                 all_raw_docs=all_docs,
                 total_turns=turn,
                 conflicts=evidence_store.get_conflicts(),
-                gaps=last_gaps,
+                gaps=gaps,
                 research_spec=research_spec,
                 evidence_packs=evidence_packs,
+                evidence_ledger=final_ledger,
+                coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
             )
@@ -304,7 +322,7 @@ class DeepResearchCoordinator:
                 policy_out=pol_out,
                 industry_out=ind_out,
                 evidence_store=evidence_store,
-                gaps=last_gaps,
+                gaps=gaps,
                 evidence_packs=evidence_packs,
             )
             summary = self.synthesizer.generate_executive_summary(
@@ -326,9 +344,11 @@ class DeepResearchCoordinator:
                 all_raw_docs=all_docs,
                 total_turns=turn,
                 conflicts=evidence_store.get_conflicts(),
-                gaps=last_gaps,
+                gaps=gaps,
                 research_spec=research_spec,
                 evidence_packs=evidence_packs,
+                evidence_ledger=final_ledger,
+                coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
             )
@@ -357,3 +377,17 @@ class DeepResearchCoordinator:
                     pass
             return results
         return []
+
+
+def _merge_gaps(*groups: list[EvidenceGap]) -> list[EvidenceGap]:
+    """Keep critic and coverage gaps without duplicating the same missing aspect."""
+    merged: list[EvidenceGap] = []
+    seen: set[tuple[str, str]] = set()
+    for group in groups:
+        for gap in group:
+            key = (gap.question_id, gap.missing_aspect)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(gap)
+    return merged

@@ -7,7 +7,7 @@ import pytest
 from county_research_ai.application.results import ResearchRunResult
 from county_research_ai.application.workflow import WorkflowRunner
 from county_research_ai.config import PipelineStages
-from county_research_ai.exceptions import ResearchStageError
+from county_research_ai.exceptions import ResearchCancelledError, ResearchStageError
 from county_research_ai.models import ResearchReport, ResearchRequest
 
 
@@ -85,3 +85,39 @@ def test_workflow_runner_respects_stage_switches() -> None:
     runner.run(ResearchRequest(county="巴中", focus="茶产业"))
 
     assert application.calls == ["report"]
+
+
+def test_workflow_runner_returns_context_with_report() -> None:
+    application = RecordingApplication()
+    runner = WorkflowRunner(application=application, stages=PipelineStages())
+
+    result = runner.run(ResearchRequest(county="巴中", focus="茶产业"))
+
+    assert result.context is not None
+    assert result.context.report is result.report
+    assert result.context.report_path == Path("report.md")
+
+
+def test_workflow_runner_cancels_at_stage_boundary() -> None:
+    application = RecordingApplication()
+    runner = WorkflowRunner(application=application, stages=PipelineStages())
+    cancel = {"value": False}
+
+    def should_cancel() -> bool:
+        return cancel["value"]
+
+    def collect_materials(context):
+        application.calls.append("collect")
+        cancel["value"] = True
+        return context
+
+    application.collect_materials = collect_materials  # type: ignore[method-assign]
+
+    with pytest.raises(ResearchCancelledError) as caught:
+        runner.run(
+            ResearchRequest(county="巴中", focus="茶产业"),
+            should_cancel=should_cancel,
+        )
+
+    assert caught.value.stage == "evidence"
+    assert application.calls == ["collect"]
