@@ -12,4 +12,5 @@ from .context import ResearchContext
 class ResearchRunResult(BaseModel):
     report: ResearchReport
     report_path: Path
+    markdown: str = ""
     context: ResearchContext | None = Field(default=None, exclude=True, repr=False)

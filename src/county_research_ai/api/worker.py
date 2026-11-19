@@ -26,6 +26,8 @@ from ..config import Settings, get_settings
 from ..domain.outcomes import ResearchOutcome
 from ..evidence.graph import EvidenceGraphStore, VerificationStatus
 from ..models import ResearchRequest
+from ..observability import pop_event_sink, push_event_sink
+from .event_sink import JobEventSink
 from .evidence_service import persist_run_evidence, thresholds_met
 from .jobs import JobRecord, JobStatus, JobStore
 
@@ -117,6 +119,7 @@ class JobRunner:
             daemon=True,
         )
         heartbeat.start()
+        sink_token = push_event_sink(JobEventSink(self.store, job_id))
         try:
             self.store.append_event(
                 job_id, "job.started", {"mode_label": job.mode_label}
@@ -166,6 +169,19 @@ class JobRunner:
                 job, "report", context, app.render_report, started, lost, lambda res: {
                     "report_path": str(res.report_path)
                 }
+            )
+            self.store.append_event(
+                job_id,
+                "report.rendered",
+                {
+                    "sections": result.report.section_count,
+                    "markdown_chars": len(result.markdown),
+                    "provenance": (
+                        "native_sections"
+                        if job.mode == "snapshot"
+                        else "markdown_split"
+                    ),
+                },
             )
             self._ensure_active(job_id, started, lost)
             enforcement = self._budget_enforcement(job, started)
@@ -233,6 +249,7 @@ class JobRunner:
         finally:
             stop_heartbeat.set()
             heartbeat.join(timeout=1.0)
+            pop_event_sink(sink_token)
 
     def _demo_delay(
         self, job: JobRecord, started: float, lost: threading.Event
