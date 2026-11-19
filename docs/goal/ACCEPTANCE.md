@@ -116,3 +116,35 @@ Not accepted here:
 | Human rubric/adjudication | BLOCKED_HUMAN_ANNOTATION | no human labels |
 | Real 400-node browser benchmark | NOT_RUN | 400/800 cap tested on synthetic projection; browser E2E uses the small MOCK case |
 | Section-level streaming / token accounting | NOT_RUN | renderer is one-shot; UI explicitly presents post-completion reveal |
+
+Superseded on 2026-11-20: the 400/800 cap now has a browser test against a
+synthetic projection; a real-investigation benchmark remains NOT_RUN. See the
+Goal Mode section below.
+
+## Goal Mode acceptance (2026-11-20, second pass)
+
+Revision: `codex/finish-roadmap` @ `0adc236`; same `.venv` and `PYTHONPATH=src`.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Python suite | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `780 passed in 24.63s` |
+| P0 regressions | PASS | three P0 test modules | `47 passed in 2.96s` |
+| Ruff | PASS | `ruff check src tests scripts/run_finish_roadmap_demo.py` | all checks passed |
+| Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
+| Frontend unit tests | PASS | `cd web; npm test` | 4 files / `20 passed` |
+| Frontend build | PASS | `cd web; npm run build` | main 208.21 kB, GraphCanvas 456.11 kB, CSS 35.98 kB |
+| Playwright E2E | PASS | `AXIOMSCOPE_E2E_PORT=8040 npx playwright test` | `4 passed (28.2s)` |
+| 400-node browser projection | PASS (synthetic) | Playwright large-graph test | 400 nodes / 800 edges: 505 ms first canvas, 204 ms list switch |
+| Accessibility | PASS (automated) | `@axe-core/playwright`, WCAG A/AA | define / run / report / disputes / graph list / drawer: 0 violations |
+| Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` | citation → drawer → graph-selected evidence |
+| Conflict/gap panel | PASS | E2E `09-disputes.png` | 2 conflicts, 3 gaps from the real MOCK run |
+| Dispute panel contrast | PASS | axe `color-contrast` | fixed orange token and selected-row secondary text |
+
+Not accepted here:
+
+| Item | Status | Why |
+| --- | --- | --- |
+| Real-investigation 400-node benchmark | NOT_RUN | browser test uses a synthetic 400/800 fixture |
+| Live end-to-end / semantic Judge | BLOCKED_EXTERNAL | no separately authorized paid cost gate |
+| 40–60 sealed tasks / human labels | NOT_MET | unchanged from M5 |
+| Screen-reader manual walkthrough | NOT_RUN | axe automation only |

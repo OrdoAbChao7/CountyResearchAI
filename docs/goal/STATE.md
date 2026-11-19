@@ -20,10 +20,11 @@ Note: the venv editable install pointed at the pre-rename path
 `E:\Projects\CountyResearchAI\src`. It was reinstalled with
 `pip install -e . --no-deps` so `python -m county_research_ai.api` works.
 
-The table above is the historical M4-era baseline. Current Finish Roadmap
-numbers (780 Python tests, 18 Vitest, 2 Playwright) are recorded in the
-"Finish Roadmap goal" section at the end of this file and in
-`docs/goal/ACCEPTANCE.md`.
+The table above is the historical M4-era baseline. Finish Roadmap numbers at
+`88f210c` were 780 Python tests, 18 Vitest and 2 Playwright; the later Goal Mode
+pass adds 20 Vitest and 4 Playwright tests. Both are recorded in the
+"Finish Roadmap goal" and "Goal Mode verification" sections at the end of this
+file and in `docs/goal/ACCEPTANCE.md`.
 
 ## Milestone gate map
 
@@ -141,7 +142,7 @@ committed to.
 | T7 graph/report projections | PASS | `api/projections/{graph,report,questions,evidence}.py`, `/graph` + `/report.json`; stable IDs, URL dedupe, multiedges, 400/800 connected truncation, citation numbering, conflict/gap tests |
 | T10 report/evidence workbench | PASS | `web/src/components/*`; StepRail, ReportStudio, EvidenceDrawer, AgentTimeline, ContextPanel; screenshots + Vitest |
 | T12 Cytoscape graph | PASS | lazy `GraphCanvas` chunk, cose layout, filters, focus, list fallback, conflict/gap styles; 500-claim projection test |
-| T13 engineering hardening | PASS | 780 Python tests, scoped ruff clean, 18 Vitest, 2 Playwright E2E; event idempotency/recovery/concurrency, XSS and malicious-source regressions |
+| T13 engineering hardening | PASS | 780 Python tests, scoped ruff clean, 18 Vitest, 2 Playwright E2E at `88f210c`; Goal Mode adds 20 Vitest, 4 Playwright, axe; event idempotency/recovery/concurrency, XSS and malicious-source regressions |
 
 Skipped by instruction after verifying equivalents: T0 (executed as read-only
 audit, no code), T4/T5/T6/T8/T9/T11. No second RunManager, queue, JSONL store,
@@ -158,3 +159,25 @@ Remaining and not claimed as PASS:
   streaming remains future work.
 - Real supply-chain relations are not modelled; the graph shows only persisted
   evidence/topic/source/conflict/gap relations.
+
+## Goal Mode verification (2026-11-20)
+
+Second autonomous pass on the same branch, starting from `88f210c`. The main
+checkout stayed at `codex/quality-recovery` @ `144f4c8` with the same 62
+porcelain entries; its regenerated `git diff --binary` SHA256 equals the backup
+(`a770faad…`). Full log: `docs/goal/EXECUTION_LOG.md`.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| P0 regressions | PASS | 47 targeted tests; conflict retention, entity binding, report integrity |
+| T10 report workbench | PASS | `46112d0`: conflict/gap tab, citation → drawer → graph, context-panel graph locate |
+| T12 graph interaction | PASS | `0adc236`: concentric layout >240 nodes, zoom-aware labels, 400-node browser test |
+| T13 hardening | PASS | 780 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
+| 400-node browser test | PASS (synthetic) | 400 nodes / 800 edges: first canvas 505 ms, list switch 204 ms |
+| Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` |
+| Disputes/gaps panel | PASS | E2E `09-disputes.png`; real MOCK run: 2 conflicts, 3 gaps |
+
+Still not accepted: M5's 40–60 sealed tasks, live end-to-end + semantic Judge
+(cost gate), human adjudication, a real-investigation 400-node benchmark,
+section streaming/token accounting, and supply-chain relations. The 400-node
+number above is a synthetic projection test, not a real investigation.

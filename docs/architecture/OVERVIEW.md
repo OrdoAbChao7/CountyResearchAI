@@ -128,7 +128,9 @@ There are no fabricated section-stream or token-usage events.
   to `http(s)` with a host.
 - `questions.py` and `evidence.py` expose the question tree/coverage and the
   drawer list. Runs without deep research return `409 artifacts_unavailable` /
-  `deep_research_disabled` rather than empty artifacts.
+  `deep_research_disabled` rather than empty artifacts. The wizard exposes
+  report citations, the evidence drawer and the graph as one navigable chain;
+  a citation can jump to graph evidence and back.
 
 ## Fact-integrity guards (P0)
 
@@ -231,4 +233,6 @@ The API's `mode_label` is visible on every task and in every brief.
   rendering is one-shot; there is no section-level streaming or real token
   accounting, and the UI does not pretend otherwise.
 - The 400-node truncation test exercises projection shape/time on synthetic
-  data, not a browser benchmark of a real 400-node investigation.
+  data. A Playwright test also renders a synthetic 400-node/800-edge projection
+  in the browser (about 0.5 s first canvas); neither is a browser benchmark of
+  a real 400-node investigation.
