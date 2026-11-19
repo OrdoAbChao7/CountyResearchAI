@@ -84,7 +84,7 @@ export function AgentTimeline({
           <h2 id="event-log-title">事件流</h2>
           <span className="section-note">{events.length} 条</span>
         </div>
-        <ol className="event-log">
+        <ol className="event-log" tabIndex={0} aria-label="事件流日志">
           {events.map((event) => (
             <li key={event.seq} className="event-row">
               <span className="event-seq">#{event.seq}</span>
