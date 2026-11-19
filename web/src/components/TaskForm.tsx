@@ -9,12 +9,14 @@ interface Props {
 }
 
 export function TaskForm({ busy, error, onCreate }: Props) {
-  const [objective, setObjective] = useState("评估德清县 2024 年产业发展与财政健康");
-  const [regions, setRegions] = useState("德清县");
-  const [focus, setFocus] = useState("");
+  const [objective, setObjective] = useState(
+    "评估安吉县 2024 年竹产业发展现状与财政贡献",
+  );
+  const [regions, setRegions] = useState("安吉县");
+  const [focus, setFocus] = useState("竹产业");
   const [mode, setMode] = useState("snapshot");
   const [questions, setQuestions] = useState(
-    "2024 年地区生产总值是多少？\n规模以上工业增加值及增速是多少？",
+    "2024 年安吉县竹产业总产值是多少？\n安吉县竹产业有哪些龙头企业和产业集群？\n安吉县针对竹产业出台了哪些政策？",
   );
   const [start, setStart] = useState("2024-01-01");
   const [end, setEnd] = useState("2024-12-31");
@@ -24,6 +26,7 @@ export function TaskForm({ busy, error, onCreate }: Props) {
   const [maxDocuments, setMaxDocuments] = useState(10);
   const [minSources, setMinSources] = useState(1);
   const [minSupported, setMinSupported] = useState(1);
+  const [deepResearch, setDeepResearch] = useState(true);
   const [localError, setLocalError] = useState("");
 
   function submit(event: FormEvent) {
@@ -68,7 +71,7 @@ export function TaskForm({ busy, error, onCreate }: Props) {
       domain_adapter: "county_industry",
       mode,
       research_focus: focus.trim(),
-      options: {},
+      options: { deep_research: deepResearch },
     };
     onCreate(contract);
   }
@@ -114,6 +117,14 @@ export function TaskForm({ busy, error, onCreate }: Props) {
           <input type="date" value={end} onChange={(event) => setEnd(event.target.value)} />
         </label>
       </div>
+      <label className="checkbox-field">
+        <input
+          type="checkbox"
+          checked={deepResearch}
+          onChange={(event) => setDeepResearch(event.target.checked)}
+        />
+        启用深度研究（问题树、证据图谱、反思与缺口）
+      </label>
       <label>
         必答问题（每行一个）
         <textarea value={questions} onChange={(event) => setQuestions(event.target.value)} rows={3} />
