@@ -37,10 +37,12 @@ from ..domain.research_contracts import (
     SourceDocument,
 )
 from .ledger import EvidenceLedger
-from .measure import derive_measure_key
+from .measure import data_years, derive_measure_key, infer_period
+from .numeric_support import numeric_context_matches
+from .source_identity import source_groups
 
 SCHEMA_VERSION = 1
-DETERMINISTIC_VERIFIER_VERSION = "deterministic_v1"
+DETERMINISTIC_VERIFIER_VERSION = "deterministic_v2_local_binding"
 
 _YEAR_RE = re.compile(r"(?<!\d)(?:1[89]\d{2}|20\d{2})(?!\d)")
 _NUMERIC_RE = re.compile(r"(?<![\d.])(\d[\d,]*(?:\.\d+)?)\s*(亿元|万元|亿|万|%|‰|亩|万人|人)?")
@@ -249,6 +251,7 @@ def _quote_contains_value(quote: str, value: str, unit: str) -> bool:
     target = _decimal(value)
     if target is None:
         return False
+    target = abs(target)  # Direction/sign is checked by numeric_context_matches.
     target_unit_multiplier = _unit_multiplier(unit)
     for match in _NUMERIC_RE.finditer(quote):
         found = _decimal(match.group(1))
@@ -291,11 +294,16 @@ def _claim_supported_by_quote(
     claim_years = set(_years(claim.period))
     if not claim_years:
         return False
-    quote_years = set(_years(evidence_text))
-    if quote_years and not (claim_years & quote_years):
+    quote_years = set(data_years(quote))
+    report_year = infer_period('', title=title)
+    if report_year:
+        quote_years.add(report_year)
+    if not (claim_years & quote_years):
         return False
     if claim.value:
         if not _quote_contains_value(quote, claim.value, claim.unit):
+            return False
+        if not numeric_context_matches(claim, quote):
             return False
         if not claim.statement and not claim.metric_id:
             return True
@@ -1216,7 +1224,12 @@ class EvidenceGraphStore:
             for link in integrity_ok
             if link.edge.relation is EdgeRelation.CONTRADICTS
         ]
-        checks["independent_support"] = self._independent_source_count(supporting)
+        valid_support = [link for link in supporting
+                         if _claim_supported_by_quote(claim, link.span.quote,
+                                                      title=link.snapshot.title,
+                                                      url=link.snapshot.canonical_url)]
+        checks["independent_support"] = self._independent_source_count(valid_support)
+        checks["source_groups"] = source_groups(link.snapshot for link in valid_support)
         checks["supporting_edges"] = len(supporting)
         checks["contradicting_edges"] = len(contradicting)
 
@@ -1288,10 +1301,17 @@ class EvidenceGraphStore:
 
     @staticmethod
     def _independent_source_count(links: list[EvidenceLink]) -> int:
-        origins = {
-            link.snapshot.canonical_url or link.snapshot.snapshot_id for link in links
-        }
-        return len(origins)
+        return len(source_groups(link.snapshot for link in links))
+
+    def supporting_sources(self, claim_id: str, *, run_id: str = "") -> list[SourceSnapshotRecord]:
+        """Only valid links that actually support this claim may satisfy API gates."""
+        chain = self.get_chain(claim_id, run_id=run_id)
+        return [link.snapshot for link in chain.links
+                if link.edge.relation is not EdgeRelation.CONTRADICTS
+                and self._check_span_integrity(link.span, link.snapshot)[0]
+                and _claim_supported_by_quote(chain.claim, link.span.quote,
+                                             title=link.snapshot.title,
+                                             url=link.snapshot.canonical_url)]
 
     def _decide_status(
         self,

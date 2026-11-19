@@ -168,6 +168,6 @@ def test_period_is_inferred_only_from_evidence():
             "种植面积28.5万亩",
             content_prefix="发布日期：2025-11-12 10:31:07",
         )
-        == "2025"
+        == ""
     )
     assert infer_period("没有年份的声明") == ""

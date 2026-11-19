@@ -79,6 +79,20 @@ def derive_measure_key(
     return key
 
 
+def data_years(text: str) -> list[str]:
+    """Explicit candidate data years excluding labelled publication/retrieval dates."""
+    years = []
+    for match in _YEAR.finditer(text or ''):
+        prefix = text[max(0, match.start() - 16):match.start()]
+        suffix = text[match.end():match.end() + 24]
+        if re.search(r'(?:发布|公布|更新|上传|抓取)(?:日期|时间)?[：:\s]*$', prefix):
+            continue
+        if re.match(r'年(?:\d{1,2}月(?:\d{1,2}日)?)?\s*(?:发布|公布|更新|上传|抓取)', suffix):
+            continue
+        years.append(match.group())
+    return years
+
+
 def infer_period(
     statement: str,
     *,
@@ -90,26 +104,30 @@ def infer_period(
 ) -> str:
     """Infer the observation year when the extractor left it empty.
 
-    Order: explicit statement year, year near the value, source title year,
-    publication date, then the first year in the document header. Returns an
-    empty string rather than inventing a year.
+    Only explicit data years and a statistical bulletin's reporting year qualify.
+    Publication/retrieval dates and arbitrary header/title years are not data years.
+    ``published_at`` stays accepted for caller compatibility, but is not evidence.
     """
-    years = _YEAR.findall(statement or "")
-    if years:
+    years = data_years(statement)
+    if len(set(years)) == 1:
         return years[0]
+    if len(set(years)) > 1:
+        return ''
     if value and chunk_text:
-        index = chunk_text.find(value)
-        if index != -1:
-            window = chunk_text[max(0, index - _VALUE_WINDOW) : index + _VALUE_WINDOW]
-            years = _YEAR.findall(window)
-            if years:
-                return years[0]
-    years = _YEAR.findall(title or "")
-    if years:
-        return years[0]
-    if published_at is not None:
-        year = getattr(published_at, "year", None)
-        if isinstance(year, int) and 1900 <= year <= 2099:
-            return str(year)
-    years = _YEAR.findall((content_prefix or "")[:800])
-    return years[0] if years else ""
+        matches = list(re.finditer(r'(?<![\d.])' + re.escape(value) + r'(?![\d.])', chunk_text))
+        candidates: set[str] = set()
+        for match in matches:
+            index = match.start()
+            window = chunk_text[max(0, index - _VALUE_WINDOW) : match.end()]
+            years = data_years(window)
+            if len(set(years)) == 1 and not re.search(r'发布|更新|上传|抓取', window):
+                candidates.add(years[0])
+            elif len(set(years)) > 1:
+                return ''
+        if len(candidates) > 1:
+            return ''
+        if candidates:
+            return next(iter(candidates))
+    report_years = re.findall(r'((?:19|20)\d{2})年[^\d。\n]{0,40}统计公报', title or '')
+    report_years = [year for year in report_years if year in data_years(title)]
+    return report_years[0] if len(set(report_years)) == 1 else ''
