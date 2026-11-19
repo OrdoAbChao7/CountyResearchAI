@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlsplit
 
 from ...evidence.graph import EvidenceGraphStore, VerificationStatus, VerifiedFinding
 from ..jobs import JobRecord
@@ -176,11 +177,11 @@ def _summary_content(
         counts[status] = counts.get(status, 0) + 1
     coverage = deep.get("coverage_rate")
     lines = [
-        f"- 研究目标：{job.contract.objective}",
-        f"- 地区：{'、'.join(job.contract.regions)}",
+        f"- 研究目标：{_inline_text(job.contract.objective)}",
+        f"- 地区：{_inline_text('、'.join(job.contract.regions))}",
         f"- 模式：`{job.mode}`；运行模式：`{job.mode_label}`",
         f"- 运行结果：`{job.outcome.value if job.outcome else 'IN_PROGRESS'}`"
-        + (f"（{job.outcome_reason}）" if job.outcome_reason else ""),
+        + (f"（{_inline_text(job.outcome_reason)}）" if job.outcome_reason else ""),
         f"- 结构化结论：{len(findings)} 条；其中已支持 {counts.get('SUPPORTED', 0)} 条，"
         f"冲突待复核 {counts.get('NEEDS_REVIEW', 0)} 条，"
         f"证据不足 {counts.get('INSUFFICIENT', 0)} 条",
@@ -217,6 +218,11 @@ def _verified_content(
             continue
         number = numbers.get(claim.claim_id)
         citation_ids.append(claim.claim_id)
+        source_label = _cell(link.snapshot.title or "来源")
+        source_url = _safe_markdown_url(link.snapshot.canonical_url)
+        source_cell = (
+            f"[{source_label}]({source_url})" if source_url else source_label
+        )
         lines.append(
             "| "
             + " | ".join(
@@ -227,7 +233,7 @@ def _verified_content(
                     _cell(claim.period or "未标期间"),
                     _cell(claim.statement),
                     _cell(truncate(link.span.quote, 120)),
-                    _cell(f"[{link.snapshot.title or '来源'}]({link.snapshot.canonical_url})"),
+                    source_cell,
                 ]
             )
             + " |"
@@ -246,13 +252,13 @@ def _disputes_content(
         lines.append("")
         for conflict in conflicts:
             lines.append(
-                f"- **{conflict.get('indicator', '未标指标')}**"
-                f"（{conflict.get('conflict_type', 'discrepancy')}）："
-                f"{conflict.get('description', '')}"
+                f"- **{_inline_text(str(conflict.get('indicator', '未标指标')))}**"
+                f"（{_inline_text(str(conflict.get('conflict_type', 'discrepancy')))}）："
+                f"{_inline_text(str(conflict.get('description', '')))}"
             )
             suggestion = conflict.get("resolution_suggestion")
             if suggestion:
-                lines.append(f"  - 核验建议：{suggestion}")
+                lines.append(f"  - 核验建议：{_inline_text(str(suggestion))}")
         lines.append("")
     if disputes:
         lines.append("### 未采信结论")
@@ -268,9 +274,9 @@ def _disputes_content(
                 else ""
             )
             lines.append(
-                f"- `{claim.claim_id}` {claim.statement} "
+                f"- `{claim.claim_id}` {_inline_text(claim.statement)} "
                 f"（{_STATUS_LABELS.get(finding.finding.status.value, finding.finding.status.value)}"
-                + (f"；{reason}" if reason else "")
+                + (f"；{_inline_text(reason)}" if reason else "")
                 + (f"；引用 [{number}]" if number is not None else "")
                 + "）"
             )
@@ -428,7 +434,10 @@ def split_markdown_sections(markdown: str) -> list[NarrativeSectionView]:
 
 
 def _render_markdown(job: JobRecord, sections: list[ReportSectionView]) -> str:
-    heading = f"# {job.county}{job.focus or job.contract.research_focus}研究报告"
+    heading = (
+        f"# {_inline_text(job.county)}"
+        f"{_inline_text(job.focus or job.contract.research_focus)}研究报告"
+    )
     lines = [
         heading,
         "",
@@ -441,8 +450,28 @@ def _render_markdown(job: JobRecord, sections: list[ReportSectionView]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _inline_text(text: str) -> str:
+    """Keep untrusted source text from injecting HTML or extra Markdown lines."""
+    collapsed = " ".join((text or "").split())
+    return (
+        collapsed.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
 def _cell(text: str) -> str:
-    return (text or "").replace("|", "\\|").replace("\n", " ")
+    return _inline_text(text).replace("|", "\\|")
+
+
+def _safe_markdown_url(url: str) -> str:
+    raw = (url or "").strip()
+    if not raw or any(character in raw for character in "()<> \t\r\n"):
+        return ""
+    parts = urlsplit(raw)
+    if parts.scheme.lower() not in {"http", "https"} or not parts.netloc:
+        return ""
+    return raw
 
 
 __all__ = ["build_report_view", "split_markdown_sections"]

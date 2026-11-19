@@ -440,8 +440,55 @@ def build_graph_view(  # noqa: C901
     )
     room = max(0, max_nodes - len(required))
     selected = {node.id: node for node in required}
-    for node in optional[:room]:
+    optional_by_id = {node.id: node for node in optional}
+    selected_ids = set(selected)
+
+    neighbours: dict[str, list[str]] = {}
+    for edge in edges:
+        neighbours.setdefault(edge.source, []).append(edge.target)
+        neighbours.setdefault(edge.target, []).append(edge.source)
+
+    # Truncation must keep a useful, connected graph: accept an evidence node
+    # together with its topic/source neighbours instead of returning hundreds
+    # of isolated evidence points after their endpoints were cut.
+    evidence_candidates = sorted(optional_evidence, key=optional_priority, reverse=True)
+    for candidate in evidence_candidates:
+        if room <= 0:
+            break
+        if candidate.id in selected:
+            continue
+        group = [candidate]
+        for neighbour_id in sorted(neighbours.get(candidate.id, [])):
+            if neighbour_id in selected or neighbour_id not in optional_by_id:
+                continue
+            group.append(optional_by_id[neighbour_id])
+        if len(group) > room:
+            continue
+        for node in group:
+            selected[node.id] = node
+            selected_ids.add(node.id)
+        room -= len(group)
+
+    # Use any remaining capacity on optional nodes that connect to the current
+    # selection, then on the remaining highest-priority nodes.
+    for node in optional:
+        if room <= 0:
+            break
+        if node.id in selected:
+            continue
+        if any(neighbour_id in selected_ids for neighbour_id in neighbours.get(node.id, [])):
+            selected[node.id] = node
+            selected_ids.add(node.id)
+            room -= 1
+    for node in optional:
+        if room <= 0:
+            break
+        if node.id in selected:
+            continue
         selected[node.id] = node
+        selected_ids.add(node.id)
+        room -= 1
+
     selected_nodes = list(selected.values())
     selected_nodes.sort(key=lambda node: (_TYPE_ORDER.get(node.type, 9), node.id))
 

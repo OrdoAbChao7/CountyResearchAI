@@ -305,6 +305,10 @@ def _legacy_report_text(
     report = Path(job.report_path).resolve()
     root = reports_dir.resolve()
     if root not in report.parents and report.parent != root:
+        if not required:
+            # Verified projections do not need the legacy file; ignore an
+            # unsafe stored path instead of leaking or reading it.
+            return None
         raise HTTPException(
             status_code=403,
             detail={

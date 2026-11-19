@@ -163,17 +163,22 @@ def _seed_api_fixture(tmp_path: Path) -> JobStore:
     return store
 
 
-def _client(tmp_path: Path) -> TestClient:
+def _client_and_store(tmp_path: Path) -> tuple[TestClient, JobStore]:
+    store = _seed_api_fixture(tmp_path)
     app = create_app(
         settings=_settings(tmp_path),
-        store=_seed_api_fixture(tmp_path),
+        store=store,
         runner=FakeRunner(),  # type: ignore[arg-type]
         live_enabled=False,
         data_dir=tmp_path / "data",
         reports_dir=tmp_path / "reports",
         evidence_db_path=tmp_path / "evidence.sqlite",
     )
-    return TestClient(app)
+    return TestClient(app), store
+
+
+def _client(tmp_path: Path) -> TestClient:
+    return _client_and_store(tmp_path)[0]
 
 
 def test_projection_endpoints_return_typed_views(tmp_path):
@@ -252,3 +257,32 @@ def test_report_draft_is_404_when_no_legacy_file_exists(tmp_path):
     assert response.json()["error"]["code"] == "report_not_ready"
     assert report.status_code == 200
     assert "没有通过确定性校验" in report.text
+
+
+def test_report_draft_rejects_paths_outside_reports_root(tmp_path):
+    client, store = _client_and_store(tmp_path)
+    outside = tmp_path / "secret.md"
+    outside.write_text("outside the reports root", encoding="utf-8")
+    job = store.create_job(
+        ResearchContract(objective="路径安全测试", regions=["安吉县"]),
+        mode_label="MOCK",
+        job_id="run-escape",
+    )
+    store.mark_running(job.job_id)
+    assert store.finish_job(
+        job.job_id,
+        JobStatus.SUCCEEDED,
+        outcome=ResearchOutcome.SUFFICIENT,
+        event_type="job.completed",
+        report_path=str(outside),
+        result={},
+    )
+    with client:
+        response = client.get("/api/v1/research/tasks/run-escape/report/draft")
+        verified = client.get("/api/v1/research/tasks/run-escape/report")
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "report_outside_root"
+    assert "outside the reports root" not in response.text
+    assert verified.status_code == 200
+    assert "没有通过确定性校验" in verified.text

@@ -198,3 +198,45 @@ def test_split_markdown_sections_skips_title_only_preamble():
 
     assert [section.title for section in sections] == ["第一节"]
     assert sections[0].content == "内容"
+
+
+def test_report_escapes_malicious_source_text_without_dropping_facts(tmp_path):
+    source = make_source(
+        "snap-malicious",
+        url="javascript:alert(1)",
+        title="<img src=x onerror=alert(1)>",
+        content="安吉县2024年竹产业产值为120亿元。<script>alert(1)</script>",
+    )
+    claim = make_claim(
+        "claim-malicious",
+        source_id="snap-malicious",
+        value="120",
+        unit="亿元",
+        period="2024",
+        metric="竹产业产值",
+        statement="安吉县2024年竹产业产值为120亿元 <script>alert(1)</script>",
+    )
+    graph = seed_graph(
+        tmp_path / "graph.sqlite",
+        RUN_ID,
+        sources=[source],
+        claims=[claim],
+    )
+
+    view = build_report_view(job=make_job(result=deep_result()), graph=graph)
+
+    assert view.verification.verified == 1
+    verified = next(
+        section for section in view.sections if section.id == "verified-facts"
+    )
+    assert "120亿元" in verified.content
+    assert "2024" in verified.content
+    assert "竹产业产值" in verified.content
+    assert view.citations[0].value == "120"
+    assert view.citations[0].unit == "亿元"
+    assert view.citations[0].period == "2024"
+
+    assert "<script>" not in view.markdown
+    assert "<img" not in view.markdown
+    assert "](javascript:" not in view.markdown
+    assert "&lt;script&gt;" in view.markdown

@@ -199,3 +199,50 @@ def test_graph_projection_reports_missing_deep_research(tmp_path):
         assert exc.reason == "deep_research_disabled"
     else:  # pragma: no cover - explicit failure message
         raise AssertionError("expected ProjectionUnavailable")
+
+
+def test_graph_projection_handles_five_hundred_claims_within_caps(tmp_path):
+    import time
+
+    sources = []
+    claims = []
+    for index in range(500):
+        source = make_source(
+            f"bulk-{index}",
+            url=f"https://example.gov.cn/bulk/{index}",
+            content=f"安吉县2024年批量指标{index}为{index + 1}亿元。",
+        )
+        sources.append(source)
+        claims.append(
+            make_claim(
+                f"bulk-claim-{index}",
+                source_id=f"bulk-{index}",
+                value=str(index + 1),
+                metric=f"批量指标{index}",
+            )
+        )
+    graph = seed_graph(
+        tmp_path / "graph.sqlite",
+        RUN_ID,
+        sources=sources,
+        claims=claims,
+    )
+    job = make_job(result=deep_result())
+
+    started = time.monotonic()
+    view = build_graph_view(job=job, graph=graph)
+    elapsed = time.monotonic() - started
+
+    assert len(view.nodes) <= 400
+    assert len(view.edges) <= 800
+    assert view.meta.truncated is True
+    assert view.meta.total_nodes == 1501
+    assert view.meta.total_edges == 1000
+    assert view.meta.returned_edges > 0
+    node_ids = {node.id for node in view.nodes}
+    assert all(
+        edge.source in node_ids and edge.target in node_ids for edge in view.edges
+    )
+    assert len({node.id for node in view.nodes}) == len(view.nodes)
+    assert len({edge.id for edge in view.edges}) == len(view.edges)
+    assert elapsed < 10

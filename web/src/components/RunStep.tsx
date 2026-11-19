@@ -121,8 +121,9 @@ export function RunStep({
         <div>
           <dt>时间窗口</dt>
           <dd>
-            {contract.date_window.start ?? "…"} ~{" "}
-            {contract.date_window.end ?? "…"}
+            {contract.date_window.start || contract.date_window.end
+              ? `${contract.date_window.start ?? "…"} ~ ${contract.date_window.end ?? "…"}`
+              : "未限定"}
           </dd>
         </div>
         <div>

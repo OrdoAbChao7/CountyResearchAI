@@ -267,8 +267,14 @@ export default function App() {
           onCancel={() => void cancel()}
           onResume={() => void resume()}
           onRefresh={() => void refresh()}
-          onGraph={() => setStep(3)}
-          onReport={() => setStep(4)}
+          onGraph={() => {
+            setLayout("graph");
+            setStep(3);
+          }}
+          onReport={() => {
+            setLayout("workbench");
+            setStep(4);
+          }}
         />
       );
     }

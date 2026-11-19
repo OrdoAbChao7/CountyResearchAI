@@ -255,3 +255,79 @@ def test_expired_lease_without_takeover_rejects_terminal_write(tmp_path):
 
     assert finished is False
     assert store.get_job(job.job_id).status is JobStatus.RUNNING
+
+
+def test_repeated_terminal_write_does_not_duplicate_completion_event(tmp_path):
+    store = _store(tmp_path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    store.mark_running(job.job_id)
+
+    first = store.finish_job(
+        job.job_id,
+        JobStatus.SUCCEEDED,
+        outcome=ResearchOutcome.SUFFICIENT,
+        event_type="job.completed",
+        result={"kept": True},
+    )
+    second = store.finish_job(
+        job.job_id,
+        JobStatus.FAILED,
+        outcome=ResearchOutcome.FAILED,
+        event_type="job.failed",
+        result={"overwritten": True},
+    )
+
+    assert first is True
+    assert second is False
+    loaded = store.get_job(job.job_id)
+    assert loaded.status is JobStatus.SUCCEEDED
+    assert loaded.result == {"kept": True}
+    event_types = [event.event_type for event in store.list_events(job.job_id)]
+    assert event_types.count("job.completed") == 1
+    assert "job.failed" not in event_types
+
+
+def test_recovery_appends_one_interruption_and_continues_event_sequence(tmp_path):
+    path = tmp_path / "jobs.sqlite"
+    store = JobStore(path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    store.mark_running(job.job_id)
+    store.append_event(job.job_id, "stage.collect.started", {"step": 1})
+
+    recovered = JobStore(path).recover_interrupted()
+    recovered_again = JobStore(path).recover_interrupted()
+    resumed_store = JobStore(path)
+    resumed_store.append_event(job.job_id, "job.resumed", {})
+
+    assert recovered == 1
+    assert recovered_again == 0
+    events = resumed_store.list_events(job.job_id)
+    assert [event.seq for event in events] == list(range(1, len(events) + 1))
+    assert [event.event_type for event in events] == [
+        "job.queued",
+        "stage.collect.started",
+        "job.interrupted",
+        "job.resumed",
+    ]
+    assert [event.event_type for event in events].count("job.interrupted") == 1
+
+
+def test_concurrent_appends_produce_unique_contiguous_sequences(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    store = _store(tmp_path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(
+            pool.map(
+                lambda index: store.append_event(
+                    job.job_id, "agent.started", {"index": index}
+                ),
+                range(40),
+            )
+        )
+
+    events = store.list_events(job.job_id)
+    assert len(events) == 41
+    assert [event.seq for event in events] == list(range(1, 42))
