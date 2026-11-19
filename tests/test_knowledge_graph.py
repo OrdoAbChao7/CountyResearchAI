@@ -18,6 +18,7 @@ from county_research_ai.knowledge_graph.graph_store.base import (
 from county_research_ai.knowledge_graph.graph_store.mock_store import InMemoryGraphStore
 from county_research_ai.knowledge_graph.ontology.entities import EntityType, KGEntity
 from county_research_ai.knowledge_graph.ontology.relations import KGRelation, RelationshipType
+from county_research_ai.models import EvidenceItem
 from county_research_ai.services.evidence_service import EvidenceService
 from county_research_ai.services.graph_builder import KnowledgeGraphBuilder, seed_core_graph
 
@@ -447,9 +448,66 @@ class TestGraphBuilder:
 
     def test_seed_core_graph_requires_evidence(self):
         graph = InMemoryGraphStore()
-        seed_core_graph(graph, county="安吉县", focus="竹产业", evidence_ids=[])
+        evidence = EvidenceService()
+
+        # 无证据 ID：不写入任何核心节点。
+        seed_core_graph(
+            graph,
+            county="安吉县",
+            focus="竹产业",
+            evidence_ids=[],
+            evidence_service=evidence,
+        )
         assert graph.stats()["entities"] == 0
 
-        seed_core_graph(graph, county="安吉县", focus="竹产业", evidence_ids=["ev-1"])
+        # 引用了不存在的证据 ID：不得生成 VERIFIED 核心关系。
+        seed_core_graph(
+            graph,
+            county="安吉县",
+            focus="竹产业",
+            evidence_ids=["ev-1"],
+            evidence_service=evidence,
+        )
+        assert graph.stats()["entities"] == 0
+
+        # 未验证证据：仍然不得生成核心关系。
+        unverified = EvidenceItem(
+            id="ev-unverified",
+            claim="安吉县竹产业总产值 200 亿元",
+            snippet="安吉县竹产业总产值 200 亿元",
+            url="https://example.com/news",
+            verification_status="unverified",
+        )
+        evidence.add(unverified)
+        seed_core_graph(
+            graph,
+            county="安吉县",
+            focus="竹产业",
+            evidence_ids=[unverified.id],
+            evidence_service=evidence,
+        )
+        assert graph.stats()["entities"] == 0
+
+        # 已验证且文本确实提到县域名与产业名的证据：写入县域 + 产业 + 关系。
+        verified = EvidenceItem(
+            id="ev-verified",
+            claim="安吉县竹产业总产值 200 亿元",
+            snippet="安吉县竹产业总产值 200 亿元，同比增长 8%",
+            url="https://www.anji.gov.cn/stat/2025.html",
+            domain_type="government",
+            credibility_score=0.95,
+            verification_status="verified",
+        )
+        evidence.add(verified)
+        seed_core_graph(
+            graph,
+            county="安吉县",
+            focus="竹产业",
+            evidence_ids=[verified.id],
+            evidence_service=evidence,
+        )
         assert graph.stats()["entities"] == 2
         assert graph.stats()["relations"] == 1
+        for relation in graph.get_relations():
+            assert relation.verification_status == VerificationStatus.VERIFIED
+            assert relation.source_evidence_id == verified.id

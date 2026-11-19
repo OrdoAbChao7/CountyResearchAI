@@ -25,6 +25,7 @@ from ..domain.intelligence import (
     ResearchTask,
     VerificationStatus,
 )
+from ..evidence.support import check_claim_evidence
 from ..llm.base import LLMClient
 from ..llm.structured import StructuredOutputError, parse_json_object
 from ..models import RawDoc
@@ -424,20 +425,32 @@ class SpecialistAgent:
             text = str(raw.get("text") or raw.get("claim") or "").strip()
             if not text:
                 continue
-            requested = [str(i) for i in raw.get("evidence_ids", []) if i]
-            valid = [i for i in requested if context.evidence.get(i) is not None]
-            if len(valid) != len(requested):
-                gaps.append(f"claim references unknown evidence ids: {set(requested) - set(valid)}")
-            status = (
-                VerificationStatus.VERIFIED
-                if valid
-                else VerificationStatus.UNVERIFIED
+            check = check_claim_evidence(
+                text,
+                [str(i) for i in raw.get("evidence_ids", []) if i],
+                context.evidence.get,
             )
+            if check.unknown:
+                gaps.append(f"claim references unknown evidence ids: {set(check.unknown)}")
+            if check.unsupported:
+                gaps.append(
+                    "claim cites evidence that is not verified or does not support the claim: "
+                    f"{set(check.unsupported)}"
+                )
+            if check.fully_supported:
+                status = VerificationStatus.VERIFIED
+            elif check.existing:
+                # Evidence exists but has not been verified / does not directly
+                # support the claim.  Keep the IDs for traceability but never
+                # mark the claim as a verified fact.
+                status = VerificationStatus.PENDING
+            else:
+                status = VerificationStatus.UNVERIFIED
             claims.append(
                 Claim(
                     claim_id=f"{task.task_id}-c{len(claims) + 1}",
                     text=text,
-                    evidence_ids=valid,
+                    evidence_ids=check.existing,
                     confidence=float(raw.get("confidence", 0.5) or 0.5),
                     verification_status=status,
                     source_agent=self.spec.kind.value,
@@ -446,9 +459,18 @@ class SpecialistAgent:
         if not claims:
             gaps.append("agent produced no evidence-bound claims")
 
-        evidence_ids = list(
-            dict.fromkeys(i for obs in observations for i in obs.evidence_ids)
+        observation_ids = list(
+            dict.fromkeys(i for obs in observations for i in obs.evidence_ids if i)
         )
+        valid_observation_ids = [
+            i for i in observation_ids if context.evidence.get(i) is not None
+        ]
+        if len(valid_observation_ids) != len(observation_ids):
+            gaps.append(
+                "tool observations referenced unknown evidence ids: "
+                f"{set(observation_ids) - set(valid_observation_ids)}"
+            )
+        evidence_ids = list(valid_observation_ids)
         for claim in claims:
             evidence_ids.extend(claim.evidence_ids)
         evidence_ids = list(dict.fromkeys(evidence_ids))

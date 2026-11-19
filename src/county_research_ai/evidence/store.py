@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import re
 from collections import defaultdict
+from urllib.parse import urlparse
 
 from ..models import (
     EvidenceConflict,
@@ -49,6 +50,26 @@ _ENTERPRISE_PATTERN = re.compile(
     r"([\u4e00-\u9fa5]{3,20}(?:股份|有限|集团|果业|竹木|木业|纸业|石墨|能源|生物|科技))"
     r"(?:公司|龙头企业|链主企业)"
 )
+
+
+_OFFICIAL_SOURCES = {"gov", "government", "statistics", "stats", "mock-gov", "official"}
+
+
+def _is_primary_official(doc: RawDoc) -> bool:
+    """Whether the document is a primary official source.
+
+    This is source *type*, not a credibility score.  A high credibility score
+    alone never upgrades evidence to ``verified``.
+    """
+    domain = (doc.domain_type or "").strip().lower()
+    source = (doc.source or "").strip().lower()
+    url = (doc.url or "").strip().lower()
+    return (
+        domain == "government"
+        or source in _OFFICIAL_SOURCES
+        or "gov" in source
+        or ".gov.cn" in url
+    )
 
 
 class EvidenceStore:
@@ -121,10 +142,15 @@ class EvidenceStore:
                     title=doc.title,
                     source_name=doc.source or "gov",
                     domain_type=doc.domain_type or "government",
-                    credibility_score=max(doc.credibility_score, 0.9),
+                    credibility_score=doc.credibility_score,
                     year=year_str,
                     indicator_caliber="政策规划",
-                    verification_status="verified",
+                    # A direct policy name in a primary official document is a
+                    # quotable source fact.  A high score on a blog/news page
+                    # is not enough.
+                    verification_status=(
+                        "verified" if _is_primary_official(doc) else "unverified"
+                    ),
                     topic="policy",
                 )
                 extracted.append(item)
@@ -147,7 +173,11 @@ class EvidenceStore:
                     credibility_score=doc.credibility_score,
                     year=year_str,
                     indicator_caliber="骨干企业",
-                    verification_status="unverified",
+                    # A named enterprise in a primary official document is a
+                    # directly attributable fact; other sources remain pending.
+                    verification_status=(
+                        "verified" if _is_primary_official(doc) else "unverified"
+                    ),
                     topic="industry",
                 )
                 extracted.append(item)
@@ -213,7 +243,13 @@ class EvidenceStore:
                     year=year_str,
                     administrative_scope=scope,
                     indicator_caliber=caliber,
-                    verification_status="verified" if doc.credibility_score >= 0.8 else "unverified",
+                    # Official primary statistics need a year so an outdated
+                    # figure cannot silently become a current fact.  Other
+                    # sources are only upgraded later by independent
+                    # corroboration (see detect_conflicts).
+                    verification_status=(
+                        "verified" if _is_primary_official(doc) and bool(year_str) else "unverified"
+                    ),
                     topic="economic",
                 )
                 items.append(item)
@@ -319,6 +355,47 @@ class EvidenceStore:
                     )
                     conflicts.append(conflict)
 
+        # Independent corroboration: two different source domains reporting the
+        # same value / year / scope / caliber upgrade the evidence to verified.
+        # This is the only path that can verify a non-official source.
+        corroboration: dict[tuple[str, str, str, str, str], list[EvidenceItem]] = defaultdict(list)
+        value_re = re.compile(
+            r"(\d+(?:\.\d+)?)\s*(亿元|万元|万亩|亩|千亩|平方公里|万吨|吨|万斤|千吨|万人|人|家|户|%)"
+        )
+        for item in self._items.values():
+            if item.topic != "economic":
+                continue
+            match = value_re.search(item.claim)
+            if not match or not item.url:
+                continue
+            key = (
+                _get_base_concept(item.indicator_caliber),
+                item.year or "",
+                item.administrative_scope,
+                item.indicator_caliber,
+                match.group(0).replace(" ", ""),
+            )
+            corroboration[key].append(item)
+        for group in corroboration.values():
+            domains = {
+                urlparse(item.url).netloc.lower()
+                for item in group
+                if item.url
+            }
+            domains.discard("")
+            if len(domains) < 2:
+                continue
+            for item in group:
+                item.verification_status = "verified"
+                item.corroborating_sources = sorted(
+                    {
+                        other.url
+                        for other in group
+                        if other.url
+                        and urlparse(other.url).netloc.lower() != urlparse(item.url).netloc.lower()
+                    }
+                )
+
         self._conflicts = conflicts
         return conflicts
 
@@ -338,17 +415,18 @@ class EvidenceStore:
             ]
             if matched:
                 q.evidence_ids = [it.id for it in matched]
-                # 检查是否满足核心要求
-                has_official = any(it.credibility_score >= 0.8 for it in matched)
-                if has_official or len(matched) >= 2:
+                # 只有已验证证据（官方原文或独立交叉佐证）才算满足问题。
+                # 来源可信度高但未验证的线索不能当作事实。
+                verified = [it for it in matched if it.verification_status == "verified"]
+                if verified:
                     q.is_satisfied = True
                     satisfied_count += 1
                 else:
                     gaps.append(
                         EvidenceGap(
                             question_id=q.id,
-                            description=f"子问题《{q.title}》虽有线索，但缺乏高可信度权威官方证据支撑",
-                            missing_aspect="insufficient_credibility",
+                            description=f"子问题《{q.title}》虽有线索，但缺乏已验证证据支撑",
+                            missing_aspect="insufficient_verification",
                             severity="medium",
                         )
                     )
