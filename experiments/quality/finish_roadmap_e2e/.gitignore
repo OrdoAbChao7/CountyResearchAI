@@ -1,0 +1,5 @@
+# Playwright writes these on every full run.
+data/
+reports/
+playwright-report/
+test-results/
