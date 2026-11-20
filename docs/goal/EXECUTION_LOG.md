@@ -65,7 +65,7 @@ Playwright 覆盖：
 
 ## 5. 未完成 / 不计为 PASS
 
-- M5 的 40–60 个独立密封任务集、Live 端到端评测、语义 Judge、人工标注与裁决：仍未完成。2026-11-20 只执行了一次显式授权的受限 Live smoke（见第 7 节）；它不构成 Live 评测，也不满足 M5。
+- M5 的 40–60 个独立密封任务集、Live 端到端评测、语义 Judge、人工标注与裁决：仍未完成。2026-11-20 执行了两次显式授权的受限 Live smoke（见第 7 节）；它们不构成 Live 评测，也不满足 M5。
 - 真实调查的 400 节点浏览器基准：`NOT_RUN`。本轮通过的是 400 节点/800 边**合成投影**的浏览器性能测试，不是真实公开资料调查。
 - 章节级流式生成与真实 token 核算：`NOT_RUN`，界面明确不伪造。
 - 真实供应链关系：未建模，图谱只投影已持久化的关系。
@@ -79,8 +79,9 @@ Playwright 覆盖：
 
 ## 7. 受限 Live smoke（2026-11-20，已获用户授权）
 
-用户明确表示“允许付费调用”并“跑一次 Live”。执行了**一次**带硬上限的
-Live 任务；未执行第二次，也未启动 Live 评测、语义 Judge 或密封任务集。
+用户明确表示“允许付费调用”并“跑一次 Live”。先执行了**一次**带硬上限的
+Live 任务；用户随后说“再跑一次”，又执行了**一次**修正版（2,048 token、
+显式 focus）。未执行第三次，也未启动 Live 评测、语义 Judge 或密封任务集。
 
 | 检查 | 结果 |
 | --- | --- |
@@ -104,6 +105,21 @@ Live 任务；未执行第二次，也未启动 Live 评测、语义 Judge 或�
   `outside_requested_window:2026`，期间归因需要单独核查，暂不称为误拒。
 - 真实数据已产生 273 节点，说明真实调查的图谱规模会超过合成 400 节点测试的
   假设；真实 400 节点浏览器基准仍未运行。
+
+第二次运行（修正版）：
+
+| 检查 | 结果 |
+| --- | --- |
+| 修复 | `ResearchApplication.discover_focus` 让显式 `research_focus` 优先；新增回归测试 |
+| 回归 | `pytest --no-cov -q` → `781 passed`（含 `test_explicit_focus_wins_over_discovery`） |
+| Job | `fdf7f3e86d444419967124236c4cc1ad` |
+| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |
+| Focus | `stage.discover.completed` 与问题树均为 `竹产业`；发现 completion 838 < 2,048 |
+| 事件 / 图谱 | 28 事件；256 节点 / 1,785 边，返回 800 边 |
+| 报告 | 0 verified / 224 `NOT_COMPARABLE`；7 冲突；2 缺口；8 来源 |
+| 守卫 | 2 次 LLM、3,944 tokens、7 次 Tavily；0 违规；43.56s |
+| 成本 | 模型 $0.00097；Tavily 若付费 $0.056；≤ $0.0579 |
+| 结论 | Focus 修复生效；仍为 `NO_PROGRESS`，剩余瓶颈是区域检索与期间覆盖 |
 
 完整记录：`docs/goal/LIVE_SMOKE.md`；预算与实际用量：
 `docs/goal/LIVE_SMOKE_COST_GATE.md`。

@@ -236,9 +236,10 @@ The API's `mode_label` is visible on every task and in every brief.
   data. A Playwright test also renders a synthetic 400-node/800-edge projection
   in the browser (about 0.5 s first canvas); neither is a browser benchmark of
   a real 400-node investigation.
-- A single authorized Live smoke on 2026-11-20 proved the real DeepSeek/Tavily
-  adapters and the job/event/graph/report path, but accepted zero claims (239
-  `NOT_COMPARABLE`) and retrieved off-region sources. Its discovery call hit
-  the 768-token cap and the contract focus `竹产业` fell back to `特色农业`.
-  This is an engineering smoke, not Live evaluation. See
+- Two authorized Live smokes on 2026-11-20 proved the real DeepSeek/Tavily
+  adapters and the job/event/graph/report path, but both accepted zero claims.
+  The first hit a 768-token discovery cap and fell back from `竹产业` to
+  `特色农业`; the second used 2,048 tokens and an explicit-focus fix, kept
+  `竹产业`, and still returned 0 verified / 224 `NOT_COMPARABLE` with
+  off-region sources. This is engineering evidence, not Live evaluation. See
   `docs/goal/LIVE_SMOKE.md`.

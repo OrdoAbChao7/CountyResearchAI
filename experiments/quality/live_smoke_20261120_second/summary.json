@@ -1,0 +1,244 @@
+{
+  "date": "2026-11-20",
+  "authorization": "user: 允许付费调用 + 跑一次 Live + 再跑一次 (2026-11-20)",
+  "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
+  "provider": {
+    "llm": "deepseek",
+    "model": "deepseek-flash",
+    "base_url": "https://api.deepseek.com/v1",
+    "search": "tavily",
+    "search_depth": "basic"
+  },
+  "model_ids": [
+    "deepseek-flash",
+    "deepseek-v4-pro"
+  ],
+  "preflight": {
+    "content_chars": 7,
+    "model": "deepseek-flash",
+    "total_tokens": 13
+  },
+  "capabilities": {
+    "status": 200,
+    "mode_label": "LIVE"
+  },
+  "job_id": "fdf7f3e86d444419967124236c4cc1ad",
+  "status": "SUCCEEDED",
+  "mode_label": "LIVE",
+  "outcome": "NO_PROGRESS",
+  "outcome_reason": "no_supported_claims",
+  "budget_enforcement": {
+    "enforced": [
+      "deadline_seconds"
+    ],
+    "bounded_per_call": [
+      "max_tokens",
+      "max_documents"
+    ],
+    "not_enforced_on_workflow_path": [
+      "max_steps",
+      "max_search_calls",
+      "max_cost"
+    ],
+    "elapsed_seconds": 28.913,
+    "deadline_seconds": 480.0
+  },
+  "event_count": 28,
+  "event_types": [
+    "job.queued",
+    "job.started",
+    "stage.collect.started",
+    "stage.collect.completed",
+    "stage.discover.started",
+    "stage.discover.completed",
+    "stage.evidence.started",
+    "stage.evidence.completed",
+    "stage.analyze.started",
+    "question_tree.created",
+    "evidence.ingested",
+    "question_tree.coverage",
+    "gaps.detected",
+    "conflicts.detected",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "synthesis.started",
+    "synthesis.completed",
+    "stage.analyze.completed",
+    "evidence.persisted",
+    "stage.report.started",
+    "stage.report.completed",
+    "report.rendered",
+    "job.completed"
+  ],
+  "graph": {
+    "http_status": 200,
+    "total_nodes": 256,
+    "returned_nodes": 256,
+    "total_edges": 1785,
+    "returned_edges": 800,
+    "truncated": true
+  },
+  "report": {
+    "json_status": 200,
+    "markdown_status": 200,
+    "sections": [
+      "summary",
+      "verified-facts",
+      "disputes",
+      "gaps",
+      "sources",
+      "method"
+    ],
+    "verification": {
+      "verified": 0,
+      "unverified": 224,
+      "total": 224,
+      "notes": [
+        "NOT_COMPARABLE: 224",
+        "证据不足的结论不在事实表中复述。"
+      ],
+      "per_section": {
+        "verified": 0,
+        "disputes": 224,
+        "gaps": 2
+      }
+    },
+    "citation_count": 224,
+    "conflict_count": 7,
+    "gap_count": 2
+  },
+  "sources": {
+    "http_status": 200,
+    "count": 8,
+    "items": [
+      {
+        "title": "(湖州市)2025年安吉县国民经济和社会发展统计公报-红黑统计公报库",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "published_at": "2025-01-01T00:00:00Z"
+      },
+      {
+        "title": "国家统计局信息公开",
+        "url": "https://stats.gov.cn/WZWSREL3h4Z2svc2pmYi96eGZiMjAyMC8yMDI1MTAvdDIwMjUxMDIwXzE5NjE2MTEuaHRtbA==",
+        "published_at": "2025-10-20T00:00:00Z"
+      },
+      {
+        "title": "浙江省安吉县竹产业2011年预计产值可达130多亿_产业动态_产业发展_国际竹藤中心",
+        "url": "https://icbr.ac.cn/cyfz/cydt/content_7847",
+        "published_at": "2011-01-01T00:00:00Z"
+      },
+      {
+        "title": "统计公报_ 数据发布_ 福建省人民政府门户网站",
+        "url": "https://fujian.gov.cn/zwgk/sjfb/tjgb",
+        "published_at": null
+      },
+      {
+        "title": "洛阳市人民政府关于印发洛阳市国民经济和社会发展第十五个五年规划纲要的通知_2026年_洛阳市人民政府",
+        "url": "https://ly.gov.cn/2026/06-17/1067947.html",
+        "published_at": "2026-06-17T00:00:00Z"
+      },
+      {
+        "title": "小蜂观察：浙江省安吉县竹产业高质量发展路径分析-农小蜂",
+        "url": "https://abeedata.com/home/article/detail/id/25883",
+        "published_at": "2023-01-01T00:00:00Z"
+      },
+      {
+        "title": "中华人民共和国2023年国民经济和社会发展统计公报 - 国家统计局",
+        "url": "https://stats.gov.cn/sj/zxfb/202402/t20240228_1947915.html",
+        "published_at": "2023-01-01T00:00:00Z"
+      },
+      {
+        "title": "2026年8月份规模以上工业增加值增长5.2% - 国家统计局",
+        "url": "https://stats.gov.cn/sj/zxfb/202609/t20260915_1965308.html",
+        "published_at": "2026-01-01T00:00:00Z"
+      }
+    ]
+  },
+  "guard": {
+    "llm_calls": 2,
+    "search_calls": 7,
+    "prompt_tokens": 3103,
+    "completion_tokens": 841,
+    "total_tokens": 3944,
+    "llm_seconds": 5.74,
+    "search_seconds": 31.68,
+    "elapsed_seconds": 43.56,
+    "violations": [],
+    "llm_events": [
+      {
+        "call": 1,
+        "model": "deepseek-flash",
+        "prompt_tokens": 10,
+        "completion_tokens": 3,
+        "total_tokens": 13,
+        "seconds": 1.6
+      },
+      {
+        "call": 2,
+        "model": "deepseek-flash",
+        "prompt_tokens": 3093,
+        "completion_tokens": 838,
+        "total_tokens": 3931,
+        "seconds": 4.14
+      }
+    ],
+    "search_events": [
+      {
+        "call": 3,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 4.17
+      },
+      {
+        "call": 4,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 4.8
+      },
+      {
+        "call": 5,
+        "query_chars": 22,
+        "documents": 6,
+        "seconds": 5.02
+      },
+      {
+        "call": 6,
+        "query_chars": 31,
+        "documents": 6,
+        "seconds": 3.92
+      },
+      {
+        "call": 7,
+        "query_chars": 25,
+        "documents": 6,
+        "seconds": 4.21
+      },
+      {
+        "call": 7,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 4.63
+      },
+      {
+        "call": 7,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 4.94
+      }
+    ]
+  },
+  "estimated_cost_usd": {
+    "llm_offpeak": 0.00097,
+    "llm_peak_worst_case": 0.00194,
+    "tavily_if_paid": 0.056,
+    "total_if_tavily_paid": 0.0579
+  },
+  "verdict_scope": "engineering_smoke_only",
+  "research_verdict": "NO_SUPPORTED_CLAIMS",
+  "verdict": "PASS_ENGINEERING",
+  "verdict_reason": "live plumbing works, but the verifier accepted zero claims",
+  "artifact_note": "authorization label updated after the run; measured counts are unchanged"
+}

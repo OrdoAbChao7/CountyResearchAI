@@ -172,7 +172,7 @@ porcelain entries; its regenerated `git diff --binary` SHA256 equals the backup
 | P0 regressions | PASS | 47 targeted tests; conflict retention, entity binding, report integrity |
 | T10 report workbench | PASS | `46112d0`: conflict/gap tab, citation → drawer → graph, context-panel graph locate |
 | T12 graph interaction | PASS | `0adc236`: concentric layout >240 nodes, zoom-aware labels, 400-node browser test |
-| T13 hardening | PASS | 780 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
+| T13 hardening | PASS | 781 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
 | 400-node browser test | PASS (synthetic) | 400 nodes / 800 edges: first canvas 505 ms, list switch 204 ms |
 | Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` |
 | Disputes/gaps panel | PASS | E2E `09-disputes.png`; real MOCK run: 2 conflicts, 3 gaps |
@@ -184,23 +184,27 @@ number above is a synthetic projection test, not a real investigation.
 
 ## Live smoke (2026-11-20)
 
-One explicitly authorized paid smoke ran through the real API path; no second
-run was made. Full record: `docs/goal/LIVE_SMOKE.md`; budget and actual usage:
+Two explicitly authorized paid smokes ran through the real API path: the initial
+run and one corrected follow-up (“再跑一次”) with a 2,048-token discovery
+allowance and an explicit-focus fix. No third run was made. Full record:
+`docs/goal/LIVE_SMOKE.md`; budget and actual usage:
 `docs/goal/LIVE_SMOKE_COST_GATE.md`.
 
-| Item | Result |
-| --- | --- |
-| Job | `d367c9b277cf47d086d28f9824d661e5`, `SUCCEEDED` / `LIVE` |
-| Outcome | `NO_PROGRESS` (`no_supported_claims`) |
-| Provider | DeepSeek `deepseek-flash` + Tavily basic |
-| Usage | 2 LLM calls / 3,619 tokens; 7 searches; 0 guard violations |
-| Cost | $0.00089 model; $0.056 if Tavily credits were paid; ≤ $0.0578 |
-| Projections | 28 events; 273 nodes / 1,869 edges (800 returned); 6 report sections |
-| Verification | 0 verified / 239 `NOT_COMPARABLE`; 7 conflicts; 2 gaps |
+| Item | First run | Second run |
+| --- | --- | --- |
+| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` |
+| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` | `NO_PROGRESS` |
+| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) |
+| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches |
+| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges |
+| Verification | 0 verified / 239 `NOT_COMPARABLE` | 0 verified / 224 `NOT_COMPARABLE` |
+| Cost | ≤ $0.0578 | ≤ $0.0579 |
 
 Findings: the root `.env` has a Gemini endpoint/model paired with a DeepSeek
-key (smoke used process overrides and left `.env` untouched); the discovery call
-hit its 768-token cap and the focus fell back from `竹产业` to `特色农业`;
-retrieval returned off-region sources; all 239 claims were `NOT_COMPARABLE`
-(most outside the 2024 window, a few missing a usable period).
-This is an engineering smoke only, not Live evaluation or M5 acceptance.
+key (smokes used process overrides and left `.env` untouched). The focus fix
+works: `stage.discover.completed` and the question tree report `竹产业`, and the
+discovery call no longer hits its cap. Both runs still accepted zero claims;
+retrieval returned off-region sources, and the 2024 window rejected the
+available 2023/2025/2026 (and one 2011) material. This is engineering evidence,
+not Live evaluation or M5 acceptance.

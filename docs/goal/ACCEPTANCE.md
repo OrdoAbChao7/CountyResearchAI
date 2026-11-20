@@ -44,7 +44,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | Observational hash | PASS | `4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e` |
 | Strategy D measurement | PASS (dev + 2-task blind) | `experiments/quality/20261026_q3_strategy_d/`, `20261026_q4_blind_pilot/` |
 | Independent task set | PARTIAL | 2 blind tasks / 10 facts; 40–60 gap documented |
-| Live end-to-end | PARTIAL | one bounded smoke: `docs/goal/LIVE_SMOKE.md`; no Live evaluation |
+| Live end-to-end | PARTIAL | two bounded smokes: `docs/goal/LIVE_SMOKE.md`; no Live evaluation |
 | Ablations | PARTIAL | no-verifier, BM25/adaptive, old/new grouping; no-gap NOT_RUN |
 | Semantic Judge | NOT_RUN | — |
 | Human rubric/adjudication | NOT_RUN | — |
@@ -112,7 +112,7 @@ Not accepted here:
 | Item | Status | Why |
 | --- | --- | --- |
 | 40–60 sealed independent task set | NOT_MET | only pilot tasks exist; no new authorized corpus |
-| Live end-to-end / semantic Judge | PARTIAL | one bounded Live smoke (`docs/goal/LIVE_SMOKE.md`); semantic Judge and Live evaluation still not run |
+| Live end-to-end / semantic Judge | PARTIAL | two bounded Live smokes (`docs/goal/LIVE_SMOKE.md`); semantic Judge and Live evaluation still not run |
 | Human rubric/adjudication | BLOCKED_HUMAN_ANNOTATION | no human labels |
 | Real 400-node browser benchmark | NOT_RUN | 400/800 cap tested on synthetic projection; browser E2E uses the small MOCK case |
 | Section-level streaming / token accounting | NOT_RUN | renderer is one-shot; UI explicitly presents post-completion reveal |
@@ -145,26 +145,29 @@ Not accepted here:
 | Item | Status | Why |
 | --- | --- | --- |
 | Real-investigation 400-node benchmark | NOT_RUN | browser test uses a synthetic 400/800 fixture |
-| Live end-to-end / semantic Judge | PARTIAL | one authorized bounded smoke (`docs/goal/LIVE_SMOKE.md`); no Live evaluation or Judge |
+| Live end-to-end / semantic Judge | PARTIAL | two authorized bounded smokes (`docs/goal/LIVE_SMOKE.md`); no Live evaluation or Judge |
 | 40–60 sealed tasks / human labels | NOT_MET | unchanged from M5 |
 | Screen-reader manual walkthrough | NOT_RUN | axe automation only |
 
 ## Live smoke acceptance (2026-11-20)
 
-Revision: `codex/finish-roadmap` + `scripts/run_live_smoke.py`. This was a
-single explicitly authorized paid smoke, not an evaluation.
+Revision: `codex/finish-roadmap` + `scripts/run_live_smoke.py`. These were two
+explicitly authorized paid smokes, not an evaluation.
 
 | Check | Status | Command / artifact | Observed |
 | --- | --- | --- | --- |
-| Live provider call | PASS | `scripts/run_live_smoke.py --confirm-paid` | DeepSeek `deepseek-flash` + Tavily basic; 2 LLM calls / 7 searches |
-| Live job execution | PASS (engineering) | job `d367c9b277cf47d086d28f9824d661e5` | `SUCCEEDED` / `LIVE`; 28 events; 30.6 s |
-| Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120/` | graph 273 nodes / 1,869 edges (800 returned); report 200 |
-| Live research quality | NO_PROGRESS | report verification | 0 verified / 239 `NOT_COMPARABLE`; 7 conflicts; 2 gaps |
-| Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | ≤ $0.0578 estimated; 0 guard violations |
+| Live provider call | PASS | `scripts/run_live_smoke.py --confirm-paid` | DeepSeek `deepseek-flash` + Tavily basic; 2 LLM calls / 7 searches per run |
+| Live job execution (first) | PASS (engineering) | job `d367c9b277cf47d086d28f9824d661e5` | `SUCCEEDED` / `LIVE`; 28 events; 30.6 s |
+| Live job execution (second) | PASS (engineering) | job `fdf7f3e86d444419967124236c4cc1ad` | `SUCCEEDED` / `LIVE`; 28 events; 28.9 s |
+| Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 nodes / 1,785 edges; report 200 |
+| Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery` | second run focus `竹产业`; discovery completion 838 < 2,048 |
+| Backend suite after fix | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `781 passed in 26.48s` |
+| Live research quality | NO_PROGRESS | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; 7 conflicts / 2 gaps each |
+| Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; 0 guard violations |
 | Provider config | FINDING | root `.env` | Gemini endpoint/model configured with a DeepSeek key; smoke used process overrides, `.env` untouched |
-| Live evaluation / semantic Judge | NOT_RUN | — | one smoke does not satisfy M5 |
+| Live evaluation / semantic Judge | NOT_RUN | — | two smokes do not satisfy M5 |
 
-The smoke proves the real provider adapters and job path, not research quality.
-The retrieval layer returned off-region sources, and the explicit `竹产业`
-focus was replaced by the discovery fallback `特色农业`; the discovery call hit
-the 768-token smoke cap. See `docs/goal/LIVE_SMOKE.md` for the full finding list.
+The smokes prove the real provider adapters and job path, not research quality.
+The retrieval layer returned off-region sources in both runs; the second run
+confirms the explicit-focus fix, but the 2024 window still rejects the available
+2023/2025/2026 material. See `docs/goal/LIVE_SMOKE.md` for the full finding list.

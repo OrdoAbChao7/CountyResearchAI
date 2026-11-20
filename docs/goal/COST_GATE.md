@@ -1,6 +1,6 @@
 # Cost Gate — Quality Recovery
 
-Status: `ONE_SMOKE_AUTHORIZED_2026-11-20` / live evaluation still `NOT_AUTHORIZED`
+Status: `TWO_SMOKES_AUTHORIZED_2026-11-20` / live evaluation still `NOT_AUTHORIZED`
 
 ## Current rule
 
@@ -9,10 +9,12 @@ user's explicit cost authorization. All Q0/Q1 work and planned Q2/Q3 work is
 offline, deterministic, and free.
 
 The user authorized **one** bounded Live smoke on 2026-11-20 (“允许付费调用”,
-“跑一次 Live”). The recorded budget, prices, provider override and stop
-conditions are in [LIVE_SMOKE_COST_GATE.md](LIVE_SMOKE_COST_GATE.md). That
-authorization does not extend to a second run, a Live evaluation campaign, a
-semantic Judge, or the 40–60 task benchmark.
+“跑一次 Live”), then authorized **one additional** bounded smoke (“再跑一次”)
+after the first run exposed a truncated discovery response. The recorded budget,
+prices, provider override and stop conditions are in
+[LIVE_SMOKE_COST_GATE.md](LIVE_SMOKE_COST_GATE.md). That authorization does not
+extend to a third run, a Live evaluation campaign, a semantic Judge, or the
+40–60 task benchmark.
 
 ## Why paid calls would be needed
 
@@ -22,7 +24,7 @@ semantic Judge, or the 40–60 task benchmark.
 | Q2 dataset curation | No (existing archived/real URLs; hash and quote) | offline |
 | Q3 Strategy D (retrieval/identity/answer rules) | No | offline |
 | Q4 A/B/C/D offline paired runs | No | offline |
-| Q4 live end-to-end confirmation | Yes (search + LLM) | PARTIAL — one bounded smoke on 2026-11-20; no Live evaluation |
+| Q4 live end-to-end confirmation | Yes (search + LLM) | PARTIAL — two bounded smokes on 2026-11-20; no Live evaluation |
 | Independent semantic Judge | Yes | BLOCKED_EXTERNAL |
 | Playwright E2E | No (local MOCK) | install/browser download only |
 

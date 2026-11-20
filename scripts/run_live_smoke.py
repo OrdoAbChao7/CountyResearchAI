@@ -31,12 +31,15 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ENV_FILE = ROOT.parent / "CountyResearchAI" / ".env"
-RUN_ROOT = ROOT / "experiments" / "quality" / "live_smoke_20261120"
+DEFAULT_RUN_ROOT = ROOT / "experiments" / "quality" / "live_smoke_20261120"
+RUN_ROOT = Path(
+    os.environ.get("LIVE_SMOKE_RUN_ROOT", str(DEFAULT_RUN_ROOT))
+)
 RUN_DIR = RUN_ROOT / "run"
 
 MAX_LLM_CALLS = 3
 MAX_SEARCH_CALLS = 24
-MAX_OUTPUT_TOKENS = 768
+MAX_OUTPUT_TOKENS = 2048
 MAX_RESULTS_PER_SEARCH = 6
 WALL_CLOCK_SECONDS = 480
 
@@ -346,7 +349,7 @@ def main() -> int:
     app = create_app(settings=settings, live_enabled=True)
     summary: dict[str, Any] = {
         "date": "2026-11-20",
-        "authorization": "user: 允许付费调用 + 跑一次 Live (2026-11-20)",
+        "authorization": "user: 允许付费调用 + 跑一次 Live + 再跑一次 (2026-11-20)",
         "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
         "provider": {
             "llm": "deepseek",

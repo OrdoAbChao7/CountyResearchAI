@@ -2,10 +2,12 @@
 
 Status: `PASS_ENGINEERING` / `NO_SUPPORTED_CLAIMS`
 
-This is **one** explicitly authorized Live run. It proves that the real
-FastAPI job path, DeepSeek client, Tavily provider, event stream, evidence
-graph and report projections work together. It is **not** a Live evaluation,
-does not replace MOCK tests, and does not satisfy M5.
+This records **two** explicitly authorized Live runs: the initial smoke and one
+corrected follow-up (“再跑一次”) with a 2,048-token discovery allowance and the
+explicit-focus fix. They prove that the real FastAPI job path, DeepSeek client,
+Tavily provider, event stream, evidence graph and report projections work
+together. They are **not** a Live evaluation, do not replace MOCK tests, and do
+not satisfy M5.
 
 - Cost gate: [LIVE_SMOKE_COST_GATE.md](LIVE_SMOKE_COST_GATE.md)
 - Script: `scripts/run_live_smoke.py`
@@ -98,6 +100,49 @@ graph projection returned, and the SSE event log was persisted.
    edge truncation. The synthetic 400-node browser test remains a valid
    performance fixture, not a substitute for a real-investigation benchmark.
 
+## Second run (corrected, 2026-11-20)
+
+The user then said “再跑一次”. Before the second paid call:
+
+- `ResearchApplication.discover_focus` was fixed so an explicit contract focus
+  wins over the discovery result (`src/county_research_ai/application/research.py`);
+- a regression test `test_explicit_focus_wins_over_discovery` was added and
+  passes;
+- the smoke output allowance was raised from 768 to 2,048 tokens;
+- a second $0.25 cap and stop conditions were recorded in the cost gate.
+
+| Item | First run | Second run |
+| --- | --- | --- |
+| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` |
+| Status / mode | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` | `NO_PROGRESS` |
+| Discovered focus | `特色农业` (cap hit) | `竹产业` (explicit focus preserved) |
+| Discovery completion | 768 (cap) | 838 (under 2,048 cap) |
+| LLM / tokens | 2 / 3,619 | 2 / 3,944 |
+| Searches | 7 | 7 |
+| Graph | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges |
+| Report | 0 verified / 239 `NOT_COMPARABLE` | 0 verified / 224 `NOT_COMPARABLE` |
+| Conflicts / gaps | 7 / 2 | 7 / 2 |
+| Sources | 8 | 8 |
+| Estimated cost | ≤ $0.0578 | ≤ $0.0579 |
+
+The second run confirms the focus fix: `stage.discover.completed` and the
+question tree both say `竹产业`, and the report is now a bamboo-industry report.
+It still accepted zero claims. The 2024 window rejected the available
+2023/2025/2026 material (and one 2011 source), and retrieval still included
+Fujian, Luoyang and national-statistics pages. Focus selection was not the
+remaining blocker; region-locked retrieval and period coverage are.
+
+Artifacts: `experiments/quality/live_smoke_20261120_second/`.
+
+Command:
+
+```bash
+LIVE_SMOKE_RUN_ROOT=experiments/quality/live_smoke_20261120_second \
+PYTHONPATH=src python scripts/run_live_smoke.py \
+  --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
+```
+
 ## What this does and does not prove
 
 Proved:
@@ -107,24 +152,26 @@ Proved:
 - real job execution through the existing SQLite `JobStore`/`JobRunner`;
 - fine-grained events, evidence persistence, graph projection and report
   projection on live data;
+- an explicit contract focus is preserved through discovery after the fix;
 - the retry/call caps and cost gate were respected (no violations).
 
 Not proved:
 
 - Live research quality or supported-claim coverage;
-- that explicit `research_focus` is honored (it was not, in this run);
 - regional relevance of the retrieval layer;
 - a Live evaluation, semantic Judge, 40–60 sealed tasks, or human adjudication;
-- that a second run is authorized.
+- that a third run is authorized.
 
 ## Next actions (not executed)
 
 1. Fix the root `.env` provider/model mismatch, or make the override explicit in
    a local launch profile.
-2. Raise the discovery output allowance (for example 2,048 tokens) and decide
-   whether an explicit contract focus should override auto-discovery.
-3. Add a region-relevance filter or query constraint before the next Live run.
-4. Inspect the `2024 → outside_requested_window:2026` claim against its source
+2. Add a region-relevance filter or query constraint; the 2,048-token
+   discovery allowance and explicit-focus precedence are already in place.
+3. Inspect the `2024 → outside_requested_window:2026` claim against its source
    span and add a regression if the period parser is wrong.
-5. Ask for a fresh authorization before a second paid run; then repeat the
+4. Decide whether the smoke contract should use a wider date window or a
+   2024-specific source set; the current 2024 window rejects most available
+   live material.
+5. Ask for a fresh authorization before a third paid run; then repeat the
    bounded smoke and compare.

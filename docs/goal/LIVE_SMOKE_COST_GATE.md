@@ -1,6 +1,6 @@
 # Live Smoke Cost Gate — 2026-11-20
 
-Status: `AUTHORIZED_FOR_ONE_BOUNDED_SMOKE`
+Status: `TWO_SMOKES_AUTHORIZED_2026-11-20`
 
 ## Authorization
 
@@ -12,6 +12,11 @@ The user explicitly authorized paid provider calls and asked for one Live run:
 This authorization covers **one** bounded smoke run only. It does not authorize a
 Live evaluation campaign, a semantic Judge, a 40–60 task benchmark, retries
 beyond the limits below, or any deployment/push.
+
+The user then asked “再跑一次” after the first smoke exposed a truncated
+discovery response and a fallback focus. That authorizes **one additional**
+bounded smoke with a 2,048-token discovery allowance and an explicit
+`竹产业` focus. It does not authorize any further runs.
 
 ## Provider and endpoint
 
@@ -119,6 +124,31 @@ The smoke is `PASS` only if:
 sources or no `SUPPORTED` claim. This smoke does **not** satisfy M5 Live
 evaluation, the 40–60 sealed task set, semantic Judge, or human adjudication.
 
+## Second run budget (2026-11-20, “再跑一次”)
+
+| Bound | Limit |
+| --- | --- |
+| Additional research jobs | 1 |
+| LLM calls | 3 total (1 tiny preflight + at most 2 job calls) |
+| LLM output per call | ≤ 2,048 tokens |
+| LLM input per call | ≤ 16,000 tokens |
+| LLM retries | 0 |
+| Search requests | ≤ 24 |
+| Results per search | ≤ 6 |
+| Search retries | 0 |
+| Wall clock | 480 s guard; 600 s hard process timeout |
+| Maximum estimated spend | **$0.25** |
+| Focus | explicit contract focus `竹产业` must survive discovery |
+| Run root | `experiments/quality/live_smoke_20261120_second/` |
+
+Worst-case arithmetic at peak: 3 × 16k input × $0.30/M = $0.0144;
+3 × 2,048 output × $1.20/M = $0.0074; 24 Tavily credits × $0.008 = $0.192.
+Total ≤ $0.214, under the $0.25 cap.
+
+The same data, stop-condition and success-criteria rules apply. The first run
+used $0.0578 at most (7 searches); the second run is expected to be in the same
+range.
+
 ## Actual usage (2026-11-20)
 
 The authorized smoke ran once. Job
@@ -144,8 +174,36 @@ Caveat: the discovery call produced exactly 768 completion tokens, i.e. it hit
 the per-call output cap. The run then used the handler default focus
 (`特色农业`) instead of the contract focus (`竹产业`), which is consistent with a
 truncated discovery JSON falling back. The smoke therefore proves the Live
-plumbing, not the best-case retrieval quality. A second run with a larger
-discovery allowance requires a fresh authorization.
+plumbing, not the best-case retrieval quality.
 
-No further paid calls were made after this run.
+## Second run actual usage (2026-11-20)
 
+The user then said “再跑一次”, authorizing one additional bounded smoke. The
+run used the same provider and prices, with a 2,048-token output allowance and
+the explicit-focus fix from `application/research.py`. Job
+`fdf7f3e86d444419967124236c4cc1ad` finished `SUCCEEDED` / `NO_PROGRESS`
+(`no_supported_claims`) in 28.9 s. The guard observed:
+
+| Item | Actual | Cap |
+| --- | --- | --- |
+| LLM calls | 2 (preflight + discovery) | 3 |
+| Prompt tokens | 3,103 | ~48,000 |
+| Completion tokens | 841 | 6,144 |
+| Discovery completion | 838 | 2,048 |
+| Tavily basic searches | 7 | 24 |
+| Guard violations | 0 | 0 |
+| Total elapsed (guard) | 43.56 s | 480 s |
+
+Estimated cost:
+
+- DeepSeek off-peak: 3,103 × $0.15/M + 841 × $0.60/M = **$0.00097**.
+- Tavily: 7 credits × $0.008 = **$0.056** if paid; $0 if still on free credits.
+- Worst-case total if Tavily was paid: **$0.0579**, below the $0.25 cap.
+
+The discovery call no longer hit its cap, and `stage.discover.completed` reports
+`竹产业`, confirming the explicit-focus fix. The verifier still accepted zero
+claims: 224 `NOT_COMPARABLE`, 7 conflicts, 2 gaps. The remaining blockers are
+retrieval region relevance and period coverage, not focus selection.
+
+No further paid calls were made after this run. A third run requires a fresh
+authorization.

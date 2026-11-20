@@ -54,7 +54,7 @@ ResearchContract
 | T7 图谱/报告投影 | PASS | 稳定 ID、URL 归一、多重边、自环丢弃、400/800 连通截断；六章节报告、引用编号、冲突/缺口投影 |
 | T10 报告与证据工作台 | PASS | Report Studio、Evidence Drawer、Agent Timeline、引用联动、冲突与缺口面板、加载/空/错误状态 |
 | T12 知识图谱 | PASS | Cytoscape 懒加载、节点/关系筛选、邻域聚焦、冲突高亮、证据抽屉、报告 ↔ 图谱双向定位、400 节点自适应布局 |
-| T13 工程硬化 | PASS | 780 Python、Ruff、TypeScript、20 Vitest、Vite build、4 Playwright、axe WCAG A/AA、XSS 与三个 P0 回归 |
+| T13 工程硬化 | PASS | 781 Python、Ruff、TypeScript、20 Vitest、Vite build、4 Playwright、axe WCAG A/AA、XSS 与三个 P0 回归 |
 
 本轮新增的交互：
 
@@ -110,7 +110,7 @@ f72b9a0 feat: capture deep research results in the run context
 | 检查 | 命令 | 结果 |
 | --- | --- | --- |
 | P0 回归 | `pytest --no-cov -q tests/test_evidence_store.py tests/test_evidence_graph.py tests/test_report_projection.py` | `47 passed in 2.96s` |
-| Python 全量 | `pytest --no-cov -q` | `780 passed in 24.63s` |
+| Python 全量 | `pytest --no-cov -q` | `781 passed in 26.48s`（含显式 focus 回归） |
 | Ruff | `ruff check src tests scripts/run_finish_roadmap_demo.py` | `All checks passed!` |
 | TypeScript | `npm run typecheck` | exit 0 |
 | Vitest | `npm test` | 4 files / `20 passed` |
@@ -120,23 +120,25 @@ f72b9a0 feat: capture deep research results in the run context
 | 无障碍 | 同上，axe WCAG A/AA | 六个界面 0 violations |
 | MOCK 演示 | `PYTHONPATH=src python scripts/run_finish_roadmap_demo.py` | `SUCCEEDED/SUFFICIENT`，35 事件，25 节点/33 边，1 SUPPORTED / 5 NOT_COMPARABLE，2 冲突，3 缺口 |
 
-### Live smoke（2026-11-20，单次授权）
+### Live smoke（2026-11-20，两次授权）
 
-| 检查 | 结果 |
-| --- | --- |
-| 命令 | `PYTHONPATH=src python scripts/run_live_smoke.py --env-file E:/Projects/CountyResearchAI/.env --confirm-paid` |
-| Job | `d367c9b277cf47d086d28f9824d661e5` |
-| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |
-| 事件 / 图谱 | 28 事件；273 节点 / 1,869 边，返回 800 边 |
-| 报告 | 0 verified / 239 `NOT_COMPARABLE`；7 冲突；2 缺口；8 来源 |
-| 用量 | 2 次 LLM、3,619 tokens；7 次 Tavily basic；0 违规；47.89s |
-| 成本 | 模型 $0.00089；Tavily 若付费 $0.056；合计 ≤ $0.0578 |
+| 检查 | 第一次 | 第二次（修正版） |
+| --- | --- | --- |
+| 授权 | “跑一次 Live” | “再跑一次” |
+| Job | `d367c9b277cf47d086d28f9824d661e5` | `fdf7f3e86d444419967124236c4cc1ad` |
+| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS` | 同左 |
+| Focus | `特色农业`（768 token 上限） | `竹产业`（显式 focus 修复生效） |
+| 事件 / 图谱 | 28 事件；273 节点 / 1,869 边 | 28 事件；256 节点 / 1,785 边 |
+| 报告 | 0/239 `NOT_COMPARABLE`；7 冲突；2 缺口 | 0/224 `NOT_COMPARABLE`；7 冲突；2 缺口 |
+| 用量 | 2 LLM、3,619 tokens；7 次 Tavily | 2 LLM、3,944 tokens；7 次 Tavily |
+| 成本 | 模型 $0.00089；合计 ≤ $0.0578 | 模型 $0.00097；合计 ≤ $0.0579 |
 
 结论：真实 provider、JobStore/JobRunner、事件、证据图与报告投影全部跑通，
-记为 `PASS_ENGINEERING`；研究结果为 `NO_PROGRESS`。根 `.env` 的
-Gemini 配置与 DeepSeek key 不匹配，smoke 使用进程级覆盖；发现调用用满
-768 output token，focus 从 `竹产业` 回退为 `特色农业`，检索还包含非安吉来源。
-因此这不构成 Live 质量验收，也不满足 M5。
+两次均记为 `PASS_ENGINEERING`；研究结果为 `NO_PROGRESS`。根 `.env` 的
+Gemini 配置与 DeepSeek key 不匹配，smoke 使用进程级覆盖。第二次已修复
+显式 `research_focus` 被自动发现覆盖的问题（新增回归测试），但检索仍包含
+非安吉来源，2024 时间窗仍拒绝可获得的 2023/2025/2026 材料。因此这仍不构成
+Live 质量验收，也不满足 M5。
 
 ## 6. 三个 P0 验收结果
 
@@ -172,7 +174,7 @@ Gemini 配置与 DeepSeek key 不匹配，smoke 使用进程级覆盖；发现�
 | 项目 | 状态 | 说明 |
 | --- | --- | --- |
 | 40–60 个独立密封任务集 | NOT_MET | M5 仍未完成；不得用 2 个 pilot 任务替代 |
-| Live 端到端评测 / 语义 Judge | PARTIAL | 2026-11-20 执行了**一次**显式授权的受限 Live smoke（`docs/goal/LIVE_SMOKE.md`）：真实 DeepSeek + Tavily、`SUCCEEDED/LIVE`，但 `NO_PROGRESS`（0 verified / 239 NOT_COMPARABLE）。这不是 Live 评测，语义 Judge 仍未运行 |
+| Live 端到端评测 / 语义 Judge | PARTIAL | 2026-11-20 执行了**两次**显式授权的受限 Live smoke（`docs/goal/LIVE_SMOKE.md`）：真实 DeepSeek + Tavily、均 `SUCCEEDED/LIVE`，但均 `NO_PROGRESS`（第一次 0/239，第二次 0/224 NOT_COMPARABLE）。第二次修复了显式 focus 覆盖。这不是 Live 评测，语义 Judge 仍未运行 |
 | 人工标注与裁决 | BLOCKED_HUMAN_ANNOTATION | 无人工标签 |
 | 真实调查的 400 节点浏览器基准 | NOT_RUN | 本轮只验证合成 400 节点/800 边投影 |
 | 章节级流式生成 / 真实 token 核算 | NOT_RUN | 报告一次性生成，界面不伪造 |
@@ -212,11 +214,11 @@ cd web && npm run typecheck && npm test && npm run build
 cd web && AXIOMSCOPE_E2E_PORT=8040 npx playwright test
 ```
 
-根目录 `.env` 已确认存在 `LLM_*` 与搜索服务配置。2026-11-20 在用户明确授权下执行了**一次**受限 Live smoke；默认仍为 MOCK。根 `.env` 当前把 Gemini endpoint/model 与一个 DeepSeek key 配在一起，smoke 使用进程级覆盖，未修改 `.env` 或主工作区。详见 `docs/goal/LIVE_SMOKE.md`。
+根目录 `.env` 已确认存在 `LLM_*` 与搜索服务配置。2026-11-20 在用户明确授权下执行了**两次**受限 Live smoke（第二次为“再跑一次”的修正版）；默认仍为 MOCK。根 `.env` 当前把 Gemini endpoint/model 与一个 DeepSeek key 配在一起，smoke 使用进程级覆盖，未修改 `.env` 或主工作区。详见 `docs/goal/LIVE_SMOKE.md`。
 
 ## 10. 后续建议
 
-1. 先修复根 `.env` 的 provider/model 与 DeepSeek key 不匹配；再决定是否给 discovery 更高 output 额度并让显式 `research_focus` 优先。Live smoke 已证明链路可用，但检索区域相关性和期间归因仍需修复；第二次付费运行需要新的显式授权。
+1. 先修复根 `.env` 的 provider/model 与 DeepSeek key 不匹配；再处理区域检索与期间覆盖。第二次 Live smoke 已确认显式 `research_focus` 修复生效，但仍是 0 verified；第三次付费运行需要新的显式授权。
 2. 先补齐 40–60 个密封任务与预期引文（`docs/evaluation/DESIGN.md`），再做 Live + 语义 Judge；不要用 pilot 调参。
 3. 用真实调查数据做 400 节点浏览器基准，记录首帧、筛选、聚焦与内存；当前数字只代表合成夹具。
 4. 若需要章节级流式，单独设计“报告已完成、前端逐节展示”与“真实流式生成”的区分，避免把视觉编排说成流式。
