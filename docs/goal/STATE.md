@@ -172,7 +172,7 @@ porcelain entries; its regenerated `git diff --binary` SHA256 equals the backup
 | P0 regressions | PASS | 47 targeted tests; conflict retention, entity binding, report integrity |
 | T10 report workbench | PASS | `46112d0`: conflict/gap tab, citation → drawer → graph, context-panel graph locate |
 | T12 graph interaction | PASS | `0adc236`: concentric layout >240 nodes, zoom-aware labels, 400-node browser test |
-| T13 hardening | PASS | 781 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
+| T13 hardening | PASS | 792 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
 | 400-node browser test | PASS (synthetic) | 400 nodes / 800 edges: first canvas 505 ms, list switch 204 ms |
 | Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` |
 | Disputes/gaps panel | PASS | E2E `09-disputes.png`; real MOCK run: 2 conflicts, 3 gaps |
@@ -206,5 +206,9 @@ key (smokes used process overrides and left `.env` untouched). The focus fix
 works: `stage.discover.completed` and the question tree report `竹产业`, and the
 discovery call no longer hits its cap. Both runs still accepted zero claims;
 retrieval returned off-region sources, and the 2024 window rejected the
-available 2023/2025/2026 (and one 2011) material. This is engineering evidence,
-not Live evaluation or M5 acceptance.
+available 2023/2025/2026 (and one 2011) material. A deterministic region gate
+(`search/region_relevance.py`) now drops other-region, national and
+upper-level-only results before ranking and ingestion; replaying the second
+run's recorded sources keeps 3 Anji pages and drops 5. It is verified offline
+only — no third paid run — and the period gap remains. This is engineering
+evidence, not Live evaluation or M5 acceptance.

@@ -54,7 +54,7 @@ ResearchContract
 | T7 图谱/报告投影 | PASS | 稳定 ID、URL 归一、多重边、自环丢弃、400/800 连通截断；六章节报告、引用编号、冲突/缺口投影 |
 | T10 报告与证据工作台 | PASS | Report Studio、Evidence Drawer、Agent Timeline、引用联动、冲突与缺口面板、加载/空/错误状态 |
 | T12 知识图谱 | PASS | Cytoscape 懒加载、节点/关系筛选、邻域聚焦、冲突高亮、证据抽屉、报告 ↔ 图谱双向定位、400 节点自适应布局 |
-| T13 工程硬化 | PASS | 781 Python、Ruff、TypeScript、20 Vitest、Vite build、4 Playwright、axe WCAG A/AA、XSS 与三个 P0 回归 |
+| T13 工程硬化 | PASS | 792 Python、Ruff、TypeScript、20 Vitest、Vite build、4 Playwright、axe WCAG A/AA、XSS 与三个 P0 回归 |
 
 本轮新增的交互：
 
@@ -87,6 +87,7 @@ ResearchContract
 ## 4. Git Commit 列表
 
 ```text
+53c2007 fix: keep retrieval results inside the requested county
 3403ddb test: record the corrected bounded live smoke
 94202f6 fix: preserve an explicit research focus during discovery
 ec50451 docs: link the live smoke commit in the execution record
@@ -113,7 +114,7 @@ f72b9a0 feat: capture deep research results in the run context
 | 检查 | 命令 | 结果 |
 | --- | --- | --- |
 | P0 回归 | `pytest --no-cov -q tests/test_evidence_store.py tests/test_evidence_graph.py tests/test_report_projection.py` | `47 passed in 2.96s` |
-| Python 全量 | `pytest --no-cov -q` | `781 passed in 26.48s`（含显式 focus 回归） |
+| Python 全量 | `pytest --no-cov -q` | `792 passed in 23.05s`（含显式 focus 与区域闸门回归） |
 | Ruff | `ruff check src tests scripts/run_finish_roadmap_demo.py` | `All checks passed!` |
 | TypeScript | `npm run typecheck` | exit 0 |
 | Vitest | `npm test` | 4 files / `20 passed` |
@@ -139,9 +140,11 @@ f72b9a0 feat: capture deep research results in the run context
 结论：真实 provider、JobStore/JobRunner、事件、证据图与报告投影全部跑通，
 两次均记为 `PASS_ENGINEERING`；研究结果为 `NO_PROGRESS`。根 `.env` 的
 Gemini 配置与 DeepSeek key 不匹配，smoke 使用进程级覆盖。第二次已修复
-显式 `research_focus` 被自动发现覆盖的问题（新增回归测试），但检索仍包含
-非安吉来源，2024 时间窗仍拒绝可获得的 2023/2025/2026 材料。因此这仍不构成
-Live 质量验收，也不满足 M5。
+显式 `research_focus` 被自动发现覆盖的问题（新增回归测试）。检索曾返回
+非安吉来源；现已加入确定性区域闸门（`search/region_relevance.py`），对第二
+次记录的 8 条来源离线回放时保留 3 条安吉来源、丢弃 5 条其他地区/国家级
+来源（尚未用付费 Live 复验）。2024 时间窗仍拒绝可获得的 2023/2025/2026 材料。
+因此这仍不构成 Live 质量验收，也不满足 M5。
 
 ## 6. 三个 P0 验收结果
 
@@ -177,7 +180,7 @@ Live 质量验收，也不满足 M5。
 | 项目 | 状态 | 说明 |
 | --- | --- | --- |
 | 40–60 个独立密封任务集 | NOT_MET | M5 仍未完成；不得用 2 个 pilot 任务替代 |
-| Live 端到端评测 / 语义 Judge | PARTIAL | 2026-11-20 执行了**两次**显式授权的受限 Live smoke（`docs/goal/LIVE_SMOKE.md`）：真实 DeepSeek + Tavily、均 `SUCCEEDED/LIVE`，但均 `NO_PROGRESS`（第一次 0/239，第二次 0/224 NOT_COMPARABLE）。第二次修复了显式 focus 覆盖。这不是 Live 评测，语义 Judge 仍未运行 |
+| Live 端到端评测 / 语义 Judge | PARTIAL | 2026-11-20 执行了**两次**显式授权的受限 Live smoke（`docs/goal/LIVE_SMOKE.md`）：真实 DeepSeek + Tavily、均 `SUCCEEDED/LIVE`，但均 `NO_PROGRESS`（第一次 0/239，第二次 0/224 NOT_COMPARABLE）。第二次修复了显式 focus 覆盖；区域闸门已通过离线回放，未复跑 Live。这不是 Live 评测，语义 Judge 仍未运行 |
 | 人工标注与裁决 | BLOCKED_HUMAN_ANNOTATION | 无人工标签 |
 | 真实调查的 400 节点浏览器基准 | NOT_RUN | 本轮只验证合成 400 节点/800 边投影 |
 | 章节级流式生成 / 真实 token 核算 | NOT_RUN | 报告一次性生成，界面不伪造 |
@@ -221,7 +224,7 @@ cd web && AXIOMSCOPE_E2E_PORT=8040 npx playwright test
 
 ## 10. 后续建议
 
-1. 先修复根 `.env` 的 provider/model 与 DeepSeek key 不匹配；再处理区域检索与期间覆盖。第二次 Live smoke 已确认显式 `research_focus` 修复生效，但仍是 0 verified；第三次付费运行需要新的显式授权。
+1. 先修复根 `.env` 的 provider/model 与 DeepSeek key 不匹配。区域检索已加入确定性闸门（`search/region_relevance.py`），对第二次 Live 记录来源离线回放为保留 3 条、丢弃 5 条；期间覆盖仍未解决，第三次付费运行需要新的显式授权。
 2. 先补齐 40–60 个密封任务与预期引文（`docs/evaluation/DESIGN.md`），再做 Live + 语义 Judge；不要用 pilot 调参。
 3. 用真实调查数据做 400 节点浏览器基准，记录首帧、筛选、聚焦与内存；当前数字只代表合成夹具。
 4. 若需要章节级流式，单独设计“报告已完成、前端逐节展示”与“真实流式生成”的区分，避免把视觉编排说成流式。

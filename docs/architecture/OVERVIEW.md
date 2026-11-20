@@ -241,5 +241,10 @@ The API's `mode_label` is visible on every task and in every brief.
   The first hit a 768-token discovery cap and fell back from `竹产业` to
   `特色农业`; the second used 2,048 tokens and an explicit-focus fix, kept
   `竹产业`, and still returned 0 verified / 224 `NOT_COMPARABLE` with
-  off-region sources. This is engineering evidence, not Live evaluation. See
+  off-region sources. A deterministic region gate
+  (`search/region_relevance.py`) now drops other-region, national and
+  upper-level-only results before ranking and evidence ingestion; replaying the
+  second run's recorded sources keeps the three 安吉 pages and drops five. That
+  fix has not been re-checked against a paid live run, and the 2024 period gap
+  remains. This is engineering evidence, not Live evaluation. See
   `docs/goal/LIVE_SMOKE.md`.

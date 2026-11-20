@@ -161,7 +161,8 @@ explicitly authorized paid smokes, not an evaluation.
 | Live job execution (second) | PASS (engineering) | job `fdf7f3e86d444419967124236c4cc1ad` | `SUCCEEDED` / `LIVE`; 28 events; 28.9 s |
 | Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 nodes / 1,785 edges; report 200 |
 | Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery`; `test_deep_mock_pipeline_emits_fine_grained_events` | second run focus `竹产业`; discovery completion 838 < 2,048; API/worker path asserted |
-| Backend suite after fix | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `781 passed in 26.48s` |
+| Region retrieval gate | PASS (offline replay) | `tests/test_region_relevance.py` (10 tests) | second-run recorded sources: 5 off-region dropped (3 national, Fujian, Luoyang), 3 Anji pages kept; `collect_adaptive` reports `region_filtered_documents` |
+| Backend suite after fixes | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `792 passed in 23.05s` |
 | Live research quality | NO_PROGRESS | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; 7 conflicts / 2 gaps each |
 | Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; 0 guard violations |
 | Provider config | FINDING | root `.env` | Gemini endpoint/model configured with a DeepSeek key; smoke used process overrides, `.env` untouched |
@@ -170,4 +171,8 @@ explicitly authorized paid smokes, not an evaluation.
 The smokes prove the real provider adapters and job path, not research quality.
 The retrieval layer returned off-region sources in both runs; the second run
 confirms the explicit-focus fix, but the 2024 window still rejects the available
-2023/2025/2026 material. See `docs/goal/LIVE_SMOKE.md` for the full finding list.
+2023/2025/2026 material. A deterministic region gate now drops other-region,
+national and upper-level-only results before ranking and ingestion; it is
+verified offline against the second run's recorded sources but has not been
+re-checked with a live provider call. See `docs/goal/LIVE_SMOKE.md` for the full
+finding list.

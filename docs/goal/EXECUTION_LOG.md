@@ -4,7 +4,7 @@
 Worktree：`E:\Projects\CountyResearchAI-finish-roadmap`
 分支：`codex/finish-roadmap`
 本轮起点：`88f210c`
-本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`
+本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`
 
 ## 1. 执行前复核
 
@@ -56,6 +56,7 @@ Playwright 覆盖：
 ## 4. 本轮提交
 
 ```text
+53c2007 fix: keep retrieval results inside the requested county
 3403ddb test: record the corrected bounded live smoke
 94202f6 fix: preserve an explicit research focus during discovery
 ec50451 docs: link the live smoke commit in the execution record
@@ -123,6 +124,17 @@ Live 任务；用户随后说“再跑一次”，又执行了**一次**修正�
 | 守卫 | 2 次 LLM、3,944 tokens、7 次 Tavily；0 违规；43.56s |
 | 成本 | 模型 $0.00097；Tavily 若付费 $0.056；≤ $0.0579 |
 | 结论 | Focus 修复生效；仍为 `NO_PROGRESS`，剩余瓶颈是区域检索与期间覆盖 |
+
+区域检索修复（离线，2026-11-20）：
+
+| 检查 | 结果 |
+| --- | --- |
+| 代码 | `search/region_relevance.py`：按 REGION / CONTEXT / OTHER_REGION / NATIONAL / UNKNOWN 分类，仅 REGION 与 UNKNOWN 可作为县级证据入库 |
+| 接入 | `SearchCollector.collect`、`collect_supplemental(county=...)`、`collect_adaptive`（深度研究路径）、`ProviderSearchAdapter.collect` |
+| 可观测 | `collect_adaptive` 的 usage 新增 `region_filtered_documents`，随 `retrieval.round.completed` 事件输出 |
+| 回放 | 第二次 Live 的 8 条来源：保留 3 条安吉来源；丢弃 3 条国家级、福建与洛阳来源 |
+| 回归 | `tests/test_region_relevance.py` 10 tests；全量 `792 passed in 23.05s`；Anji MOCK 演示不变（25 节点 / 33 边，1 SUPPORTED / 5 NOT_COMPARABLE） |
+| 未验证 | 未执行第三次付费 Live；2024 时间窗仍会拒绝现有 2023/2025/2026 材料 |
 
 完整记录：`docs/goal/LIVE_SMOKE.md`；预算与实际用量：
 `docs/goal/LIVE_SMOKE_COST_GATE.md`。

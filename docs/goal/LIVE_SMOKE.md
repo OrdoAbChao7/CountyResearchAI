@@ -143,6 +143,48 @@ PYTHONPATH=src python scripts/run_live_smoke.py \
   --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
 ```
 
+## Region retrieval fix (offline replay, 2026-11-20)
+
+After the second run, the retrieval layer was given a deterministic region gate
+(`src/county_research_ai/search/region_relevance.py`). Each result is classified
+before ranking and evidence ingestion:
+
+- `REGION` — names the target county (or its distinctive short name);
+- `CONTEXT` — names only the target province/prefecture, never the county;
+- `OTHER_REGION` — names a different province/city/county;
+- `NATIONAL` — a national statistical/government source, or a title announcing
+  national coverage, without the county;
+- `UNKNOWN` — no identifiable region.
+
+Only `REGION` and `UNKNOWN` are evidence-bearing. The gate runs in
+`SearchCollector.collect`, `collect_supplemental` and `collect_adaptive` (the
+deep-research path); `collect_adaptive` reports `region_filtered_documents` in
+its usage payload, which flows into `retrieval.round.completed`.
+
+Replaying the eight source titles/URLs persisted by the second run:
+
+| Recorded source | Verdict |
+| --- | --- |
+| (湖州市)2025年安吉县国民经济和社会发展统计公报 | `REGION` (kept) |
+| 小蜂观察：浙江省安吉县竹产业高质量发展路径分析 | `REGION` (kept) |
+| 浙江省安吉县竹产业2011年预计产值可达130多亿 | `REGION` (kept) |
+| 中华人民共和国2023年国民经济和社会发展统计公报 | `NATIONAL` (dropped) |
+| 2026年8月份规模以上工业增加值增长5.2% | `NATIONAL` (dropped) |
+| 国家统计局信息公开 | `NATIONAL` (dropped) |
+| 统计公报_数据发布_福建省人民政府门户网站 | `OTHER_REGION` (dropped) |
+| 洛阳市…第十五个五年规划纲要 | `OTHER_REGION` (dropped) |
+
+Regression: `tests/test_region_relevance.py` (10 tests) covers the replay,
+county mention beating a national source marker, prefecture-only context,
+unknown documents being kept, and the three collector entry points. The backend
+suite is `792 passed`; the Anji MOCK demo is unchanged (25 nodes / 33 edges,
+1 SUPPORTED / 5 NOT_COMPARABLE, 2 conflicts, 3 gaps).
+
+This is an offline verification against already-recorded sources. It does not
+prove the live behaviour of the search providers, and no third paid run was
+made. The period blocker is untouched: the three kept 安吉 sources are from
+2011/2023/2025, so a 2024 contract would still accept zero claims.
+
 ## What this does and does not prove
 
 Proved:
@@ -166,8 +208,9 @@ Not proved:
 
 1. Fix the root `.env` provider/model mismatch, or make the override explicit in
    a local launch profile.
-2. Add a region-relevance filter or query constraint; the 2,048-token
-   discovery allowance and explicit-focus precedence are already in place.
+2. Region relevance: the deterministic gate described above is in place and
+   verified offline against the recorded sources; re-check it with a fresh
+   authorization before the next paid run.
 3. Inspect the `2024 → outside_requested_window:2026` claim against its source
    span and add a regression if the period parser is wrong.
 4. Decide whether the smoke contract should use a wider date window or a
