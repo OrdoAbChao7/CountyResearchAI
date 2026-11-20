@@ -338,3 +338,6 @@ searches were spent. The run failed in `collect_adaptive`: all four gov-channel
 follow-up queries returned zero whitelisted documents, and the existing
 `fail_fast` branch raised `SearchError`. No retry or second paid attempt was
 made. Root cause and evidence: `docs/goal/LIVE_SMOKE.md` (fourth run section).
+
+The offline follow-up fix (empty-result handling) made no provider calls, so
+the fourth-run cost above is unchanged and no additional budget was spent.

@@ -30,7 +30,8 @@ Failure: `GovDataProvider` returned no whitelisted documents for all four
 follow-up queries; the pre-existing `fail_fast` branch in
 `SearchCollector._run_tasks` treated the empty aggregate as a provider failure
 and raised `SearchError`, which the worker reported as `ResearchStageError`.
-No code was changed for this run and no retry was made.
+No code was changed for this run and no retry was made. The follow-up defect was
+fixed offline in `daa0b83`; see `docs/goal/LIVE_SMOKE.md`.
 
 `summary.json` verdict is `FAIL`, not a research-quality verdict. Compare with
 `../live_smoke_20261120_third/`; the root cause is recorded in

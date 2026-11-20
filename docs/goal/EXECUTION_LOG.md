@@ -4,7 +4,7 @@
 Worktree：`E:\Projects\CountyResearchAI-finish-roadmap`
 分支：`codex/finish-roadmap`
 本轮起点：`88f210c`
-本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`；短名误判修复：`6614307`；第三次 Live 记录：`ee63fed`；第四次 Live 记录：`f813ba3`
+本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`；短名误判修复：`6614307`；第三次 Live 记录：`ee63fed`；第四次 Live 记录：`f813ba3`；空结果修复：`daa0b83`
 
 ## 1. 执行前复核
 
@@ -223,5 +223,19 @@ API，未修改 `.env` 或主工作区。工作树
 
 结论：第四次 Live 证明了区域闸门、2024 目标年传递、期间覆盖事件和补充查询文本
 在真实 provider 下工作；但它在补充检索阶段失败，未完成验证，不能算 2024 检索
-成功，也不能算 Live quality PASS。下一步应先修复空结果处理并加回归，再申请
-第五次授权。
+成功，也不能算 Live quality PASS。下一步需申请第五次授权；空结果处理已在下一节
+修复并加回归。
+
+## 补充修复：补充检索空结果处理（2026-11-20）
+
+第四次 Live 暴露的 `fail_fast` 空结果误判已修复；未调用付费 API。
+
+| 检查 | 结果 |
+| --- | --- |
+| 代码 | `SearchCollector._run_tasks` 区分“任务抛异常”与“成功返回空”；仅当所有任务都抛异常且 `fail_fast=True` 时抛 `SearchError` |
+| 行为 | 空 gov 补充轮返回空 `AdaptiveCollectionResult`；协调器以 `ZERO_MARGINAL_EVIDENCE` 停止该轮，继续用已有证据分析/报告 |
+| 回归 | `tests/test_search_collector.py` 新增 3 个：空 gov 不失败、全异常仍失败、空+异常不失败；11 passed |
+| 全量 | `830 passed in 23.53s` |
+| Ruff | `All checks passed!` |
+| 提交 | `daa0b83` |
+| 未做 | 未跑第五次 Live；未 Push/合并 |

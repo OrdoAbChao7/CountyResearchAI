@@ -229,6 +229,14 @@ and raised `SearchError`. The job failed before verification, evidence
 persistence, graph and report. No code was changed for this run; the root cause
 and an offline reproduction are recorded in `LIVE_SMOKE.md`.
 
+Follow-up fix: `SearchCollector._run_tasks` now counts failed tasks separately
+from successful empty results and raises `SearchError` only when every task
+raised. An empty adaptive follow-up returns an empty result; the controller
+stops with `ZERO_MARGINAL_EVIDENCE` and the job continues with existing
+evidence. Three regressions were added in `tests/test_search_collector.py`;
+the full suite is `830 passed`, Ruff is clean, and no paid call was made. A
+fifth Live run has not been made and still needs a fresh authorization.
+
 ## 2024 period coverage and claim region fix (2026-11-20)
 
 Worktree `E:\Projects\CountyResearchAI-finish-roadmap`, branch
@@ -247,7 +255,7 @@ Verification at code HEAD:
 
 | Check | Observed |
 | --- | --- |
-| Full backend suite | `827 passed` (`pytest -q`) |
+| Full backend suite | `830 passed` (`pytest -q`; 827 at `d186577`, plus 3 follow-up regressions) |
 | P0 regression modules | `49 passed` (`test_evidence_store`, `test_evidence_graph`, `test_report_projection`) |
 | Targeted new regressions | `85 passed` across region, window, adaptive, period, ledger and provider tests |
 | Ruff | `ruff check src tests` → `All checks passed!` |

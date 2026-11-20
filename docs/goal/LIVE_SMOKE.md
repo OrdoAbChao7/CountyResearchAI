@@ -1,6 +1,7 @@
 # Live Smoke Record — 2026-11-20
 
-Status: runs 1–3 `PASS_ENGINEERING`; run 4 `FAILED` / `NO_SUPPORTED_CLAIMS`
+Status: runs 1–3 `PASS_ENGINEERING`; run 4 `FAILED` / `NO_SUPPORTED_CLAIMS`;
+follow-up fix offline
 
 This records **four** explicitly authorized Live runs: the initial smoke, one
 corrected follow-up (“再跑一次”), one region-gate verification (“跑第三次”),
@@ -317,7 +318,27 @@ Consequences:
 - The single in-window claim is only a coverage count. It was not verified and
   is not a 2024 research result.
 - No second paid attempt was made after the failure. A fifth run would need a
-  fresh authorization after the follow-up error handling is fixed.
+  fresh authorization to verify the fixed follow-up path live.
+
+### Follow-up fix (offline, 2026-11-20)
+
+The defect was fixed without a provider call. `SearchCollector._run_tasks` now
+tracks failed tasks separately from successful empty results and raises
+`SearchError` only when every task raised. An empty adaptive follow-up returns
+an empty `AdaptiveCollectionResult`; the coordinator stops that round with
+`ZERO_MARGINAL_EVIDENCE` and lets the job finish with the evidence it has.
+
+Regressions in `tests/test_search_collector.py`:
+
+- `test_empty_gov_followup_is_not_a_search_failure` — a gov query returning
+  `[]` yields an empty result, not `SearchError`;
+- `test_all_provider_errors_still_fail_fast` — all providers raising still
+  raises, with `failed_tasks == tasks_count`;
+- `test_mixed_empty_and_error_does_not_fail_fast` — one empty success plus one
+  provider error is not an all-task failure.
+
+`pytest --no-cov -q` → `830 passed`; `ruff check src tests` → clean. No fifth
+Live run has been made; it still needs a fresh authorization.
 
 ## What this does and does not prove
 
@@ -345,8 +366,8 @@ Not proved:
   response (the fourth run exercised the gate but failed before completing);
 - that the 2024 fixes produce a verified 2024 claim or a completed report; the
   fourth run failed in the adaptive follow-up before verification;
-- that the adaptive follow-up path is reliable: it aborts when every gov-channel
-  query returns zero whitelisted documents;
+- that the fixed adaptive follow-up path completes a full paid run; it has only
+  offline regressions so far;
 - a Live evaluation, semantic Judge, 40–60 sealed tasks, or human adjudication;
 - that a fifth run is authorized.
 
@@ -354,11 +375,9 @@ Not proved:
 
 1. Fix the root `.env` provider/model mismatch, or make the override explicit in
    a local launch profile.
-2. Fix the adaptive follow-up error handling: a gov provider returning zero
-   whitelisted documents is a legitimate gap, not a provider failure. Separate
-   “all providers errored” from “all providers returned empty” in
-   `SearchCollector._run_tasks`/`collect_adaptive`, and add a regression with a
-   gov provider that returns `[]`.
+2. The adaptive follow-up error handling is fixed offline (see the follow-up
+   fix above). A fifth paid run is still needed to verify the changed path with
+   a real provider.
 3. Region relevance: the deterministic gate ran live in the fourth run (27 kept
    / 4 dropped), but the specific short-name false positive from the third run
    still has only offline replay evidence. Re-check it in the next completed

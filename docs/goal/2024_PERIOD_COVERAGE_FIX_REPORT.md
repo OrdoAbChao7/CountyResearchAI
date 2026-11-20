@@ -25,6 +25,7 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 | 4. `infer_period` / Claim 期间修复 | `1f08ba1` | 完成 |
 | 5. 日期解析与内容截断 | `c6d98a6` | 完成 |
 | 补充回归：相邻年份窗口 | `d186577` | 完成 |
+| 补充：adaptive 空结果处理 | `daa0b83` | 完成 |
 
 最终验证：
 
@@ -218,7 +219,8 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 1. **第四次付费 Live 已执行，但未完成**。2026-11-20 的第四次 Live 在
    `collect_adaptive` 补充检索阶段因空 gov 结果触发 `fail_fast` 而 `FAILED`；
    真实 2024 资料是否可验证、最终 outcome 是否改善仍未验证。当前结论仍为
-   工程修复，见 §11。
+   工程修复，见 §11。该失败的空结果处理已在 §12 修复并加回归；仍需第五次
+   Live 验证。
 2. **没有制造 2024 数据**。若公开资料中缺少目标年，系统会保持
    `INSUFFICIENT_DATA` / `NO_PROGRESS`，这是预期行为。
 3. **区域分类器未重写**。`search/region_relevance.py` 只增加公开包装；文档级
@@ -275,6 +277,7 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 - `tests/test_evidence_store.py`
 - `tests/test_measure_identity.py`
 - `tests/test_research_application.py`
+- `tests/test_search_collector.py`
 - `tests/test_search_web.py`
 
 文档：
@@ -343,5 +346,39 @@ PYTHONPATH=src python scripts/run_live_smoke.py \
 
 结论：第四次 Live 是工程链路的**部分**验证，不是 2024 检索成功，也不是 Live
 quality PASS。它证明区域闸门、2024 目标年传递、期间覆盖事件和补充查询文本在真实
-provider 下工作；但 job 在补充检索阶段失败，未产生验证、图谱或报告。下一步应先
-修复空结果处理并添加回归，再申请第五次授权。
+provider 下工作；但 job 在补充检索阶段失败，未产生验证、图谱或报告。空结果处理
+已按 §12 修复并加回归；下一步需申请第五次授权，验证真实 provider 路径。
+
+## 12. 补充修复：adaptive 补充检索空结果（2026-11-20）
+
+第四次 Live 暴露的 `fail_fast` 空结果误判已修复，未调用付费 API。
+
+### 修复
+
+- `SearchCollector._run_tasks` 分别统计成功任务和失败任务；只有所有任务都抛异常
+  且 `fail_fast=True` 时才抛 `SearchError`。成功的空结果（例如 gov 白名单无匹配）
+  不再被视为搜索失败。
+- `collect_adaptive` 返回空 `AdaptiveCollectionResult`；协调器在
+  `if not followup.documents` 时设置 `ZERO_MARGINAL_EVIDENCE` 并停止补充轮，继续
+  用已有证据完成分析/报告。
+- `SearchError` 的 context 新增 `failed_tasks`，与 `tasks_count` 一起用于诊断。
+- 未改变 provider 行为、Verifier、期间覆盖判定或区域闸门。
+
+### 回归
+
+- `test_empty_gov_followup_is_not_a_search_failure`：gov 查询返回 `[]` 时得到空
+  结果，不抛 `SearchError`。
+- `test_all_provider_errors_still_fail_fast`：所有 provider 都抛异常时仍 fail-fast，
+  且 `failed_tasks == tasks_count`。
+- `test_mixed_empty_and_error_does_not_fail_fast`：一个成功空结果加一个 provider
+  异常不构成“所有任务失败”。
+
+验证：
+
+| 检查 | 结果 |
+| --- | --- |
+| `pytest --no-cov -q tests/test_search_collector.py` | `11 passed` |
+| 全量后端 | `830 passed in 23.53s` |
+| Ruff | `ruff check src tests` → `All checks passed!` |
+| 付费调用 | 无 |
+| 第五次 Live | 未执行；需单独授权 |

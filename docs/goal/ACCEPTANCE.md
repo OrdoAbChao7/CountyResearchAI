@@ -164,11 +164,12 @@ explicitly authorized paid smokes, not an evaluation.
 | Live 2024 period coverage (fourth) | PASS (live observability) | `retrieval.period_coverage` | target `2024`; 22 selected; 1 in-window claim/source; period met; topic missing 4 slots |
 | Live target-year follow-up queries (fourth) | PASS (live) | `retrieval.round.started` | 4 queries; real text recorded, including `2024年`; all routed to gov |
 | Live adaptive follow-up failure (fourth) | FAILED | `job.failed` | all 4 gov queries returned zero whitelisted docs; `SearchError` fail-fast; `ResearchStageError` |
+| Adaptive follow-up empty-result fix | FIXED (offline) | `tests/test_search_collector.py` (3 new tests) | empty results no longer fail-fast; all-provider errors still raise; 830 passed |
 | Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 / 1,785; third 165 / 1,077; fourth graph 409, report empty |
 | Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery`; `test_deep_mock_pipeline_emits_fine_grained_events` | second run focus `竹产业`; discovery completion 838 < 2,048; API/worker path asserted |
 | Region retrieval gate | PASS (live + offline) | `tests/test_region_relevance.py` (13 tests); fourth-run event | second-run recorded sources: 5 off-region dropped, 3 Anji kept; third run: 7 Anji / 1 false positive; fourth run: 27 kept / 4 dropped (3 other-region, 1 national) |
 | Region gate live finding | FIXED (offline) | third run sources + reclassification | Guizhou plan with “安吉精铸/正安吉他” was kept; full-name rule now marks it `OTHER_REGION` (7 region / 1 other-region); fourth run did not complete the specific re-check |
-| Backend suite after fixes | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `795 passed in 37.07s` at the region-gate stage; `827 passed` after the 2024 fix (see below) |
+| Backend suite after fixes | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `795 passed in 37.07s` at the region-gate stage; `827 passed` after the 2024 fix; `830 passed` after the empty-result fix |
 | Live research quality | FAIL | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; third 0/133; fourth no verification (job failed); 7/7/6 conflicts; 2 gaps in runs 1–3 |
 | Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; third ≤ $0.0585; fourth ≤ $0.0905; 0 guard violations in all four |
 | Provider config | FINDING | root `.env` | Gemini endpoint/model configured with a DeepSeek key; smokes used process overrides, `.env` untouched |
@@ -193,6 +194,22 @@ persistence, graph or report was produced. No code was changed for this run and
 no fifth run was made. See `docs/goal/LIVE_SMOKE.md` for the root cause and
 offline reproduction.
 
+## Adaptive follow-up fix acceptance (2026-11-20)
+
+Revision: `codex/finish-roadmap` after the fourth-run record.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Empty gov follow-up is not a failure | PASS | `pytest tests/test_search_collector.py` | `11 passed`; a gov query returning `[]` yields an empty result, not `SearchError` |
+| All-provider errors still fail fast | PASS | same | `SearchError` with `failed_tasks == tasks_count` |
+| Mixed empty/error is not all-failure | PASS | same | one empty success + one provider error returns `[]` |
+| Full backend suite | PASS | `pytest --no-cov -q` | `830 passed in 23.53s` |
+| Ruff | PASS | `ruff check src tests` | `All checks passed!` |
+| Fifth Live run | NOT_RUN | — | needs fresh authorization |
+
+The fix changes only the failure classification in `SearchCollector._run_tasks`;
+it does not relax the verifier or change provider behavior.
+
 ## 2024 period coverage and claim region fix acceptance (2026-11-20)
 
 Revision: `codex/finish-roadmap` @ `d186577`; `.venv` Python 3.13.7.
@@ -207,7 +224,7 @@ Details and code locations: `docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`.
 | Phase 5 provider dates/truncation | PASS | `tests/test_search_web.py`, `tests/test_deep_retrieval.py`, `tests/test_source_contract.py` | Tavily `published_date` parsed; `tYYYYMMDD` and `/YYYYMM/` URL dates; body-only date rejected; provider truncation sets `content_truncated=True` and original length |
 | Targeted new regressions | PASS | 8 modules listed in the fix report | `85 passed in 1.10s` |
 | P0 regressions | PASS | `test_evidence_store.py`, `test_evidence_graph.py`, `test_report_projection.py` | `49 passed in 2.96s` |
-| Full backend suite | PASS | `python -m pytest -q` | `827 passed in 35.24s` |
+| Full backend suite | PASS | `python -m pytest -q` | `827 passed in 35.24s`; `830 passed` after the separate empty-result fix |
 | Ruff (source and tests) | PASS | `python -m ruff check src tests` | `All checks passed!` |
 | API compatibility | PASS | worker/contract tests | optional date fields default to `None`; existing callers unchanged |
 | Real 2024 retrieval | PARTIAL | fourth Live `retrieval.period_coverage` | fourth run recorded target `2024` and 1 in-window claim/source, then failed in adaptive follow-up before verification; no completed 2024 research result |
