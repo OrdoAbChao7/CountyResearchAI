@@ -1,6 +1,8 @@
 """深度检索子系统测试（消歧、查询展开、URL 规范化、去重与重排）。"""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from county_research_ai.models import RawDoc
 from county_research_ai.search.content_extractor import (
     calculate_content_fingerprint,
@@ -52,12 +54,30 @@ def test_normalize_url_strips_tracking_params():
 
 
 def test_extract_publish_date():
-    text = "2023年08月15日，安吉县竹产业发展大会在安吉召开..."
+    text = "发布时间：2023年08月15日 10:00 来源：安吉新闻网"
     dt = extract_publish_date(text)
     assert dt is not None
     assert dt.year == 2023
     assert dt.month == 8
     assert dt.day == 15
+
+    # A dated sentence in the body is an event date, not a publication date.
+    assert extract_publish_date("2023年08月15日，安吉县竹产业发展大会在安吉召开...") is None
+
+
+def test_url_timestamp_is_not_overridden_by_a_body_year():
+    dt = extract_publish_date(
+        "2018年安吉县竹产业总产值达到180亿元。",
+        "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202401/t20240108_123.html",
+    )
+
+    assert dt == datetime(2024, 1, 8, tzinfo=timezone.utc)
+
+
+def test_month_only_url_date_keeps_month_precision():
+    dt = extract_publish_date("正文没有任何日期", "https://anji.gov.cn/202401/")
+
+    assert dt == datetime(2024, 1, 1, tzinfo=timezone.utc)
 
 
 def test_content_fingerprint_identifies_syndicated_reprints():
@@ -143,7 +163,7 @@ def test_collector_normalizes_doc_urls(tmp_settings):
             title="测试新闻",
             url="https://www.anji.gov.cn/news.html?spm=123&utm_source=baidu#hash",
             snippet="安吉竹产业总产值280亿元",
-            content="2023年安吉竹林面积达101万亩",
+            content="发布时间：2023年8月15日 2023年安吉竹林面积达101万亩",
         )
     ]
     ranked = collector._dedup_and_rank(docs, top=5, keywords=["安吉"])
