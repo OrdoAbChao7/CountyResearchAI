@@ -4,7 +4,7 @@
 Worktree：`E:\Projects\CountyResearchAI-finish-roadmap`
 分支：`codex/finish-roadmap`
 本轮起点：`88f210c`
-本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`
+本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`；短名误判修复：`6614307`；第三次 Live 记录：`ee63fed`
 
 ## 1. 执行前复核
 
@@ -56,7 +56,11 @@ Playwright 覆盖：
 ## 4. 本轮提交
 
 ```text
+ee63fed test: record the third bounded live smoke and the short-name fix
+6614307 fix: require the full county name inside document content
+227b4f7 docs: record the region retrieval gate
 53c2007 fix: keep retrieval results inside the requested county
+9c76384 docs: link the live smoke fix commits
 3403ddb test: record the corrected bounded live smoke
 94202f6 fix: preserve an explicit research focus during discovery
 ec50451 docs: link the live smoke commit in the execution record
@@ -146,7 +150,7 @@ Live 任务；用户随后说“再跑一次”，又执行了**一次**修正�
 | 事件 / 图谱 | 28 事件；165 节点 / 1,077 边，返回 800 边 |
 | 报告 | 0 verified / 133 `NOT_COMPARABLE`；6 冲突；2 缺口；8 来源 |
 | 成本 | 模型 $0.001256；Tavily 若付费 $0.056；≤ $0.0585 |
-| 区域闸门 | 第二次运行中的国家统计局 / 福建 / 洛阳页面消失；8 条来源均为安吉相关或安吉案例报道 |
+| 区域闸门 | 第二次运行中的国家统计局 / 福建 / 洛阳页面消失；剩余来源集中在安吉，但混入 1 条贵州规划（见下） |
 | 发现 | 贵州省“十五五”规划因正文含“安吉精铸”“正安吉他”被短名子串误判为 REGION；该文正文无“安吉县” |
 | 修复 | 正文只认全称 `安吉县`；短名仅在标题/摘要/URL 且需词边界；回放第三次来源为 7 region / 1 other_region（贵州规划） |
 | 可观测补充 | `collect` 阶段新增 `retrieval.region_filtered` 事件；第三次运行早于该事件，无法给出 collect 阶段丢弃计数 |

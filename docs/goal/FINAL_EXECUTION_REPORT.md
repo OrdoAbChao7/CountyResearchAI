@@ -87,7 +87,11 @@ ResearchContract
 ## 4. Git Commit 列表
 
 ```text
+ee63fed test: record the third bounded live smoke and the short-name fix
+6614307 fix: require the full county name inside document content
+227b4f7 docs: record the region retrieval gate
 53c2007 fix: keep retrieval results inside the requested county
+9c76384 docs: link the live smoke fix commits
 3403ddb test: record the corrected bounded live smoke
 94202f6 fix: preserve an explicit research focus during discovery
 ec50451 docs: link the live smoke commit in the execution record
@@ -141,8 +145,8 @@ f72b9a0 feat: capture deep research results in the run context
 三次均记为 `PASS_ENGINEERING`；研究结果为 `NO_PROGRESS`。根 `.env` 的
 Gemini 配置与 DeepSeek key 不匹配，smoke 使用进程级覆盖。第二次修复了
 显式 `research_focus` 被自动发现覆盖的问题（新增回归测试）。第三次验证了
-区域闸门：第二次运行中的国家统计局、福建、洛阳页面消失，8 条来源均为安吉
-相关或安吉案例报道；同时暴露一个短名误判——贵州省“十五五”规划正文含
+区域闸门：第二次运行中的国家统计局、福建、洛阳页面消失，剩余 8 条来源中
+7 条安吉相关；同时暴露一个短名误判——贵州省“十五五”规划正文含
 “安吉精铸”“正安吉他”，被误当作县名。现已改为正文只认全称 `安吉县`、
 短名仅在标题/摘要/URL 且需词边界；回放第三次来源为 7 条 region、1 条
 other_region（贵州规划），该规则尚未再跑付费 Live。2024 时间窗仍拒绝可获得
