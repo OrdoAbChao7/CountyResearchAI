@@ -2,12 +2,12 @@
 
 Status: `PASS_ENGINEERING` / `NO_SUPPORTED_CLAIMS`
 
-This records **two** explicitly authorized Live runs: the initial smoke and one
-corrected follow-up (“再跑一次”) with a 2,048-token discovery allowance and the
-explicit-focus fix. They prove that the real FastAPI job path, DeepSeek client,
-Tavily provider, event stream, evidence graph and report projections work
-together. They are **not** a Live evaluation, do not replace MOCK tests, and do
-not satisfy M5.
+This records **three** explicitly authorized Live runs: the initial smoke, one
+corrected follow-up (“再跑一次”), and one region-gate verification (“跑第三次”).
+They prove that the real FastAPI job path, DeepSeek client, Tavily provider,
+event stream, evidence graph and report projections work together, and the
+third run shows the region gate acting on live results. They are **not** a Live
+evaluation, do not replace MOCK tests, and do not satisfy M5.
 
 - Cost gate: [LIVE_SMOKE_COST_GATE.md](LIVE_SMOKE_COST_GATE.md)
 - Script: `scripts/run_live_smoke.py`
@@ -174,16 +174,67 @@ Replaying the eight source titles/URLs persisted by the second run:
 | 统计公报_数据发布_福建省人民政府门户网站 | `OTHER_REGION` (dropped) |
 | 洛阳市…第十五个五年规划纲要 | `OTHER_REGION` (dropped) |
 
-Regression: `tests/test_region_relevance.py` (10 tests) covers the replay,
+Regression: `tests/test_region_relevance.py` (13 tests) covers the replay,
 county mention beating a national source marker, prefecture-only context,
-unknown documents being kept, and the three collector entry points. The backend
-suite is `792 passed`; the Anji MOCK demo is unchanged (25 nodes / 33 edges,
-1 SUPPORTED / 5 NOT_COMPARABLE, 2 conflicts, 3 gaps).
+unknown documents being kept, the short-name boundary rule, and the three
+collector entry points. The backend suite is `795 passed`; the Anji MOCK demo
+is unchanged (25 nodes / 33 edges, 1 SUPPORTED / 5 NOT_COMPARABLE, 2 conflicts,
+3 gaps).
 
-This is an offline verification against already-recorded sources. It does not
-prove the live behaviour of the search providers, and no third paid run was
-made. The period blocker is untouched: the three kept 安吉 sources are from
-2011/2023/2025, so a 2024 contract would still accept zero claims.
+This section is the offline verification that preceded the third run. The third
+run then exercised the gate with a live provider and exposed a short-name false
+positive, described below. The period blocker is untouched: the kept 安吉
+sources are from 2011/2023/2025, so a 2024 contract still accepts zero claims.
+
+## Third run (region-gate verification, 2026-11-20)
+
+The user then said “跑第三次”, authorizing one bounded smoke to verify the gate
+with a real provider. Command:
+
+```bash
+LIVE_SMOKE_RUN_ROOT=experiments/quality/live_smoke_20261120_third \
+PYTHONPATH=src python scripts/run_live_smoke.py \
+  --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
+```
+
+| Item | Third run |
+| --- | --- |
+| Job | `007487e8e7494e3fba1770c1f7b0781f` |
+| Status / mode | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` (`no_supported_claims`) |
+| Focus | `竹产业` |
+| LLM / tokens | 2 / 4,693 (discovery completion 1,224) |
+| Searches | 7 |
+| Graph | 165 nodes / 1,077 edges (800 returned) |
+| Report | 0 verified / 133 `NOT_COMPARABLE`; 6 conflicts; 2 gaps |
+| Sources | 8 |
+| Guard | 0 violations; 29.23 s |
+| Estimated cost | model $0.001256; ≤ $0.0585 total |
+
+What the gate did:
+
+- The persisted set is Anji-centred. The national statistical bulletins, the
+  Fujian bulletin and the Luoyang plan seen in the second run are gone. The
+  remaining government pages (NDRC, forestry) are articles about Anji and
+  contain multiple `安吉县` mentions.
+- One false positive slipped through: the Guizhou five-year plan contains
+  “安吉精铸” and “正安吉他” (a company/project name and a guitar brand), so the
+  short-name substring rule classified it `REGION`. Its content has zero
+  occurrences of the full `安吉县`.
+- The classifier was fixed: the full administrative name is required inside
+  document content, and the short name is matched only in title/snippet/URL and
+  only on a word boundary. Replaying this run's stored source content marks the
+  Guizhou plan `OTHER_REGION` (7 region / 1 other-region). No provider calls
+  were made for that replay.
+- No `retrieval.round.*` event appears: the adaptive loop stopped before any
+  follow-up round, so `collect_adaptive` fetched no additional documents. The
+  gate ran inside `SearchCollector.collect`. The `retrieval.region_filtered`
+  event was added after this run, so its collect-time drop count is not in the
+  artifact.
+
+The run still accepted zero claims: all 133 structured claims are outside the
+2024 window (sources from 2011/2023/2025/2026). Region filtering removed
+sources, not the period gap.
 
 ## What this does and does not prove
 
@@ -195,22 +246,26 @@ Proved:
 - fine-grained events, evidence persistence, graph projection and report
   projection on live data;
 - an explicit contract focus is preserved through discovery after the fix;
+- the region gate kept the third run's sources Anji-centred and exposed a
+  short-name false positive, which was fixed and replayed offline;
 - the retry/call caps and cost gate were respected (no violations).
 
 Not proved:
 
 - Live research quality or supported-claim coverage;
-- regional relevance of the retrieval layer;
+- that the fixed short-name rule behaves correctly under a fresh live provider
+  response (only the stored third-run sources were replayed);
 - a Live evaluation, semantic Judge, 40–60 sealed tasks, or human adjudication;
-- that a third run is authorized.
+- that a fourth run is authorized.
 
 ## Next actions (not executed)
 
 1. Fix the root `.env` provider/model mismatch, or make the override explicit in
    a local launch profile.
-2. Region relevance: the deterministic gate described above is in place and
-   verified offline against the recorded sources; re-check it with a fresh
-   authorization before the next paid run.
+2. Region relevance: the deterministic gate is in place, and its short-name
+   rule was fixed after the third run and replayed against that run's stored
+   sources. A fourth paid run would be the only way to confirm the fixed rule
+   live; it needs a fresh authorization.
 3. Inspect the `2024 → outside_requested_window:2026` claim against its source
    span and add a regression if the period parser is wrong.
 4. Decide whether the smoke contract should use a wider date window or a

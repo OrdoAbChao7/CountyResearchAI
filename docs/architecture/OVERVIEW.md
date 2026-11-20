@@ -100,7 +100,8 @@ The SSE endpoint replays from `after` / `Last-Event-ID` and closes after a
 terminal event.
 
 The coordinator emits only real work: `question_tree.created`,
-`retrieval.round.started/completed`, `evidence.ingested`,
+`retrieval.round.started/completed`, `retrieval.region_filtered` (collector
+drop counts by verdict), `evidence.ingested`,
 `question_tree.coverage`, `reflection.started/completed`, `gaps.detected`,
 `conflicts.detected`, `agent.started/completed`, `synthesis.started/completed`.
 Stage events, `evidence.persisted`, `report.rendered` and `job.completed` come
@@ -236,15 +237,19 @@ The API's `mode_label` is visible on every task and in every brief.
   data. A Playwright test also renders a synthetic 400-node/800-edge projection
   in the browser (about 0.5 s first canvas); neither is a browser benchmark of
   a real 400-node investigation.
-- Two authorized Live smokes on 2026-11-20 proved the real DeepSeek/Tavily
-  adapters and the job/event/graph/report path, but both accepted zero claims.
+- Three authorized Live smokes on 2026-11-20 proved the real DeepSeek/Tavily
+  adapters and the job/event/graph/report path, but all accepted zero claims.
   The first hit a 768-token discovery cap and fell back from `竹产业` to
   `特色农业`; the second used 2,048 tokens and an explicit-focus fix, kept
   `竹产业`, and still returned 0 verified / 224 `NOT_COMPARABLE` with
   off-region sources. A deterministic region gate
-  (`search/region_relevance.py`) now drops other-region, national and
-  upper-level-only results before ranking and evidence ingestion; replaying the
-  second run's recorded sources keeps the three 安吉 pages and drops five. That
-  fix has not been re-checked against a paid live run, and the 2024 period gap
-  remains. This is engineering evidence, not Live evaluation. See
-  `docs/goal/LIVE_SMOKE.md`.
+  (`search/region_relevance.py`) drops other-region, national and
+  upper-level-only results before ranking and evidence ingestion. The third run
+  exercised it: the previously seen national/Fujian/Luoyang pages were gone and
+  the remaining sources were Anji-focused, but a Guizhou plan containing
+  “安吉精铸/正安吉他” slipped through as a short-name false positive. The rule
+  now requires the full `安吉县` inside content and a word boundary for the
+  short name; replaying the third run's stored sources marks that plan
+  `OTHER_REGION` (7 region / 1 other-region). That fixed rule has not been
+  re-checked against a paid live run, and the 2024 period gap remains. This is
+  engineering evidence, not Live evaluation. See `docs/goal/LIVE_SMOKE.md`.

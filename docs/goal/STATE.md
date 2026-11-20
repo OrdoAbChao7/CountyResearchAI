@@ -172,7 +172,7 @@ porcelain entries; its regenerated `git diff --binary` SHA256 equals the backup
 | P0 regressions | PASS | 47 targeted tests; conflict retention, entity binding, report integrity |
 | T10 report workbench | PASS | `46112d0`: conflict/gap tab, citation → drawer → graph, context-panel graph locate |
 | T12 graph interaction | PASS | `0adc236`: concentric layout >240 nodes, zoom-aware labels, 400-node browser test |
-| T13 hardening | PASS | 792 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
+| T13 hardening | PASS | 795 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
 | 400-node browser test | PASS (synthetic) | 400 nodes / 800 edges: first canvas 505 ms, list switch 204 ms |
 | Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` |
 | Disputes/gaps panel | PASS | E2E `09-disputes.png`; real MOCK run: 2 conflicts, 3 gaps |
@@ -184,31 +184,34 @@ number above is a synthetic projection test, not a real investigation.
 
 ## Live smoke (2026-11-20)
 
-Two explicitly authorized paid smokes ran through the real API path: the initial
-run and one corrected follow-up (“再跑一次”) with a 2,048-token discovery
-allowance and an explicit-focus fix. No third run was made. Full record:
-`docs/goal/LIVE_SMOKE.md`; budget and actual usage:
-`docs/goal/LIVE_SMOKE_COST_GATE.md`.
+Three explicitly authorized paid smokes ran through the real API path: the
+initial run, one corrected follow-up (“再跑一次”), and one region-gate
+verification (“跑第三次”). Full record: `docs/goal/LIVE_SMOKE.md`; budget and
+actual usage: `docs/goal/LIVE_SMOKE_COST_GATE.md`.
 
-| Item | First run | Second run |
-| --- | --- | --- |
-| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` |
-| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` |
-| Outcome | `NO_PROGRESS` | `NO_PROGRESS` |
-| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) |
-| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches |
-| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges |
-| Verification | 0 verified / 239 `NOT_COMPARABLE` | 0 verified / 224 `NOT_COMPARABLE` |
-| Cost | ≤ $0.0578 | ≤ $0.0579 |
+| Item | First run | Second run | Third run |
+| --- | --- | --- | --- |
+| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` | `007487e8e7494e3fba1770c1f7b0781f` |
+| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` | `NO_PROGRESS` | `NO_PROGRESS` |
+| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) | `竹产业` |
+| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches | 2 LLM / 4,693 tokens; 7 searches |
+| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges | 165 nodes / 1,077 edges |
+| Verification | 0 / 239 `NOT_COMPARABLE` | 0 / 224 `NOT_COMPARABLE` | 0 / 133 `NOT_COMPARABLE` |
+| Cost | ≤ $0.0578 | ≤ $0.0579 | ≤ $0.0585 |
 
 Findings: the root `.env` has a Gemini endpoint/model paired with a DeepSeek
 key (smokes used process overrides and left `.env` untouched). The focus fix
-works: `stage.discover.completed` and the question tree report `竹产业`, and the
-discovery call no longer hits its cap. Both runs still accepted zero claims;
-retrieval returned off-region sources, and the 2024 window rejected the
-available 2023/2025/2026 (and one 2011) material. A deterministic region gate
-(`search/region_relevance.py`) now drops other-region, national and
-upper-level-only results before ranking and ingestion; replaying the second
-run's recorded sources keeps 3 Anji pages and drops 5. It is verified offline
-only — no third paid run — and the period gap remains. This is engineering
-evidence, not Live evaluation or M5 acceptance.
+works: `stage.discover.completed` and the question tree report `竹产业`. All
+three runs accepted zero claims; the 2024 window rejected the available
+2023/2025/2026 (and 2011) material. A deterministic region gate
+(`search/region_relevance.py`) drops other-region, national and
+upper-level-only results before ranking and ingestion. The third run exercised
+it live: the national/Fujian/Luoyang pages from the second run were gone, and
+the remaining government pages are Anji-focused. It exposed one short-name
+false positive (a Guizhou plan containing “安吉精铸”/“正安吉他”); the rule now
+requires the full `安吉县` in content and a word boundary for the short name,
+and replaying the third run's stored sources marks that plan `OTHER_REGION`
+(7 region / 1 other-region). The fixed rule has not been re-verified with a paid
+run, and the period gap remains. This is engineering evidence, not Live
+evaluation or M5 acceptance.

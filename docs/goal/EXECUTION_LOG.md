@@ -134,7 +134,24 @@ Live 任务；用户随后说“再跑一次”，又执行了**一次**修正�
 | 可观测 | `collect_adaptive` 的 usage 新增 `region_filtered_documents`，随 `retrieval.round.completed` 事件输出 |
 | 回放 | 第二次 Live 的 8 条来源：保留 3 条安吉来源；丢弃 3 条国家级、福建与洛阳来源 |
 | 回归 | `tests/test_region_relevance.py` 10 tests；全量 `792 passed in 23.05s`；Anji MOCK 演示不变（25 节点 / 33 边，1 SUPPORTED / 5 NOT_COMPARABLE） |
-| 未验证 | 未执行第三次付费 Live；2024 时间窗仍会拒绝现有 2023/2025/2026 材料 |
+| 未验证（当时） | 尚未执行第三次付费 Live；2024 时间窗仍会拒绝现有 2023/2025/2026 材料 |
+
+第三次运行（区域闸门验证，用户“跑第三次”）：
+
+| 检查 | 结果 |
+| --- | --- |
+| Job | `007487e8e7494e3fba1770c1f7b0781f` |
+| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |
+| 用量 | 2 次 LLM、4,693 tokens（发现 completion 1,224）；7 次 Tavily；0 违规；29.23s |
+| 事件 / 图谱 | 28 事件；165 节点 / 1,077 边，返回 800 边 |
+| 报告 | 0 verified / 133 `NOT_COMPARABLE`；6 冲突；2 缺口；8 来源 |
+| 成本 | 模型 $0.001256；Tavily 若付费 $0.056；≤ $0.0585 |
+| 区域闸门 | 第二次运行中的国家统计局 / 福建 / 洛阳页面消失；8 条来源均为安吉相关或安吉案例报道 |
+| 发现 | 贵州省“十五五”规划因正文含“安吉精铸”“正安吉他”被短名子串误判为 REGION；该文正文无“安吉县” |
+| 修复 | 正文只认全称 `安吉县`；短名仅在标题/摘要/URL 且需词边界；回放第三次来源为 7 region / 1 other_region（贵州规划） |
+| 可观测补充 | `collect` 阶段新增 `retrieval.region_filtered` 事件；第三次运行早于该事件，无法给出 collect 阶段丢弃计数 |
+| 回归 | `tests/test_region_relevance.py` 13 tests；全量 `795 passed in 37.07s` |
+| 未验证 | 修复后的短名规则未再跑付费 Live；2024 时间窗仍为 0 verified |
 
 完整记录：`docs/goal/LIVE_SMOKE.md`；预算与实际用量：
 `docs/goal/LIVE_SMOKE_COST_GATE.md`。

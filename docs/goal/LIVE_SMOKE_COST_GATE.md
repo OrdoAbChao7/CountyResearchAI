@@ -1,6 +1,6 @@
 # Live Smoke Cost Gate — 2026-11-20
 
-Status: `TWO_SMOKES_AUTHORIZED_2026-11-20`
+Status: `THREE_SMOKES_AUTHORIZED_2026-11-20`
 
 ## Authorization
 
@@ -17,6 +17,13 @@ The user then asked “再跑一次” after the first smoke exposed a truncated
 discovery response and a fallback focus. That authorizes **one additional**
 bounded smoke with a 2,048-token discovery allowance and an explicit
 `竹产业` focus. It does not authorize any further runs.
+
+After the region-relevance gate was implemented and replayed offline against the
+second run's recorded sources, the user said “跑第三次”. That authorizes
+**exactly one more** bounded smoke to verify the gate with a real provider. It
+does not authorize a Live evaluation, a semantic Judge, a 40–60 task benchmark,
+retries beyond the limits below, or any deployment/push. Any further paid run
+needs a new explicit authorization.
 
 ## Provider and endpoint
 
@@ -205,5 +212,68 @@ The discovery call no longer hit its cap, and `stage.discover.completed` reports
 claims: 224 `NOT_COMPARABLE`, 7 conflicts, 2 gaps. The remaining blockers are
 retrieval region relevance and period coverage, not focus selection.
 
-No further paid calls were made after this run. A third run requires a fresh
-authorization.
+## Third run budget (pre-registered, 2026-11-20)
+
+Authorized by “跑第三次” after the deterministic region gate was implemented
+and replayed offline. The budget is identical to the second run so the
+comparison is clean:
+
+| Item | Cap |
+| --- | --- |
+| Additional research jobs | 1 |
+| LLM calls | 3 total (1 tiny preflight + at most 2 job calls) |
+| LLM output per call | ≤ 2,048 tokens |
+| LLM input per call | ≤ 16,000 tokens |
+| LLM retries | 0 |
+| Search requests | ≤ 24 |
+| Results per search | ≤ 6 |
+| Search retries | 0 |
+| Wall clock | 480 s guard; 600 s hard process timeout |
+| Maximum estimated spend | **$0.25** |
+| Contract | `安吉县 竹产业`, 2024 window, explicit focus |
+| Run root | `experiments/quality/live_smoke_20261120_third/` |
+
+Worst-case arithmetic at peak: 3 × 16k input × $0.30/M = $0.0144;
+3 × 2,048 output × $1.20/M = $0.0074; 24 Tavily credits × $0.008 = $0.192.
+Total ≤ $0.214, under the $0.25 cap.
+
+Expected region-gate evidence: `retrieval.round.completed` usage must report
+`region_filtered_documents > 0`, and every persisted source must classify as
+`REGION` or `UNKNOWN` (no `NATIONAL`/`OTHER_REGION`/`CONTEXT` pages). The
+verifier may still accept zero claims because the 2024 period coverage is not
+part of this fix; that would not fail the engineering verdict.
+
+Stop conditions are unchanged: any guard violation, non-`SUCCEEDED` terminal
+state, or an unexpected provider error ends the run and is recorded honestly.
+
+## Third run actual usage (2026-11-20)
+
+The user said “跑第三次” after the region gate was implemented. Job
+`007487e8e7494e3fba1770c1f7b0781f` finished `SUCCEEDED` / `LIVE` /
+`NO_PROGRESS` (`no_supported_claims`) in 29.2 s. The guard observed:
+
+| Item | Actual | Cap |
+| --- | --- | --- |
+| LLM calls | 2 (preflight + discovery) | 3 |
+| Prompt tokens | 3,466 | ~48,000 |
+| Completion tokens | 1,227 | 6,144 |
+| Discovery completion | 1,224 | 2,048 |
+| Tavily basic searches | 7 | 24 |
+| Guard violations | 0 | 0 |
+| Total elapsed (guard) | 29.23 s | 480 s |
+
+Estimated cost:
+
+- DeepSeek off-peak: 3,466 × $0.15/M + 1,227 × $0.60/M = **$0.001256**.
+- Tavily: 7 credits × $0.008 = **$0.056** if paid; $0 if still on free credits.
+- Worst-case total if Tavily was paid: **$0.0585**, below the $0.25 cap.
+
+Result: 28 events, 165 graph nodes / 1,077 edges (800 returned), 8 sources,
+0 verified / 133 `NOT_COMPARABLE`, 6 conflicts, 2 gaps. The gate kept seven
+Anji-related sources and let one false positive through: the Guizhou five-year
+plan contains “安吉精铸” and “正安吉他”, which the short-name substring rule
+mistook for the county. The classifier was fixed to require the full
+`安吉县` inside document content and to match the short name only on a word
+boundary in title/snippet/URL; replaying this run's stored sources marks the
+Guizhou plan `OTHER_REGION`. No provider calls were made for that replay, and
+no fourth run was made.
