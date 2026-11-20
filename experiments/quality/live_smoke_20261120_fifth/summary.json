@@ -1,0 +1,393 @@
+{
+  "date": "2026-11-20",
+  "authorization": "user: 允许付费调用 + 跑一次 Live + 再跑一次 + 跑第三次 + 跑第四次 Live + 跑第五次 (2026-11-20)",
+  "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
+  "provider": {
+    "llm": "deepseek",
+    "model": "deepseek-flash",
+    "base_url": "https://api.deepseek.com/v1",
+    "search": "tavily",
+    "search_depth": "basic"
+  },
+  "model_ids": [
+    "deepseek-flash",
+    "deepseek-v4-pro"
+  ],
+  "preflight": {
+    "content_chars": 7,
+    "model": "deepseek-flash",
+    "total_tokens": 13
+  },
+  "capabilities": {
+    "status": 200,
+    "mode_label": "LIVE"
+  },
+  "job_id": "27a8fdb796f94b689ff4fbba78b2d798",
+  "status": "SUCCEEDED",
+  "mode_label": "LIVE",
+  "outcome": "NO_PROGRESS",
+  "outcome_reason": "no_supported_claims",
+  "budget_enforcement": {
+    "enforced": [
+      "deadline_seconds"
+    ],
+    "bounded_per_call": [
+      "max_tokens",
+      "max_documents"
+    ],
+    "not_enforced_on_workflow_path": [
+      "max_steps",
+      "max_search_calls",
+      "max_cost"
+    ],
+    "elapsed_seconds": 57.476,
+    "deadline_seconds": 480.0
+  },
+  "event_count": 35,
+  "event_types": [
+    "job.queued",
+    "job.started",
+    "stage.collect.started",
+    "retrieval.region_filtered",
+    "stage.collect.completed",
+    "stage.discover.started",
+    "stage.discover.completed",
+    "stage.evidence.started",
+    "stage.evidence.completed",
+    "stage.analyze.started",
+    "question_tree.created",
+    "retrieval.period_coverage",
+    "retrieval.round.started",
+    "retrieval.round.completed",
+    "retrieval.period_coverage",
+    "retrieval.round.started",
+    "retrieval.round.completed",
+    "evidence.ingested",
+    "question_tree.coverage",
+    "gaps.detected",
+    "conflicts.detected",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "synthesis.started",
+    "synthesis.completed",
+    "stage.analyze.completed",
+    "evidence.persisted",
+    "stage.report.started",
+    "stage.report.completed",
+    "report.rendered",
+    "job.completed"
+  ],
+  "graph": {
+    "http_status": 200,
+    "total_nodes": 45,
+    "returned_nodes": 45,
+    "total_edges": 139,
+    "returned_edges": 139,
+    "truncated": false
+  },
+  "report": {
+    "json_status": 200,
+    "markdown_status": 200,
+    "sections": [
+      "summary",
+      "verified-facts",
+      "disputes",
+      "gaps",
+      "sources",
+      "method"
+    ],
+    "verification": {
+      "verified": 0,
+      "unverified": 22,
+      "total": 22,
+      "notes": [
+        "NOT_COMPARABLE: 21",
+        "INSUFFICIENT: 1",
+        "证据不足的结论不在事实表中复述。"
+      ],
+      "per_section": {
+        "verified": 0,
+        "disputes": 21,
+        "gaps": 2
+      }
+    },
+    "citation_count": 22,
+    "conflict_count": 4,
+    "gap_count": 2
+  },
+  "sources": {
+    "http_status": 200,
+    "count": 10,
+    "items": [
+      {
+        "title": "安吉县竹产业现状及发展对策",
+        "url": "https://zlxb.zafu.edu.cn/fileZJNLDXXB/journal/article/zjnldxxb/1996/1/PDF/13-1-13.pdf",
+        "published_at": null
+      },
+      {
+        "title": "浅谈安吉竹文化与产业开发",
+        "url": "https://journals.caf.ac.cn/data/article/sjzttx/preview/pdf/sjzttx_286.pdf",
+        "published_at": null
+      },
+      {
+        "title": "(湖州市)2025年安吉县国民经济和社会发展统计公报-红黑统计公报库",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "published_at": null
+      },
+      {
+        "title": "安吉县毛竹林下食用菌栽培产业发展现状与对策",
+        "url": "https://zjlykj.xml-journal.net/cn/article/pdf/preview/10.3969/j.issn.1001-3776.2023.03.017.pdf",
+        "published_at": null
+      },
+      {
+        "title": "【传统竹产业有了绿色新路径 （美丽中国·“以竹代塑”在行动①）】-国家发展和改革委员会",
+        "url": "https://ndrc.gov.cn/xwdt/ztzl/slwrzlzxd/202401/t20240108_1363146.html",
+        "published_at": "2024-01-08T00:00:00Z"
+      },
+      {
+        "title": "浙江省安吉县竹产业2011年预计产值可达130多亿_产业动态_产业发展_国际竹藤中心",
+        "url": "https://icbr.ac.cn/cyfz/cydt/content_7847",
+        "published_at": null
+      },
+      {
+        "title": "浙江安吉竹产业何以破局？_国家林业和草原局政府网",
+        "url": "https://forestry.gov.cn/c/www/gglcy/593681.jhtml",
+        "published_at": null
+      },
+      {
+        "title": "小蜂观察：浙江省安吉县竹产业高质量发展路径分析-农小蜂",
+        "url": "https://abeedata.com/home/article/detail/id/25883",
+        "published_at": null
+      },
+      {
+        "title": "竹产业三次产业融合发展影响因素分析 - 北京林业大学学报（社会科学版）",
+        "url": "https://sheke.bjfu.edu.cn/cn/article/pdf/preview/10.13931/j.cnki.bjfuss.2021238.pdf",
+        "published_at": null
+      },
+      {
+        "title": "浙江安吉竹文化系统",
+        "url": "https://baike.baidu.com/item/%E6%B5%99%E6%B1%9F%E5%AE%89%E5%90%89%E7%AB%B9%E6%96%87%E5%8C%96%E7%B3%BB%E7%BB%9F/24237517",
+        "published_at": null
+      }
+    ]
+  },
+  "guard": {
+    "llm_calls": 2,
+    "search_calls": 15,
+    "prompt_tokens": 3547,
+    "completion_tokens": 1401,
+    "total_tokens": 4948,
+    "llm_seconds": 7.75,
+    "search_seconds": 103.28,
+    "elapsed_seconds": 66.69,
+    "violations": [],
+    "llm_events": [
+      {
+        "call": 1,
+        "model": "deepseek-flash",
+        "prompt_tokens": 10,
+        "completion_tokens": 3,
+        "total_tokens": 13,
+        "seconds": 1.5
+      },
+      {
+        "call": 2,
+        "model": "deepseek-flash",
+        "prompt_tokens": 3537,
+        "completion_tokens": 1398,
+        "total_tokens": 4935,
+        "seconds": 6.25
+      }
+    ],
+    "search_events": [
+      {
+        "call": 3,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 8.04
+      },
+      {
+        "call": 4,
+        "query_chars": 32,
+        "documents": 6,
+        "seconds": 8.13
+      },
+      {
+        "call": 5,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 8.43
+      },
+      {
+        "call": 6,
+        "query_chars": 31,
+        "documents": 6,
+        "seconds": 6.84
+      },
+      {
+        "call": 7,
+        "query_chars": 25,
+        "documents": 6,
+        "seconds": 7.79
+      },
+      {
+        "call": 7,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 7.75
+      },
+      {
+        "call": 7,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 6.26
+      },
+      {
+        "call": 10,
+        "query_chars": 24,
+        "documents": 6,
+        "seconds": 6.67
+      },
+      {
+        "call": 11,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 7.32
+      },
+      {
+        "call": 11,
+        "query_chars": 35,
+        "documents": 6,
+        "seconds": 7.65
+      },
+      {
+        "call": 11,
+        "query_chars": 29,
+        "documents": 6,
+        "seconds": 6.06
+      },
+      {
+        "call": 14,
+        "query_chars": 24,
+        "documents": 6,
+        "seconds": 5.74
+      },
+      {
+        "call": 15,
+        "query_chars": 35,
+        "documents": 6,
+        "seconds": 5.79
+      },
+      {
+        "call": 15,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 5.87
+      },
+      {
+        "call": 15,
+        "query_chars": 29,
+        "documents": 6,
+        "seconds": 4.93
+      }
+    ]
+  },
+  "region_gate": {
+    "county": "安吉县",
+    "rounds": [
+      {
+        "round": 2,
+        "region_filtered_documents": 0,
+        "fetched_documents": 12,
+        "returned_documents": null
+      },
+      {
+        "round": 3,
+        "region_filtered_documents": 0,
+        "fetched_documents": 24,
+        "returned_documents": null
+      }
+    ],
+    "collect_filter_events": [
+      {
+        "kept": 24,
+        "dropped": 7,
+        "verdicts": {
+          "other_region": 6,
+          "national": 1
+        }
+      }
+    ],
+    "region_filtered_documents_total": 7,
+    "persisted_source_verdicts": {
+      "region": 9,
+      "unknown": 1
+    },
+    "persisted_sources": [
+      {
+        "title": "安吉县竹产业现状及发展对策",
+        "url": "https://zlxb.zafu.edu.cn/fileZJNLDXXB/journal/article/zjnldxxb/1996/1/PDF/13-1-13.pdf",
+        "verdict": "region"
+      },
+      {
+        "title": "浅谈安吉竹文化与产业开发",
+        "url": "https://journals.caf.ac.cn/data/article/sjzttx/preview/pdf/sjzttx_286.pdf",
+        "verdict": "region"
+      },
+      {
+        "title": "(湖州市)2025年安吉县国民经济和社会发展统计公报-红黑统计公报库",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "verdict": "region"
+      },
+      {
+        "title": "安吉县毛竹林下食用菌栽培产业发展现状与对策",
+        "url": "https://zjlykj.xml-journal.net/cn/article/pdf/preview/10.3969/j.issn.1001-3776.2023.03.017.pdf",
+        "verdict": "region"
+      },
+      {
+        "title": "【传统竹产业有了绿色新路径 （美丽中国·“以竹代塑”在行动①）】-国家发展和改革委员会",
+        "url": "https://ndrc.gov.cn/xwdt/ztzl/slwrzlzxd/202401/t20240108_1363146.html",
+        "verdict": "region"
+      },
+      {
+        "title": "浙江省安吉县竹产业2011年预计产值可达130多亿_产业动态_产业发展_国际竹藤中心",
+        "url": "https://icbr.ac.cn/cyfz/cydt/content_7847",
+        "verdict": "region"
+      },
+      {
+        "title": "浙江安吉竹产业何以破局？_国家林业和草原局政府网",
+        "url": "https://forestry.gov.cn/c/www/gglcy/593681.jhtml",
+        "verdict": "region"
+      },
+      {
+        "title": "小蜂观察：浙江省安吉县竹产业高质量发展路径分析-农小蜂",
+        "url": "https://abeedata.com/home/article/detail/id/25883",
+        "verdict": "region"
+      },
+      {
+        "title": "竹产业三次产业融合发展影响因素分析 - 北京林业大学学报（社会科学版）",
+        "url": "https://sheke.bjfu.edu.cn/cn/article/pdf/preview/10.13931/j.cnki.bjfuss.2021238.pdf",
+        "verdict": "region"
+      },
+      {
+        "title": "浙江安吉竹文化系统",
+        "url": "https://baike.baidu.com/item/%E6%B5%99%E6%B1%9F%E5%AE%89%E5%90%89%E7%AB%B9%E6%96%87%E5%8C%96%E7%B3%BB%E7%BB%9F/24237517",
+        "verdict": "unknown"
+      }
+    ]
+  },
+  "estimated_cost_usd": {
+    "llm_offpeak": 0.001373,
+    "llm_peak_worst_case": 0.002745,
+    "tavily_if_paid": 0.12,
+    "total_if_tavily_paid": 0.1227
+  },
+  "verdict_scope": "engineering_smoke_only",
+  "research_verdict": "NO_SUPPORTED_CLAIMS",
+  "verdict": "PASS_ENGINEERING",
+  "verdict_reason": "live plumbing works, but the verifier accepted zero claims"
+}
