@@ -41,7 +41,7 @@ from .measure import data_years, derive_measure_key, infer_period
 from .numeric_support import numeric_context_matches
 from .source_identity import source_groups
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 DETERMINISTIC_VERIFIER_VERSION = "deterministic_v2_local_binding"
 
 _YEAR_RE = re.compile(r"(?<!\d)(?:1[89]\d{2}|20\d{2})(?!\d)")
@@ -559,6 +559,7 @@ class EvidenceGraphStore:
                     unit TEXT NOT NULL DEFAULT '',
                     normalized_unit TEXT NOT NULL DEFAULT '',
                     region_id TEXT NOT NULL DEFAULT '',
+                    region_source TEXT NOT NULL DEFAULT '',
                     scope TEXT NOT NULL DEFAULT '',
                     valid_time TEXT NOT NULL DEFAULT '',
                     observed_time TEXT NOT NULL DEFAULT '',
@@ -648,6 +649,7 @@ class EvidenceGraphStore:
                 connection.execute("PRAGMA foreign_keys = ON")
             for table, column, ddl in (
                 ("claims", "measure_id", "TEXT NOT NULL DEFAULT ''"),
+                ("claims", "region_source", "TEXT NOT NULL DEFAULT ''"),
                 ("verification_records", "run_id", "TEXT NOT NULL DEFAULT ''"),
                 ("verification_records", "reason", "TEXT NOT NULL DEFAULT ''"),
             ):
@@ -670,6 +672,7 @@ class EvidenceGraphStore:
         run_id: str = "",
         window: tuple[date | None, date | None] | None = None,
         use_measure_identity: bool = True,
+        target_region: str = "",
     ) -> dict[str, int]:
         """Persist a ledger, classify claim relations, and record verification."""
         now = _utcnow().isoformat()
@@ -729,6 +732,7 @@ class EvidenceGraphStore:
                 window=window,
                 supported_ids=supported_ids,
                 run_id=run_id,
+                target_region=target_region,
             )
         return counts
 
@@ -817,16 +821,17 @@ class EvidenceGraphStore:
         connection.execute(
             "INSERT INTO claims"
             " (claim_id, statement, subject, predicate, measure_id, value, unit,"
-            " normalized_unit, region_id, scope, valid_time, observed_time, methodology,"
+            " normalized_unit, region_id, region_source, scope, valid_time, observed_time, methodology,"
             " qualifier, verification_status, verification_reason, source_ids_json,"
             " evidence_chunk_ids_json, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             " ON CONFLICT(claim_id) DO UPDATE SET"
             " statement=excluded.statement, subject=excluded.subject,"
             " predicate=excluded.predicate, measure_id=excluded.measure_id,"
             " value=excluded.value, unit=excluded.unit,"
             " normalized_unit=excluded.normalized_unit,"
-            " region_id=excluded.region_id, scope=excluded.scope,"
+            " region_id=excluded.region_id, region_source=excluded.region_source,"
+            " scope=excluded.scope,"
             " valid_time=excluded.valid_time, observed_time=excluded.observed_time,"
             " methodology=excluded.methodology, qualifier=excluded.qualifier,"
             " verification_status=excluded.verification_status,"
@@ -843,6 +848,7 @@ class EvidenceGraphStore:
                 claim.unit,
                 normalized_unit,
                 claim.region_id,
+                claim.region_source,
                 claim.administrative_scope,
                 claim.period,
                 _iso(observed),
@@ -970,6 +976,7 @@ class EvidenceGraphStore:
             claim_id=row["claim_id"],
             statement=row["statement"],
             region_id=row["region_id"],
+            region_source=row["region_source"],
             metric_id=row["predicate"],
             measure_id=row["measure_id"],
             value=row["value"],
@@ -1195,6 +1202,7 @@ class EvidenceGraphStore:
         window: tuple[date | None, date | None] | None = None,
         supported_ids: set[str] | None = None,
         run_id: str = "",
+        target_region: str = "",
     ) -> VerificationRecord:
         chain = self.get_chain(claim_id, run_id=run_id)
         claim = chain.claim
@@ -1232,8 +1240,16 @@ class EvidenceGraphStore:
         checks["source_groups"] = source_groups(link.snapshot for link in valid_support)
         checks["supporting_edges"] = len(supporting)
         checks["contradicting_edges"] = len(contradicting)
+        checks["claim_region"] = claim.region_id
+        checks["claim_region_source"] = claim.region_source
+        if target_region:
+            checks["target_region"] = target_region
 
         quote_text = "\n".join(link.span.quote for link in supporting)
+        region_text = "\n".join(
+            f"{link.span.quote}\n{link.snapshot.title}\n{link.snapshot.canonical_url}"
+            for link in supporting
+        )
         if quote_text:
             checks["value_present"] = (
                 _quote_contains_value(quote_text, claim.value, claim.unit)
@@ -1244,7 +1260,7 @@ class EvidenceGraphStore:
                 claim.period in quote_text if claim.period else None
             )
             checks["region_present"] = (
-                claim.region_id in quote_text if claim.region_id else None
+                claim.region_id in region_text if claim.region_id else None
             )
             checks["metric_present"] = (
                 claim.metric_id in quote_text if claim.metric_id else None
@@ -1272,6 +1288,7 @@ class EvidenceGraphStore:
             window=window,
             supported_ids=supported_ids,
             run_id=run_id,
+            target_region=target_region,
         )
         record = VerificationRecord(
             record_id=hashlib.sha256(
@@ -1322,12 +1339,21 @@ class EvidenceGraphStore:
         window: tuple[date | None, date | None] | None = None,
         supported_ids: set[str] | None = None,
         run_id: str = "",
+        target_region: str = "",
     ) -> tuple[VerificationStatus, str]:
         superseded = self._has_supported_superseder(
             claim, chain, supported_ids=supported_ids, run_id=run_id
         )
         if superseded:
             return VerificationStatus.OUTDATED, "superseded_by_newer_claim"
+        region_issue = self._region_issue(claim, checks, target_region)
+        if region_issue:
+            status = (
+                VerificationStatus.NOT_COMPARABLE
+                if region_issue.startswith("claim_region_not_target")
+                else VerificationStatus.INSUFFICIENT
+            )
+            return status, region_issue
         window_issue = self._window_issue(claim, window)
         if window_issue:
             return VerificationStatus.NOT_COMPARABLE, window_issue
@@ -1357,6 +1383,26 @@ class EvidenceGraphStore:
         if checks.get("value_present") is False:
             return VerificationStatus.INSUFFICIENT, "value_not_in_quote"
         return VerificationStatus.INSUFFICIENT, "statement_not_in_span"
+
+    @staticmethod
+    def _region_issue(
+        claim: AtomicClaim,
+        checks: dict[str, Any],
+        target_region: str,
+    ) -> str:
+        """Region is an authorization condition, not a display-only check."""
+        region = (claim.region_id or "").strip()
+        if region.upper() == "UNKNOWN":
+            return "claim_region_unknown"
+        if not region:
+            if claim.region_source == "unknown" or target_region:
+                return "claim_region_unknown"
+            return ""
+        if target_region and region != target_region:
+            return f"claim_region_not_target:{region}"
+        if checks.get("region_present") is False:
+            return "claim_region_not_in_evidence"
+        return ""
 
     @staticmethod
     def _window_issue(

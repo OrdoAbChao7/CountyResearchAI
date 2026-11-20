@@ -103,7 +103,7 @@ class FactVerifier:
         report = VerificationReport()
         annotated_lines = []
 
-        all_evidence = self.evidence_store.get_all()
+        all_evidence = self.evidence_store.get_target_items()
         by_pair, by_num, by_policy = self._build_indices(all_evidence)
 
         # 逐段逐行核验

@@ -373,7 +373,7 @@ class JobRunner:
                 question_tree.model_dump(mode="json") if question_tree is not None else None
             ),
             "items": (
-                [item.model_dump(mode="json") for item in evidence_store.get_all()]
+                [item.model_dump(mode="json") for item in evidence_store.get_target_items()]
                 if evidence_store is not None
                 else []
             ),

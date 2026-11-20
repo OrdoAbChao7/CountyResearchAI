@@ -629,7 +629,8 @@ def _merge_gaps(*groups: list[EvidenceGap]) -> list[EvidenceGap]:
 def _emit_evidence_ingested(
     store: EvidenceStore, documents: int, *, round_number: int
 ) -> None:
-    items = store.get_all()
+    items = store.get_target_items()
+    excluded = len(store.get_all()) - len(items)
     topics: dict[str, int] = {}
     for item in items:
         topics[item.topic] = topics.get(item.topic, 0) + 1
@@ -641,5 +642,6 @@ def _emit_evidence_ingested(
             "documents": documents,
             "total": len(items),
             "topics": topics,
+            "region_excluded": excluded,
         },
     )

@@ -161,6 +161,25 @@ def _short_name_on_boundary(short: str, text: str) -> bool:
         start = index + 1
 
 
+def county_name_terms(county: str) -> tuple[str, str]:
+    """Public read-only view of the gate's administrative-name rules.
+
+    Claim-level attribution must use the same full-name/short-name boundary
+    rules as document retrieval, without re-implementing a second classifier.
+    """
+    return _admin_name_terms(county)
+
+
+def short_name_on_boundary(short: str, text: str) -> bool:
+    """Public wrapper for the gate's boundary-safe short-name check."""
+    return _short_name_on_boundary(short, text)
+
+
+def place_names(text: str) -> tuple[str, ...]:
+    """Public wrapper for the gate's administrative place-name extraction."""
+    return _place_tokens(text)
+
+
 def _host_is_national(url: str) -> bool:
     host = (urlparse(url).hostname or "").lower()
     if not host:

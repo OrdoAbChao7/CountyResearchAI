@@ -110,6 +110,8 @@ class EvidenceItem(BaseModel):
     credibility_score: float = 0.5  # 0.0 - 1.0
     year: str | None = None  # 统计年份或发布年份
     administrative_scope: str = ""  # 县域本级 / 地级市全市 / 全省
+    region_id: str = ""  # 该条证据所属地区；无法判断时为 UNKNOWN
+    region_source: str = ""  # claim / document / scope / unknown
     indicator_caliber: str = ""  # 口径（如“规上工业总产值”、“全产业链产值”）
     verification_status: str = "unverified"  # verified / conflicting / unverified / insufficient
     corroborating_sources: list[str] = Field(default_factory=list)  # 交叉佐证的其它 URL
