@@ -180,3 +180,23 @@ other-region). The fixed rule has not been re-verified with a live provider
 call. The 2024 window still rejects the available 2023/2025/2026 material, so
 every run remains `NO_PROGRESS`. See `docs/goal/LIVE_SMOKE.md` for the full
 finding list.
+
+## 2024 period coverage and claim region fix acceptance (2026-11-20)
+
+Revision: `codex/finish-roadmap` @ `d186577`; `.venv` Python 3.13.7.
+Details and code locations: `docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Phase 1 claim region tests | PASS | `pytest tests/test_claim_region.py` | county claim allowed; Guizhou plan not county; mixed article yields two regions; UNKNOWN not promoted; cross-region conflict isolated; `region_present=false` blocks support |
+| Phase 2 window propagation | PASS | `pytest tests/test_date_window_propagation.py` | contract → request → application → collector → QueryEngine; all three modes include the target year; 2025-published/2024-data page retained |
+| Phase 3 adaptive period stop | PASS | `tests/test_adaptive_retrieval.py`, `tests/test_period_coverage_flow.py` | topical coverage alone does not set `quality_met`; period gap generates `2024年` query; event carries real query text and per-round coverage |
+| Phase 4 claim period | PASS | `tests/test_measure_identity.py`, `tests/test_evidence_ledger.py`, `tests/test_evidence_graph.py` | local 2018 wins over document 2023; 2030 plan target wins over 2026; `2024-2025` stays a span and is rejected for a 2024 window; 2023/2025 rejected |
+| Phase 5 provider dates/truncation | PASS | `tests/test_search_web.py`, `tests/test_deep_retrieval.py`, `tests/test_source_contract.py` | Tavily `published_date` parsed; `tYYYYMMDD` and `/YYYYMM/` URL dates; body-only date rejected; provider truncation sets `content_truncated=True` and original length |
+| Targeted new regressions | PASS | 8 modules listed in the fix report | `85 passed in 1.10s` |
+| P0 regressions | PASS | `test_evidence_store.py`, `test_evidence_graph.py`, `test_report_projection.py` | `49 passed in 2.96s` |
+| Full backend suite | PASS | `python -m pytest -q` | `827 passed in 35.24s` |
+| Ruff (source and tests) | PASS | `python -m ruff check src tests` | `All checks passed!` |
+| API compatibility | PASS | worker/contract tests | optional date fields default to `None`; existing callers unchanged |
+| Real 2024 retrieval | NOT_RUN | — | no fourth paid Live was authorized; 2024 material has not been observed end-to-end |
+| Live research quality | NOT_RUN | — | this fix does not claim a SUFFICIENT Live outcome |

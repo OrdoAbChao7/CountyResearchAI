@@ -1,6 +1,6 @@
 # AxiomScope v2 — Goal State
 
-Updated: 2026-10-26
+Updated: 2026-11-20
 Branch: `codex/evidence-first-v2`
 Repository: `E:\Projects\AxiomScope` (formerly `E:\Projects\CountyResearchAI`)
 
@@ -215,3 +215,31 @@ and replaying the third run's stored sources marks that plan `OTHER_REGION`
 (7 region / 1 other-region). The fixed rule has not been re-verified with a paid
 run, and the period gap remains. This is engineering evidence, not Live
 evaluation or M5 acceptance.
+
+## 2024 period coverage and claim region fix (2026-11-20)
+
+Worktree `E:\Projects\CountyResearchAI-finish-roadmap`, branch
+`codex/finish-roadmap`, code HEAD after this work `d186577`. Commits:
+
+| Phase | Commit | Result |
+| --- | --- | --- |
+| 1. Claim-level region | `e8021c8` | each claim independently classified; cross-region claims excluded from target packs, conflicts, coverage, citations and verifier support |
+| 2. Date window propagation | `36a7c4f` | contract `date_window` reaches `ResearchRequest`, application, search port, collector and QueryEngine; target year appears in generated queries; publication date is not a filter |
+| 3. Adaptive period coverage | `1da579c` | `CoverageSnapshot` separates topic and period coverage; `quality_met` requires at least one in-window claim; period-gap queries, real query text and per-round coverage are recorded |
+| 4. Claim period inference | `1f08ba1` | claim-local year first; multi-year spans preserved; document year only when no local year exists; window rejects a span reaching outside |
+| 5. Date parsing / truncation | `c6d98a6` | Tavily/Serper/Bing/DeepSeek publication dates parsed; `tYYYYMMDD` and `/YYYYMM/` URL dates; body-first-paragraph guessing removed; provider truncation records original length |
+| Adjacent-year test | `d186577` | 2023/2025 claims stay outside a 2024 window |
+
+Verification at code HEAD:
+
+| Check | Observed |
+| --- | --- |
+| Full backend suite | `827 passed` (`pytest -q`) |
+| P0 regression modules | `49 passed` (`test_evidence_store`, `test_evidence_graph`, `test_report_projection`) |
+| Targeted new regressions | `85 passed` across region, window, adaptive, period, ledger and provider tests |
+| Ruff | `ruff check src tests` → `All checks passed!` |
+
+Not yet established: no fourth paid Live run; real retrieval of 2024 material is
+not demonstrated; the final Live-style outcome could still be
+`INSUFFICIENT_DATA`/`NO_PROGRESS` if the target year is absent. The fix changes
+retrieval and extraction, not the verifier's acceptance standard.

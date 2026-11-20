@@ -6,6 +6,12 @@
 审计对象：第三次 Live smoke `007487e8e7494e3fba1770c1f7b0781f`
 审计性质：只读。未调用任何付费 API，未修改 `.env`、`region_relevance.py`、Verifier、源码或既有运行工件；主工作区 `codex/quality-recovery` @ `144f4c8` 未修改。
 
+实施状态（2026-11-20 后续提交）：§7 的五个修复阶段已离线实施并提交
+（`e8021c8`、`36a7c4f`、`1da579c`、`1f08ba1`、`c6d98a6`）。本审计的原始
+结论保留不变；新增的实施映射与未验证事项见 §11，
+完整说明见 `docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`。
+
+
 ## 0. 结论摘要
 
 **直接结论：2024 年结论为 0，不是 Verifier 过严，也不是区域闸门造成的。**
@@ -428,3 +434,25 @@ PY
 ## 10. 待授权事项
 
 本审计没有修改任何代码或运行工件，也没有调用付费 API。下一阶段若要实施 §7，需要新的实施授权；若要验证修复后的真实检索，还需要单独的第 **四次** Live 授权。本报告基于 `aaa6a09`，仅作为文档提交，不改变代码或运行工件。
+
+## 11. 实施状态（2026-11-20 后续提交）
+
+§7 的修复顺序已落实，未放宽 Verifier，未调用付费 API。代码 HEAD
+`d186577`；详细代码位置与逐项测试见
+`docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`。
+
+| 审计问题 | 实施 | Commit | 回归 |
+| --- | --- | --- | --- |
+| 文档级 REGION 授权所有 Claim | Claim 独立分类；跨区域 Claim 不进入目标县证据包、冲突、覆盖、引用和核验支持 | `e8021c8` | `tests/test_claim_region.py` |
+| `date_window` 未进入检索 | contract → request → application → port → collector → QueryEngine；三种模式都生成目标年查询 | `36a7c4f` | `tests/test_date_window_propagation.py` |
+| 自适应停止只看主题覆盖 | 增加目标年 Claim/来源覆盖；`quality_met` 要求期间覆盖；期间缺口生成年度查询并记录每轮真实 query | `1da579c` | `tests/test_adaptive_retrieval.py`、`tests/test_period_coverage_flow.py` |
+| 文档级年份覆盖 Claim 年份 | Claim 原文年份优先；跨年区间保留；文档年仅在无本地年份时兜底；越界区间在窗口检查中拒绝 | `1f08ba1` | measure / ledger / graph 回归 |
+| Tavily 日期与截断元数据 | 解析 provider `published_date`；支持 `tYYYYMMDD` 与 `/YYYYMM/`；正文只接受发布标签日期；记录截断前长度 | `c6d98a6` | `tests/test_search_web.py`、`tests/test_deep_retrieval.py` |
+
+边界：
+
+- 全量后端 `827 passed`；P0 `49 passed`；`ruff check src tests` 通过。
+- 没有第四次付费 Live。真实 2024 年资料是否可检索到、修复后的
+  Live outcome 是否为 `SUFFICIENT`，均未验证。
+- 若目标年资料不存在，Adaptive Retrieval 会停止并保留
+  `INSUFFICIENT_DATA` / `NO_PROGRESS` 的可能性，而不是制造 2024 数据。

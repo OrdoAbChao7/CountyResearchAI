@@ -159,3 +159,31 @@ Live 任务；用户随后说“再跑一次”，又执行了**一次**修正�
 
 完整记录：`docs/goal/LIVE_SMOKE.md`；预算与实际用量：
 `docs/goal/LIVE_SMOKE_COST_GATE.md`。
+
+## 2024 时间覆盖与 Claim 级区域修复（2026-11-20）
+
+依据：`docs/goal/2024_PERIOD_COVERAGE_AUDIT.md`。全部离线实施，未调用付费
+API，未修改 `.env` 或主工作区。工作树
+`E:\Projects\CountyResearchAI-finish-roadmap`，分支 `codex/finish-roadmap`。
+
+| Phase | Commit | 变更 | 验证 |
+| --- | --- | --- | --- |
+| 1 | `e8021c8` | `evidence/claim_region.py`；`EvidenceStore` Claim 独立区域；ledger/图谱/冲突/引用只使用目标县 Claim；`region_present` 参与授权 | `tests/test_claim_region.py`；P0 保持 |
+| 2 | `36a7c4f` | `ResearchContract.date_window` → `request_from_contract` → `ResearchRequest` → application → `SearchPort` → collector → QueryEngine；三种模式查询包含目标年份；不按发布日期过滤 | `tests/test_date_window_propagation.py` |
+| 3 | `1da579c` | `CoverageSnapshot` 增加目标年 Claim/来源计数与 `period_coverage_met`；`quality_met` 同时要求主题与期间覆盖；期间缺口生成年度查询；事件记录真实 query 文本和每轮覆盖 | `tests/test_adaptive_retrieval.py`、`tests/test_period_coverage_flow.py` |
+| 4 | `1f08ba1` | `infer_claim_period`：Claim 原文年份优先；跨年保留区间；无本地年份时才用文档年；窗口检查拒绝越界区间 | measure / ledger / graph 回归 |
+| 5 | `c6d98a6` | Tavily/Serper/Bing/DeepSeek 发布日期；URL `tYYYYMMDD` / `/YYYYMM/`；正文仅接受发布标签日期；Provider 截断原文长度与状态 | `test_search_web.py`、`test_deep_retrieval.py` |
+| 补充 | `d186577` | 2023/2025 年 Claim 在 2024 窗口外 | `test_evidence_graph.py` |
+
+最终验证（代码 HEAD `d186577`）：
+
+| 检查 | 结果 |
+| --- | --- |
+| 新增目标回归 | `85 passed in 1.10s` |
+| P0 三个模块 | `49 passed in 2.96s` |
+| 全量后端 | `827 passed in 35.24s` |
+| Ruff | `All checks passed!`（`src tests`） |
+
+未验证：没有第四次付费 Live；真实检索是否返回 2024 年资料仍未验证。修复只改变
+检索、期间抽取和区域授权，没有放宽 Verifier；若目标年资料不存在，最终结果仍可为
+`INSUFFICIENT_DATA` / `NO_PROGRESS`。
