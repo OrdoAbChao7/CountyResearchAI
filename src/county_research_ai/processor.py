@@ -30,7 +30,7 @@ _SOURCE_WEIGHTS: dict[str, float] = {
 
 # ---- HTML 标签清理正则 ----
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
-_WHITESPACE_RE = re.compile(r"\s+")
+_WHITESPACE_RE = re.compile(r"[^\S\n]+")  # Collapse spaces, preserve paragraph boundaries
 
 
 class DocumentProcessor:
@@ -247,7 +247,10 @@ class DocumentProcessor:
         if not text:
             return ""
         text = _HTML_TAG_RE.sub("", text)
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
         text = _WHITESPACE_RE.sub(" ", text)
+        text = re.sub(r" *\n *", "\n", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip()
 
     @staticmethod
