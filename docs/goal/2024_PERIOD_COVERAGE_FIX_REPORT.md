@@ -235,6 +235,7 @@ Verifier，未制造 2024 年数据。
 源码：
 
 - `src/county_research_ai/api/worker.py`
+- `src/county_research_ai/api/evidence_service.py`
 - `src/county_research_ai/agent/tools.py`
 - `src/county_research_ai/application/research.py`
 - `src/county_research_ai/domain/research_contracts.py`
@@ -243,6 +244,7 @@ Verifier，未制造 2024 年数据。
 - `src/county_research_ai/evidence/ledger.py`
 - `src/county_research_ai/evidence/measure.py`
 - `src/county_research_ai/evidence/store.py`
+- `src/county_research_ai/evidence/verifier.py`
 - `src/county_research_ai/infrastructure/search_adapter.py`
 - `src/county_research_ai/models.py`
 - `src/county_research_ai/modes/{snapshot,rise_fall,long_history}.py`
