@@ -56,6 +56,10 @@ class LongHistoryModeHandler:
                 focus=focus,
                 mode="long-history",
                 existing_docs=docs,
+                date_start=context.request.date_start,
+                date_end=context.request.date_end,
+                target_years=context.request.target_years,
+                time_period=context.request.time_period,
             )
             research_packs = list(result.evidence_packs or context.evidence_packs)
             period_packs = (

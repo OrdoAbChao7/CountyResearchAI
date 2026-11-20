@@ -27,10 +27,30 @@ class _LegacySearchAdapter:
     def __init__(self, provider: SearchProvider) -> None:
         self.provider = provider
 
-    def collect(self, county: str, focus: str, max_results: int, *, mode: str):
+    def collect(
+        self,
+        county: str,
+        focus: str,
+        max_results: int,
+        *,
+        mode: str,
+        date_start=None,
+        date_end=None,
+        target_years=None,
+    ):
         collect = getattr(self.provider, "collect", None)
         if callable(collect):
-            return collect(county, focus, max_results, mode=mode)
+            kwargs = {"mode": mode}
+            if date_start is not None:
+                kwargs["date_start"] = date_start
+            if date_end is not None:
+                kwargs["date_end"] = date_end
+            if target_years:
+                kwargs["target_years"] = target_years
+            try:
+                return collect(county, focus, max_results, **kwargs)
+            except TypeError:
+                return collect(county, focus, max_results, mode=mode)
         return self.provider.search(f"{county} {focus or '产业'}", max_results=max_results)
 
 

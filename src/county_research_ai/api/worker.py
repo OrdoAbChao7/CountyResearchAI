@@ -24,6 +24,7 @@ from ..application.context import ResearchContext
 from ..bootstrap.container import create_app_container
 from ..config import Settings, get_settings
 from ..domain.outcomes import ResearchOutcome
+from ..domain.research_contracts import ResearchContract
 from ..evidence.graph import EvidenceGraphStore, VerificationStatus
 from ..models import ResearchRequest
 from ..observability import pop_event_sink, push_event_sink
@@ -53,6 +54,25 @@ def force_mock_settings(settings: Settings) -> Settings:
             "llm": settings.llm.model_copy(update={"api_key": SecretStr("")}),
             "search": settings.search.model_copy(update={"api_key": SecretStr("")}),
         }
+    )
+
+
+def request_from_contract(contract: ResearchContract) -> ResearchRequest:
+    """Build the execution request from the validated contract and its spec.
+
+    This is the single hand-off from the contract boundary into the application:
+    the target years come from ``to_research_spec()`` and the inclusive dates
+    come from ``date_window``. An empty contract window remains unbounded and
+    keeps the legacy behaviour.
+    """
+    spec = contract.to_research_spec()
+    return ResearchRequest(
+        county=spec.region_name,
+        focus=contract.research_focus or None,
+        mode=spec.mode,
+        options={**contract.options, "no_cache": True},
+        date_start=contract.date_window.start,
+        date_end=contract.date_window.end,
     )
 
 
@@ -127,12 +147,7 @@ class JobRunner:
             graph = EvidenceGraphStore(self.evidence_db_path)
             graph.clear_run(job_id)
             context = ResearchContext.from_request(
-                ResearchRequest(
-                    county=job.contract.regions[0],
-                    focus=job.contract.research_focus or None,
-                    mode=job.contract.mode,
-                    options={**job.contract.options, "no_cache": True},
-                )
+                request_from_contract(job.contract)
             )
             container = self._container(job)
             app = container.application

@@ -137,6 +137,7 @@ def build_adaptive_query_plan(
         focus=spec.research_focus,
         mode=spec.mode,
         max_queries=max_queries,
+        target_years=spec.target_years,
     )
     return AdaptiveQueryPlan(spec=spec, queries=tuple(queries), round_number=round_number)
 
@@ -310,6 +311,7 @@ class AdaptiveRetrievalController:
             focus=self.spec.research_focus,
             mode=self.spec.mode,
             max_queries=limit,
+            target_years=self.spec.target_years,
         )
         reserved = self.budget.reserve_queries(len(queries))
         return AdaptiveQueryPlan(

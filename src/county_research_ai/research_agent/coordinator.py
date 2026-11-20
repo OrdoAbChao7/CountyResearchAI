@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any
 
 from ..domain.research_contracts import EvidencePack, ResearchSpec
@@ -122,9 +123,16 @@ class DeepResearchCoordinator:
         focus: str | None = None,
         mode: str = "snapshot",
         existing_docs: list[RawDoc] | None = None,
+        *,
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
+        time_period: str = "",
     ) -> DeepResearchResult:
         c_info = CountyInfo.from_name(county)
         f_name = focus or ("兴衰规律" if mode == "rise-fall" else ("长周期兴衰史" if mode == "long-history" else "特色优势产业"))
+        years = list(target_years or _years_from_window(date_start, date_end))
+        period = time_period or _period_label(years)
 
         logger.info("=== 启动深度多智能体研究 === | county=%s | focus=%s | mode=%s", county, f_name, mode)
 
@@ -151,7 +159,13 @@ class DeepResearchCoordinator:
 
         # 2. 首轮检索（如果已有资料不足）
         if self.collector is not None and hasattr(self.collector, "collect_adaptive"):
-            research_spec = QueryEngine().generate_research_spec(county, f_name, mode)
+            research_spec = QueryEngine().generate_research_spec(
+                county,
+                f_name,
+                mode,
+                target_years=years,
+                time_period=period,
+            )
             budget = RetrievalBudget(max_queries=12, max_fetches=120)
             controller = AdaptiveRetrievalController(research_spec, budget=budget)
             if not all_docs:
@@ -266,7 +280,14 @@ class DeepResearchCoordinator:
                     stage="analyze",
                     payload={"round": 1, "queries": 0, "supplemental": False},
                 )
-                all_docs = self._collect_initial(county, f_name, mode)
+                all_docs = self._collect_initial(
+                    county,
+                    f_name,
+                    mode,
+                    date_start=date_start,
+                    date_end=date_end,
+                    target_years=years,
+                )
                 emit(
                     "retrieval.round.completed",
                     stage="analyze",
@@ -579,10 +600,26 @@ class DeepResearchCoordinator:
                 retrieval_usage=retrieval_usage,
             )
 
-    def _collect_initial(self, county: str, focus: str, mode: str) -> list[RawDoc]:
+    def _collect_initial(
+        self,
+        county: str,
+        focus: str,
+        mode: str,
+        *,
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
+    ) -> list[RawDoc]:
         if hasattr(self.collector, "collect"):
+            kwargs = {"county": county, "focus": focus, "mode": mode}
+            if date_start is not None:
+                kwargs["date_start"] = date_start
+            if date_end is not None:
+                kwargs["date_end"] = date_end
+            if target_years:
+                kwargs["target_years"] = target_years
             try:
-                return self.collector.collect(county=county, focus=focus, mode=mode)
+                return self.collector.collect(**kwargs)
             except TypeError:
                 return self.collector.collect(county, focus, 10)
         elif hasattr(self.collector, "search"):
@@ -610,6 +647,24 @@ class DeepResearchCoordinator:
                     pass
             return results
         return []
+
+
+def _years_from_window(
+    date_start: date | None, date_end: date | None
+) -> list[str]:
+    years: list[str] = []
+    for value in (date_start, date_end):
+        if value is not None and str(value.year) not in years:
+            years.append(str(value.year))
+    return years
+
+
+def _period_label(years: list[str]) -> str:
+    if not years:
+        return ""
+    if len(years) == 1:
+        return years[0]
+    return f"{years[0]}-{years[-1]}"
 
 
 def _merge_gaps(*groups: list[EvidenceGap]) -> list[EvidenceGap]:

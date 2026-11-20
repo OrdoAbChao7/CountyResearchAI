@@ -25,9 +25,29 @@ class StaticSearch:
     def __init__(self, docs):
         self.docs = docs
         self.modes = []
+        self.calls = []
 
-    def collect(self, county, focus, max_results, *, mode):
+    def collect(
+        self,
+        county,
+        focus,
+        max_results,
+        *,
+        mode,
+        date_start=None,
+        date_end=None,
+        target_years=None,
+    ):
         self.modes.append(mode)
+        self.calls.append(
+            {
+                "county": county,
+                "focus": focus,
+                "date_start": date_start,
+                "date_end": date_end,
+                "target_years": target_years,
+            }
+        )
         return self.docs
 
 

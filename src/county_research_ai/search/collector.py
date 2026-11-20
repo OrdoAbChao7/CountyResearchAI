@@ -17,6 +17,7 @@ import logging
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as _TimeoutError
+from datetime import date
 
 from ..config import Settings, get_settings
 from ..exceptions import SearchError
@@ -145,8 +146,16 @@ class SearchCollector(SearchProvider):
         max_results: int = 0,
         *,
         mode: str = "snapshot",
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
     ) -> list[RawDoc]:
-        """主业务采集接口。优先采用动态消歧与 QueryEngine。"""
+        """主业务采集接口。优先采用动态消歧与 QueryEngine。
+
+        ``date_start``/``date_end`` are accepted so every layer receives the
+        contract window. They are deliberately not used to filter search
+        results by publication date: a 2025 bulletin may report 2024 data.
+        """
         n = max_results or self._max_results
         keywords = [kw for kw in [county, focus] if kw]
 
@@ -176,6 +185,7 @@ class SearchCollector(SearchProvider):
                 focus=focus,
                 mode=mode,
                 max_queries=10,
+                target_years=target_years,
             )
             for gq in generated_queries:
                 if gq.target_channel == "gov" and self._gov is not None:

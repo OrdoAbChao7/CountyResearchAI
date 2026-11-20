@@ -47,6 +47,10 @@ class RiseFallModeHandler:
                 focus=focus,
                 mode="rise-fall",
                 existing_docs=docs,
+                date_start=context.request.date_start,
+                date_end=context.request.date_end,
+                target_years=context.request.target_years,
+                time_period=context.request.time_period,
             )
             return context.model_copy(
                 update={
