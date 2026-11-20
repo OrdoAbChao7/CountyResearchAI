@@ -308,6 +308,11 @@ def test_deep_mock_pipeline_emits_fine_grained_events(tmp_path):
     assert detail["status"] == "SUCCEEDED", detail
     assert detail["result"]["deep_research"]["enabled"] is True
     assert detail["result"]["deep_research"]["question_tree"]["questions"]
+    assert detail["result"]["deep_research"]["question_tree"]["focus"] == "竹产业"
+    discover = next(
+        event for event in events if event["event_type"] == "stage.discover.completed"
+    )
+    assert discover["payload"]["focus"] == "竹产业"
     types = [event["event_type"] for event in events]
     assert types[-1] == "job.completed"
     assert types.index("question_tree.created") < types.index("evidence.ingested")

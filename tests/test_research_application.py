@@ -153,6 +153,21 @@ def test_empty_search_without_focus_uses_handler_default(tmp_path):
     assert context.request.focus == "特色农业"
 
 
+def test_explicit_focus_wins_over_discovery(tmp_path):
+    discovery = StaticDiscovery(DiscoveryResult(selected_focus="特色农业"))
+    application, _, _ = make_application(tmp_path, discovery=discovery)
+    context = ResearchContext.from_request(
+        ResearchRequest(county="安吉县", focus="竹产业", mode="snapshot")
+    )
+
+    context = application.discover_focus(application.collect_materials(context))
+
+    assert context.focus == "竹产业"
+    assert context.request.focus == "竹产业"
+    assert context.discovery is not None
+    assert context.discovery.selected_focus == "特色农业"
+
+
 def test_no_cache_skips_storage_cache_lookup(tmp_path):
     storage = StaticStorage(tmp_path)
     application, _, storage = make_application(tmp_path, storage=storage)

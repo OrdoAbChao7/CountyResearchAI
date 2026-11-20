@@ -67,7 +67,11 @@ class ResearchApplication:
                 county=context.county,
                 raw_docs=context.raw_docs,
             )
-            focus = discovery.selected_focus or handler.default_focus
+            # An explicit contract focus is authoritative. Discovery still runs
+            # so its candidates can be shown, but it must not replace a focus
+            # the caller already chose (notably on the API/JobRunner path).
+            explicit_focus = (context.request.focus or "").strip()
+            focus = explicit_focus or discovery.selected_focus or handler.default_focus
             request = context.request.model_copy(update={"focus": focus})
             return context.model_copy(
                 update={"discovery": discovery, "focus": focus, "request": request}
