@@ -20,6 +20,11 @@ Note: the venv editable install pointed at the pre-rename path
 `E:\Projects\CountyResearchAI\src`. It was reinstalled with
 `pip install -e . --no-deps` so `python -m county_research_ai.api` works.
 
+The table above is the historical M4-era baseline. Current Finish Roadmap
+numbers (780 Python tests, 18 Vitest, 2 Playwright) are recorded in the
+"Finish Roadmap goal" section at the end of this file and in
+`docs/goal/ACCEPTANCE.md`.
+
 ## Milestone gate map
 
 | Milestone | Gate | Status | Evidence | Remaining work |
@@ -28,7 +33,7 @@ Note: the venv editable install pointed at the pre-rename path
 | M1 retrieval / snapshots / eval foundation | snapshots + hashes/offsets, replay, query-aware lexical baseline, negative controls | **PARTIAL** | `evidence/source_contract.py`, `search/lexical.py`, contracts, phase replays | live replay / Recall@K on a real query not run; full snapshot replay runner limited |
 | M2 temporal evidence graph | persistent typed graph, finding→claim→span→snapshot, conflict/temporal semantics | **PASS** | `evidence/graph.py`, 19 graph tests incl false reference, window, reload equality | semantic entailment explicitly out of scope |
 | M3 durable orchestration | bounded loop, restart/resume, cancellation, disjoint finish states | **PASS (workflow path)** | `api/jobs.py`, `api/worker.py`, resume/cancel/deadline tests | agent-path checkpoints remain opt-in; no distributed queue |
-| M4 API + web workspace | FastAPI `/api/v1`, SSE, cancel/resume, evidence explorer, brief export, React app | **PASS (screenshot NOT_RUN)** | `src/.../api/`, `web/`, 10 API app tests, live smoke | browser E2E/screenshots not automated |
+| M4 API + web workspace | FastAPI `/api/v1`, SSE, cancel/resume, evidence explorer, brief export, React app | **PASS** | `src/.../api/`, `web/`, 10 API app tests, live smoke, Wizard Playwright E2E + screenshots | section streaming / token accounting deliberately absent |
 | M5 multi-baseline evaluation + release docs | A/B/C/D paired eval, locked task set, ablations, final report, brand docs | **FAIL / PARTIAL** | design + offline A/B/C report + verifier ablation + README/ADR/demo/career docs | D not measured; 40–60 independent tasks, remaining ablations, live, semantic Judge, human adjudication missing |
 
 ## Constraints in force
@@ -121,3 +126,35 @@ retrieval implementation on a dev split, then one locked blind run.
 Q7 full report: `docs/goal/Q7_REPORT.md`. Stop reason: no sealed 40–60 task set,
 no human annotation, no paid live/Judge cost gate. Do not reclassify PILOT as
 SEALED or loosen the verifier.
+
+## Finish Roadmap goal (2026-11-20)
+
+Branch: `codex/finish-roadmap`; worktree outside the main checkout
+(`E:\Projects\CountyResearchAI-finish-roadmap`); base mainline
+`codex/quality-recovery` @ `144f4c8`. The main checkout was not modified or
+committed to.
+
+| Task | Status | Evidence |
+| --- | --- | --- |
+| T2 deep-research capture | PASS | `application/context.py`, `modes/{snapshot,rise_fall,long_history}.py`, `api/worker.py:359`; projection persisted in `jobs.result_json`; mode + worker tests |
+| T3 fine-grained events | PASS | `observability/events.py`, `api/event_sink.py`, `research_agent/coordinator.py`; per-job `seq`, SSE replay, event-order test; 35-event MOCK run |
+| T7 graph/report projections | PASS | `api/projections/{graph,report,questions,evidence}.py`, `/graph` + `/report.json`; stable IDs, URL dedupe, multiedges, 400/800 connected truncation, citation numbering, conflict/gap tests |
+| T10 report/evidence workbench | PASS | `web/src/components/*`; StepRail, ReportStudio, EvidenceDrawer, AgentTimeline, ContextPanel; screenshots + Vitest |
+| T12 Cytoscape graph | PASS | lazy `GraphCanvas` chunk, cose layout, filters, focus, list fallback, conflict/gap styles; 500-claim projection test |
+| T13 engineering hardening | PASS | 780 Python tests, scoped ruff clean, 18 Vitest, 2 Playwright E2E; event idempotency/recovery/concurrency, XSS and malicious-source regressions |
+
+Skipped by instruction after verifying equivalents: T0 (executed as read-only
+audit, no code), T4/T5/T6/T8/T9/T11. No second RunManager, queue, JSONL store,
+`/api/v1/runs` API, `frontend/` rewrite or React 19 upgrade was introduced.
+
+Remaining and not claimed as PASS:
+
+- M5's 40–60 independent sealed tasks, live end-to-end evaluation, semantic
+  Judge and human adjudication are still unfinished (`BLOCKED_EXTERNAL` for paid
+  live/Judge).
+- The 400-node test is a synthetic projection test, not a browser performance
+  benchmark of a real investigation.
+- Report sections are rendered once and revealed sequentially; section-level
+  streaming remains future work.
+- Real supply-chain relations are not modelled; the graph shows only persisted
+  evidence/topic/source/conflict/gap relations.

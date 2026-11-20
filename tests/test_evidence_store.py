@@ -196,3 +196,93 @@ def test_evidence_store_macro_gdp_and_cross_caliber_conflicts():
     assert c.conflict_type in {"caliber_discrepancy", "year_discrepancy"}
     assert "产值" in c.indicator
 
+
+
+def test_repeated_imports_keep_conflicting_items_out_of_verified_state():
+    store = EvidenceStore()
+    doc1 = RawDoc(
+        title="2024年安吉县统计公报",
+        url="https://anji.gov.cn/tjgb2024-a",
+        snippet="2024年安吉县竹产业总产值达250亿元。",
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    doc2 = RawDoc(
+        title="2024年安吉县产业简报",
+        url="https://anji.gov.cn/tjgb2024-b",
+        snippet="2024年安吉县竹产业总产值达280亿元。",
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    store.ingest_documents([doc1], county="安吉县", focus="竹产业")
+    store.ingest_documents([doc2], county="安吉县", focus="竹产业")
+
+    conflicts = store.detect_conflicts()
+    assert any(conflict.conflict_type == "contradiction" for conflict in conflicts)
+    economic = [
+        item for item in store.get_by_topic("economic") if "总产值" in item.claim
+    ]
+    assert len(economic) == 2
+    assert all(item.verification_status == "conflicting" for item in economic)
+
+    store.ingest_documents([doc1, doc2], county="安吉县", focus="竹产业")
+    conflicts = store.detect_conflicts()
+    economic = [
+        item for item in store.get_by_topic("economic") if "总产值" in item.claim
+    ]
+    assert len(conflicts) >= 1
+    assert len(economic) == 2
+    assert all(item.verification_status == "conflicting" for item in economic)
+
+
+def test_enterprise_evidence_is_the_source_clause_not_a_synthesized_fact():
+    store = EvidenceStore()
+    doc = RawDoc(
+        title="安吉县林业局名单",
+        url="https://anji.gov.cn/forestry",
+        snippet="安吉竹丰竹木有限公司获评省级林业龙头企业，带动就业500人。",
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    items = store.ingest_documents([doc], county="安吉县", focus="竹产业")
+
+    enterprise = [
+        item for item in items if item.indicator_caliber == "骨干企业"
+    ]
+    assert len(enterprise) == 1
+    assert enterprise[0].claim == "安吉竹丰竹木有限公司获评省级林业龙头企业"
+    assert enterprise[0].claim in doc.snippet
+    assert "龙头骨干企业:" not in enterprise[0].claim
+
+
+def test_negated_or_uncertain_enterprise_mentions_are_not_extracted():
+    store = EvidenceStore()
+    doc = RawDoc(
+        title="核查通报",
+        url="https://anji.gov.cn/check",
+        snippet="经核查，安吉县不存在安吉竹丰竹木有限公司。另有疑似安吉绿源竹业有限公司的冒名材料。",
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    items = store.ingest_documents([doc], county="安吉县", focus="竹产业")
+
+    assert not [
+        item for item in items if item.indicator_caliber == "骨干企业"
+    ]
+
+
+def test_policy_evidence_is_the_source_clause_and_remains_traceable():
+    store = EvidenceStore()
+    doc = RawDoc(
+        title="发改委通知",
+        url="https://ndrc.gov.cn/policy",
+        snippet="国家发展改革委等部门印发《加快“以竹代塑”发展三年行动计划》。",
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    items = store.ingest_documents([doc], county="安吉县", focus="竹产业")
+
+    policy = [item for item in items if item.indicator_caliber == "政策规划"]
+    assert len(policy) == 1
+    assert policy[0].claim == "国家发展改革委等部门印发《加快“以竹代塑”发展三年行动计划》"
+    assert policy[0].claim in doc.snippet

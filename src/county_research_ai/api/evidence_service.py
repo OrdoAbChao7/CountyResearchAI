@@ -12,6 +12,7 @@ from ..evidence.graph import (
     VerifiedFinding,
 )
 from ..evidence.ledger import EvidenceLedger
+from ..evidence.source_identity import source_groups
 
 
 def persist_run_evidence(
@@ -34,7 +35,7 @@ def persist_run_evidence(
             if claim.claim_id in seen:
                 continue
             seen.add(claim.claim_id)
-            chain = graph.get_chain(claim.claim_id)
+            chain = graph.get_chain(claim.claim_id, run_id=run_id)
             status = (
                 chain.verification.status
                 if chain.verification is not None
@@ -54,16 +55,16 @@ def persist_run_evidence(
 
     status_counts = Counter(finding.status.value for finding in findings)
     supported = status_counts.get(VerificationStatus.SUPPORTED.value, 0)
-    source_urls: set[str] = set()
-    for pack in packs:
-        for source in pack.source_map.values():
-            if source.canonical_url:
-                source_urls.add(source.canonical_url)
+    sources = [source for finding in findings
+               if finding.status is VerificationStatus.SUPPORTED
+               for source in graph.supporting_sources(finding.claim_id, run_id=run_id)]
+    groups = source_groups(sources)
     total = len(findings)
     return {
         "claims": total,
         "supported_claims": supported,
-        "independent_sources": len(source_urls),
+        "independent_sources": len(groups),
+        "source_groups": groups,
         "supported_ratio": round(supported / total, 4) if total else 0.0,
         "status_counts": dict(sorted(status_counts.items())),
         "snapshots": len(ledger.sources),

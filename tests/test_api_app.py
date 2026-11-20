@@ -251,6 +251,13 @@ def test_mock_pipeline_end_to_end(tmp_path):
     assert "MOCK" in brief.text
 
 
+def _deep_contract_payload() -> dict:
+    payload = _contract_payload()
+    payload["contract"]["research_focus"] = "竹产业"
+    payload["contract"]["options"] = {"deep_research": True}
+    return payload
+
+
 def _wait_for_terminal(client: TestClient, job_id: str) -> dict:
     terminal = {"SUCCEEDED", "FAILED", "CANCELLED", "BUDGET_EXHAUSTED", "INTERRUPTED"}
     detail: dict = {}
@@ -281,6 +288,61 @@ def test_deadline_exhaustion_is_not_reported_as_sufficient(tmp_path):
     assert detail["outcome"] == "BUDGET_EXHAUSTED"
     assert detail["outcome"] != "SUFFICIENT"
     assert "BUDGET_EXHAUSTED" in brief
+
+
+def test_deep_mock_pipeline_emits_fine_grained_events(tmp_path):
+    app = create_app(
+        settings=_settings(tmp_path),
+        live_enabled=False,
+        data_dir=tmp_path / "data",
+        reports_dir=tmp_path / "reports",
+        evidence_db_path=tmp_path / "evidence.sqlite",
+    )
+    with TestClient(app) as client:
+        created = client.post("/api/v1/research/tasks", json=_deep_contract_payload())
+        assert created.status_code == 202
+        job_id = created.json()["job_id"]
+        detail = _wait_for_terminal(client, job_id)
+        events = client.get(f"/api/v1/research/tasks/{job_id}/events").json()
+
+    assert detail["status"] == "SUCCEEDED", detail
+    assert detail["result"]["deep_research"]["enabled"] is True
+    assert detail["result"]["deep_research"]["question_tree"]["questions"]
+    types = [event["event_type"] for event in events]
+    assert types[-1] == "job.completed"
+    assert types.index("question_tree.created") < types.index("evidence.ingested")
+    assert types.index("evidence.ingested") < types.index("conflicts.detected")
+    assert types.index("conflicts.detected") < types.index("synthesis.completed")
+    assert types.index("synthesis.completed") < types.index("report.rendered")
+    assert {
+        "retrieval.round.completed",
+        "question_tree.coverage",
+        "gaps.detected",
+        "agent.started",
+        "agent.completed",
+        "synthesis.started",
+        "synthesis.completed",
+        "report.rendered",
+    } <= set(types)
+    round_started = [
+        event["payload"]["round"]
+        for event in events
+        if event["event_type"] == "retrieval.round.started"
+    ]
+    round_completed = [
+        event["payload"]["round"]
+        for event in events
+        if event["event_type"] == "retrieval.round.completed"
+    ]
+    assert round_completed
+    assert all(round_number in round_started for round_number in round_completed)
+    assert types.index("retrieval.round.started") < types.index(
+        "retrieval.round.completed"
+    )
+    coverage = next(
+        event for event in events if event["event_type"] == "question_tree.coverage"
+    )
+    assert 0.0 <= coverage["payload"]["coverage_rate"] <= 1.0
 
 
 def test_cancel_requested_before_execution_stops_job(tmp_path):

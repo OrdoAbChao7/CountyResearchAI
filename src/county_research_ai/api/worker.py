@@ -26,6 +26,8 @@ from ..config import Settings, get_settings
 from ..domain.outcomes import ResearchOutcome
 from ..evidence.graph import EvidenceGraphStore, VerificationStatus
 from ..models import ResearchRequest
+from ..observability import pop_event_sink, push_event_sink
+from .event_sink import JobEventSink
 from .evidence_service import persist_run_evidence, thresholds_met
 from .jobs import JobRecord, JobStatus, JobStore
 
@@ -117,6 +119,7 @@ class JobRunner:
             daemon=True,
         )
         heartbeat.start()
+        sink_token = push_event_sink(JobEventSink(self.store, job_id))
         try:
             self.store.append_event(
                 job_id, "job.started", {"mode_label": job.mode_label}
@@ -150,17 +153,35 @@ class JobRunner:
                     "chunks": len(ctx.evidence_ledger.chunks) if ctx.evidence_ledger else 0,
                 }
             )
-            summary = self._persist(job, graph, context)
-            self.store.append_event(job_id, "evidence.persisted", summary)
             context = self._stage(
                 job, "analyze", context, app.analyze, started, lost, lambda ctx: {
-                    "sections": len(ctx.report.sections) if ctx.report else 0
+                    "sections": len(ctx.report.sections) if ctx.report else 0,
+                    "deep_research": ctx.deep_research is not None,
                 }
+            )
+            deep = getattr(context, "deep_research", None)
+            summary = self._persist(job, graph, context, deep=deep)
+            deep_projection = self._deep_projection(deep)
+            self.store.append_event(
+                job.job_id, "evidence.persisted", {**summary, "deep_research": deep_projection["enabled"]}
             )
             result = self._stage(
                 job, "report", context, app.render_report, started, lost, lambda res: {
                     "report_path": str(res.report_path)
                 }
+            )
+            self.store.append_event(
+                job_id,
+                "report.rendered",
+                {
+                    "sections": result.report.section_count,
+                    "markdown_chars": len(result.markdown),
+                    "provenance": (
+                        "native_sections"
+                        if job.mode == "snapshot"
+                        else "markdown_split"
+                    ),
+                },
             )
             self._ensure_active(job_id, started, lost)
             enforcement = self._budget_enforcement(job, started)
@@ -179,6 +200,8 @@ class JobRunner:
                     "evidence": summary,
                     "sections": result.report.section_count,
                     "mode_label": job.mode_label,
+                    "deep_research": deep_projection,
+                    "report": self._report_projection(job, result),
                 },
                 budget_enforcement=enforcement,
             )
@@ -227,6 +250,7 @@ class JobRunner:
         finally:
             stop_heartbeat.set()
             heartbeat.join(timeout=1.0)
+            pop_event_sink(sink_token)
 
     def _demo_delay(
         self, job: JobRecord, started: float, lost: threading.Event
@@ -305,10 +329,16 @@ class JobRunner:
         return container
 
     def _persist(
-        self, job: JobRecord, graph: EvidenceGraphStore, context: ResearchContext
+        self,
+        job: JobRecord,
+        graph: EvidenceGraphStore,
+        context: ResearchContext,
+        *,
+        deep: Any | None = None,
     ) -> dict[str, Any]:
-        ledger = context.evidence_ledger
-        packs = context.evidence_packs or (
+        ledger = getattr(deep, "evidence_ledger", None) or context.evidence_ledger
+        deep_packs = list(getattr(deep, "evidence_packs", None) or [])
+        packs = deep_packs or context.evidence_packs or (
             [context.evidence_pack] if context.evidence_pack is not None else []
         )
         if ledger is None:
@@ -325,6 +355,56 @@ class JobRunner:
         return persist_run_evidence(
             graph, ledger, packs, run_id=job.job_id, contract=job.contract
         )
+
+    @staticmethod
+    def _deep_projection(deep: Any | None) -> dict[str, Any]:
+        if deep is None:
+            return {"enabled": False}
+        question_tree = getattr(deep, "question_tree", None)
+        evidence_store = getattr(deep, "evidence_store", None)
+        return {
+            "enabled": True,
+            "coverage_rate": getattr(deep, "coverage_rate", None),
+            "total_turns": getattr(deep, "total_turns", 0),
+            "reflection_turns": len(getattr(deep, "reflection_history", []) or []),
+            "retrieval_stop_reason": getattr(deep, "retrieval_stop_reason", ""),
+            "retrieval_usage": getattr(deep, "retrieval_usage", {}) or {},
+            "question_tree": (
+                question_tree.model_dump(mode="json") if question_tree is not None else None
+            ),
+            "items": (
+                [item.model_dump(mode="json") for item in evidence_store.get_all()]
+                if evidence_store is not None
+                else []
+            ),
+            "conflicts": [
+                conflict.model_dump(mode="json")
+                for conflict in getattr(deep, "conflicts", []) or []
+            ],
+            "gaps": [
+                gap.model_dump(mode="json")
+                for gap in getattr(deep, "gaps", []) or []
+            ],
+        }
+
+    @staticmethod
+    def _report_projection(job: JobRecord, result: Any) -> dict[str, Any]:
+        report = result.report
+        return {
+            "provenance": (
+                "native_sections" if job.mode == "snapshot" else "markdown_split"
+            ),
+            "sections": [
+                {
+                    "title": section.title,
+                    "order": section.order,
+                    "content": section.content,
+                    "sources": list(section.sources),
+                }
+                for section in report.sections
+            ],
+            "markdown_chars": len(result.markdown),
+        }
 
     def _stage(
         self,

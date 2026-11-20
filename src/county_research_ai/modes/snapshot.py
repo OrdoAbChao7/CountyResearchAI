@@ -50,6 +50,7 @@ class SnapshotModeHandler:
                     "research_spec": result.research_spec or context.research_spec,
                     "evidence_packs": result.evidence_packs or context.evidence_packs,
                     "evidence_pack": (result.evidence_packs[0] if result.evidence_packs else context.evidence_pack),
+                    "deep_research": result,
                 }
             )
         else:

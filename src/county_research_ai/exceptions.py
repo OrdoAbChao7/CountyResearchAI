@@ -88,3 +88,11 @@ class ResearchStageError(CountyResearchAIError):
         self.code = code
         self.stage = stage
         self.retryable = retryable
+
+
+class ResearchCancelledError(CountyResearchAIError):
+    """协作式取消：在阶段边界观察到取消请求时抛出。"""
+
+    def __init__(self, stage: str) -> None:
+        super().__init__("research run cancelled", context={"stage": stage})
+        self.stage = stage

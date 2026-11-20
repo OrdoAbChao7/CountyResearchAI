@@ -75,6 +75,7 @@ class LongHistoryModeHandler:
                     "research_spec": result.research_spec or context.research_spec,
                     "evidence_packs": research_packs,
                     "evidence_pack": (research_packs[0] if research_packs else context.evidence_pack),
+                    "deep_research": result,
                 }
             )
         else:

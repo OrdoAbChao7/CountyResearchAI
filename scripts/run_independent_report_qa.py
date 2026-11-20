@@ -73,6 +73,7 @@ def run_qa_batch(
     max_runs: int | None = None,
     run_id_prefixes: tuple[str, ...] | None = None,
 ) -> dict[str, Any]:
+    require_formal_api_gate(FORMAL_GATE_PATH)
     questions = load_frozen_questions()
     claims = {
         claim.claim_id: claim
@@ -100,7 +101,6 @@ def run_qa_batch(
         )
         return summary
 
-    require_formal_api_gate(FORMAL_GATE_PATH)
     output_dir.mkdir(parents=True, exist_ok=False)
     settings = load_settings()
     manager = ResourceManager(

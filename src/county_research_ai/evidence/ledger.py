@@ -352,7 +352,7 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
             fetch_status=record.get("fetch_status", "unknown"),
             provider=record.get("provider", "unknown"),
             source_type=record.get("source_type", "unknown"),
-            publish_date=record.get("published_at") or record.get("document_timestamp"),
+            publish_date=record.get("published_at"),
             retrieved_at=record.get("retrieved_at"),
             metadata=record.get("metadata", {}),
             chunks=chunks,

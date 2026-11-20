@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -39,6 +40,11 @@ class ResearchContext(BaseModel):
     long_history_analysis: CountyLongHistoryAnalysis | None = None
     report: ResearchReport | None = None
     report_path: Path | None = None
+    # The coordinator result is intentionally excluded from serialisation: it
+    # holds a live EvidenceStore and is consumed by the projection layer in the
+    # same process. Keeping it here avoids a second result type or a parallel
+    # in-memory registry.
+    deep_research: Any | None = Field(default=None, exclude=True, repr=False)
 
     @classmethod
     def from_request(cls, request: ResearchRequest) -> ResearchContext:

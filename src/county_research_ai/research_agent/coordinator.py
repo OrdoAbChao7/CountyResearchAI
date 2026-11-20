@@ -31,6 +31,7 @@ from ..models import (
     RawDoc,
     ReflectionResult,
 )
+from ..observability import emit
 from ..search.adaptive_retrieval import (
     AdaptiveQueryPlan,
     AdaptiveRetrievalController,
@@ -70,6 +71,8 @@ class DeepResearchResult:
     gaps: list[EvidenceGap] = field(default_factory=list)
     research_spec: ResearchSpec | None = None
     evidence_packs: list[EvidencePack] = field(default_factory=list)
+    evidence_ledger: Any | None = None
+    coverage_rate: float | None = None
     retrieval_stop_reason: str = ""
     retrieval_usage: dict[str, int] = field(default_factory=dict)
 
@@ -127,10 +130,22 @@ class DeepResearchCoordinator:
 
         # 1. 动态生成研究问题树
         qtree = build_question_tree(county=county, focus=f_name, mode=mode)
+        emit(
+            "question_tree.created",
+            stage="analyze",
+            payload={
+                "county": county,
+                "focus": f_name,
+                "mode": mode,
+                "tree": qtree.model_dump(mode="json"),
+                "questions": len(qtree.questions),
+            },
+        )
         evidence_store = EvidenceStore()
         all_docs: list[RawDoc] = list(existing_docs or [])
         research_spec: ResearchSpec | None = None
         evidence_packs: list[EvidencePack] = []
+        final_ledger = None
         retrieval_stop_reason = ""
         retrieval_usage: dict[str, int] = {}
 
@@ -141,9 +156,28 @@ class DeepResearchCoordinator:
             controller = AdaptiveRetrievalController(research_spec, budget=budget)
             if not all_docs:
                 plan = controller.initial_plan()
+                emit(
+                    "retrieval.round.started",
+                    stage="analyze",
+                    payload={
+                        "round": 1,
+                        "queries": len(plan.queries),
+                        "supplemental": False,
+                    },
+                )
                 collected = self.collector.collect_adaptive(plan, controller=controller)
                 all_docs.extend(collected.documents)
                 retrieval_usage = dict(collected.usage)
+                emit(
+                    "retrieval.round.completed",
+                    stage="analyze",
+                    payload={
+                        "round": 1,
+                        "documents": len(collected.documents),
+                        "usage": retrieval_usage,
+                        "stop_reason": "",
+                    },
+                )
             seen_claim_ids: set[str] = set()
 
             for adaptive_turn in range(1, max(1, self.max_turns) + 1):
@@ -173,11 +207,30 @@ class DeepResearchCoordinator:
                 if not decision.queries:
                     retrieval_stop_reason = RetrievalStopReason.NO_GAP_QUERY.value
                     break
+                emit(
+                    "retrieval.round.started",
+                    stage="analyze",
+                    payload={
+                        "round": adaptive_turn + 1,
+                        "queries": len(decision.queries),
+                        "supplemental": True,
+                    },
+                )
                 followup = self.collector.collect_adaptive(
                     AdaptiveQueryPlan(research_spec, decision.queries, adaptive_turn + 1),
                     controller=controller,
                 )
                 retrieval_usage = controller._usage()
+                emit(
+                    "retrieval.round.completed",
+                    stage="analyze",
+                    payload={
+                        "round": adaptive_turn + 1,
+                        "documents": len(followup.documents),
+                        "usage": retrieval_usage,
+                        "stop_reason": "",
+                    },
+                )
                 if not followup.documents:
                     retrieval_stop_reason = RetrievalStopReason.ZERO_MARGINAL_EVIDENCE.value
                     break
@@ -195,7 +248,9 @@ class DeepResearchCoordinator:
                 ledger.select_evidence_pack(slot)
                 for slot in research_spec.question_slots
             ]
+            final_ledger = ledger
             evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
+            _emit_evidence_ingested(evidence_store, len(all_docs), round_number=1)
             reflection_history: list[ReflectionResult] = []
             turn = max(1, adaptive_turn)
             last_gaps: list[EvidenceGap] = []
@@ -206,14 +261,35 @@ class DeepResearchCoordinator:
             last_gaps = []
             if not all_docs and self.collector is not None:
                 logger.info("执行首轮多角度定向检索...")
+                emit(
+                    "retrieval.round.started",
+                    stage="analyze",
+                    payload={"round": 1, "queries": 0, "supplemental": False},
+                )
                 all_docs = self._collect_initial(county, f_name, mode)
+                emit(
+                    "retrieval.round.completed",
+                    stage="analyze",
+                    payload={
+                        "round": 1,
+                        "documents": len(all_docs),
+                        "usage": {},
+                        "stop_reason": "",
+                    },
+                )
 
             # 3. 证据提取与摄入
             evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
+            _emit_evidence_ingested(evidence_store, len(all_docs), round_number=1)
 
             # 4. Legacy collector reflection fallback.
 
         while research_spec is None and turn <= self.max_turns:
+            emit(
+                "reflection.started",
+                stage="analyze",
+                payload={"turn": turn},
+            )
             reflection = self.critic.reflect(
                 evidence_store=evidence_store,
                 question_tree=qtree,
@@ -221,6 +297,16 @@ class DeepResearchCoordinator:
             )
             reflection_history.append(reflection)
             last_gaps = reflection.gaps
+            emit(
+                "reflection.completed",
+                stage="analyze",
+                payload={
+                    "turn": turn,
+                    "sufficient": reflection.is_sufficient,
+                    "gaps": [gap.model_dump(mode="json") for gap in reflection.gaps],
+                    "followup_queries": list(reflection.followup_queries),
+                },
+            )
 
             if reflection.is_sufficient or not reflection.followup_queries:
                 logger.info("反思通过或无更多补充检索词，结束迭代 | turn=%d", turn)
@@ -233,14 +319,72 @@ class DeepResearchCoordinator:
                 len(reflection.followup_queries),
                 reflection.followup_queries,
             )
+            emit(
+                "retrieval.round.started",
+                stage="analyze",
+                payload={
+                    "round": turn + 1,
+                    "queries": len(reflection.followup_queries),
+                    "supplemental": True,
+                },
+            )
             supp_docs = self._collect_supp(reflection.followup_queries)
+            emit(
+                "retrieval.round.completed",
+                stage="analyze",
+                payload={
+                    "round": turn + 1,
+                    "documents": len(supp_docs),
+                    "usage": {},
+                    "stop_reason": "" if supp_docs else "zero_marginal_evidence",
+                },
+            )
             if not supp_docs:
                 logger.info("补充检索未返回更多新内容，停止迭代")
                 break
 
             all_docs.extend(supp_docs)
             evidence_store.ingest_documents(supp_docs, county=county, focus=f_name)
+            _emit_evidence_ingested(
+                evidence_store, len(all_docs), round_number=turn + 1
+            )
             turn += 1
+
+        if final_ledger is None:
+            from ..processor import DocumentProcessor
+
+            final_ledger = build_evidence_ledger(
+                DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
+            )
+
+        coverage_rate, coverage_gaps = evidence_store.assess_question_tree_coverage(qtree)
+        gaps = _merge_gaps(last_gaps, coverage_gaps)
+        satisfied = sum(1 for question in qtree.questions if question.is_satisfied)
+        emit(
+            "question_tree.coverage",
+            stage="analyze",
+            payload={
+                "coverage_rate": coverage_rate,
+                "satisfied": satisfied,
+                "questions": len(qtree.questions),
+                "tree": qtree.model_dump(mode="json"),
+            },
+        )
+        emit(
+            "gaps.detected",
+            stage="analyze",
+            payload={"gaps": [gap.model_dump(mode="json") for gap in gaps]},
+        )
+        conflicts = evidence_store.get_conflicts()
+        emit(
+            "conflicts.detected",
+            stage="analyze",
+            payload={
+                "conflicts": [
+                    conflict.model_dump(mode="json") for conflict in conflicts
+                ]
+            },
+        )
 
         # 5. 依据研究模式调度专业智能体或模式分析器
         if mode == "rise-fall":
@@ -248,7 +392,21 @@ class DeepResearchCoordinator:
             from ..processor import DocumentProcessor
             proc_data = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
             rf_analyzer = self.rise_fall_analyzer or RiseFallAnalyzer(llm=self._get_llm())
+            emit(
+                "agent.started",
+                stage="analyze",
+                payload={"agent": "rise_fall", "mode": mode},
+            )
             rf_analysis = rf_analyzer.analyze(county=c_info, data=proc_data)
+            emit(
+                "agent.completed",
+                stage="analyze",
+                payload={
+                    "agent": "rise_fall",
+                    "mode": mode,
+                    "content_chars": len(rf_analysis.summary or ""),
+                },
+            )
             return DeepResearchResult(
                 county=c_info,
                 focus=f_name,
@@ -259,10 +417,12 @@ class DeepResearchCoordinator:
                 rise_fall_analysis=rf_analysis,
                 all_raw_docs=all_docs,
                 total_turns=turn,
-                conflicts=evidence_store.get_conflicts(),
-                gaps=last_gaps,
+                conflicts=conflicts,
+                gaps=gaps,
                 research_spec=research_spec,
                 evidence_packs=evidence_packs,
+                evidence_ledger=final_ledger,
+                coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
             )
@@ -271,7 +431,21 @@ class DeepResearchCoordinator:
             from ..processor import DocumentProcessor
             proc_data = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
             lh_analyzer = self.long_history_analyzer or LongHistoryAnalyzer(llm=self._get_llm())
+            emit(
+                "agent.started",
+                stage="analyze",
+                payload={"agent": "long_history", "mode": mode},
+            )
             lh_analysis = lh_analyzer.analyze(county=c_info, data=proc_data)
+            emit(
+                "agent.completed",
+                stage="analyze",
+                payload={
+                    "agent": "long_history",
+                    "mode": mode,
+                    "content_chars": len(lh_analysis.summary or ""),
+                },
+            )
             return DeepResearchResult(
                 county=c_info,
                 focus=f_name,
@@ -282,21 +456,83 @@ class DeepResearchCoordinator:
                 long_history_analysis=lh_analysis,
                 all_raw_docs=all_docs,
                 total_turns=turn,
-                conflicts=evidence_store.get_conflicts(),
-                gaps=last_gaps,
+                conflicts=conflicts,
+                gaps=gaps,
                 research_spec=research_spec,
                 evidence_packs=evidence_packs,
+                evidence_ledger=final_ledger,
+                coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
             )
         else:
             # Snapshot / Industry 模式
             logger.info("调度专业研究智能体进行分项分析...")
+            emit(
+                "agent.started",
+                stage="analyze",
+                payload={
+                    "agent": "economic",
+                    "evidence": len(evidence_store.get_by_topic("economic")),
+                },
+            )
             econ_out = self.economic_agent.analyze(county=county, focus=f_name, evidence_store=evidence_store)
+            emit(
+                "agent.completed",
+                stage="analyze",
+                payload={
+                    "agent": "economic",
+                    "items": len(econ_out.evidence_items),
+                    "content_chars": len(econ_out.markdown_content),
+                },
+            )
+            emit(
+                "agent.started",
+                stage="analyze",
+                payload={
+                    "agent": "policy",
+                    "evidence": len(evidence_store.get_by_topic("policy")),
+                },
+            )
             pol_out = self.policy_agent.analyze(county=county, focus=f_name, evidence_store=evidence_store)
+            emit(
+                "agent.completed",
+                stage="analyze",
+                payload={
+                    "agent": "policy",
+                    "items": len(pol_out.evidence_items),
+                    "content_chars": len(pol_out.markdown_content),
+                },
+            )
+            emit(
+                "agent.started",
+                stage="analyze",
+                payload={
+                    "agent": "industry",
+                    "evidence": len(evidence_store.get_by_topic("industry")),
+                },
+            )
             ind_out = self.industry_agent.analyze(county=county, focus=f_name, evidence_store=evidence_store)
+            emit(
+                "agent.completed",
+                stage="analyze",
+                payload={
+                    "agent": "industry",
+                    "items": len(ind_out.evidence_items),
+                    "content_chars": len(ind_out.markdown_content),
+                },
+            )
 
             logger.info("执行研究成果综合合成与审计...")
+            emit(
+                "synthesis.started",
+                stage="analyze",
+                payload={
+                    "agents": 3,
+                    "packs": len(evidence_packs),
+                    "gaps": len(gaps),
+                },
+            )
             analyses = self.synthesizer.synthesize(
                 county=c_info,
                 focus=f_name,
@@ -304,8 +540,16 @@ class DeepResearchCoordinator:
                 policy_out=pol_out,
                 industry_out=ind_out,
                 evidence_store=evidence_store,
-                gaps=last_gaps,
+                gaps=gaps,
                 evidence_packs=evidence_packs,
+            )
+            emit(
+                "synthesis.completed",
+                stage="analyze",
+                payload={
+                    "sections": len(analyses),
+                    "content_chars": sum(len(item.content) for item in analyses),
+                },
             )
             summary = self.synthesizer.generate_executive_summary(
                 county=c_info, focus=f_name, analyses=analyses
@@ -325,10 +569,12 @@ class DeepResearchCoordinator:
                 executive_summary=summary,
                 all_raw_docs=all_docs,
                 total_turns=turn,
-                conflicts=evidence_store.get_conflicts(),
-                gaps=last_gaps,
+                conflicts=conflicts,
+                gaps=gaps,
                 research_spec=research_spec,
                 evidence_packs=evidence_packs,
+                evidence_ledger=final_ledger,
+                coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
             )
@@ -357,3 +603,36 @@ class DeepResearchCoordinator:
                     pass
             return results
         return []
+
+
+def _merge_gaps(*groups: list[EvidenceGap]) -> list[EvidenceGap]:
+    """Keep critic and coverage gaps without duplicating the same missing aspect."""
+    merged: list[EvidenceGap] = []
+    seen: set[tuple[str, str]] = set()
+    for group in groups:
+        for gap in group:
+            key = (gap.question_id, gap.missing_aspect)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(gap)
+    return merged
+
+
+def _emit_evidence_ingested(
+    store: EvidenceStore, documents: int, *, round_number: int
+) -> None:
+    items = store.get_all()
+    topics: dict[str, int] = {}
+    for item in items:
+        topics[item.topic] = topics.get(item.topic, 0) + 1
+    emit(
+        "evidence.ingested",
+        stage="analyze",
+        payload={
+            "round": round_number,
+            "documents": documents,
+            "total": len(items),
+            "topics": topics,
+        },
+    )

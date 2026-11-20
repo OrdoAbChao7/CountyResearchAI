@@ -83,3 +83,36 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | Sealed 40–60 task holdout | NOT_MET | 2 PILOT tasks; 0 SEALED |
 | Two-process lease stress | PASS | one success/job, stale rejected, takeover + crash recovery |
 | Q7 tests / regressions | PASS | 702 Python, 4 frontend, 2 Playwright |
+
+## Finish Roadmap acceptance (2026-11-20)
+
+Revision: `codex/finish-roadmap`, based on `144f4c8`; commands run with the
+mainline `.venv` and `PYTHONPATH=src`.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Python suite | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `780 passed in 24.91s`, exit 0 |
+| Ruff (changed scope) | PASS | `python -m ruff check src tests scripts/run_finish_roadmap_demo.py` | all checks passed |
+| Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
+| Frontend unit tests | PASS | `cd web; npm test -- --run` | 18 passed (3 files) |
+| Frontend build | PASS | `cd web; npm run build` | main 202.3 kB, lazy GraphCanvas 455.5 kB |
+| Playwright E2E | PASS | `AXIOMSCOPE_E2E_PORT=8020 npx playwright test --reporter=list` | 2 passed; full wizard + cancel/resume |
+| Anji MOCK demo | PASS | `PYTHONPATH=src python scripts/run_finish_roadmap_demo.py` | `SUCCEEDED/SUFFICIENT`, 35 events, 25 nodes/33 edges, 1 SUPPORTED / 5 NOT_COMPARABLE, 2 conflicts, 3 gaps |
+| Deep-research capture (T2) | PASS | `tests/test_api_app.py::test_deep_mock_pipeline_emits_fine_grained_events`; mode tests | projection in `result.deep_research`, all modes |
+| Event order/recovery/idempotency (T3/T13) | PASS | `tests/test_api_jobs.py` | repeated completion no-op, recovery continuity, 40 concurrent appends with unique contiguous seq |
+| Graph projection (T7/T12) | PASS | `tests/test_graph_projection.py` (7 tests) | stable IDs, URL dedupe, multiedges, no self-loops, unmatched conflicts, 500 claims → ≤400 nodes/≤800 edges, connected |
+| Report projection + citation (T7/T13) | PASS | `tests/test_report_projection.py`, `tests/test_projection_api.py` | 6 sections, citations, escaping, path traversal 403 |
+| P0-1 conflicting numbers | PASS | `tests/test_evidence_store.py::test_repeated_imports_keep_conflicting_items_out_of_verified_state`, `tests/test_evidence_graph.py::test_two_supported_conflicting_claims_need_review` | conflicting items stay `conflicting`; both claims `NEEDS_REVIEW`, not `SUPPORTED` |
+| P0-2 entity binding | PASS | `tests/test_evidence_store.py::test_enterprise_evidence_is_the_source_clause_not_a_synthesized_fact`, `::test_negated_or_uncertain_enterprise_mentions_are_not_extracted` | source clause retained; negated/uncertain names rejected |
+| P0-3 report integrity | PASS | `tests/test_report_projection.py::test_report_escapes_malicious_source_text_without_dropping_facts` and verified-fact tests | only `SUPPORTED` rows; value/unit/period preserved; `<script>`/`javascript:` blocked |
+| Wizard UI / error states | PASS | `web/src/workspace.test.ts`, `web/src/markdown.test.ts`, E2E screenshots | URL restore, event dedupe, loading/empty/error, keyboard Escape/focus return, list view |
+
+Not accepted here:
+
+| Item | Status | Why |
+| --- | --- | --- |
+| 40–60 sealed independent task set | NOT_MET | only pilot tasks exist; no new authorized corpus |
+| Live end-to-end / semantic Judge | BLOCKED_EXTERNAL | no paid cost gate; default remains MOCK |
+| Human rubric/adjudication | BLOCKED_HUMAN_ANNOTATION | no human labels |
+| Real 400-node browser benchmark | NOT_RUN | 400/800 cap tested on synthetic projection; browser E2E uses the small MOCK case |
+| Section-level streaming / token accounting | NOT_RUN | renderer is one-shot; UI explicitly presents post-completion reveal |

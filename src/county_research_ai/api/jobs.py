@@ -34,6 +34,9 @@ class JobStatus(StrEnum):
         return self not in {JobStatus.QUEUED, JobStatus.RUNNING}
 
 
+_TERMINAL_STATUSES = tuple(status.value for status in JobStatus if status.terminal)
+
+
 class JobRecord(BaseModel):
     job_id: str
     status: JobStatus
@@ -384,8 +387,9 @@ class JobStore:
             raise ValueError(f"not a terminal status: {status}")
         now_dt = _utcnow()
         now = now_dt.isoformat()
-        where = "job_id = ?"
-        where_params: list[Any] = [job_id]
+        terminal_placeholders = ", ".join("?" for _ in _TERMINAL_STATUSES)
+        where = f"job_id = ? AND status NOT IN ({terminal_placeholders})"
+        where_params: list[Any] = [job_id, *_TERMINAL_STATUSES]
         if owner and fencing_token is not None:
             where += (
                 " AND status = ? AND lease_owner = ? AND fencing_token = ?"

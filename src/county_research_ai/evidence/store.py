@@ -50,6 +50,26 @@ _ENTERPRISE_PATTERN = re.compile(
     r"(?:公司|龙头企业|链主企业)"
 )
 
+_ENTITY_NEGATION = re.compile(
+    r"不存在|并非|不是|没有|查无|假冒|冒充|疑似|所谓|未注册|无此|非本地"
+)
+
+
+def _clause_bounds(text: str, start: int, end: int) -> str:
+    """Return the punctuation-delimited clause containing ``[start, end)``."""
+    clause_start = 0
+    for index in range(start - 1, -1, -1):
+        if text[index] in "，,。；;！!？?\n":
+            clause_start = index + 1
+            break
+    clause_end = len(text)
+    for index in range(end, len(text)):
+        if text[index] in "，,。；;！!？?\n":
+            clause_end = index
+            break
+    return text[clause_start:clause_end].strip()
+
+
 def _iter_evidence_segments(text: str):
     """Segment both paragraph-preserving and whitespace-flattened long documents.
 
@@ -84,6 +104,7 @@ class EvidenceStore:
         self._items_by_indicator: dict[str, list[str]] = defaultdict(list)
         self._raw_docs: list[RawDoc] = []
         self._conflicts: list[EvidenceConflict] = []
+        self._conflict_origin_status: dict[str, str] = {}
 
     def ingest_documents(
         self,
@@ -133,15 +154,20 @@ class EvidenceStore:
             )
 
             # 2. 抽取政策文件
-            policy_matches = _POLICY_NAME_PATTERN.findall(line)
-            for policy_name in policy_matches:
+            for policy_match in _POLICY_NAME_PATTERN.finditer(line):
+                policy_name = policy_match.group(1)
+                clause = _clause_bounds(
+                    line, policy_match.start(), policy_match.end()
+                )
                 item_id = self._make_id(doc.url, policy_name)
                 if item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
                 item = EvidenceItem(
                     id=item_id,
-                    claim=f"出台政策规划文件《{policy_name}》",
+                    # Keep the source clause, not a synthesized "issued policy"
+                    # statement: the quote must remain able to support the claim.
+                    claim=clause,
                     snippet=line,
                     url=doc.url,
                     title=doc.title,
@@ -156,15 +182,21 @@ class EvidenceStore:
                 extracted.append(item)
 
             # 3. 抽取龙头企业
-            ent_matches = _ENTERPRISE_PATTERN.findall(line)
-            for ent_name in ent_matches:
+            for ent_match in _ENTERPRISE_PATTERN.finditer(line):
+                ent_name = ent_match.group(1)
+                window = line[max(0, ent_match.start() - 12) : ent_match.end()]
+                clause = _clause_bounds(
+                    line, ent_match.start(), ent_match.end()
+                )
+                if _ENTITY_NEGATION.search(window) or _ENTITY_NEGATION.search(clause):
+                    continue
                 item_id = self._make_id(doc.url, ent_name)
                 if item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
                 item = EvidenceItem(
                     id=item_id,
-                    claim=f"龙头骨干企业: {ent_name}",
+                    claim=clause,
                     snippet=line,
                     url=doc.url,
                     title=doc.title,
@@ -256,9 +288,17 @@ class EvidenceStore:
         """向证据库注册单条证据项并建立索引。"""
         if not item.id:
             item.id = self._make_id(item.url, item.claim)
+        if item.id in self._conflict_origin_status:
+            # Re-ingesting the same source must not silently restore a verified
+            # status while the unresolved conflict is still present.
+            item.verification_status = "conflicting"
         self._items[item.id] = item
-        self._items_by_topic[item.topic].append(item.id)
-        if item.indicator_caliber:
+        if item.id not in self._items_by_topic[item.topic]:
+            self._items_by_topic[item.topic].append(item.id)
+        if (
+            item.indicator_caliber
+            and item.id not in self._items_by_indicator[item.indicator_caliber]
+        ):
             self._items_by_indicator[item.indicator_caliber].append(item.id)
 
     def get_by_topic(self, topic: str) -> list[EvidenceItem]:
@@ -273,6 +313,7 @@ class EvidenceStore:
     def detect_conflicts(self) -> list[EvidenceConflict]:
         """交叉核验各指标数值，识别潜在冲突并分析成因。"""
         conflicts: list[EvidenceConflict] = []
+        conflicting_ids: set[str] = set()
 
         def _get_base_concept(indicator: str) -> str:
             for kw in ("产值", "面积", "产量", "GDP", "人口", "增速", "企业", "财政"):
@@ -303,6 +344,7 @@ class EvidenceStore:
                     unit = num_match.group(2)
                     raw_val = f"{int(val) if val.is_integer() else val}{unit}"
                     values_with_meta.append({
+                        "item_id": it.id,
                         "value": val,
                         "unit": unit,
                         "raw": raw_val,
@@ -339,6 +381,11 @@ class EvidenceStore:
                         reason = f"指标统计口径不同 (涉及口径: {', '.join(calibers)})"
                         suggestion = "区分规上工业与全产业链总产值口径"
 
+                    if conflict_type == "contradiction":
+                        conflicting_ids.update(
+                            str(meta["item_id"]) for meta in values_with_meta
+                        )
+
                     conflict = EvidenceConflict(
                         topic="economic",
                         indicator=f"{base_ind}（{', '.join(calibers)}）",
@@ -352,8 +399,32 @@ class EvidenceStore:
                     )
                     conflicts.append(conflict)
 
+        self._apply_conflict_status(conflicting_ids)
         self._conflicts = conflicts
         return conflicts
+
+    def _apply_conflict_status(self, conflicting_ids: set[str]) -> None:
+        """Keep comparable contradictory items out of the verified state.
+
+        The original status is retained so repeated imports recompute the same
+        result and an item can only become verified again once the conflict is
+        genuinely gone (for example after the conflicting item is removed).
+        """
+        for item_id in list(self._conflict_origin_status):
+            if item_id in conflicting_ids:
+                continue
+            original = self._conflict_origin_status.pop(item_id)
+            item = self._items.get(item_id)
+            if item is not None and item.verification_status == "conflicting":
+                item.verification_status = original
+        for item_id in conflicting_ids:
+            item = self._items.get(item_id)
+            if item is None:
+                continue
+            self._conflict_origin_status.setdefault(
+                item_id, item.verification_status
+            )
+            item.verification_status = "conflicting"
 
     def assess_question_tree_coverage(
         self, question_tree: QuestionTree

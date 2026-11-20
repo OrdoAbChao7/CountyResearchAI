@@ -171,6 +171,7 @@ class ResearchApplication:
             return ResearchRunResult(
                 report=rendered.report,
                 report_path=report_path,
+                markdown=rendered.markdown,
             )
         except Exception as exc:  # noqa: BLE001
             self._raise_stage("report", context, exc)
