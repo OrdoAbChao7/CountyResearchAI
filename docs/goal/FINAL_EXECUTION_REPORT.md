@@ -87,6 +87,9 @@ ResearchContract
 ## 4. Git Commit 列表
 
 ```text
+3403ddb test: record the corrected bounded live smoke
+94202f6 fix: preserve an explicit research focus during discovery
+ec50451 docs: link the live smoke commit in the execution record
 0adc236 perf(web): bound large-graph layout and add accessibility coverage
 46112d0 feat(web): add dispute panels and report-graph linkage
 63a0a0e test: record one bounded live provider smoke

@@ -4,7 +4,7 @@
 Worktree：`E:\Projects\CountyResearchAI-finish-roadmap`
 分支：`codex/finish-roadmap`
 本轮起点：`88f210c`
-本轮代码提交：`46112d0`、`0adc236`
+本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`
 
 ## 1. 执行前复核
 
@@ -56,9 +56,12 @@ Playwright 覆盖：
 ## 4. 本轮提交
 
 ```text
-46112d0 feat(web): add dispute panels and report-graph linkage
-0adc236 perf(web): bound large-graph layout and add accessibility coverage
+3403ddb test: record the corrected bounded live smoke
+94202f6 fix: preserve an explicit research focus during discovery
+ec50451 docs: link the live smoke commit in the execution record
 63a0a0e test: record one bounded live provider smoke
+0adc236 perf(web): bound large-graph layout and add accessibility coverage
+46112d0 feat(web): add dispute panels and report-graph linkage
 ```
 
 文档提交（本日志、最终报告、STATE/ACCEPTANCE/README）紧随其后。
@@ -110,7 +113,7 @@ Live 任务；用户随后说“再跑一次”，又执行了**一次**修正�
 
 | 检查 | 结果 |
 | --- | --- |
-| 修复 | `ResearchApplication.discover_focus` 让显式 `research_focus` 优先；新增回归测试 |
+| 修复 | `ResearchApplication.discover_focus` 让显式 `research_focus` 优先；新增 `test_explicit_focus_wins_over_discovery` 与 API 级断言（`stage.discover.completed` 与问题树） |
 | 回归 | `pytest --no-cov -q` → `781 passed`（含 `test_explicit_focus_wins_over_discovery`） |
 | Job | `fdf7f3e86d444419967124236c4cc1ad` |
 | 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |

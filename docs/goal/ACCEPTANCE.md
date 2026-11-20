@@ -160,7 +160,7 @@ explicitly authorized paid smokes, not an evaluation.
 | Live job execution (first) | PASS (engineering) | job `d367c9b277cf47d086d28f9824d661e5` | `SUCCEEDED` / `LIVE`; 28 events; 30.6 s |
 | Live job execution (second) | PASS (engineering) | job `fdf7f3e86d444419967124236c4cc1ad` | `SUCCEEDED` / `LIVE`; 28 events; 28.9 s |
 | Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 nodes / 1,785 edges; report 200 |
-| Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery` | second run focus `竹产业`; discovery completion 838 < 2,048 |
+| Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery`; `test_deep_mock_pipeline_emits_fine_grained_events` | second run focus `竹产业`; discovery completion 838 < 2,048; API/worker path asserted |
 | Backend suite after fix | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `781 passed in 26.48s` |
 | Live research quality | NO_PROGRESS | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; 7 conflicts / 2 gaps each |
 | Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; 0 guard violations |
