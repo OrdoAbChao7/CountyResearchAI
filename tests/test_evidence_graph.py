@@ -424,6 +424,33 @@ def test_multi_year_claim_is_not_a_single_target_year_fact(tmp_path):
     )
 
 
+def test_adjacent_year_claims_stay_outside_the_2024_window(tmp_path):
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    window = (date(2024, 1, 1), date(2024, 12, 31))
+    store.save_ledger(
+        _ledger(
+            _source("snap-1"),
+            claims=[
+                _claim("claim-2023", period="2023"),
+                _claim("claim-2025", period="2025"),
+            ],
+        ),
+        window=window,
+    )
+
+    previous = store.verify_claim("claim-2023", window=window)
+    following = store.verify_claim("claim-2025", window=window)
+
+    assert previous.status is VerificationStatus.NOT_COMPARABLE
+    assert following.status is VerificationStatus.NOT_COMPARABLE
+    assert store.get_claim("claim-2023").verification_reason == (
+        "outside_requested_window:2023"
+    )
+    assert store.get_claim("claim-2025").verification_reason == (
+        "outside_requested_window:2025"
+    )
+
+
 def test_numeric_claim_without_unit_is_not_comparable(tmp_path):
     store = EvidenceGraphStore(tmp_path / "graph.sqlite")
     store.save_ledger(
