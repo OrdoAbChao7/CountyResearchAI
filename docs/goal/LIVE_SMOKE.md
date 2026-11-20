@@ -1,17 +1,22 @@
 # Live Smoke Record — 2026-11-20
 
-Status: `PASS_ENGINEERING` / `NO_SUPPORTED_CLAIMS`
+Status: runs 1–3 `PASS_ENGINEERING`; run 4 `FAILED` / `NO_SUPPORTED_CLAIMS`
 
-This records **three** explicitly authorized Live runs: the initial smoke, one
-corrected follow-up (“再跑一次”), and one region-gate verification (“跑第三次”).
-They prove that the real FastAPI job path, DeepSeek client, Tavily provider,
-event stream, evidence graph and report projections work together, and the
-third run shows the region gate acting on live results. They are **not** a Live
-evaluation, do not replace MOCK tests, and do not satisfy M5.
+This records **four** explicitly authorized Live runs: the initial smoke, one
+corrected follow-up (“再跑一次”), one region-gate verification (“跑第三次”),
+and one 2024-window / adaptive-retrieval verification (“跑第四次 Live”). Runs
+1–3 completed; run 4 failed in the adaptive follow-up collection before
+verification. They prove that the real FastAPI job path, DeepSeek client,
+Tavily provider, event stream, region gate and (for runs 1–3) evidence graph and
+report projections work together. They are **not** a Live evaluation, do not
+replace MOCK tests, and do not satisfy M5.
 
 - Cost gate: [LIVE_SMOKE_COST_GATE.md](LIVE_SMOKE_COST_GATE.md)
 - Script: `scripts/run_live_smoke.py`
-- Artifacts: `experiments/quality/live_smoke_20261120/`
+- Artifacts: `experiments/quality/live_smoke_20261120/`,
+  `experiments/quality/live_smoke_20261120_second/`,
+  `experiments/quality/live_smoke_20261120_third/`,
+  `experiments/quality/live_smoke_20261120_fourth/`
 - Job: `d367c9b277cf47d086d28f9824d661e5`
 - Command:
 
@@ -236,6 +241,84 @@ The run still accepted zero claims: all 133 structured claims are outside the
 2024 window (sources from 2011/2023/2025/2026). Region filtering removed
 sources, not the period gap.
 
+## Fourth run (adaptive follow-up failure, 2026-11-20)
+
+The user then said “跑第四次 Live”, authorizing one further bounded smoke to
+exercise the 2024-window and adaptive-retrieval fixes with a real provider.
+Command:
+
+```bash
+LIVE_SMOKE_RUN_ROOT=experiments/quality/live_smoke_20261120_fourth \
+PYTHONPATH=src python scripts/run_live_smoke.py \
+  --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
+```
+
+| Item | Fourth run |
+| --- | --- |
+| Job | `4f4d6610f48248a599e6b112ce5b9ee0` |
+| Status / mode | `FAILED` / `LIVE` |
+| Outcome | `FAILED` (`execution_error`) |
+| Focus | `竹产业` |
+| LLM / tokens | 2 / 4,651 (preflight 13; discovery completion 1,204) |
+| Searches | 11 Tavily calls (7 initial + 4 follow-up) |
+| Events | 14, ending in `job.failed` |
+| Graph | HTTP 409 (job not completed) |
+| Report | HTTP 200 but empty: 0 verified / 0 unverified; no sources persisted |
+| Guard | 0 violations; 39.64 s guard, 31.85 s job elapsed |
+| Estimated cost | model $0.001241; Tavily $0.088; ≤ $0.0905 |
+| Verdict | `FAIL` (`FAILED` terminal state) |
+
+What ran before the failure:
+
+- The region gate ran live in `stage.collect`. It assessed 31 provider-returned
+  documents: 27 kept, 4 dropped (`other_region` 3, `national` 1). Eight
+  documents were returned after ranking and dedup.
+- `stage.discover.completed` reported `竹产业`; the discovery completion did not
+  hit the 2,048-token cap.
+- The first `retrieval.period_coverage` event reported `target_years=["2024"]`,
+  22 selected claims, 1 in-window claim, 1 in-window source,
+  `period_coverage_met=true`, `topic_coverage_met=false`, and four missing
+  slots (`snapshot:economic_scale`, `snapshot:industry_structure`,
+  `snapshot:policy`, `snapshot:risk`). This is the first live evidence that the
+  Phase 2/3 window and period-coverage plumbing is active.
+- The adaptive controller started round 2 with four queries and recorded their
+  real text:
+  - `安吉县 2024年 统计公报 国民经济 竹产业 产值 产量 面积 最新`
+  - `安吉县 2024年 竹产业 安吉县竹产业产业结构与县域贡献`
+  - `安吉县 竹产业 政策文件 十四五 专项扶持 实施意见`
+  - `安吉县 2024年 竹产业 安吉县竹产业现状风险与发展瓶颈`
+  All four were routed to the `gov` channel because the generated gap queries
+  map to `ECONOMIC_SCALE`/`POLICY_PLANNING`.
+
+The failure:
+
+- `collect_adaptive` sent all four queries through `GovDataProvider`. The guard
+  recorded four successful Tavily calls, each returning six documents, so the
+  upstream search did not fail.
+- `GovDataProvider` keeps only documents on its government whitelist and
+  returned an empty list for all four queries.
+- `SearchCollector._run_tasks` treats an empty aggregate result as “all search
+  tasks failed” when `pipeline.fail_fast=True` and raises `SearchError`; the
+  worker records `job.failed` with `ResearchStageError`.
+- This conflates a legitimate zero-result gap query with a provider failure.
+  The fail-fast branch is pre-existing (`4400668`, 2026-08-05, `git blame` on
+  `collector.py:355`). This is the first live run to enter the adaptive
+  follow-up path; the third run stopped before any follow-up round.
+- Offline reproduction without any provider call: a stub `gov` provider that
+  returns `[]` for one gov-channel `GeneratedQuery` raises the same
+  `SearchError("所有搜索任务均失败", context={"tasks_count": 1,
+  "providers": ["gov"]})`. No code was changed for this run.
+
+Consequences:
+
+- The job did not reach verification, evidence persistence, graph projection or
+  a final report; the empty report and HTTP 409 graph are consistent with the
+  `FAILED` state, not evidence that no sources existed.
+- The single in-window claim is only a coverage count. It was not verified and
+  is not a 2024 research result.
+- No second paid attempt was made after the failure. A fifth run would need a
+  fresh authorization after the follow-up error handling is fixed.
+
 ## What this does and does not prove
 
 Proved:
@@ -244,32 +327,46 @@ Proved:
 - Tavily basic search with the existing provider adapter;
 - real job execution through the existing SQLite `JobStore`/`JobRunner`;
 - fine-grained events, evidence persistence, graph projection and report
-  projection on live data;
+  projection on live data (runs 1–3; run 4 failed before persistence);
 - an explicit contract focus is preserved through discovery after the fix;
-- the region gate kept the third run's sources Anji-centred and exposed a
-  short-name false positive, which was fixed and replayed offline;
-- the retry/call caps and cost gate were respected (no violations).
+- the region gate runs live: the third run kept its persisted set Anji-centred,
+  and the fourth run dropped 3 other-region plus 1 national result before
+  ingestion;
+- the fourth run recorded a 2024 `retrieval.period_coverage` event (1 in-window
+  claim/source) and four target-year follow-up query texts, so the Phase 2/3
+  window and coverage plumbing is active with a real provider;
+- the retry/call caps and cost gate were respected in all four runs (no
+  violations).
 
 Not proved:
 
 - Live research quality or supported-claim coverage;
 - that the fixed short-name rule behaves correctly under a fresh live provider
-  response (only the stored third-run sources were replayed);
+  response (the fourth run exercised the gate but failed before completing);
+- that the 2024 fixes produce a verified 2024 claim or a completed report; the
+  fourth run failed in the adaptive follow-up before verification;
+- that the adaptive follow-up path is reliable: it aborts when every gov-channel
+  query returns zero whitelisted documents;
 - a Live evaluation, semantic Judge, 40–60 sealed tasks, or human adjudication;
-- that a fourth run is authorized.
+- that a fifth run is authorized.
 
 ## Next actions (not executed)
 
 1. Fix the root `.env` provider/model mismatch, or make the override explicit in
    a local launch profile.
-2. Region relevance: the deterministic gate is in place, and its short-name
-   rule was fixed after the third run and replayed against that run's stored
-   sources. A fourth paid run would be the only way to confirm the fixed rule
-   live; it needs a fresh authorization.
-3. Inspect the `2024 → outside_requested_window:2026` claim against its source
+2. Fix the adaptive follow-up error handling: a gov provider returning zero
+   whitelisted documents is a legitimate gap, not a provider failure. Separate
+   “all providers errored” from “all providers returned empty” in
+   `SearchCollector._run_tasks`/`collect_adaptive`, and add a regression with a
+   gov provider that returns `[]`.
+3. Region relevance: the deterministic gate ran live in the fourth run (27 kept
+   / 4 dropped), but the specific short-name false positive from the third run
+   still has only offline replay evidence. Re-check it in the next completed
+   run.
+4. Inspect the `2024 → outside_requested_window:2026` claim against its source
    span and add a regression if the period parser is wrong.
-4. Decide whether the smoke contract should use a wider date window or a
+5. Decide whether the smoke contract should use a wider date window or a
    2024-specific source set; the current 2024 window rejects most available
    live material.
-5. Ask for a fresh authorization before a third paid run; then repeat the
+6. Ask for a fresh authorization before a fifth paid run; then repeat the
    bounded smoke and compare.

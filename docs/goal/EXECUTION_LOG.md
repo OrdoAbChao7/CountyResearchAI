@@ -4,7 +4,7 @@
 Worktree：`E:\Projects\CountyResearchAI-finish-roadmap`
 分支：`codex/finish-roadmap`
 本轮起点：`88f210c`
-本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`；短名误判修复：`6614307`；第三次 Live 记录：`ee63fed`
+本轮代码提交：`46112d0`、`0adc236`；Live smoke 修复：`94202f6`、`3403ddb`；区域检索修复：`53c2007`；短名误判修复：`6614307`；第三次 Live 记录：`ee63fed`；第四次 Live 记录：本次文档提交
 
 ## 1. 执行前复核
 
@@ -184,6 +184,44 @@ API，未修改 `.env` 或主工作区。工作树
 | 全量后端 | `827 passed in 35.24s` |
 | Ruff | `All checks passed!`（`src tests`） |
 
-未验证：没有第四次付费 Live；真实检索是否返回 2024 年资料仍未验证。修复只改变
-检索、期间抽取和区域授权，没有放宽 Verifier；若目标年资料不存在，最终结果仍可为
-`INSUFFICIENT_DATA` / `NO_PROGRESS`。
+未验证：第四次付费 Live 已执行，但在 adaptive follow-up 阶段 `FAILED`；真实检索
+是否返回可验证的 2024 年资料仍未验证。修复只改变检索、期间抽取和区域授权，没有
+放宽 Verifier；若目标年资料不存在，最终结果仍可为 `INSUFFICIENT_DATA` /
+`NO_PROGRESS`。
+
+## 第四次 Live（2026-11-20，用户“跑第四次 Live”）
+
+用户明确说“跑第四次 Live”，授权一次受限付费 smoke。使用同一脚本、同一 provider
+覆盖、同一 480s / 24 搜索 / 3 LLM 上限；新 artifact root
+`experiments/quality/live_smoke_20261120_fourth`，未修改 `.env`，未覆盖旧运行。
+
+| 检查 | 结果 |
+| --- | --- |
+| Job | `4f4d6610f48248a599e6b112ce5b9ee0` |
+| 状态 | `FAILED` / `LIVE` / `FAILED`（`execution_error`） |
+| 用量 | 2 LLM / 4,651 tokens（发现 completion 1,204）；11 Tavily（7 初次 + 4 补充）；0 违规 |
+| 时间 | job 31.85s；guard 39.64s |
+| 事件 | 14，最后 `job.failed` |
+| 区域闸门 | `retrieval.region_filtered`: kept 27 / dropped 4（other_region 3, national 1） |
+| 期间覆盖 | `retrieval.period_coverage`: target 2024；22 selected；1 in-window claim/source；period met；topic 缺失 4 slots |
+| 补充查询 | 4 条，真实文本记录，含 `2024年` 查询；全部 gov 通道 |
+| 失败 | `collect_adaptive` 的 4 条 gov 查询均无白名单结果；`_run_tasks` 在 `fail_fast` 下将空结果当搜索失败，抛 `SearchError` → `ResearchStageError` |
+| 产物 | 无验证、无证据持久化、无图谱（409）、报告为空；sources 0 |
+| 成本 | 模型 $0.001241；Tavily 11 credits $0.088；≤ $0.0905 |
+
+诊断：
+
+- 根因不是期间覆盖计算，也不是 provider 调用失败。Guard 记录 4 次 Tavily 调用各
+  返回 6 条，说明搜索本身成功；`GovDataProvider` 的白名单过滤把这 4 批结果全部
+  过滤为空。
+- `_run_tasks` 的 `if not results and self._fail_fast` 把“所有任务空结果”与
+  “所有任务异常”混为一谈；该分支自 `4400668`（2026-08-05）已存在，不是本轮
+  2024 修复引入。第三次 Live 没有进入补充轮；第四次是首次进入该路径。
+- 离线复现（无付费调用）：stub gov provider 返回 `[]` 时，`collect_adaptive`
+  抛出同样的 `SearchError`，context 为 `{'tasks_count': 1, 'providers': ['gov']}`。
+- 未在本次运行中修改代码；没有第二次付费重试。
+
+结论：第四次 Live 证明了区域闸门、2024 目标年传递、期间覆盖事件和补充查询文本
+在真实 provider 下工作；但它在补充检索阶段失败，未完成验证，不能算 2024 检索
+成功，也不能算 Live quality PASS。下一步应先修复空结果处理并加回归，再申请
+第五次授权。

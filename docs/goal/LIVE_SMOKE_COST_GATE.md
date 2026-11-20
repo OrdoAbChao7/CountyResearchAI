@@ -275,5 +275,66 @@ plan contains “安吉精铸” and “正安吉他”, which the short-name su
 mistook for the county. The classifier was fixed to require the full
 `安吉县` inside document content and to match the short name only on a word
 boundary in title/snippet/URL; replaying this run's stored sources marks the
-Guizhou plan `OTHER_REGION`. No provider calls were made for that replay, and
-no fourth run was made.
+Guizhou plan `OTHER_REGION`. No provider calls were made for that replay. At
+the time of that record no fourth run had been made; the fourth run is recorded
+below.
+
+## Fourth run budget (same caps as the third, 2026-11-20)
+
+Authorized by “跑第四次 Live” after the 2024 period-coverage and claim-region
+fix. The script constants were unchanged, so the comparison stays clean:
+
+| Item | Cap |
+| --- | --- |
+| Additional research jobs | 1 |
+| LLM calls | 3 total (1 tiny preflight + at most 2 job calls) |
+| LLM output per call | ≤ 2,048 tokens |
+| LLM input per call | ≤ 16,000 tokens |
+| LLM retries | 0 |
+| Search requests | ≤ 24 |
+| Results per search | ≤ 6 |
+| Search retries | 0 |
+| Wall clock | 480 s guard; 600 s hard process timeout |
+| Maximum estimated spend | **$0.25** |
+| Contract | `安吉县 竹产业`, 2024 window, explicit focus |
+| Run root | `experiments/quality/live_smoke_20261120_fourth/` |
+
+Worst-case arithmetic at peak: 3 × 16k input × $0.30/M = $0.0144;
+3 × 2,048 output × $1.20/M = $0.0074; 24 Tavily credits × $0.008 = $0.192.
+Total ≤ $0.214, under the $0.25 cap.
+
+Expected live evidence: the region gate should drop off-region/national pages,
+`retrieval.period_coverage` should report the 2024 target window, and any
+follow-up query should carry the target year where applicable. A completed run
+could still be `NO_PROGRESS`; the fixes do not relax the verifier.
+
+## Fourth run actual usage (2026-11-20)
+
+The user said “跑第四次 Live”. Job
+`4f4d6610f48248a599e6b112ce5b9ee0` finished `FAILED` / `LIVE` /
+`FAILED` (`execution_error`) in 31.85 s. The guard observed:
+
+| Item | Actual | Cap |
+| --- | --- | --- |
+| LLM calls | 2 (preflight + discovery) | 3 |
+| Prompt tokens | 3,444 | ~48,000 |
+| Completion tokens | 1,207 | 6,144 |
+| Discovery completion | 1,204 | 2,048 |
+| Tavily basic searches | 11 (7 initial + 4 follow-up) | 24 |
+| Guard violations | 0 | 0 |
+| Job elapsed | 31.85 s | 480 s |
+| Total elapsed (guard) | 39.64 s | 480 s |
+
+Estimated cost:
+
+- DeepSeek off-peak: 3,444 × $0.15/M + 1,207 × $0.60/M = **$0.001241**.
+- Tavily: 11 credits × $0.008 = **$0.088** if paid; $0 if still on free
+  credits.
+- Worst-case total if Tavily was paid: **$0.0905**, below the $0.25 cap.
+
+The failure is not a cost-gate violation: the guard recorded no cap breach. The
+job stopped at the first adaptive follow-up, so only 11 of the 24 allowed
+searches were spent. The run failed in `collect_adaptive`: all four gov-channel
+follow-up queries returned zero whitelisted documents, and the existing
+`fail_fast` branch raised `SearchError`. No retry or second paid attempt was
+made. Root cause and evidence: `docs/goal/LIVE_SMOKE.md` (fourth run section).

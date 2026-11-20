@@ -11,6 +11,10 @@
 未执行 Git Push，未合并主线，未修改主工作区或其他 worktree，未放宽
 Verifier，未制造 2024 年数据。
 
+追加（2026-11-20）：用户随后说“跑第四次 Live”，授权并执行了一次受限付费
+Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节保留修复实施时的
+记录。
+
 ## 1. 结果摘要
 
 | Phase | Commit | 状态 |
@@ -211,8 +215,10 @@ Verifier，未制造 2024 年数据。
 
 ## 8. 未解决问题与未验证事项
 
-1. **没有第四次付费 Live**。真实 Provider 是否返回 2024 年资料、目标年查询
-   是否命中、最终 outcome 是否改善，均未验证。当前结论仅为工程修复。
+1. **第四次付费 Live 已执行，但未完成**。2026-11-20 的第四次 Live 在
+   `collect_adaptive` 补充检索阶段因空 gov 结果触发 `fail_fast` 而 `FAILED`；
+   真实 2024 资料是否可验证、最终 outcome 是否改善仍未验证。当前结论仍为
+   工程修复，见 §11。
 2. **没有制造 2024 数据**。若公开资料中缺少目标年，系统会保持
    `INSUFFICIENT_DATA` / `NO_PROGRESS`，这是预期行为。
 3. **区域分类器未重写**。`search/region_relevance.py` 只增加公开包装；文档级
@@ -279,8 +285,63 @@ Verifier，未制造 2024 年数据。
 - `docs/goal/2024_PERIOD_COVERAGE_AUDIT.md`
 - `docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`（本文件）
 
+第四次运行追加：
+
+- `scripts/run_live_smoke.py`（仅 `authorization` 字符串）
+- `experiments/quality/live_smoke_20261120_fourth/README.md`
+- `experiments/quality/live_smoke_20261120_fourth/summary.json`
+- `experiments/quality/live_smoke_20261120_fourth/report.json`
+- `experiments/quality/live_smoke_20261120_fourth/report.md`
+
 ## 10. 停止状态
 
 五个 Phase 已独立提交、独立测试。工作树在本次修复提交后保持干净（文档提交除
-外）。按授权要求停止，不执行第四次 Live、不 Push、不合并主线；等待下一次 Live
-授权。
+外）。按当时的授权要求停止，不执行第四次 Live、不 Push、不合并主线。追加：
+2026-11-20 用户授权并执行了第四次 Live，结果见 §11；仍未 Push、未合并主线。
+
+## 11. 第四次 Live（2026-11-20 追加）
+
+用户说“跑第四次 Live”后，执行一次受限付费 smoke。命令：
+
+```bash
+LIVE_SMOKE_RUN_ROOT=experiments/quality/live_smoke_20261120_fourth \
+PYTHONPATH=src python scripts/run_live_smoke.py \
+  --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
+```
+
+| 检查 | 结果 |
+| --- | --- |
+| Job | `4f4d6610f48248a599e6b112ce5b9ee0` |
+| 状态 | `FAILED` / `LIVE` / `FAILED`（`execution_error`） |
+| 用量 | 2 LLM / 4,651 tokens；11 Tavily（7 初次 + 4 补充）；0 违规 |
+| 时间 | job 31.85s；guard 39.64s |
+| 事件 | 14，最后 `job.failed` |
+| 区域闸门 | kept 27 / dropped 4（`other_region` 3、`national` 1） |
+| 期间覆盖 | target 2024；22 selected；1 in-window claim/source；period met；topic 缺失 4 slots |
+| 补充查询 | 4 条，真实文本记录，含 `2024年` 查询；全部 gov 通道 |
+| 产物 | 无验证、无证据持久化、无图谱（409）、报告为空；sources 0 |
+| 成本 | 模型 $0.001241；Tavily 11 credits $0.088；≤ $0.0905 |
+
+诊断：
+
+- 区域闸门和期间覆盖在真实 provider 下工作：`retrieval.region_filtered` 保留
+  27、丢弃 4；`retrieval.period_coverage` 记录 2024 目标年和 1 条窗口内
+  Claim/来源；第二轮生成 4 条补充查询并记录真实文本。
+- 失败不在期间覆盖计算，也不在 Tavily 调用。Guard 记录 4 次 Tavily 调用各返回
+  6 条，说明搜索成功；`GovDataProvider` 的政府域名白名单把这 4 批结果全部过滤
+  为空。
+- `SearchCollector._run_tasks`（`collector.py:355`）在 `fail_fast=True` 时把
+  “所有任务空结果”与“所有任务异常”混为一谈，抛出 `SearchError`；协调器
+  （`coordinator.py:249`）的补充轮因此中止，worker 记录 `ResearchStageError`。
+  该 fail-fast 分支由 `4400668`（2026-08-05）引入，早于本次 2024 修复；第三次
+  Live 未进入补充轮，第四次是首次进入该路径。
+- 离线复现（无付费调用）：stub gov provider 返回 `[]` 时，`collect_adaptive`
+  抛出同样的 `SearchError`，context 为
+  `{'tasks_count': 1, 'providers': ['gov']}`。
+- 本次运行未修改业务代码；仅将 `scripts/run_live_smoke.py` 的 `authorization`
+  字符串更新为包含第四次授权。未做第二次付费重试。
+
+结论：第四次 Live 是工程链路的**部分**验证，不是 2024 检索成功，也不是 Live
+quality PASS。它证明区域闸门、2024 目标年传递、期间覆盖事件和补充查询文本在真实
+provider 下工作；但 job 在补充检索阶段失败，未产生验证、图谱或报告。下一步应先
+修复空结果处理并添加回归，再申请第五次授权。

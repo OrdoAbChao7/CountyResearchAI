@@ -184,26 +184,28 @@ number above is a synthetic projection test, not a real investigation.
 
 ## Live smoke (2026-11-20)
 
-Three explicitly authorized paid smokes ran through the real API path: the
-initial run, one corrected follow-up (“再跑一次”), and one region-gate
-verification (“跑第三次”). Full record: `docs/goal/LIVE_SMOKE.md`; budget and
-actual usage: `docs/goal/LIVE_SMOKE_COST_GATE.md`.
+Four explicitly authorized paid smokes ran through the real API path: the
+initial run, one corrected follow-up (“再跑一次”), one region-gate verification
+(“跑第三次”), and one 2024-window / adaptive-retrieval verification
+(“跑第四次 Live”). The fourth failed in adaptive follow-up collection before
+verification. Full record: `docs/goal/LIVE_SMOKE.md`; budget and actual usage:
+`docs/goal/LIVE_SMOKE_COST_GATE.md`.
 
-| Item | First run | Second run | Third run |
-| --- | --- | --- | --- |
-| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` | `007487e8e7494e3fba1770c1f7b0781f` |
-| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` |
-| Outcome | `NO_PROGRESS` | `NO_PROGRESS` | `NO_PROGRESS` |
-| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) | `竹产业` |
-| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches | 2 LLM / 4,693 tokens; 7 searches |
-| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges | 165 nodes / 1,077 edges |
-| Verification | 0 / 239 `NOT_COMPARABLE` | 0 / 224 `NOT_COMPARABLE` | 0 / 133 `NOT_COMPARABLE` |
-| Cost | ≤ $0.0578 | ≤ $0.0579 | ≤ $0.0585 |
+| Item | First run | Second run | Third run | Fourth run |
+| --- | --- | --- | --- | --- |
+| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` | `007487e8e7494e3fba1770c1f7b0781f` | `4f4d6610f48248a599e6b112ce5b9ee0` |
+| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `FAILED` / `LIVE` |
+| Outcome | `NO_PROGRESS` | `NO_PROGRESS` | `NO_PROGRESS` | `FAILED` (`execution_error`) |
+| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) | `竹产业` | `竹产业` |
+| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches | 2 LLM / 4,693 tokens; 7 searches | 2 LLM / 4,651 tokens; 11 searches |
+| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges | 165 nodes / 1,077 edges | — (graph 409; report empty) |
+| Verification | 0 / 239 `NOT_COMPARABLE` | 0 / 224 `NOT_COMPARABLE` | 0 / 133 `NOT_COMPARABLE` | — (job failed before verification) |
+| Cost | ≤ $0.0578 | ≤ $0.0579 | ≤ $0.0585 | ≤ $0.0905 |
 
 Findings: the root `.env` has a Gemini endpoint/model paired with a DeepSeek
 key (smokes used process overrides and left `.env` untouched). The focus fix
-works: `stage.discover.completed` and the question tree report `竹产业`. All
-three runs accepted zero claims; the 2024 window rejected the available
+works: `stage.discover.completed` and the question tree report `竹产业`. The
+first three runs accepted zero claims; the 2024 window rejected the available
 2023/2025/2026 (and 2011) material. A deterministic region gate
 (`search/region_relevance.py`) drops other-region, national and
 upper-level-only results before ranking and ingestion. The third run exercised
@@ -212,9 +214,20 @@ the remaining government pages are Anji-focused. It exposed one short-name
 false positive (a Guizhou plan containing “安吉精铸”/“正安吉他”); the rule now
 requires the full `安吉县` in content and a word boundary for the short name,
 and replaying the third run's stored sources marks that plan `OTHER_REGION`
-(7 region / 1 other-region). The fixed rule has not been re-verified with a paid
-run, and the period gap remains. This is engineering evidence, not Live
-evaluation or M5 acceptance.
+(7 region / 1 other-region).
+
+The fourth run is the first live exercise of the 2024-window / adaptive
+plumbing. The region gate kept 27 and dropped 4 documents (3 other-region,
+1 national). `retrieval.period_coverage` reported `target_years=["2024"]`,
+22 selected claims, 1 in-window claim and 1 in-window source, with period
+coverage met but topic coverage missing four slots. Round 2 generated four
+follow-up queries and recorded their real text, including target-year forms.
+All four were routed to the gov channel; `GovDataProvider` returned no
+whitelisted documents, and the pre-existing `fail_fast` branch in
+`SearchCollector._run_tasks` treated the empty aggregate as a provider failure
+and raised `SearchError`. The job failed before verification, evidence
+persistence, graph and report. No code was changed for this run; the root cause
+and an offline reproduction are recorded in `LIVE_SMOKE.md`.
 
 ## 2024 period coverage and claim region fix (2026-11-20)
 
@@ -239,7 +252,11 @@ Verification at code HEAD:
 | Targeted new regressions | `85 passed` across region, window, adaptive, period, ledger and provider tests |
 | Ruff | `ruff check src tests` → `All checks passed!` |
 
-Not yet established: no fourth paid Live run; real retrieval of 2024 material is
-not demonstrated; the final Live-style outcome could still be
+Not yet established: a fourth paid Live run was executed on 2026-11-20, but it
+failed in the adaptive follow-up before verification. It did show live 2024
+period coverage (1 in-window claim/source) and target-year follow-up query
+texts, then aborted because `fail_fast` treated four empty gov-channel results
+as a search failure. Real retrieval of 2024 material and a completed Live-style
+outcome are therefore still not demonstrated; the final outcome could still be
 `INSUFFICIENT_DATA`/`NO_PROGRESS` if the target year is absent. The fix changes
 retrieval and extraction, not the verifier's acceptance standard.

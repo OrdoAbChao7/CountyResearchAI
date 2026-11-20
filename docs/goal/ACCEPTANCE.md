@@ -44,7 +44,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | Observational hash | PASS | `4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e` |
 | Strategy D measurement | PASS (dev + 2-task blind) | `experiments/quality/20261026_q3_strategy_d/`, `20261026_q4_blind_pilot/` |
 | Independent task set | PARTIAL | 2 blind tasks / 10 facts; 40–60 gap documented |
-| Live end-to-end | PARTIAL | three bounded smokes: `docs/goal/LIVE_SMOKE.md`; no Live evaluation |
+| Live end-to-end | PARTIAL | four bounded smokes: `docs/goal/LIVE_SMOKE.md`; fourth failed in adaptive follow-up; no Live evaluation |
 | Ablations | PARTIAL | no-verifier, BM25/adaptive, old/new grouping; no-gap NOT_RUN |
 | Semantic Judge | NOT_RUN | — |
 | Human rubric/adjudication | NOT_RUN | — |
@@ -112,7 +112,7 @@ Not accepted here:
 | Item | Status | Why |
 | --- | --- | --- |
 | 40–60 sealed independent task set | NOT_MET | only pilot tasks exist; no new authorized corpus |
-| Live end-to-end / semantic Judge | PARTIAL | three bounded Live smokes (`docs/goal/LIVE_SMOKE.md`); semantic Judge and Live evaluation still not run |
+| Live end-to-end / semantic Judge | PARTIAL | four bounded Live smokes (`docs/goal/LIVE_SMOKE.md`); fourth failed before verification; semantic Judge and Live evaluation still not run |
 | Human rubric/adjudication | BLOCKED_HUMAN_ANNOTATION | no human labels |
 | Real 400-node browser benchmark | NOT_RUN | 400/800 cap tested on synthetic projection; browser E2E uses the small MOCK case |
 | Section-level streaming / token accounting | NOT_RUN | renderer is one-shot; UI explicitly presents post-completion reveal |
@@ -145,41 +145,53 @@ Not accepted here:
 | Item | Status | Why |
 | --- | --- | --- |
 | Real-investigation 400-node benchmark | NOT_RUN | browser test uses a synthetic 400/800 fixture |
-| Live end-to-end / semantic Judge | PARTIAL | three authorized bounded smokes (`docs/goal/LIVE_SMOKE.md`); no Live evaluation or Judge |
+| Live end-to-end / semantic Judge | PARTIAL | four authorized bounded smokes (`docs/goal/LIVE_SMOKE.md`); fourth failed before verification; no Live evaluation or Judge |
 | 40–60 sealed tasks / human labels | NOT_MET | unchanged from M5 |
 | Screen-reader manual walkthrough | NOT_RUN | axe automation only |
 
 ## Live smoke acceptance (2026-11-20)
 
-Revision: `codex/finish-roadmap` + `scripts/run_live_smoke.py`. These were three
+Revision: `codex/finish-roadmap` + `scripts/run_live_smoke.py`. These were four
 explicitly authorized paid smokes, not an evaluation.
 
 | Check | Status | Command / artifact | Observed |
 | --- | --- | --- | --- |
-| Live provider call | PASS | `scripts/run_live_smoke.py --confirm-paid` | DeepSeek `deepseek-flash` + Tavily basic; 2 LLM calls / 7 searches per run |
+| Live provider call | PASS | `scripts/run_live_smoke.py --confirm-paid` | DeepSeek `deepseek-flash` + Tavily basic; first three: 2 LLM / 7 searches; fourth: 2 LLM / 11 searches |
 | Live job execution (first) | PASS (engineering) | job `d367c9b277cf47d086d28f9824d661e5` | `SUCCEEDED` / `LIVE`; 28 events; 30.6 s |
 | Live job execution (second) | PASS (engineering) | job `fdf7f3e86d444419967124236c4cc1ad` | `SUCCEEDED` / `LIVE`; 28 events; 28.9 s |
 | Live job execution (third) | PASS (engineering) | job `007487e8e7494e3fba1770c1f7b0781f` | `SUCCEEDED` / `LIVE`; 28 events; 29.2 s |
-| Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 / 1,785; third 165 / 1,077; report 200 |
+| Live job execution (fourth) | FAILED (engineering) | job `4f4d6610f48248a599e6b112ce5b9ee0` | `FAILED` / `LIVE`; 14 events; 31.85 s |
+| Live 2024 period coverage (fourth) | PASS (live observability) | `retrieval.period_coverage` | target `2024`; 22 selected; 1 in-window claim/source; period met; topic missing 4 slots |
+| Live target-year follow-up queries (fourth) | PASS (live) | `retrieval.round.started` | 4 queries; real text recorded, including `2024年`; all routed to gov |
+| Live adaptive follow-up failure (fourth) | FAILED | `job.failed` | all 4 gov queries returned zero whitelisted docs; `SearchError` fail-fast; `ResearchStageError` |
+| Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 / 1,785; third 165 / 1,077; fourth graph 409, report empty |
 | Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery`; `test_deep_mock_pipeline_emits_fine_grained_events` | second run focus `竹产业`; discovery completion 838 < 2,048; API/worker path asserted |
-| Region retrieval gate | PASS (offline replay) | `tests/test_region_relevance.py` (13 tests) | second-run recorded sources: 5 off-region dropped, 3 Anji kept; third run: 7 Anji / 1 false positive |
-| Region gate live finding | FIXED (offline) | third run sources + reclassification | Guizhou plan with “安吉精铸/正安吉他” was kept; full-name rule now marks it `OTHER_REGION` (7 region / 1 other-region), not re-verified live |
-| Backend suite after fixes | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `795 passed in 37.07s` |
-| Live research quality | NO_PROGRESS | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; third 0/133; 7/7/6 conflicts; 2 gaps each |
-| Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; third ≤ $0.0585; 0 guard violations |
+| Region retrieval gate | PASS (live + offline) | `tests/test_region_relevance.py` (13 tests); fourth-run event | second-run recorded sources: 5 off-region dropped, 3 Anji kept; third run: 7 Anji / 1 false positive; fourth run: 27 kept / 4 dropped (3 other-region, 1 national) |
+| Region gate live finding | FIXED (offline) | third run sources + reclassification | Guizhou plan with “安吉精铸/正安吉他” was kept; full-name rule now marks it `OTHER_REGION` (7 region / 1 other-region); fourth run did not complete the specific re-check |
+| Backend suite after fixes | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `795 passed in 37.07s` at the region-gate stage; `827 passed` after the 2024 fix (see below) |
+| Live research quality | FAIL | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; third 0/133; fourth no verification (job failed); 7/7/6 conflicts; 2 gaps in runs 1–3 |
+| Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; third ≤ $0.0585; fourth ≤ $0.0905; 0 guard violations in all four |
 | Provider config | FINDING | root `.env` | Gemini endpoint/model configured with a DeepSeek key; smokes used process overrides, `.env` untouched |
-| Live evaluation / semantic Judge | NOT_RUN | — | three smokes do not satisfy M5 |
+| Live evaluation / semantic Judge | NOT_RUN | — | four smokes do not satisfy M5 |
 
-The smokes prove the real provider adapters and job path, not research quality.
-The first two runs returned off-region sources; the third run, after the region
-gate, was Anji-centred and exposed one short-name false positive (a Guizhou plan
-containing “安吉精铸”/“正安吉他”). The classifier was fixed to require the full
-`安吉县` in content and a word boundary for the short name; replaying the third
-run's stored sources now marks that plan `OTHER_REGION` (7 region / 1
-other-region). The fixed rule has not been re-verified with a live provider
-call. The 2024 window still rejects the available 2023/2025/2026 material, so
-every run remains `NO_PROGRESS`. See `docs/goal/LIVE_SMOKE.md` for the full
-finding list.
+The first three smokes prove the real provider adapters and job path, not
+research quality. The first two runs returned off-region sources; the third run,
+after the region gate, was Anji-centred and exposed one short-name false
+positive (a Guizhou plan containing “安吉精铸”/“正安吉他”). The classifier was
+fixed to require the full `安吉县` in content and a word boundary for the short
+name; replaying the third run's stored sources now marks that plan
+`OTHER_REGION` (7 region / 1 other-region).
+
+The fourth run is the first live exercise of the 2024-window and adaptive
+plumbing. It kept 27 and dropped 4 documents at the region gate, recorded
+`target_years=["2024"]` with 1 in-window claim/source, and generated four
+target-year follow-up queries. It then failed in `collect_adaptive`: all four
+gov-channel queries returned zero whitelisted documents, and the pre-existing
+`fail_fast` branch in `SearchCollector._run_tasks` raised `SearchError`, which
+the worker reported as `ResearchStageError`. No verification, evidence
+persistence, graph or report was produced. No code was changed for this run and
+no fifth run was made. See `docs/goal/LIVE_SMOKE.md` for the root cause and
+offline reproduction.
 
 ## 2024 period coverage and claim region fix acceptance (2026-11-20)
 
@@ -198,5 +210,5 @@ Details and code locations: `docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`.
 | Full backend suite | PASS | `python -m pytest -q` | `827 passed in 35.24s` |
 | Ruff (source and tests) | PASS | `python -m ruff check src tests` | `All checks passed!` |
 | API compatibility | PASS | worker/contract tests | optional date fields default to `None`; existing callers unchanged |
-| Real 2024 retrieval | NOT_RUN | — | no fourth paid Live was authorized; 2024 material has not been observed end-to-end |
-| Live research quality | NOT_RUN | — | this fix does not claim a SUFFICIENT Live outcome |
+| Real 2024 retrieval | PARTIAL | fourth Live `retrieval.period_coverage` | fourth run recorded target `2024` and 1 in-window claim/source, then failed in adaptive follow-up before verification; no completed 2024 research result |
+| Live research quality | FAIL | fourth Live job `4f4d6610f48248a599e6b112ce5b9ee0` | `FAILED` (`execution_error`); no report verification; this fix does not claim a SUFFICIENT Live outcome |

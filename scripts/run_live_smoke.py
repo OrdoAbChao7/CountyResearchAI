@@ -439,7 +439,8 @@ def main() -> int:
     summary: dict[str, Any] = {
         "date": "2026-11-20",
         "authorization": (
-            "user: 允许付费调用 + 跑一次 Live + 再跑一次 + 跑第三次 (2026-11-20)"
+            "user: 允许付费调用 + 跑一次 Live + 再跑一次 + 跑第三次 + "
+            "跑第四次 Live (2026-11-20)"
         ),
         "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
         "provider": {
