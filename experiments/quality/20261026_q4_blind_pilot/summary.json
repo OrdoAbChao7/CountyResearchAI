@@ -1,0 +1,206 @@
+{
+  "generated_at": "2026-10-26T11:47:13.915629+00:00",
+  "evidence_kind": "OFFLINE_BLIND_PILOT",
+  "provider_calls": 0,
+  "blind_file_sha256": "c01000327b9fd102bea5b6c3ad5b7fc105335ebac3f0c9ba4e459e9448154309",
+  "tasks": {
+    "blind_anji_snapshot_2025": {
+      "region": "安吉县",
+      "facts": 4,
+      "snapshot_path": "experiments/independent_comparison/runs/smoke_20261018T095509Z/smoke_20261018T095509Z_安吉县_C/data/raw/安吉县/20261018/raw_docs.json"
+    },
+    "blind_xinfeng_snapshot_2025": {
+      "region": "信丰县",
+      "facts": 6,
+      "snapshot_path": "experiments/independent_comparison/runs/smoke_20261018T095509Z/smoke_20261018T095509Z_信丰县_C/data/raw/信丰县/20261018/raw_docs.json"
+    }
+  },
+  "summary": {
+    "A": {
+      "answered": 0,
+      "facts": 4,
+      "answer_rate": 0.0,
+      "regions_with_report": [
+        "安吉县"
+      ]
+    },
+    "B": {
+      "answered": 0,
+      "facts": 4,
+      "answer_rate": 0.0,
+      "regions_with_report": [
+        "安吉县"
+      ]
+    },
+    "C": {
+      "answered": 0,
+      "facts": 0,
+      "answer_rate": null,
+      "regions_with_report": []
+    },
+    "D": {
+      "answered": 4,
+      "facts": 10,
+      "answer_rate": 0.4,
+      "regions_with_report": [
+        "信丰县",
+        "安吉县"
+      ],
+      "supported": 5,
+      "e2e": 4,
+      "e2e_rate": 0.4
+    }
+  },
+  "rows": [
+    {
+      "task_id": "blind_anji_snapshot_2025",
+      "region": "安吉县",
+      "fact_id": "anji_gdp_2025",
+      "metric": "地区生产总值（GDP）",
+      "value": "710.60",
+      "unit": "亿元",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": true,
+      "D_supported": true
+    },
+    {
+      "task_id": "blind_anji_snapshot_2025",
+      "region": "安吉县",
+      "fact_id": "anji_tertiary_2025",
+      "metric": "第三产业增加值",
+      "value": "342.24",
+      "unit": "亿元",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": false,
+      "D_supported": false
+    },
+    {
+      "task_id": "blind_anji_snapshot_2025",
+      "region": "安吉县",
+      "fact_id": "anji_industrial_2025",
+      "metric": "规上工业增加值",
+      "value": "249.12",
+      "unit": "亿元",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": true,
+      "D_supported": true
+    },
+    {
+      "task_id": "blind_anji_snapshot_2025",
+      "region": "安吉县",
+      "fact_id": "anji_budget_2025",
+      "metric": "一般公共预算收入",
+      "value": "63.36",
+      "unit": "亿元",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": true,
+      "D_supported": true
+    },
+    {
+      "task_id": "blind_xinfeng_snapshot_2025",
+      "region": "信丰县",
+      "fact_id": "xinfeng_acreage_2025",
+      "metric": "脐橙种植面积",
+      "value": "28.5",
+      "unit": "万亩",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": false,
+      "D_supported": false
+    },
+    {
+      "task_id": "blind_xinfeng_snapshot_2025",
+      "region": "信丰县",
+      "fact_id": "xinfeng_output_2025",
+      "metric": "脐橙年产量",
+      "value": "28.6",
+      "unit": "万吨",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": false,
+      "D_supported": false
+    },
+    {
+      "task_id": "blind_xinfeng_snapshot_2025",
+      "region": "信丰县",
+      "fact_id": "xinfeng_cluster_value_2025",
+      "metric": "脐橙产业集群总产值",
+      "value": "70",
+      "unit": "亿元",
+      "period": "2025",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": false,
+      "D_supported": false
+    },
+    {
+      "task_id": "blind_xinfeng_snapshot_2025",
+      "region": "信丰县",
+      "fact_id": "xinfeng_processing_2024",
+      "metric": "脐橙加工产值",
+      "value": "20",
+      "unit": "亿元",
+      "period": "2024",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": true,
+      "D_supported": true
+    },
+    {
+      "task_id": "blind_xinfeng_snapshot_2025",
+      "region": "信丰县",
+      "fact_id": "xinfeng_online_sales_2024",
+      "metric": "脐橙线上销售额",
+      "value": "3.6",
+      "unit": "亿元",
+      "period": "2024",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": false,
+      "D_supported": true
+    },
+    {
+      "task_id": "blind_xinfeng_snapshot_2025",
+      "region": "信丰县",
+      "fact_id": "xinfeng_origin_1971",
+      "metric": "脐橙引种历史",
+      "value": "1971",
+      "unit": "年",
+      "period": "1971",
+      "A_answered": false,
+      "B_answered": false,
+      "C_answered": false,
+      "D_answered": false,
+      "D_supported": false
+    }
+  ],
+  "not_run": {
+    "A/B for 信丰县": "no report archive for the smoke A/B runs",
+    "40-60 task blind set": "only 2 disjoint archived tasks had verifiable exact quotes"
+  },
+  "caveats": [
+    "Pilot only: 2 tasks / 10 facts; not a comprehensive blind benchmark.",
+    "D is a deterministic extractive answer; A/B/C are archived reports.",
+    "Answer coverage is not prose quality or citation precision.",
+    "A/B reports exist only for 安吉县; missing groups are NOT_RUN, not zero-scored."
+  ]
+}

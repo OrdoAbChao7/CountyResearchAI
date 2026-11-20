@@ -1,0 +1,137 @@
+{
+  "generated_at": "2026-10-26T14:03:47.437692+00:00",
+  "evidence_kind": "FREE_PUBLIC_WEB_RETRIEVAL",
+  "provider_calls_paid": 0,
+  "mode": "rise-fall",
+  "facts": 12,
+  "recovered": 0,
+  "recovered_exact_excerpt": 0,
+  "recovered_value_metric": 0,
+  "value_context_candidates": 0,
+  "recovery_rate": 0.0,
+  "official_recovered": 0,
+  "request_count": 44,
+  "elapsed_seconds": 228.58,
+  "by_mode": {
+    "rise-fall": {
+      "miss": 12
+    }
+  },
+  "by_region": {
+    "临泽县": {
+      "miss": 1
+    },
+    "于都县": {
+      "miss": 3
+    },
+    "攀枝花市": {
+      "miss": 4
+    },
+    "长汀县": {
+      "miss": 4
+    }
+  },
+  "missing": [
+    {
+      "claim_id": "continuation_c68ff9816e3d",
+      "region": "长汀县",
+      "metric": "三次产业结构",
+      "year": "2024",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_cb15a919e999",
+      "region": "长汀县",
+      "metric": "规模以上工业分产业增加值增速",
+      "year": "2024",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_45d9a2c70e4e",
+      "region": "长汀县",
+      "metric": "高技术制造业增加值增速",
+      "year": "2024",
+      "best_score": 6,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_81d7e4baea7a",
+      "region": "长汀县",
+      "metric": "全体居民人均可支配收入",
+      "year": "2019-2024",
+      "best_score": 1,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_0b79dc381c59",
+      "region": "于都县",
+      "metric": "三次产业结构比",
+      "year": "2024",
+      "best_score": 1,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_4f4a16add6ae",
+      "region": "于都县",
+      "metric": "工业增加值及占GDP比重",
+      "year": "2024",
+      "best_score": 1,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_e9dd00e9ea05",
+      "region": "于都县",
+      "metric": "城乡居民人均可支配收入",
+      "year": "2024",
+      "best_score": 1,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_6191b59b7d50",
+      "region": "攀枝花市",
+      "metric": "三次产业结构",
+      "year": "2024年（对比上年）",
+      "best_score": 0,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_66b0720be669",
+      "region": "攀枝花市",
+      "metric": "全部工业增加值及贡献率",
+      "year": "2024年",
+      "best_score": 0,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_9c37027fdc7d",
+      "region": "攀枝花市",
+      "metric": "固定资产投资及分产业投资增速",
+      "year": "2024年",
+      "best_score": 5,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_2478e0c5121d",
+      "region": "攀枝花市",
+      "metric": "社会消费品零售总额及餐饮收入",
+      "year": "2024年",
+      "best_score": 0,
+      "best_mode": ""
+    },
+    {
+      "claim_id": "continuation_7f3a31979061",
+      "region": "临泽县",
+      "metric": "三次产业结构比",
+      "year": "2024",
+      "best_score": 1,
+      "best_mode": ""
+    }
+  ],
+  "notes": [
+    "Public DuckDuckGo HTML search + direct page fetch; no paid API.",
+    "Queries are derived from region/metric/year, not the GT URL.",
+    "Recovery is excerpt exact or value+metric+region; not a quality claim."
+  ]
+}

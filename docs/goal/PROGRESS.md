@@ -181,3 +181,63 @@ Full suite: `674 passed`; ruff clean. Ablation re-run on stricter support:
   old rows with `run_id=''`. Regression:
   `test_old_claim_relations_schema_is_rebuilt_with_run_id`.
 - Full suite: `675 passed`.
+
+## 2026-10-26 — Quality Recovery Q0/Q1
+
+- Created `codex/quality-recovery` and tag `checkpoint-m4-pass-20261026`;
+  `.claude/` untouched.
+- Q0 reproduced: 675 Python tests, scoped ruff clean, frontend typecheck/4
+  tests/build pass. Saved under `experiments/quality/20261026_baseline/`.
+- Added `scripts/diagnose_quality_funnel.py`: 90 GT facts over 18 archived C
+  runs → 21 retrieved (23.3%), 15 extracted, 2 supported, 4 reported, 0
+  end-to-end. Long-history retrieval 0/30. Outputs under
+  `experiments/quality/20261026_q1_funnel_baseline/`.
+- Added `scripts/review_withheld_claims.py`: reproduced 872 withheld claims;
+  351 different-measure grouped conflicts, 521 same-string measure conflicts;
+  0 supported claims with statement absent from quote (30-sample review).
+  Outputs under `experiments/quality/20261026_q1_withheld_review_baseline/`.
+- Wrote `docs/goal/QUALITY_REPORT.md`, `TASKS.md`, `COST_GATE.md`. Ranked defects:
+  retrieval coverage, coarse measure identity, decontextualized extraction,
+  verified findings disconnected from answer, extraction misses, unlabelled
+  false-support audit.
+
+## 2026-10-26 — Q5 reliability and Q6 final verification
+
+- SQLite jobs now use execution leases (`lease_owner`, `lease_expires_at`) and
+  monotonic fencing tokens. Heartbeat renews every lease/3; `finish_job` writes
+  terminal state + event atomically and rejects stale workers; startup recovers
+  only empty/expired leases; concurrent claims have one winner.
+- API jobs write isolated raw/report directories per job, preventing concurrent
+  overwrite. New tests cover live-lease recovery blocking, expired takeover with
+  stale rejection, concurrent claims, and distinct report paths.
+- Playwright 1.64.1 + Chromium installed; 2 E2E tests pass in ~15 s: create →
+  SSE timeline → evidence quote → brief download; and create → cancel → resume.
+  Artifacts under `experiments/quality/20261026_q5_e2e/` (log, traces,
+  screenshots). A MOCK-only env delay makes cancel deterministic.
+- Final local verification: `692 passed` Python, scoped ruff clean, 4 Vitest,
+  typecheck/build, 2 Playwright, legacy CLI dry-run exit 0.
+- Wrote `docs/goal/Q5_REPORT.md`, `docs/goal/Q6_FINAL_ACCEPTANCE.md`,
+  `docs/architecture/ADR-004-execution-leases.md`; updated README/acceptance/
+  final report.
+
+## 2026-10-26 — Q7 retrieval recovery and validation
+
+- Built a bounded free public-web adapter (`search/public_web.py`, DuckDuckGo
+  HTML + direct fetch, cached/hashed; no paid API) and a region/metric/year query
+  planner with metric aliases and year constraints (`q7_retrieve_missing.py`).
+  Fixed UTF-8/GBK charset selection (UTF-8 pages were previously mojibake).
+- Pooled all archived raw docs by region: 47/90 GT facts retrieved; 26 of the 69
+  C-missing facts recovered. D pooled dev E2E 33/90 vs D archived 15/90 vs C
+  3/90. Task-clustered bootstrap: D pooled − C +0.333 [0.156, 0.522].
+- Long-history: autonomous free web recovered 6/30 (4 exact, 2 value+metric);
+  oracle GT-URL probe recovered 17/30, proving source availability and isolating
+  discovery as the bottleneck. D long-history E2E remains 0/30 because extracted
+  claims/answer integration do not consume the recovered pages.
+- Verifier audit: 25 assistant-labeled claims; false support 3/10 (30%, Wilson
+  10.8–60.3%), false rejection 4/15 (26.7%, Wilson 10.9–52.0%); human annotation
+  BLOCKED_HUMAN_ANNOTATION. Errors: wrong span links, period metadata, fragmented
+  measure, sign/measure mismatch.
+- Q7.3: 2 PILOT tasks / 10 facts; 0 SEALED; 40–60 gap not padded.
+- Q7.5: two-process stress (6 jobs, 2 workers) — one success per job, stale
+  finish rejected, expired-lease takeover, crash + recovery. `3.0 s`.
+- Tests: `702 passed`; frontend 4, Playwright 2; scoped ruff clean.

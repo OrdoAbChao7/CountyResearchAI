@@ -1,0 +1,222 @@
+{
+  "status": "VALIDATED_BLIND_PILOT",
+  "blind_file": "experiments\\quality\\dataset\\blind_pilot.jsonl",
+  "blind_file_sha256": "c01000327b9fd102bea5b6c3ad5b7fc105335ebac3f0c9ba4e459e9448154309",
+  "blind_tasks": {
+    "blind_anji_snapshot_2025": 4,
+    "blind_xinfeng_snapshot_2025": 6
+  },
+  "blind_facts": 10,
+  "blind_regions_tasks": [
+    [
+      "信丰县",
+      "snapshot"
+    ],
+    [
+      "安吉县",
+      "snapshot"
+    ]
+  ],
+  "dev_replay": {
+    "ground_truth": "experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019.jsonl",
+    "ground_truth_sha256": "a5fa504976b83c57334f36cc246ef2a3f73b706957a4c9a2725d222d0f4f1bdd",
+    "tasks": 18,
+    "task_keys": [
+      [
+        "临泽县",
+        "long-history"
+      ],
+      [
+        "临泽县",
+        "rise-fall"
+      ],
+      [
+        "临泽县",
+        "snapshot"
+      ],
+      [
+        "于都县",
+        "long-history"
+      ],
+      [
+        "于都县",
+        "rise-fall"
+      ],
+      [
+        "于都县",
+        "snapshot"
+      ],
+      [
+        "德清县",
+        "long-history"
+      ],
+      [
+        "德清县",
+        "rise-fall"
+      ],
+      [
+        "德清县",
+        "snapshot"
+      ],
+      [
+        "攀枝花市",
+        "long-history"
+      ],
+      [
+        "攀枝花市",
+        "rise-fall"
+      ],
+      [
+        "攀枝花市",
+        "snapshot"
+      ],
+      [
+        "白山市",
+        "long-history"
+      ],
+      [
+        "白山市",
+        "rise-fall"
+      ],
+      [
+        "白山市",
+        "snapshot"
+      ],
+      [
+        "长汀县",
+        "long-history"
+      ],
+      [
+        "长汀县",
+        "rise-fall"
+      ],
+      [
+        "长汀县",
+        "snapshot"
+      ]
+    ],
+    "facts": 90,
+    "split": "dev_replay",
+    "independent": false,
+    "note": "Inherited frozen corpus used for Q1 diagnosis and Q3 tuning; not a blind set."
+  },
+  "blind_pilot": {
+    "split": "blind_pilot",
+    "tasks": 2,
+    "facts": 10,
+    "task_hashes": {
+      "blind_anji_snapshot_2025": {
+        "snapshot_sha256": "cef6145276a4b2fd859fcc06292407fa36e240f2deb12e558565c5ad2f51f9ea",
+        "snapshot_path": "experiments/independent_comparison/runs/smoke_20261018T095509Z/smoke_20261018T095509Z_安吉县_C/data/raw/安吉县/20261018/raw_docs.json",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "source_title": "(湖州市)2025年安吉县国民经济和社会发展统计公报"
+      },
+      "blind_xinfeng_snapshot_2025": {
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "snapshot_path": "experiments/independent_comparison/runs/smoke_20261018T095509Z/smoke_20261018T095509Z_信丰县_C/data/raw/信丰县/20261018/raw_docs.json",
+        "url": "https://jxxf.gov.cn/xfxrmzfyyh/c104548/202511/5ad26d15b5964c4bb9689064f0a575ed.shtml",
+        "source_title": "信丰：一橙“链”动70亿元"
+      }
+    },
+    "independent_of_dev": true
+  },
+  "coverage_gap": {
+    "target_min_tasks": 40,
+    "target_max_tasks": 60,
+    "achieved_blind_tasks": 2,
+    "missing_blind_tasks_min": 38,
+    "missing_blind_tasks_max": 58,
+    "reason": "Only two disjoint archived sources had verifiable exact quotes and hashes without new retrieval or human annotation. The 18 inherited tasks are not independent. No paid search/annotation was authorized."
+  },
+  "leakage_controls": {
+    "dev_blind_task_overlap": [],
+    "blind_used_in_q1": false,
+    "tuning_uses_blind": false
+  },
+  "validation": {
+    "ok": true,
+    "failures": [],
+    "facts": [
+      {
+        "task_id": "blind_anji_snapshot_2025",
+        "fact_id": "anji_gdp_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "cef6145276a4b2fd859fcc06292407fa36e240f2deb12e558565c5ad2f51f9ea",
+        "quote_sha256": "d640e69c65c20a5ba085d1aea2a3889b83b3ca6c670794ec067c2226aa3b4fea"
+      },
+      {
+        "task_id": "blind_anji_snapshot_2025",
+        "fact_id": "anji_tertiary_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "cef6145276a4b2fd859fcc06292407fa36e240f2deb12e558565c5ad2f51f9ea",
+        "quote_sha256": "91cc05a44c81927ff657e2790f711daa9b4fba2387209a30caa4da3fc628bfd1"
+      },
+      {
+        "task_id": "blind_anji_snapshot_2025",
+        "fact_id": "anji_industrial_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "cef6145276a4b2fd859fcc06292407fa36e240f2deb12e558565c5ad2f51f9ea",
+        "quote_sha256": "d9734134df9330e3091171287674a3a3003b8d09672c315e9147077ae2a72aa5"
+      },
+      {
+        "task_id": "blind_anji_snapshot_2025",
+        "fact_id": "anji_budget_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "cef6145276a4b2fd859fcc06292407fa36e240f2deb12e558565c5ad2f51f9ea",
+        "quote_sha256": "4f0d8d13f211afa1ab50ee218e38fe56a23ed114a7d260d9a68b06bb1e261db4"
+      },
+      {
+        "task_id": "blind_xinfeng_snapshot_2025",
+        "fact_id": "xinfeng_acreage_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "quote_sha256": "f6c3b4d3e87c8a6a04de17e4e5fddd8b7fc3a4f3b84710b20f866c2329276d1f"
+      },
+      {
+        "task_id": "blind_xinfeng_snapshot_2025",
+        "fact_id": "xinfeng_output_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "quote_sha256": "f6c3b4d3e87c8a6a04de17e4e5fddd8b7fc3a4f3b84710b20f866c2329276d1f"
+      },
+      {
+        "task_id": "blind_xinfeng_snapshot_2025",
+        "fact_id": "xinfeng_cluster_value_2025",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "quote_sha256": "f6c3b4d3e87c8a6a04de17e4e5fddd8b7fc3a4f3b84710b20f866c2329276d1f"
+      },
+      {
+        "task_id": "blind_xinfeng_snapshot_2025",
+        "fact_id": "xinfeng_processing_2024",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "quote_sha256": "30b3673bf78af9921c12aca63d91a1ddfd9ca07c0c9b254909bb50ad315ea0ec"
+      },
+      {
+        "task_id": "blind_xinfeng_snapshot_2025",
+        "fact_id": "xinfeng_online_sales_2024",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "quote_sha256": "421c7c7185070cb57ad76fbae6edd83c13c2eb76b16cd1bdb7d1a44ee50d2c3d"
+      },
+      {
+        "task_id": "blind_xinfeng_snapshot_2025",
+        "fact_id": "xinfeng_origin_1971",
+        "ok": true,
+        "errors": [],
+        "snapshot_sha256": "d9139f5ae9ff0fbe8afe59c970146db2bd60d963965146f041bb65391ef0d5c6",
+        "quote_sha256": "5b93c9a9c993589e07ea05c5dadceaab19b9c2dfd4a97dbc88b954942a60781a"
+      }
+    ]
+  }
+}

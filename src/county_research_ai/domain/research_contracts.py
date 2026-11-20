@@ -86,6 +86,7 @@ class AtomicClaim(BaseModel):
     statement: str
     region_id: str = ""
     metric_id: str = ""
+    measure_id: str = ""
     value: str = ""
     unit: str = ""
     period: str = ""

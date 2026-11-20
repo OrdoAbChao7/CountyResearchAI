@@ -1,0 +1,16 @@
+{"event": "claimed", "job_id": "lease-expiry-job", "owner": "worker-a", "token": 1}
+{"event": "stale_finish", "job_id": "lease-expiry-job", "owner": "worker-a", "accepted": false}
+{"event": "claimed", "job_id": "crash-job", "owner": "worker-a", "token": 1}
+{"event": "crash", "job_id": "crash-job", "owner": "worker-a"}
+{"event": "claimed", "job_id": "lease-expiry-job", "owner": "worker-b", "token": 2}
+{"event": "finished", "job_id": "lease-expiry-job", "owner": "worker-b", "token": 2, "accepted": true}
+{"event": "claimed", "job_id": "normal-3", "owner": "worker-b", "token": 1, "round": 0}
+{"event": "finished", "job_id": "normal-3", "owner": "worker-b", "token": 1, "renewed": true, "accepted": true}
+{"event": "claimed", "job_id": "normal-0", "owner": "worker-b", "token": 1, "round": 0}
+{"event": "finished", "job_id": "normal-0", "owner": "worker-b", "token": 1, "renewed": true, "accepted": true}
+{"event": "claimed", "job_id": "normal-1", "owner": "worker-b", "token": 1, "round": 0}
+{"event": "finished", "job_id": "normal-1", "owner": "worker-b", "token": 1, "renewed": true, "accepted": true}
+{"event": "claimed", "job_id": "normal-2", "owner": "worker-b", "token": 1, "round": 0}
+{"event": "finished", "job_id": "normal-2", "owner": "worker-b", "token": 1, "renewed": true, "accepted": true}
+{"event": "recovered", "count": 1}
+{"event": "finished", "job_id": "crash-job", "owner": "recovery-worker", "token": 2, "accepted": true}

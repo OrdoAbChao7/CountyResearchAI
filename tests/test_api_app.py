@@ -359,3 +359,25 @@ def test_startup_resubmits_queued_jobs(tmp_path):
         pass
 
     assert job.job_id in runner.submitted
+
+
+def test_jobs_do_not_overwrite_each_others_reports(tmp_path):
+    app = create_app(
+        settings=_settings(tmp_path),
+        live_enabled=False,
+        data_dir=tmp_path / "data",
+        reports_dir=tmp_path / "reports",
+        evidence_db_path=tmp_path / "evidence.sqlite",
+    )
+    details = []
+    with TestClient(app) as client:
+        for objective in ("并发任务一", "并发任务二"):
+            payload = _contract_payload()
+            payload["contract"]["objective"] = objective
+            job_id = client.post("/api/v1/research/tasks", json=payload).json()["job_id"]
+            details.append(_wait_for_terminal(client, job_id))
+
+    paths = [detail["report_path"] for detail in details]
+    assert all(detail["status"] == "SUCCEEDED" for detail in details)
+    assert len(set(paths)) == 2
+    assert all(Path(path).is_file() for path in paths)

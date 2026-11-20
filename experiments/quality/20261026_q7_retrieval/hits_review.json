@@ -1,0 +1,77 @@
+[
+  {
+    "region": "德清县",
+    "metric": "规模企业产值",
+    "year": "2006",
+    "recovered": true,
+    "best": {
+      "query": "德清县 规模企业产值 2006",
+      "url": "https://dqnews.zjol.com.cn/dqnews/system/2007/02/15/000869518.shtml",
+      "title": "德清县统计局关于2006年德清县国民经济和社会发展的统计公报-德清新闻网",
+      "status": 200,
+      "content_hash": "b2b21da9f17f7b03f6235b33711f01283b65d6d9ac59a374c1201f7fe8bada09",
+      "retrieved_at": "2026-10-26T13:45:11.219525+00:00",
+      "error": "",
+      "excerpt_hit": false,
+      "value_hit": true,
+      "metric_hit": true,
+      "region_hit": true,
+      "year_hit": true,
+      "official": false,
+      "host": "dqnews.zjol.com.cn",
+      "score": 11,
+      "hit": true,
+      "recovery_mode": "value_metric"
+    }
+  },
+  {
+    "region": "德清县",
+    "metric": "规模以上企业数量",
+    "year": "2006",
+    "recovered": false,
+    "best": {
+      "query": "德清县 规模以上企业数量 2006",
+      "url": "https://dqnews.zjol.com.cn/dqnews/system/2007/02/15/000869518.shtml",
+      "title": "德清县统计局关于2006年德清县国民经济和社会发展的统计公报-德清新闻网",
+      "status": 200,
+      "content_hash": "b2b21da9f17f7b03f6235b33711f01283b65d6d9ac59a374c1201f7fe8bada09",
+      "retrieved_at": "2026-10-26T13:45:11.219525+00:00",
+      "error": "",
+      "excerpt_hit": false,
+      "value_hit": true,
+      "metric_hit": false,
+      "region_hit": true,
+      "year_hit": true,
+      "official": false,
+      "host": "dqnews.zjol.com.cn",
+      "score": 8,
+      "hit": false,
+      "recovery_mode": "value_context_candidate"
+    }
+  },
+  {
+    "region": "于都县",
+    "metric": "县名变更",
+    "year": "1957年6月1日",
+    "recovered": true,
+    "best": {
+      "query": "于都县 县名变更 1957年6月1日 政府工作报告",
+      "url": "https://www.kejiatong.com/data/6/1/2019-07-03/1364.html",
+      "title": "1957年6月1日改“雩都”为“于都”--客家通网",
+      "status": 200,
+      "content_hash": "e7b454418d8815d66ef4f8aedcacf4a87f7265e39fb4372ebc95de90940a80ae",
+      "retrieved_at": "2026-10-26T13:50:26.016366+00:00",
+      "error": "",
+      "excerpt_hit": true,
+      "value_hit": false,
+      "metric_hit": false,
+      "region_hit": true,
+      "year_hit": true,
+      "official": false,
+      "host": "www.kejiatong.com",
+      "score": 13,
+      "hit": true,
+      "recovery_mode": "exact_excerpt"
+    }
+  }
+]

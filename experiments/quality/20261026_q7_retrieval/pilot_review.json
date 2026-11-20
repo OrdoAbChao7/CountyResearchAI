@@ -1,0 +1,176 @@
+[
+  {
+    "metric": "二产比重",
+    "queries": [
+      "德清县 二产比重 2006",
+      "德清县 二产比重 2006 政府工作报告",
+      "德清县 二产比重 2006 统计公报"
+    ],
+    "fetched": [
+      {
+        "url": "https://dqnews.zjol.com.cn/dqnews/system/2007/02/15/000869518.shtml",
+        "title": "������ͳ�ƾֹ���2006������ع��񾭼ú���ᷢչ��ͳ�ƹ���-����������",
+        "status": 200,
+        "score": 1,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": false
+      },
+      {
+        "url": "https://gdp.gotohui.com/data-375/2006",
+        "title": "德清县GDP_2006年数据_聚汇数据",
+        "status": 200,
+        "score": 3,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      },
+      {
+        "url": "http://www.deqing.gov.cn/col/col1229518885/2025zfgzbgfb/art/2026/art_d071a3630dee47698c1bc5f08af26740.html",
+        "title": "德清县2026年政府工作报告",
+        "status": 200,
+        "score": 2,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      },
+      {
+        "url": "https://www.deqing.gov.cn/col/col1229212621/index.html",
+        "title": "统计公报",
+        "status": 200,
+        "score": 2,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      }
+    ]
+  },
+  {
+    "metric": "工业总产值",
+    "queries": [
+      "德清县 工业总产值 2006",
+      "德清县 工业总产值 2006 政府工作报告",
+      "德清县 工业总产值 2006 统计公报"
+    ],
+    "fetched": [
+      {
+        "url": "https://dqnews.zjol.com.cn/dqnews/system/2007/02/15/000869518.shtml",
+        "title": "������ͳ�ƾֹ���2006������ع��񾭼ú���ᷢչ��ͳ�ƹ���-����������",
+        "status": 200,
+        "score": 1,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": false
+      },
+      {
+        "url": "https://max.book118.com/html/2023/0625/7035040026005125.shtm",
+        "title": "深楚2006年国民经济和社会发展统计-20230625051124.pdf-原创力文档",
+        "status": 200,
+        "score": 3,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      },
+      {
+        "url": "http://www.deqing.gov.cn/col/col1229518885/2025zfgzbgfb/art/2026/art_d071a3630dee47698c1bc5f08af26740.html",
+        "title": "德清县2026年政府工作报告",
+        "status": 200,
+        "score": 2,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      },
+      {
+        "url": "https://www.deqing.gov.cn/col/col1229212621/art/2026/art_374d506b57564763be2b7bcf2c46185d.html",
+        "title": "2025年德清县国民经济和社会发展统计公报",
+        "status": 200,
+        "score": 2,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      }
+    ]
+  },
+  {
+    "metric": "规模企业产值",
+    "queries": [
+      "德清县 规模企业产值 2006",
+      "德清县 规模企业产值 2006 政府工作报告",
+      "德清县 规模企业产值 2006 统计公报"
+    ],
+    "fetched": [
+      {
+        "url": "https://dqnews.zjol.com.cn/dqnews/system/2007/02/15/000869518.shtml",
+        "title": "������ͳ�ƾֹ���2006������ع��񾭼ú���ᷢչ��ͳ�ƹ���-����������",
+        "status": 200,
+        "score": 1,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": false
+      },
+      {
+        "url": "https://gdp.gotohui.com/data-375/2006",
+        "title": "德清县GDP_2006年数据_聚汇数据",
+        "status": 200,
+        "score": 3,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      },
+      {
+        "url": "http://www.deqing.gov.cn/col/col1229518885/2025zfgzbgfb/art/2026/art_d071a3630dee47698c1bc5f08af26740.html",
+        "title": "德清县2026年政府工作报告",
+        "status": 200,
+        "score": 2,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      },
+      {
+        "url": "https://www.deqing.gov.cn/col/col1229212621/art/2026/art_374d506b57564763be2b7bcf2c46185d.html",
+        "title": "2025年德清县国民经济和社会发展统计公报",
+        "status": 200,
+        "score": 2,
+        "hit": false,
+        "error": "",
+        "excerpt": false,
+        "value": false,
+        "metric_hit": false,
+        "region": true
+      }
+    ]
+  }
+]

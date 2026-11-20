@@ -1,0 +1,393 @@
+[
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "gt_claim_id": "continuation_f7a2ce02987c",
+    "funnel": "not_in_answer",
+    "metric": "地区生产总值（GDP）",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "c56189cc8c68",
+    "legacy": "unverified",
+    "status": "SUPPORTED",
+    "reason": "value_and_span_verified",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "gt_claim_id": "continuation_883aa3007a72",
+    "funnel": "not_in_answer",
+    "metric": "第一产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "c56189cc8c68",
+    "legacy": "unverified",
+    "status": "SUPPORTED",
+    "reason": "value_and_span_verified",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "gt_claim_id": "continuation_e4c785968b50",
+    "funnel": "not_in_answer",
+    "metric": "第二产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "c56189cc8c68",
+    "legacy": "unverified",
+    "status": "SUPPORTED",
+    "reason": "value_and_span_verified",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "gt_claim_id": "continuation_96bd036aacf9",
+    "funnel": "not_in_answer",
+    "metric": "第三产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "c56189cc8c68",
+    "legacy": "unverified",
+    "status": "SUPPORTED",
+    "reason": "value_and_span_verified",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "gt_claim_id": "continuation_5b14c2f3f486",
+    "funnel": "withheld_exact_evidence",
+    "metric": "规模以上工业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "81219301389b",
+    "legacy": "unverified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_C",
+    "gt_claim_id": "continuation_3d437d2d0d6d",
+    "funnel": "withheld_exact_evidence",
+    "metric": "工业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "bf2d3657947e",
+    "legacy": "unverified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "gt_claim_id": "continuation_5d7c39532aa2",
+    "funnel": "withheld_exact_evidence",
+    "metric": "地区生产总值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "b436b67f5164",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "gt_claim_id": "continuation_d5dc6ade978e",
+    "funnel": "withheld_exact_evidence",
+    "metric": "第一产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "b436b67f5164",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "gt_claim_id": "continuation_c460d79f39de",
+    "funnel": "withheld_exact_evidence",
+    "metric": "第二产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "b436b67f5164",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "gt_claim_id": "continuation_37640421ce97",
+    "funnel": "withheld_exact_evidence",
+    "metric": "第三产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "b436b67f5164",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "gt_claim_id": "continuation_65de1eb3aae1",
+    "funnel": "withheld_exact_evidence",
+    "metric": "三次产业结构比重",
+    "value": [
+      [
+        "2024",
+        "比例"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "b436b67f5164",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_snapshot_r1_C",
+    "gt_claim_id": "continuation_e4692d5e1010",
+    "funnel": "not_extracted",
+    "metric": "地区生产总值（GDP）",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "",
+    "legacy": "",
+    "status": "",
+    "reason": "",
+    "exact": false,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "gt_claim_id": "continuation_3499cb225ab4",
+    "funnel": "withheld_exact_evidence",
+    "metric": "地区生产总值（GDP）",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "3315bf76ca1c",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": true
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "gt_claim_id": "continuation_67da47431fd1",
+    "funnel": "withheld_exact_evidence",
+    "metric": "第一产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "3315bf76ca1c",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "gt_claim_id": "continuation_1b4e364002af",
+    "funnel": "withheld_exact_evidence",
+    "metric": "第二产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "3315bf76ca1c",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "gt_claim_id": "continuation_ecb10ad17acc",
+    "funnel": "withheld_exact_evidence",
+    "metric": "第三产业增加值",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "3315bf76ca1c",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "gt_claim_id": "continuation_ff51d8745b8d",
+    "funnel": "withheld_exact_evidence",
+    "metric": "一般公共预算收入",
+    "value": [
+      [
+        "2024",
+        "亿元"
+      ]
+    ],
+    "year": "2024",
+    "matched_claim_id": "3315bf76ca1c",
+    "legacy": "verified",
+    "status": "NEEDS_REVIEW",
+    "reason": "conflicting_supported_evidence",
+    "exact": true,
+    "answer": {
+      "present": false,
+      "value_hit": false,
+      "metric_hit": false
+    }
+  }
+]

@@ -47,15 +47,17 @@ Open <http://127.0.0.1:8000>. The header shows `MOCK` and `API v1`.
 4. **Brief (15 s).** Open 决策简报. Download the Markdown. It contains explicit
    `MOCK` and limitation labels, supported findings with citations, and a
    withheld section that does not restate unsupported claims.
-5. **Cancel/resume (5 s, optional).** The mock run finishes quickly; to see the
-   durable states, run the API tests or submit a task with a long
-   `deadline_seconds` and stop the API process. After restart the job shows
-   `已中断`; press **恢复运行**.
+5. **Cancel/resume (5 s, optional).** The mock run finishes quickly. The
+   Playwright test sets `AXIOMSCOPE_MOCK_STAGE_DELAY_SECONDS=3` to cancel a
+   running task and resume it deterministically; see
+   `experiments/quality/20261026_q5_e2e/cancel-resume.png`. In a manual demo,
+   you can also stop the API mid-run and press **恢复运行** after restart.
 
 ## What not to claim
 
 - Do not describe this demo as evidence that AxiomScope beats the legacy
   baselines. Current small-sample offline results do not support that claim.
 - Do not call the deterministic checks "semantic entailment".
-- Screenshots are not produced by the automated test suite; inspect the UI
-  manually or run the API/Selenium checks explicitly.
+- Playwright produces real screenshots/traces under
+  `experiments/quality/20261026_q5_e2e/`; they show the MOCK UI, not LIVE
+  retrieval quality.

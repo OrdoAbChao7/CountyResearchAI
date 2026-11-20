@@ -103,3 +103,15 @@ data/api/
 web/node_modules/
 web/dist/
 
+
+# ===== Playwright / E2E =====
+web/test-results/
+web/playwright-report/
+experiments/quality/20261026_q5_e2e/data/
+experiments/quality/20261026_q5_e2e/reports/
+experiments/quality/20261026_q5_e2e/playwright-report/
+
+# ===== Q7 transient retrieval caches / stress DB =====
+experiments/quality/20261026_q7_retrieval/cache/
+experiments/quality/20261026_q7_oracle_probe/cache/
+experiments/quality/20261026_q7_stress/stress_jobs.sqlite*

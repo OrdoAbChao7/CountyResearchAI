@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-10-26T13:58:49.394955+00:00",
+  "seed": 20261026,
+  "frame_counts": {
+    "INSUFFICIENT": 238,
+    "NEEDS_REVIEW": 203,
+    "SUPPORTED": 834
+  },
+  "sample_counts": {
+    "INSUFFICIENT": 5,
+    "NEEDS_REVIEW": 10,
+    "SUPPORTED": 10
+  },
+  "sample_size": 25,
+  "runs": 18,
+  "note": "Labels are empty. Fill label='correct' or 'incorrect', label_rationale, and labeler (e.g. assistant_manual_review or a human name). Do not present assistant labels as human ground truth."
+}

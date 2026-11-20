@@ -7,7 +7,7 @@ import threading
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -54,6 +54,9 @@ class JobRecord(BaseModel):
     report_path: str = ""
     result: dict[str, Any] = Field(default_factory=dict)
     budget_enforcement: dict[str, Any] = Field(default_factory=dict)
+    lease_owner: str = ""
+    lease_expires_at: datetime | None = None
+    fencing_token: int = 0
 
 
 class EventRecord(BaseModel):
@@ -119,7 +122,10 @@ class JobStore:
                     error_message TEXT NOT NULL DEFAULT '',
                     report_path TEXT NOT NULL DEFAULT '',
                     result_json TEXT NOT NULL DEFAULT '{}',
-                    budget_enforcement_json TEXT NOT NULL DEFAULT '{}'
+                    budget_enforcement_json TEXT NOT NULL DEFAULT '{}',
+                    lease_owner TEXT NOT NULL DEFAULT '',
+                    lease_expires_at TEXT NOT NULL DEFAULT '',
+                    fencing_token INTEGER NOT NULL DEFAULT 0
                 );
                 CREATE TABLE IF NOT EXISTS job_events (
                     job_id TEXT NOT NULL,
@@ -132,6 +138,18 @@ class JobStore:
                 CREATE INDEX IF NOT EXISTS idx_jobs_created ON jobs(created_at DESC);
                 """
             )
+            job_columns = {
+                row[1] for row in connection.execute("PRAGMA table_info(jobs)")
+            }
+            for column, ddl in (
+                ("lease_owner", "TEXT NOT NULL DEFAULT ''"),
+                ("lease_expires_at", "TEXT NOT NULL DEFAULT ''"),
+                ("fencing_token", "INTEGER NOT NULL DEFAULT 0"),
+            ):
+                if column not in job_columns:
+                    connection.execute(
+                        f"ALTER TABLE jobs ADD COLUMN {column} {ddl}"
+                    )
             connection.execute(f"PRAGMA user_version = {JOB_SCHEMA_VERSION}")
 
     # ------------------------------------------------------------------ jobs
@@ -213,27 +231,81 @@ class JobStore:
             report_path=row["report_path"],
             result=json.loads(row["result_json"]),
             budget_enforcement=json.loads(row["budget_enforcement_json"]),
+            lease_owner=row["lease_owner"],
+            lease_expires_at=_parse(row["lease_expires_at"]),
+            fencing_token=int(row["fencing_token"]),
         )
 
-    def claim_for_execution(self, job_id: str) -> bool:
-        """Atomically move a queued/interrupted job to RUNNING.
+    def claim_for_execution(
+        self,
+        job_id: str,
+        *,
+        owner: str = "",
+        lease_seconds: float = 60.0,
+    ) -> int | None:
+        """Atomically acquire an execution lease and return a fencing token.
 
-        Only one caller can win, which prevents duplicate execution when
-        ``resume`` is retried or two workers race on the same queued job.
+        A job can be claimed when it is queued/interrupted, or when it is
+        RUNNING but its lease has expired. Only one caller can win; the returned
+        token must accompany later renewal and terminal writes so a stale worker
+        cannot overwrite a newer attempt.
         """
-        now = _utcnow().isoformat()
+        owner = owner or f"worker:{uuid.uuid4().hex}"
+        now_dt = _utcnow()
+        now = now_dt.isoformat()
+        expires = (now_dt + timedelta(seconds=max(0.1, lease_seconds))).isoformat()
         with self._lock, self._connect() as connection:
             cursor = connection.execute(
-                "UPDATE jobs SET status = ?, started_at = ?, finished_at = NULL,"
-                " updated_at = ?, error_code = '', error_message = ''"
-                " WHERE job_id = ? AND status IN (?, ?)",
+                "UPDATE jobs SET status = ?, started_at = COALESCE(started_at, ?),"
+                " finished_at = NULL, updated_at = ?, error_code = '',"
+                " error_message = '', lease_owner = ?, lease_expires_at = ?,"
+                " fencing_token = fencing_token + 1"
+                " WHERE job_id = ? AND ("
+                "   status IN (?, ?)"
+                "   OR (status = ? AND (lease_expires_at = '' OR lease_expires_at < ?))"
+                " )",
                 (
                     JobStatus.RUNNING.value,
                     now,
                     now,
+                    owner,
+                    expires,
                     job_id,
                     JobStatus.QUEUED.value,
                     JobStatus.INTERRUPTED.value,
+                    JobStatus.RUNNING.value,
+                    now,
+                ),
+            )
+            if cursor.rowcount != 1:
+                return None
+            row = connection.execute(
+                "SELECT fencing_token FROM jobs WHERE job_id = ?", (job_id,)
+            ).fetchone()
+        return int(row["fencing_token"]) if row is not None else None
+
+    def renew_lease(
+        self,
+        job_id: str,
+        *,
+        owner: str,
+        fencing_token: int,
+        lease_seconds: float = 60.0,
+    ) -> bool:
+        now_dt = _utcnow()
+        expires = (now_dt + timedelta(seconds=max(0.1, lease_seconds))).isoformat()
+        with self._lock, self._connect() as connection:
+            cursor = connection.execute(
+                "UPDATE jobs SET lease_expires_at = ?, updated_at = ?"
+                " WHERE job_id = ? AND status = ? AND lease_owner = ?"
+                " AND fencing_token = ?",
+                (
+                    expires,
+                    now_dt.isoformat(),
+                    job_id,
+                    JobStatus.RUNNING.value,
+                    owner,
+                    fencing_token,
                 ),
             )
             return cursor.rowcount == 1
@@ -268,7 +340,8 @@ class JobStore:
             connection.execute(
                 "UPDATE jobs SET status = ?, outcome = ?, outcome_reason = ?,"
                 " finished_at = ?, updated_at = ?, report_path = ?, result_json = ?,"
-                " budget_enforcement_json = ?, error_code = ?, error_message = ?"
+                " budget_enforcement_json = ?, error_code = ?, error_message = ?,"
+                " lease_owner = '', lease_expires_at = ''"
                 " WHERE job_id = ?",
                 (
                     status.value,
@@ -284,6 +357,84 @@ class JobStore:
                     job_id,
                 ),
             )
+
+    def finish_job(
+        self,
+        job_id: str,
+        status: JobStatus,
+        *,
+        outcome: ResearchOutcome,
+        event_type: str,
+        event_payload: dict[str, Any] | None = None,
+        outcome_reason: str = "",
+        owner: str = "",
+        fencing_token: int | None = None,
+        report_path: str = "",
+        result: dict[str, Any] | None = None,
+        budget_enforcement: dict[str, Any] | None = None,
+        error_code: str = "",
+        error_message: str = "",
+    ) -> bool:
+        """Atomically write the terminal state and its event.
+
+        With owner + fencing token, a stale worker that lost its lease cannot
+        overwrite a newer attempt. Returns False in that case.
+        """
+        if not status.terminal:
+            raise ValueError(f"not a terminal status: {status}")
+        now_dt = _utcnow()
+        now = now_dt.isoformat()
+        where = "job_id = ?"
+        where_params: list[Any] = [job_id]
+        if owner and fencing_token is not None:
+            where += (
+                " AND status = ? AND lease_owner = ? AND fencing_token = ?"
+                " AND lease_expires_at >= ?"
+            )
+            where_params.extend(
+                [JobStatus.RUNNING.value, owner, int(fencing_token), now]
+            )
+        values: list[Any] = [
+            status.value,
+            outcome.value,
+            outcome_reason,
+            now,
+            now,
+            report_path,
+            json.dumps(result or {}, ensure_ascii=False, default=str),
+            json.dumps(budget_enforcement or {}, ensure_ascii=False),
+            error_code,
+            error_message,
+        ]
+        with self._lock, self._connect() as connection:
+            cursor = connection.execute(
+                "UPDATE jobs SET status = ?, outcome = ?, outcome_reason = ?,"
+                " finished_at = ?, updated_at = ?, report_path = ?, result_json = ?,"
+                " budget_enforcement_json = ?, error_code = ?, error_message = ?,"
+                " lease_owner = '', lease_expires_at = ''"
+                f" WHERE {where}",
+                (*values, *where_params),
+            )
+            if cursor.rowcount != 1:
+                return False
+            row = connection.execute(
+                "SELECT COALESCE(MAX(seq), 0) AS seq FROM job_events WHERE job_id = ?",
+                (job_id,),
+            ).fetchone()
+            seq = int(row["seq"]) + 1
+            connection.execute(
+                "INSERT INTO job_events"
+                " (job_id, seq, event_type, payload_json, created_at)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (
+                    job_id,
+                    seq,
+                    event_type,
+                    json.dumps(event_payload or {}, ensure_ascii=False, default=str),
+                    now,
+                ),
+            )
+        return True
 
     def request_cancel(self, job_id: str) -> bool:
         """Request cancellation; returns True when the job is still active."""
@@ -326,25 +477,35 @@ class JobStore:
                 " cancel_requested = 0, error_code = '', error_message = '',"
                 " report_path = '', result_json = '{}',"
                 " budget_enforcement_json = '{}', started_at = NULL,"
-                " finished_at = NULL, updated_at = ?"
+                " finished_at = NULL, lease_owner = '', lease_expires_at = '',"
+                " updated_at = ?"
                 " WHERE job_id = ?",
                 (JobStatus.QUEUED.value, now, job_id),
             )
         self.append_event(job_id, "job.requeued", {})
 
     def recover_interrupted(self) -> int:
-        """Mark jobs left RUNNING by a previous process as INTERRUPTED."""
+        """Mark RUNNING jobs with no live lease as INTERRUPTED.
+
+        A live lease belongs to another worker/process and must not be stolen on
+        startup. Only empty or expired leases are recovered.
+        """
         now = _utcnow().isoformat()
+        condition = (
+            "status = ? AND (lease_expires_at = '' OR lease_expires_at < ?)"
+        )
         with self._lock, self._connect() as connection:
             rows = connection.execute(
-                "SELECT job_id FROM jobs WHERE status = ?", (JobStatus.RUNNING.value,)
+                f"SELECT job_id FROM jobs WHERE {condition}",
+                (JobStatus.RUNNING.value, now),
             ).fetchall()
             if not rows:
                 return 0
             connection.execute(
                 "UPDATE jobs SET status = ?, outcome = ?, outcome_reason = ?,"
-                " finished_at = ?, updated_at = ?, error_code = ?"
-                " WHERE status = ?",
+                " finished_at = ?, updated_at = ?, error_code = ?,"
+                " lease_owner = '', lease_expires_at = ''"
+                f" WHERE {condition}",
                 (
                     JobStatus.INTERRUPTED.value,
                     ResearchOutcome.FAILED.value,
@@ -353,6 +514,7 @@ class JobStore:
                     now,
                     "process_restarted",
                     JobStatus.RUNNING.value,
+                    now,
                 ),
             )
         for row in rows:

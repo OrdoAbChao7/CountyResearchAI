@@ -149,6 +149,109 @@ def test_claim_for_execution_is_atomic(tmp_path):
     store = _store(tmp_path)
     job = store.create_job(_contract(), mode_label="MOCK")
 
-    assert store.claim_for_execution(job.job_id) is True
-    assert store.claim_for_execution(job.job_id) is False
+    token = store.claim_for_execution(job.job_id, owner="worker-a", lease_seconds=60)
+    assert token is not None
+    assert store.claim_for_execution(job.job_id, owner="worker-b", lease_seconds=60) is None
+    assert store.get_job(job.job_id).status is JobStatus.RUNNING
+    assert store.get_job(job.job_id).lease_owner == "worker-a"
+
+
+def test_live_lease_blocks_recovery_and_takeover(tmp_path):
+    path = tmp_path / "jobs.sqlite"
+    store = JobStore(path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    token = store.claim_for_execution(job.job_id, owner="worker-a", lease_seconds=60)
+
+    other = JobStore(path)
+    assert other.recover_interrupted() == 0
+    assert other.claim_for_execution(job.job_id, owner="worker-b", lease_seconds=60) is None
+    assert store.renew_lease(
+        job.job_id, owner="worker-a", fencing_token=token, lease_seconds=60
+    )
+    assert not other.renew_lease(
+        job.job_id, owner="worker-b", fencing_token=token, lease_seconds=60
+    )
+
+
+def test_expired_lease_takeover_rejects_stale_terminal_write(tmp_path):
+    path = tmp_path / "jobs.sqlite"
+    store = JobStore(path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    first_token = store.claim_for_execution(
+        job.job_id, owner="worker-a", lease_seconds=0.1
+    )
+    time.sleep(0.15)
+
+    other = JobStore(path)
+    second_token = other.claim_for_execution(
+        job.job_id, owner="worker-b", lease_seconds=60
+    )
+
+    assert first_token is not None
+    assert second_token is not None
+    assert second_token > first_token
+    stale = store.finish_job(
+        job.job_id,
+        JobStatus.SUCCEEDED,
+        outcome=ResearchOutcome.SUFFICIENT,
+        event_type="job.completed",
+        owner="worker-a",
+        fencing_token=first_token,
+    )
+    assert stale is False
+    assert store.get_job(job.job_id).status is JobStatus.RUNNING
+
+    fresh = other.finish_job(
+        job.job_id,
+        JobStatus.SUCCEEDED,
+        outcome=ResearchOutcome.SUFFICIENT,
+        event_type="job.completed",
+        owner="worker-b",
+        fencing_token=second_token,
+    )
+    assert fresh is True
+    loaded = store.get_job(job.job_id)
+    assert loaded.status is JobStatus.SUCCEEDED
+    assert loaded.lease_owner == ""
+    assert store.list_events(job.job_id)[-1].event_type == "job.completed"
+
+
+def test_concurrent_claims_have_exactly_one_winner(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    path = tmp_path / "jobs.sqlite"
+    store = JobStore(path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    stores = [JobStore(path) for _ in range(8)]
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(
+            pool.map(
+                lambda index: stores[index].claim_for_execution(
+                    job.job_id, owner=f"worker-{index}", lease_seconds=60
+                ),
+                range(8),
+            )
+        )
+
+    assert sum(result is not None for result in results) == 1
+    assert store.get_job(job.job_id).status is JobStatus.RUNNING
+
+
+def test_expired_lease_without_takeover_rejects_terminal_write(tmp_path):
+    store = _store(tmp_path)
+    job = store.create_job(_contract(), mode_label="MOCK")
+    token = store.claim_for_execution(job.job_id, owner="worker-a", lease_seconds=0.1)
+    time.sleep(0.15)
+
+    finished = store.finish_job(
+        job.job_id,
+        JobStatus.SUCCEEDED,
+        outcome=ResearchOutcome.SUFFICIENT,
+        event_type="job.completed",
+        owner="worker-a",
+        fencing_token=token,
+    )
+
+    assert finished is False
     assert store.get_job(job.job_id).status is JobStatus.RUNNING

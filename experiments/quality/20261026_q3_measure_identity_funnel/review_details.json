@@ -1,0 +1,1155 @@
+[
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "funnel": "not_in_answer",
+    "gt_claim": "2024年德清县实现生产总值（GDP）722.5亿元，同比增长5.8%。",
+    "gt_expected": "2024年德清县全县实现生产总值（GDP）722.5亿元，按可比价计算同比增长5.8%，为年度初步统计数据。",
+    "gt_value": [
+      [
+        "722.5",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "c56189cc8c68",
+      "statement": "全县实现生产总值（GDP）722.5亿元",
+      "region_id": "德清县",
+      "metric_id": "宏观GDP",
+      "value": "722.5",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "宏观GDP",
+      "series_version": "",
+      "source_ids": [
+        "dcd3841cb98a7d82949098cd"
+      ],
+      "evidence_chunk_ids": [
+        "dcd3841cb98a7d82949098cd:chunk:2"
+      ],
+      "verification_status": "supported",
+      "verification_reason": "value_and_span_verified"
+    },
+    "quote": "德清县国民经济和社会发展统计公报 2024](https://tjgb.hongheiku.com/xjtjgb/xj2020/57944.html) * 发布于 2025-03-31 * 分类：[县级统计公报分类目录1](https://tjgb.hongheiku.com/category/xjtjgb/xj2020) 来源：德清县统计局 **选择区域：**[湖州市](https://tjgb.hongheiku.com/tag/湖州市)>> 综合 初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。其中，第一产业增加值31.4亿元，同比增长3.8%；第二产业增加值378.1亿元，同比增长7.1%；第三产业增加值313.1亿元，同比增长4.3%。三次产业占比为4.34∶52.33∶43.33。按常住人口计算，全县人均生产总值为129256元，同比增长5.1%。 根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。 农业农村 **农业。**全年实现农林牧渔业增加值33.2亿元，同比增长3.9%。实现农林牧渔业总产值51.9亿元，同比增长4.0%。其中，农业总产值同比增长3.0%；林业总产值同比增长0.4%；牧业总产值同比下降2.1%；渔业总产值同比增长6.3%。现代农业园区加快建设。2024年末，全县拥有现代农业园区72个，其中国家级1个、省级32个；全年新建现代农业园区（精品园）1个；2024年末拥有农业龙头企业126家。拥有绿色食品面积5.9万亩，绿色食品产品146个。全县建成15个省级数字农业工厂、省级未来农场3个、市级未来农场9个。 **农村。**全力推进数字乡村建设，通过浙农码，打通生产端和销售端对接渠道，浙农码赋码用码量",
+    "objective_supported_conflicts": [],
+    "count": 0
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年德清县第一产业增加值31.4亿元，同比增长3.8%。",
+    "gt_expected": "2024年德清县第一产业增加值31.4亿元，同比增长3.8%，为年度初步统计数据。",
+    "gt_value": [
+      [
+        "31.4",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "b927150d7ddc",
+      "statement": "第一产业增加值31.4亿元",
+      "region_id": "德清县",
+      "metric_id": "产值与收入",
+      "value": "31.4",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "dcd3841cb98a7d82949098cd"
+      ],
+      "evidence_chunk_ids": [
+        "dcd3841cb98a7d82949098cd:chunk:2"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "德清县国民经济和社会发展统计公报 2024](https://tjgb.hongheiku.com/xjtjgb/xj2020/57944.html) * 发布于 2025-03-31 * 分类：[县级统计公报分类目录1](https://tjgb.hongheiku.com/category/xjtjgb/xj2020) 来源：德清县统计局 **选择区域：**[湖州市](https://tjgb.hongheiku.com/tag/湖州市)>> 综合 初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。其中，第一产业增加值31.4亿元，同比增长3.8%；第二产业增加值378.1亿元，同比增长7.1%；第三产业增加值313.1亿元，同比增长4.3%。三次产业占比为4.34∶52.33∶43.33。按常住人口计算，全县人均生产总值为129256元，同比增长5.1%。 根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。 农业农村 **农业。**全年实现农林牧渔业增加值33.2亿元，同比增长3.9%。实现农林牧渔业总产值51.9亿元，同比增长4.0%。其中，农业总产值同比增长3.0%；林业总产值同比增长0.4%；牧业总产值同比下降2.1%；渔业总产值同比增长6.3%。现代农业园区加快建设。2024年末，全县拥有现代农业园区72个，其中国家级1个、省级32个；全年新建现代农业园区（精品园）1个；2024年末拥有农业龙头企业126家。拥有绿色食品面积5.9万亩，绿色食品产品146个。全县建成15个省级数字农业工厂、省级未来农场3个、市级未来农场9个。 **农村。**全力推进数字乡村建设，通过浙农码，打通生产端和销售端对接渠道，浙农码赋码用码量",
+    "objective_supported_conflicts": [
+      {
+        "id": "061f70dc83f1",
+        "value": "378.1亿元",
+        "statement": "第二产业增加值378.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0de1f3eedce4",
+        "value": "217.6亿元",
+        "statement": "高新技术产业增加值217.6亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0fe7a802282a",
+        "value": "74.7亿元",
+        "statement": "全县批发和零售业增加值74.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "339f19afe9eb",
+        "value": "33.2亿元",
+        "statement": "**全年实现农林牧渔业增加值33.2亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4346d6bb4844",
+        "value": "1284.1亿元",
+        "statement": "其中限上批发业销售额1284.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "63f6504b339b",
+        "value": "313.1亿元",
+        "statement": "第三产业增加值313.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 18
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年德清县第二产业增加值378.1亿元，同比增长7.1%。",
+    "gt_expected": "2024年德清县第二产业增加值378.1亿元，同比增长7.1%，为年度初步统计数据。",
+    "gt_value": [
+      [
+        "378.1",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "061f70dc83f1",
+      "statement": "第二产业增加值378.1亿元",
+      "region_id": "德清县",
+      "metric_id": "产值与收入",
+      "value": "378.1",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "dcd3841cb98a7d82949098cd"
+      ],
+      "evidence_chunk_ids": [
+        "dcd3841cb98a7d82949098cd:chunk:2"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "德清县国民经济和社会发展统计公报 2024](https://tjgb.hongheiku.com/xjtjgb/xj2020/57944.html) * 发布于 2025-03-31 * 分类：[县级统计公报分类目录1](https://tjgb.hongheiku.com/category/xjtjgb/xj2020) 来源：德清县统计局 **选择区域：**[湖州市](https://tjgb.hongheiku.com/tag/湖州市)>> 综合 初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。其中，第一产业增加值31.4亿元，同比增长3.8%；第二产业增加值378.1亿元，同比增长7.1%；第三产业增加值313.1亿元，同比增长4.3%。三次产业占比为4.34∶52.33∶43.33。按常住人口计算，全县人均生产总值为129256元，同比增长5.1%。 根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。 农业农村 **农业。**全年实现农林牧渔业增加值33.2亿元，同比增长3.9%。实现农林牧渔业总产值51.9亿元，同比增长4.0%。其中，农业总产值同比增长3.0%；林业总产值同比增长0.4%；牧业总产值同比下降2.1%；渔业总产值同比增长6.3%。现代农业园区加快建设。2024年末，全县拥有现代农业园区72个，其中国家级1个、省级32个；全年新建现代农业园区（精品园）1个；2024年末拥有农业龙头企业126家。拥有绿色食品面积5.9万亩，绿色食品产品146个。全县建成15个省级数字农业工厂、省级未来农场3个、市级未来农场9个。 **农村。**全力推进数字乡村建设，通过浙农码，打通生产端和销售端对接渠道，浙农码赋码用码量",
+    "objective_supported_conflicts": [
+      {
+        "id": "0de1f3eedce4",
+        "value": "217.6亿元",
+        "statement": "高新技术产业增加值217.6亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0fe7a802282a",
+        "value": "74.7亿元",
+        "statement": "全县批发和零售业增加值74.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "339f19afe9eb",
+        "value": "33.2亿元",
+        "statement": "**全年实现农林牧渔业增加值33.2亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4346d6bb4844",
+        "value": "1284.1亿元",
+        "statement": "其中限上批发业销售额1284.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "63f6504b339b",
+        "value": "313.1亿元",
+        "statement": "第三产业增加值313.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "7e0b87d7d4cd",
+        "value": "120.7亿元",
+        "statement": "装备制造业增加值120.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 18
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年德清县第三产业增加值313.1亿元，同比增长4.3%。",
+    "gt_expected": "2024年德清县第三产业增加值313.1亿元，同比增长4.3%，为年度初步统计数据。",
+    "gt_value": [
+      [
+        "313.1",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "63f6504b339b",
+      "statement": "第三产业增加值313.1亿元",
+      "region_id": "德清县",
+      "metric_id": "产值与收入",
+      "value": "313.1",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "dcd3841cb98a7d82949098cd"
+      ],
+      "evidence_chunk_ids": [
+        "dcd3841cb98a7d82949098cd:chunk:2"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "德清县国民经济和社会发展统计公报 2024](https://tjgb.hongheiku.com/xjtjgb/xj2020/57944.html) * 发布于 2025-03-31 * 分类：[县级统计公报分类目录1](https://tjgb.hongheiku.com/category/xjtjgb/xj2020) 来源：德清县统计局 **选择区域：**[湖州市](https://tjgb.hongheiku.com/tag/湖州市)>> 综合 初步核算，2024年，全县实现生产总值（GDP）722.5亿元，同比增长5.8%（按可比价计算，下同）。其中，第一产业增加值31.4亿元，同比增长3.8%；第二产业增加值378.1亿元，同比增长7.1%；第三产业增加值313.1亿元，同比增长4.3%。三次产业占比为4.34∶52.33∶43.33。按常住人口计算，全县人均生产总值为129256元，同比增长5.1%。 根据第五次全国经济普查结果和国家GDP核算制度规定，2023年全县地区生产总值修订为695.1亿元，三次产业结构为4.4∶52.8∶42.8。 农业农村 **农业。**全年实现农林牧渔业增加值33.2亿元，同比增长3.9%。实现农林牧渔业总产值51.9亿元，同比增长4.0%。其中，农业总产值同比增长3.0%；林业总产值同比增长0.4%；牧业总产值同比下降2.1%；渔业总产值同比增长6.3%。现代农业园区加快建设。2024年末，全县拥有现代农业园区72个，其中国家级1个、省级32个；全年新建现代农业园区（精品园）1个；2024年末拥有农业龙头企业126家。拥有绿色食品面积5.9万亩，绿色食品产品146个。全县建成15个省级数字农业工厂、省级未来农场3个、市级未来农场9个。 **农村。**全力推进数字乡村建设，通过浙农码，打通生产端和销售端对接渠道，浙农码赋码用码量",
+    "objective_supported_conflicts": [
+      {
+        "id": "061f70dc83f1",
+        "value": "378.1亿元",
+        "statement": "第二产业增加值378.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0de1f3eedce4",
+        "value": "217.6亿元",
+        "statement": "高新技术产业增加值217.6亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0fe7a802282a",
+        "value": "74.7亿元",
+        "statement": "全县批发和零售业增加值74.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "339f19afe9eb",
+        "value": "33.2亿元",
+        "statement": "**全年实现农林牧渔业增加值33.2亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4346d6bb4844",
+        "value": "1284.1亿元",
+        "statement": "其中限上批发业销售额1284.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "7e0b87d7d4cd",
+        "value": "120.7亿元",
+        "statement": "装备制造业增加值120.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 18
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_01_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年德清县规模以上工业增加值300.6亿元，同比增长7.7%。",
+    "gt_expected": "2024年德清县规模以上工业增加值300.6亿元，同比增长7.7%，为年度初步统计数据。",
+    "gt_value": [
+      [
+        "300.6",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "a840592b3f4e",
+      "statement": "规模以上工业增加值300.6亿元",
+      "region_id": "德清县",
+      "metric_id": "产值与收入",
+      "value": "300.6",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "dcd3841cb98a7d82949098cd"
+      ],
+      "evidence_chunk_ids": [
+        "dcd3841cb98a7d82949098cd:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "末拥有农业龙头企业126家。拥有绿色食品面积5.9万亩，绿色食品产品146个。全县建成15个省级数字农业工厂、省级未来农场3个、市级未来农场9个。 **农村。**全力推进数字乡村建设，通过浙农码，打通生产端和销售端对接渠道，浙农码赋码用码量248.2万余次。累计创成省级未来乡村14个；省级共同富裕新时代美丽乡村示范带1条；市级组团式未来乡村4批8个片区。 工业和建筑业 **工业。**全年实现工业增加值354.2亿元，同比增长7.1%。规模以上工业增加值300.6亿元，同比增长7.7%。其中，战略性新兴产业增加值102.3亿元，同比增长7.4%；高新技术产业增加值217.6亿元，同比增长9.0%；装备制造业增加值120.7亿元，同比增长14.2%。全县规模以上工业企业利税总额134.9亿元，同比增长11.0%，其中利润总额97.9亿元，同比增长17.1%。 **建筑业。**全县建筑业增加值24.0亿元，同比增长7.1%。具有总承包或专业承包资质的建筑业企业共完成产值173.3亿元，竣工产值159.5亿元，建筑业企业房屋建筑施工面积1469.5万平方米，房屋建筑竣工面积604.7万平方米，其中住宅竣工面积112.4万平方米。新型建筑工业化步伐显著加快，全年新开工装配式项目建筑面积达122.1万平方米，实施绿色建筑38项、面积55.6万平方米。 固定资产投资和房地产业 **固定资产投资。**全年固定资产投资同比增长3.2%。民间投资下降6.0%；交通、水利、能源投资和生态环境投资增长20.4%；高新技术产业投资下降0.9%。 **房地产业。**全年房地产投资同比下降30.2%。商品房施工面积316.0万平方米，同比下降15.9%。商品房销售面积28.9万平方米，同比下降44.7%，其中住宅销售面积24.8万平方米，同比下降42.0%。商品房待售面积24万平方米，同比下降75.4%",
+    "objective_supported_conflicts": [
+      {
+        "id": "061f70dc83f1",
+        "value": "378.1亿元",
+        "statement": "第二产业增加值378.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0de1f3eedce4",
+        "value": "217.6亿元",
+        "statement": "高新技术产业增加值217.6亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "0fe7a802282a",
+        "value": "74.7亿元",
+        "statement": "全县批发和零售业增加值74.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "339f19afe9eb",
+        "value": "33.2亿元",
+        "statement": "**全年实现农林牧渔业增加值33.2亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4346d6bb4844",
+        "value": "1284.1亿元",
+        "statement": "其中限上批发业销售额1284.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "63f6504b339b",
+        "value": "313.1亿元",
+        "statement": "第三产业增加值313.1亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 18
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_02_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年长汀县工业增加值74.5亿元，同比增长3.1%。",
+    "gt_expected": "2024年长汀县工业增加值74.5亿元，同比增长3.1%（初步统计数，按现价计算总量、可比价计算增速）。",
+    "gt_value": [
+      [
+        "74.5",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "26550a67a7d9",
+      "statement": "三、工业和建筑业 全年工业增加值74.5亿元",
+      "region_id": "长汀县",
+      "metric_id": "产值与收入",
+      "value": "74.5",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "bd960bef5526a0b4eaff5730"
+      ],
+      "evidence_chunk_ids": [
+        "bd960bef5526a0b4eaff5730:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "铃薯0.63万吨，增长3.1%；杂粮0.19万吨，增长2.9%；大豆0.19万吨，增长2.7%；杂豆141吨，下降26.9%；油料产量0.57万吨，增长1.0%。 全年茶叶总产量0.23万吨，增长3.5%；园林水果产量2.44万吨，增长6.1%；食用菌产量0.67万吨，增长3.8%；油茶籽产量0.32万吨，增长16.5%；松脂产量0.3万吨，增长17.9%；竹笋干产量0.55万吨，增长8.3%；板栗产量0.26万吨，增长1.5%。 全年肉蛋奶总产量 9.39万吨，增长0.9%。肉类总产量8.93万吨，增长0.9%。其中，猪肉产量4.92万吨，下降6.3%；牛肉产量0.11万吨，增长32.3%；羊肉产量237吨，下降12.7%。主要禽蛋产量0.43万吨，下降1.4%。年末生猪存栏35.11万头，增长5.6%；生猪出栏60.18万头，下降8.0%。年末家禽存栏683.28万羽，增长11.0%；家禽出栏2124.26万羽，增长1.2%。 全年水产品产量1.37万吨，增长3.4%。 三、工业和建筑业 全年工业增加值74.5亿元，同比增长3.1%。其中，规模以上工业增加值增长4.2%；规模以下工业增加值下降1.3%。规模以上工业中，分轻重工业看，轻工业下降19.9%，重工业增长25.8%。分门类看，采矿业增长6.2%，制造业增长4.1%，电力、热力、燃气及水生产和供应业增长7.4%。 规模以上工业的23个行业大类中，有12个行业增加值实现正增长，增长面为52.2%。其中，增长较快的分别是有色金属冶炼和压延加工业增长56.2%、专用设备制造业增长32.8%、化学纤维制造业增长30.3%、化学原料和化学制品制造业增长15.0%、电力、热力生产和供应业增长14.7%。分产业看，稀土及其应用产业增加值增长0.8%；机械电子产业增加值增长7.0%；铜铝产业增加值增长219.3%。高技术制造业增",
+    "objective_supported_conflicts": [
+      {
+        "id": "2c19f8450572",
+        "value": "9.6亿元",
+        "statement": "全年交通运输、仓储和邮政业实现增加值9.6亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "34304d806f28",
+        "value": "9.7亿元",
+        "statement": "商品房销售额9.7亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4c962d002508",
+        "value": "91.64亿元",
+        "statement": "其中省内产值91.64亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4e04b0a118b2",
+        "value": "59.3亿元",
+        "statement": "全年建筑业实现增加值59.3亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "51be9303bc32",
+        "value": "181.0亿元",
+        "statement": "零售业销售额181.0亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "51f7d7cfc98d",
+        "value": "21.5亿元",
+        "statement": "实现增加值21.5亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 16
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_snapshot_r1_C",
+    "funnel": "withheld_other",
+    "gt_claim": "2024年于都县工业增加值947850万元，较上年增长9.7%。",
+    "gt_expected": "2024年于都县工业增加值为947850万元，较上年增长9.7%。",
+    "gt_value": [
+      [
+        "947850",
+        "万元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "dd057bc748d9",
+      "statement": "全县实现工业增加值947850万元",
+      "region_id": "于都县",
+      "metric_id": "产值与收入",
+      "value": "947850",
+      "unit": "万元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "b5fde74218c6d91683c75081"
+      ],
+      "evidence_chunk_ids": [
+        "b5fde74218c6d91683c75081:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "-- | | **产品名称** | **单位** | **202****4****年** | **比上年增长±%** | | 肉类总产量 #猪肉 禽蛋 生猪存栏 家禽存笼 大牲畜（牛）存栏 | 吨 吨 吨 头 百只 头 | 94833 | -0.3 | | 38421 | 6.0 | | 5026 | 2.3 | | 258678 | 11.5 | | 124428 | -3.0 | | 22889 | 2.0 | **三、工业和建筑业** 2024年，全县实现工业增加值947850万元，较上年增长9.7%，占全县GDP比重为26.9%，较上年提升0.9个百分点；其中，规模以上工业增加值增长13.8%。全县实现规模以上工业总产值2090798万元，比上年增长11.7%，实现销售产值2051235万元，比上年增长11.8%，工业产销率达98.1%。 规模以上工业营业收入达207.03亿元，比上年增长7.9%，规模以上工业企业实现利税总额173535万元，比上年增长3.8%。从工业三大门类来看，采矿业实现营业收入170082万元，增长7.6%，制造业实现营业收入1853221万元，增长8.1%，电力、热力、燃气及水的生产和供应业实现营业收入46990万元，增长3.4%。 2024年，全县具有资质等级的总承包和专业承包建筑企业60家，建筑业总产值52.93亿元，比上年增长12.6%。其中建筑工程产值49.71亿元，占建筑业总产值的93.9%；安装工程产值2.11亿元，占4.0%；其他产值1.11亿元，占2.1%。 **四、****服务业** 2024年，全县服务业实现增加值2002876万元，比上年增长3.0%。其中，批发和零售业增加值367528万元，增长9.0%；交通运输、仓储和邮政业增加值100052万元，增长2.9%；住宿和餐饮业增加值140046万元，增长4.1%；金融",
+    "objective_supported_conflicts": [
+      {
+        "id": "08be88f42dcd",
+        "value": "175589万元",
+        "statement": "金融业增加值175589万元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "1a434a98f888",
+        "value": "52.93亿元",
+        "statement": "建筑业总产值52.93亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "1ff96ec9bd68",
+        "value": "42770万元",
+        "statement": "信息传输、软件和信息技术服务业增加值42770万元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "27f90217623e",
+        "value": "140046万元",
+        "statement": "住宿和餐饮业增加值140046万元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "2c26c2b5bdcd",
+        "value": "286804万元",
+        "statement": "房地产业增加值286804万元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "3098e086d697",
+        "value": "1.11亿元",
+        "statement": "其他产值1.11亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 22
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年白山市第一产业增加值72.80亿元，增长4.7%。",
+    "gt_expected": "2024年白山市第一产业增加值72.80亿元，增长4.7%。",
+    "gt_value": [
+      [
+        "72.80",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "3125dd360bea",
+      "statement": "第一产业增加值72.80亿元",
+      "region_id": "白山市",
+      "metric_id": "产值与收入",
+      "value": "72.80",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "034fdc7705376941a51a49e6"
+      ],
+      "evidence_chunk_ids": [
+        "034fdc7705376941a51a49e6:chunk:1"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "[登录](javascript:void(0)) | [退出登录](javascript:void(0))[注册](javascript:void(0)) | [无障碍浏览](javascript:void(0); \"无障碍浏览\") | [设为首页](javascript:void(0)) | [加入收藏](javascript:void(0)) * [首 页](/) * [政务公开](../../../../zwgk/) * [统计数据](../../../) * [网上办事](../../../../wsbs/) * [互动交流](../../../../hdjl/) * [政务服务](http://zwfw.jl.gov.cn/jlszwfw/cksx/?deptId=112200000135446996 \"政务服务\") 发文日期：2025-08-06 15:43:02 字体： [小](javascript:;) [中](javascript:;) [大](javascript:;) 2024年，白山市上下坚持以习近平新时代中国特色社会主义思想为指导，深入贯彻党的二十大和二十届二中、三中全会精神，坚持稳中求进工作总基调，完整准确全面贯彻新发展理念，全面建设践行“两山”理念试验区，大力实施“一山两江”品牌战略，着力构建“一体两翼”发展格局，坚定不移推动经济稳中有进，全市各项事业呈现出良好的发展态势，高质量发展迈出坚实步伐。 初步核算，全年实现地区生产总值[1]567.85亿元，比上年增长3.4%。其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元，增长0.2%；第三产业增加值353.67亿元，增长4.3%。三次产业结构比重为12.8:24.9:62.3。 图1 2018—2024年地区生产总值增速（%） 图2 2024年地区生产总值三次产业",
+    "objective_supported_conflicts": [
+      {
+        "id": "0934457814a0",
+        "value": "141.38亿元",
+        "statement": "第二产业增加值141.38亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "54cf8f4b6a2d",
+        "value": "353.67亿元",
+        "statement": "第三产业增加值353.67亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 2
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年白山市第二产业增加值141.38亿元，增长0.2%。",
+    "gt_expected": "2024年白山市第二产业增加值141.38亿元，增长0.2%。",
+    "gt_value": [
+      [
+        "141.38",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "0934457814a0",
+      "statement": "第二产业增加值141.38亿元",
+      "region_id": "白山市",
+      "metric_id": "产值与收入",
+      "value": "141.38",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "034fdc7705376941a51a49e6"
+      ],
+      "evidence_chunk_ids": [
+        "034fdc7705376941a51a49e6:chunk:1",
+        "034fdc7705376941a51a49e6:chunk:2"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "[登录](javascript:void(0)) | [退出登录](javascript:void(0))[注册](javascript:void(0)) | [无障碍浏览](javascript:void(0); \"无障碍浏览\") | [设为首页](javascript:void(0)) | [加入收藏](javascript:void(0)) * [首 页](/) * [政务公开](../../../../zwgk/) * [统计数据](../../../) * [网上办事](../../../../wsbs/) * [互动交流](../../../../hdjl/) * [政务服务](http://zwfw.jl.gov.cn/jlszwfw/cksx/?deptId=112200000135446996 \"政务服务\") 发文日期：2025-08-06 15:43:02 字体： [小](javascript:;) [中](javascript:;) [大](javascript:;) 2024年，白山市上下坚持以习近平新时代中国特色社会主义思想为指导，深入贯彻党的二十大和二十届二中、三中全会精神，坚持稳中求进工作总基调，完整准确全面贯彻新发展理念，全面建设践行“两山”理念试验区，大力实施“一山两江”品牌战略，着力构建“一体两翼”发展格局，坚定不移推动经济稳中有进，全市各项事业呈现出良好的发展态势，高质量发展迈出坚实步伐。 初步核算，全年实现地区生产总值[1]567.85亿元，比上年增长3.4%。其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元，增长0.2%；第三产业增加值353.67亿元，增长4.3%。三次产业结构比重为12.8:24.9:62.3。 图1 2018—2024年地区生产总值增速（%） 图2 2024年地区生产总值三次产业",
+    "objective_supported_conflicts": [
+      {
+        "id": "3125dd360bea",
+        "value": "72.80亿元",
+        "statement": "第一产业增加值72.80亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "54cf8f4b6a2d",
+        "value": "353.67亿元",
+        "statement": "第三产业增加值353.67亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 2
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_05_rise-fall_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年白山市第三产业增加值353.67亿元，增长4.3%。",
+    "gt_expected": "2024年白山市第三产业增加值353.67亿元，增长4.3%。",
+    "gt_value": [
+      [
+        "353.67",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "54cf8f4b6a2d",
+      "statement": "第三产业增加值353.67亿元",
+      "region_id": "白山市",
+      "metric_id": "产值与收入",
+      "value": "353.67",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "034fdc7705376941a51a49e6"
+      ],
+      "evidence_chunk_ids": [
+        "034fdc7705376941a51a49e6:chunk:1",
+        "034fdc7705376941a51a49e6:chunk:2"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "[登录](javascript:void(0)) | [退出登录](javascript:void(0))[注册](javascript:void(0)) | [无障碍浏览](javascript:void(0); \"无障碍浏览\") | [设为首页](javascript:void(0)) | [加入收藏](javascript:void(0)) * [首 页](/) * [政务公开](../../../../zwgk/) * [统计数据](../../../) * [网上办事](../../../../wsbs/) * [互动交流](../../../../hdjl/) * [政务服务](http://zwfw.jl.gov.cn/jlszwfw/cksx/?deptId=112200000135446996 \"政务服务\") 发文日期：2025-08-06 15:43:02 字体： [小](javascript:;) [中](javascript:;) [大](javascript:;) 2024年，白山市上下坚持以习近平新时代中国特色社会主义思想为指导，深入贯彻党的二十大和二十届二中、三中全会精神，坚持稳中求进工作总基调，完整准确全面贯彻新发展理念，全面建设践行“两山”理念试验区，大力实施“一山两江”品牌战略，着力构建“一体两翼”发展格局，坚定不移推动经济稳中有进，全市各项事业呈现出良好的发展态势，高质量发展迈出坚实步伐。 初步核算，全年实现地区生产总值[1]567.85亿元，比上年增长3.4%。其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元，增长0.2%；第三产业增加值353.67亿元，增长4.3%。三次产业结构比重为12.8:24.9:62.3。 图1 2018—2024年地区生产总值增速（%） 图2 2024年地区生产总值三次产业",
+    "objective_supported_conflicts": [
+      {
+        "id": "0934457814a0",
+        "value": "141.38亿元",
+        "statement": "第二产业增加值141.38亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "3125dd360bea",
+        "value": "72.80亿元",
+        "statement": "第一产业增加值72.80亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 2
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年临泽县完成地区生产总值79.68亿元，同比增长6.1%。",
+    "gt_expected": "2024年临泽县完成地区生产总值79.68亿元，同比增长6.1%。",
+    "gt_value": [
+      [
+        "79.68",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "3315bf76ca1c",
+      "statement": "全县完成地区生产总值79.68亿元",
+      "region_id": "临泽县",
+      "metric_id": "宏观GDP",
+      "value": "79.68",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "宏观GDP",
+      "series_version": "",
+      "source_ids": [
+        "4e3d14a34cfa0cd9d80b8f31"
+      ],
+      "evidence_chunk_ids": [
+        "4e3d14a34cfa0cd9d80b8f31:chunk:2",
+        "4e3d14a34cfa0cd9d80b8f31:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "images/lz-nav3.png)政府信息公开](http://www.gslz.gov.cn/zfxxgk/) [![](http://www.gslz.gov.cn/images/lz-nav4.png)办事服务](https://zwfw.gansu.gov.cn/linze/index.html) [![](http://www.gslz.gov.cn/images/lz-nav5.png)政民互动](http://www.gslz.gov.cn/hdjl/) [![](http://www.gslz.gov.cn/images/lz-nav1.png)临泽招商](http://www.gslz.gov.cn/lzxzsyzcs/) * [智能小掖](https://www.zhangye.gov.cn/AI.html \"智能小掖\") * [甘快办](https://zwfw.gansu.gov.cn/fzlm/gkb/art/2021/art_30a7ba92cf5e4025a5c0dba220ba8734.html \"甘快办APP\") * 收藏 * 订阅 温馨提示： 收藏、订阅需先登录，系统检测到您未登录，请点击“确认”将为您跳转到登录页面。 确认 政务公开 ![](../../../../images/zw-locationtbg.png) 首页 > 政府信息公开 > 法定主动公开内容 > 统计信息及法律法规 # 临泽县2024年主要经济指标完成情况 索引号 620723022/2025-00014 发文字号 关键词 发布机构 临泽县统计局 公开形式 责任部门 生成日期 2025-04-15 是否有效 是 2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。一产增加值26.35亿元，同比增长7.7％；二产增加值15.26亿元，同比增长10.8",
+    "objective_supported_conflicts": [
+      {
+        "id": "9928e68a2f87",
+        "value": "119.65亿元",
+        "statement": "完成2022年度生态系统生产总值(GEP)核算119.65亿元",
+        "metric": "宏观GDP",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "宏观GDP",
+        "version": ""
+      }
+    ],
+    "count": 1
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年临泽县第一产业增加值26.35亿元，同比增长7.7%。",
+    "gt_expected": "2024年临泽县第一产业增加值26.35亿元，同比增长7.7%。",
+    "gt_value": [
+      [
+        "26.35",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "aef755cb8d6b",
+      "statement": "一产增加值26.35亿元",
+      "region_id": "临泽县",
+      "metric_id": "产值与收入",
+      "value": "26.35",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "4e3d14a34cfa0cd9d80b8f31"
+      ],
+      "evidence_chunk_ids": [
+        "4e3d14a34cfa0cd9d80b8f31:chunk:2",
+        "4e3d14a34cfa0cd9d80b8f31:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "images/lz-nav3.png)政府信息公开](http://www.gslz.gov.cn/zfxxgk/) [![](http://www.gslz.gov.cn/images/lz-nav4.png)办事服务](https://zwfw.gansu.gov.cn/linze/index.html) [![](http://www.gslz.gov.cn/images/lz-nav5.png)政民互动](http://www.gslz.gov.cn/hdjl/) [![](http://www.gslz.gov.cn/images/lz-nav1.png)临泽招商](http://www.gslz.gov.cn/lzxzsyzcs/) * [智能小掖](https://www.zhangye.gov.cn/AI.html \"智能小掖\") * [甘快办](https://zwfw.gansu.gov.cn/fzlm/gkb/art/2021/art_30a7ba92cf5e4025a5c0dba220ba8734.html \"甘快办APP\") * 收藏 * 订阅 温馨提示： 收藏、订阅需先登录，系统检测到您未登录，请点击“确认”将为您跳转到登录页面。 确认 政务公开 ![](../../../../images/zw-locationtbg.png) 首页 > 政府信息公开 > 法定主动公开内容 > 统计信息及法律法规 # 临泽县2024年主要经济指标完成情况 索引号 620723022/2025-00014 发文字号 关键词 发布机构 临泽县统计局 公开形式 责任部门 生成日期 2025-04-15 是否有效 是 2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。一产增加值26.35亿元，同比增长7.7％；二产增加值15.26亿元，同比增长10.8",
+    "objective_supported_conflicts": [
+      {
+        "id": "16e9302f13f1",
+        "value": "6.43亿元",
+        "statement": "建筑业增加值6.43亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "324e037b5d8f",
+        "value": "28.71亿元",
+        "statement": "二、农 业 全年实现农林牧渔业增加值28.71亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "38952751713b",
+        "value": "3.85亿元",
+        "statement": "交通运输业增加值3.85亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "3c8ed8bc6ba5",
+        "value": "5.24亿元",
+        "statement": "营利性服务业增加值5.24亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4b8d64306792",
+        "value": "1.64亿元",
+        "statement": "住宿和餐饮业增加值1.64亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "84379056c639",
+        "value": "38.07亿元",
+        "statement": "三产增加值38.07亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 13
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年临泽县第二产业增加值15.26亿元，同比增长10.8%。",
+    "gt_expected": "2024年临泽县第二产业增加值15.26亿元，同比增长10.8%。",
+    "gt_value": [
+      [
+        "15.26",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "87bef06beb1b",
+      "statement": "二产增加值15.26亿元",
+      "region_id": "临泽县",
+      "metric_id": "产值与收入",
+      "value": "15.26",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "4e3d14a34cfa0cd9d80b8f31"
+      ],
+      "evidence_chunk_ids": [
+        "4e3d14a34cfa0cd9d80b8f31:chunk:2",
+        "4e3d14a34cfa0cd9d80b8f31:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "images/lz-nav3.png)政府信息公开](http://www.gslz.gov.cn/zfxxgk/) [![](http://www.gslz.gov.cn/images/lz-nav4.png)办事服务](https://zwfw.gansu.gov.cn/linze/index.html) [![](http://www.gslz.gov.cn/images/lz-nav5.png)政民互动](http://www.gslz.gov.cn/hdjl/) [![](http://www.gslz.gov.cn/images/lz-nav1.png)临泽招商](http://www.gslz.gov.cn/lzxzsyzcs/) * [智能小掖](https://www.zhangye.gov.cn/AI.html \"智能小掖\") * [甘快办](https://zwfw.gansu.gov.cn/fzlm/gkb/art/2021/art_30a7ba92cf5e4025a5c0dba220ba8734.html \"甘快办APP\") * 收藏 * 订阅 温馨提示： 收藏、订阅需先登录，系统检测到您未登录，请点击“确认”将为您跳转到登录页面。 确认 政务公开 ![](../../../../images/zw-locationtbg.png) 首页 > 政府信息公开 > 法定主动公开内容 > 统计信息及法律法规 # 临泽县2024年主要经济指标完成情况 索引号 620723022/2025-00014 发文字号 关键词 发布机构 临泽县统计局 公开形式 责任部门 生成日期 2025-04-15 是否有效 是 2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。一产增加值26.35亿元，同比增长7.7％；二产增加值15.26亿元，同比增长10.8",
+    "objective_supported_conflicts": [
+      {
+        "id": "16e9302f13f1",
+        "value": "6.43亿元",
+        "statement": "建筑业增加值6.43亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "324e037b5d8f",
+        "value": "28.71亿元",
+        "statement": "二、农 业 全年实现农林牧渔业增加值28.71亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "38952751713b",
+        "value": "3.85亿元",
+        "statement": "交通运输业增加值3.85亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "3c8ed8bc6ba5",
+        "value": "5.24亿元",
+        "statement": "营利性服务业增加值5.24亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4b8d64306792",
+        "value": "1.64亿元",
+        "statement": "住宿和餐饮业增加值1.64亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "84379056c639",
+        "value": "38.07亿元",
+        "statement": "三产增加值38.07亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 13
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "funnel": "withheld_exact_evidence",
+    "gt_claim": "2024年临泽县第三产业增加值38.07亿元，同比增长3.3%。",
+    "gt_expected": "2024年临泽县第三产业增加值38.07亿元，同比增长3.3%。",
+    "gt_value": [
+      [
+        "38.07",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "84379056c639",
+      "statement": "三产增加值38.07亿元",
+      "region_id": "临泽县",
+      "metric_id": "产值与收入",
+      "value": "38.07",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "产值与收入",
+      "series_version": "",
+      "source_ids": [
+        "4e3d14a34cfa0cd9d80b8f31"
+      ],
+      "evidence_chunk_ids": [
+        "4e3d14a34cfa0cd9d80b8f31:chunk:3"
+      ],
+      "verification_status": "needs_review",
+      "verification_reason": "conflicting_supported_evidence"
+    },
+    "quote": "布机构 临泽县统计局 公开形式 责任部门 生成日期 2025-04-15 是否有效 是 2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。一产增加值26.35亿元，同比增长7.7％；二产增加值15.26亿元，同比增长10.8％；三产增加值38.07亿元，同比增长3.3％。固定资产投资额同比下降4.8％；工业增加值同比增长10.5％；建筑业增加值同比增长11.3％；社会消费品零售总额同比增长6.4％；一般公共预算收入3.01亿元，同比增长6.9％；一般公共预算支出24.89亿元，同比增长17.1％；城镇居民人均可支配收入35435元，同比增长5.6％；农村居民人均可支配收入23582元，同比增长7.8％。 ![](http://www.gslz.gov.cn/images/zw-floatsj.png)甘肃临泽 ![](http://www.gslz.gov.cn/ggbf/ewm/201809/W020180918471753480735.jpg) ![](http://www.gslz.gov.cn/images/zw-floatwx.png)文明临泽 ![](http://www.gslz.gov.cn/ggbf/ewm/201809/W020230520691785027589.jpg) ![](http://www.gslz.gov.cn/images/zw-floatwb.png)枣乡临泽 ![](http://www.gslz.gov.cn/ggbf/ewm/201809/W020230520704351220441.png) ![](http://www.gslz.gov.cn/images/zw-floattop.png)返回顶部 [关于我们](http://www.gslz.gov.cn/ggbf/gywm/) | [网站地图](http:",
+    "objective_supported_conflicts": [
+      {
+        "id": "16e9302f13f1",
+        "value": "6.43亿元",
+        "statement": "建筑业增加值6.43亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "324e037b5d8f",
+        "value": "28.71亿元",
+        "statement": "二、农 业 全年实现农林牧渔业增加值28.71亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "38952751713b",
+        "value": "3.85亿元",
+        "statement": "交通运输业增加值3.85亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "3c8ed8bc6ba5",
+        "value": "5.24亿元",
+        "statement": "营利性服务业增加值5.24亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "4b8d64306792",
+        "value": "1.64亿元",
+        "statement": "住宿和餐饮业增加值1.64亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      },
+      {
+        "id": "87bef06beb1b",
+        "value": "15.26亿元",
+        "statement": "二产增加值15.26亿元",
+        "metric": "产值与收入",
+        "period": "2024",
+        "scope": "县域本级",
+        "caliber": "产值与收入",
+        "version": ""
+      }
+    ],
+    "count": 12
+  },
+  {
+    "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_06_snapshot_r1_C",
+    "funnel": "not_in_answer",
+    "gt_claim": "2024年临泽县一般公共预算收入3.01亿元，同比增长6.9%。",
+    "gt_expected": "2024年临泽县一般公共预算收入3.01亿元，同比增长6.9%。",
+    "gt_value": [
+      [
+        "3.01",
+        "亿元"
+      ]
+    ],
+    "matched": {
+      "claim_id": "b2bc296d5bc0",
+      "statement": "一般公共预算收入3.01亿元",
+      "region_id": "临泽县",
+      "metric_id": "财政与投资",
+      "value": "3.01",
+      "unit": "亿元",
+      "period": "2024",
+      "administrative_scope": "县域本级",
+      "statistical_caliber": "财政与投资",
+      "series_version": "",
+      "source_ids": [
+        "4e3d14a34cfa0cd9d80b8f31"
+      ],
+      "evidence_chunk_ids": [
+        "4e3d14a34cfa0cd9d80b8f31:chunk:3"
+      ],
+      "verification_status": "supported",
+      "verification_reason": "value_and_span_verified"
+    },
+    "quote": "布机构 临泽县统计局 公开形式 责任部门 生成日期 2025-04-15 是否有效 是 2024年，全县完成地区生产总值79.68亿元，同比增长6.1％。一产增加值26.35亿元，同比增长7.7％；二产增加值15.26亿元，同比增长10.8％；三产增加值38.07亿元，同比增长3.3％。固定资产投资额同比下降4.8％；工业增加值同比增长10.5％；建筑业增加值同比增长11.3％；社会消费品零售总额同比增长6.4％；一般公共预算收入3.01亿元，同比增长6.9％；一般公共预算支出24.89亿元，同比增长17.1％；城镇居民人均可支配收入35435元，同比增长5.6％；农村居民人均可支配收入23582元，同比增长7.8％。 ![](http://www.gslz.gov.cn/images/zw-floatsj.png)甘肃临泽 ![](http://www.gslz.gov.cn/ggbf/ewm/201809/W020180918471753480735.jpg) ![](http://www.gslz.gov.cn/images/zw-floatwx.png)文明临泽 ![](http://www.gslz.gov.cn/ggbf/ewm/201809/W020230520691785027589.jpg) ![](http://www.gslz.gov.cn/images/zw-floatwb.png)枣乡临泽 ![](http://www.gslz.gov.cn/ggbf/ewm/201809/W020230520704351220441.png) ![](http://www.gslz.gov.cn/images/zw-floattop.png)返回顶部 [关于我们](http://www.gslz.gov.cn/ggbf/gywm/) | [网站地图](http:",
+    "objective_supported_conflicts": [],
+    "count": 0
+  }
+]
