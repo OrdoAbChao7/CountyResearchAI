@@ -131,3 +131,43 @@ def infer_period(
     report_years = re.findall(r'((?:19|20)\d{2})年[^\d。\n]{0,40}统计公报', title or '')
     report_years = [year for year in report_years if year in data_years(title)]
     return report_years[0] if len(set(report_years)) == 1 else ''
+
+
+def infer_claim_period(
+    statement: str,
+    *,
+    chunk_text: str = "",
+    value: str = "",
+    title: str = "",
+    published_at: object | None = None,
+    content_prefix: str = "",
+    document_year: str = "",
+) -> str:
+    """Resolve a claim's data period without borrowing the publication year.
+
+    Claim-local years take priority. A claim that names several years stays a
+    span (for example ``2024-2025``) and is never collapsed to one year or to
+    the document year. The document year is only used when the claim, its
+    title, and its evidence chunk mention no year at all; if a year was named
+    but could not be resolved unambiguously, the period stays empty.
+    """
+    statement_years = sorted(set(data_years(statement)))
+    if len(statement_years) > 1:
+        return "-".join(statement_years)
+    period = infer_period(
+        statement,
+        chunk_text=chunk_text,
+        value=value,
+        title=title,
+        published_at=published_at,
+        content_prefix=content_prefix,
+    )
+    if period:
+        return period
+    if statement_years:
+        return statement_years[0]
+    # A year was named but rejected as a publication label (or left ambiguous):
+    # do not replace it with the document year.
+    if any(_YEAR.search(text or "") for text in (statement, title, chunk_text)):
+        return ""
+    return str(document_year or "").strip()

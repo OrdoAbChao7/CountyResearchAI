@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import re
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from ..models import RawDoc
@@ -63,40 +64,104 @@ def normalize_url(url: str) -> str:
         return url.strip()
 
 
-def extract_publish_date(text: str, url: str = "") -> datetime | None:
-    """从文本或 URL 中提取发布日期或主要年份。"""
-    # 1. 尝试从 URL 中匹配日期，如 /2023-05-18/ 或 /20230518/
-    url_date_match = re.search(r"/(20[12]\d)[-_/]?(0[1-9]|1[0-2])[-_/]?(0[1-9]|[12]\d|3[01])", url)
-    if url_date_match:
-        try:
-            year, month, day = (int(url_date_match.group(i)) for i in (1, 2, 3))
-            return datetime(year, month, day, tzinfo=timezone.utc)
-        except ValueError:
-            pass
+_PUBLISHED_LABEL = re.compile(
+    r"(?:发布(?:时间|日期)|发布日期|发布时间|发布于|更新(?:时间|日期)|"
+    r"最后更新|成文日期|印发日期)"
+    r"[\s：:]*"
+    r"(20[12]\d)[年\-/](0?[1-9]|1[0-2])[月\-/]([12]\d|3[01]|0?[1-9])日?"
+)
+_DATE_IN_TEXT = re.compile(
+    r"(20[12]\d)[年\-/](0?[1-9]|1[0-2])[月\-/]([12]\d|3[01]|0?[1-9])日?"
+)
 
-    # 2. 尝试从正文中提取 "2023年5月18日" 或 "2023-05-18"
-    text_date_match = re.search(
-        r"(20[12]\d)[年\-/](0?[1-9]|1[0-2])[月\-/]([12]\d|3[01]|0?[1-9])日?",
-        text[:500],  # 优先看开头
+
+def _safe_utc(year: int, month: int, day: int) -> datetime | None:
+    try:
+        return datetime(year, month, day, tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _date_from_url(url: str) -> datetime | None:
+    """Extract a date from common Chinese government URL layouts."""
+    # /202401/t20240108_123.html, /t20240108.html
+    match = re.search(r"(?:^|[/_])t(20[12]\d)(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)", url)
+    if match:
+        parsed = _safe_utc(*(int(match.group(i)) for i in (1, 2, 3)))
+        if parsed is not None:
+            return parsed
+    # /2024-01-08/, /2024/01/08/, /20240108/
+    match = re.search(
+        r"/(20[12]\d)[-_/]?(0[1-9]|1[0-2])[-_/]?(0[1-9]|[12]\d|3[01])(?!\d)",
+        url,
     )
-    if text_date_match:
-        try:
-            year = int(text_date_match.group(1))
-            month = int(text_date_match.group(2))
-            day = int(text_date_match.group(3))
-            return datetime(year, month, day, tzinfo=timezone.utc)
-        except ValueError:
-            pass
+    if match:
+        parsed = _safe_utc(*(int(match.group(i)) for i in (1, 2, 3)))
+        if parsed is not None:
+            return parsed
+    # Month-only path: /202401/ or /2024/01/. Day precision is unknown.
+    match = re.search(r"/(20[12]\d)[-_/]?(0[1-9]|1[0-2])(?![0-9])", url)
+    if match:
+        return _safe_utc(int(match.group(1)), int(match.group(2)), 1)
+    return None
 
-    # 3. 仅提取年份
-    year_match = re.search(r"(20[12]\d)年", text[:500])
-    if year_match:
-        try:
-            year = int(year_match.group(1))
-            return datetime(year, 1, 1, tzinfo=timezone.utc)
-        except ValueError:
-            pass
 
+def parse_published_date(value: object) -> datetime | None:
+    """Parse a provider-supplied publication date without guessing from body text.
+
+    Accepts ISO-8601, RFC/HTTP dates, Unix timestamps, and Chinese date strings.
+    This is the only path that may populate ``RawDoc.published_at`` from a
+    provider field; it never derives a data period.
+    """
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        try:
+            return datetime.fromtimestamp(float(value), tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
+    text = str(value).strip()
+    if not text or text.lower() in {"none", "null", "unknown"}:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        parsed = None
+    if parsed is None:
+        try:
+            parsed = parsedate_to_datetime(text)
+        except (TypeError, ValueError):
+            parsed = None
+    if parsed is None:
+        match = _DATE_IN_TEXT.search(text)
+        if match:
+            parsed = _safe_utc(*(int(match.group(i)) for i in (1, 2, 3)))
+    if parsed is None:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def extract_publish_date(text: str, url: str = "") -> datetime | None:
+    """Extract a publication date from a URL or an explicit text label.
+
+    URL timestamps win. Body dates are accepted only when preceded by a
+    publication/update label, so a dated statement in the first body paragraph
+    is not mistaken for the page's publication time. A bare year is never a
+    publication date.
+    """
+    url_date = _date_from_url(url)
+    if url_date is not None:
+        return url_date
+
+    label_match = _PUBLISHED_LABEL.search(text[:1000])
+    if label_match:
+        return _safe_utc(
+            int(label_match.group(1)),
+            int(label_match.group(2)),
+            int(label_match.group(3)),
+        )
     return None
 
 

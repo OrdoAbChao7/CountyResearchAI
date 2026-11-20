@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import type { GraphEdge, GraphNode, GraphNodeType, GraphView } from "../api";
 import { getGraph } from "../api";
+import { isLargeGraph } from "../graphLayout";
 import { EmptyState, ErrorState, LoadingState } from "./StateViews";
 
 const GraphCanvas = lazy(() => import("./GraphCanvas"));
@@ -9,6 +10,7 @@ interface Props {
   jobId: string;
   terminal: boolean;
   selectedNodeId: string | null;
+  focusClaimId?: string | null;
   onSelectNode: (node: GraphNode | null) => void;
   onEvidence: (claimId: string) => void;
   onOpenReport: (claimId: string) => void;
@@ -38,6 +40,7 @@ export function GraphPanel({
   jobId,
   terminal,
   selectedNodeId,
+  focusClaimId,
   onSelectNode,
   onEvidence,
   onOpenReport,
@@ -93,6 +96,16 @@ export function GraphPanel({
       cancelled = true;
     };
   }, [jobId, terminal, includeSources, topic, reloadKey]);
+
+  useEffect(() => {
+    if (!focusClaimId || !graph) return;
+    const node = graph.nodes.find(
+      (candidate) =>
+        candidate.type === "evidence" &&
+        String(candidate.data.claim_id ?? "") === focusClaimId,
+    );
+    if (node) onSelectNode(node);
+  }, [focusClaimId, graph, onSelectNode]);
 
   const filtered = useMemo(() => {
     if (!graph) return null;
@@ -302,8 +315,9 @@ export function GraphPanel({
       )}
 
       <p className="graph-footnote">
-        图谱只展示本次运行持久化的问题、证据、来源与冲突关系；来源节点按规范化
-        URL 合并，缺失冲突来源不会生成虚构连线。
+        {isLargeGraph(graph.nodes.length)
+          ? `当前 ${graph.nodes.length} 个节点，画布已切换为同心布局并在低缩放级别隐藏节点标签以保持交互流畅；放大后标签会恢复，完整节点详情也可在列表视图与右侧上下文面板查看。`
+          : "图谱只展示本次运行持久化的问题、证据、来源与冲突关系；来源节点按规范化 URL 合并，缺失冲突来源不会生成虚构连线。"}
       </p>
     </section>
   );

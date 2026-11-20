@@ -169,17 +169,17 @@ def test_fact_verifier_single_digit_and_unit_mismatch():
 def test_evidence_store_macro_gdp_and_cross_caliber_conflicts():
     store = EvidenceStore()
     doc1 = RawDoc(
-        title="2023年统计公报",
+        title="2023年安吉县统计公报",
         url="https://anji.gov.cn/tjgb",
-        snippet="实现地区生产总值350亿元，规上工业产值120亿元，常住人口达到58万人。",
+        snippet="安吉县实现地区生产总值350亿元，规上工业产值120亿元，常住人口达到58万人。",
         content="2023年全县地区生产总值350亿元，规上工业产值120亿元，常住人口58万人。",
         domain_type="government",
         credibility_score=0.95,
     )
     doc2 = RawDoc(
-        title="产业专班报道",
+        title="安吉县竹产业专班报道",
         url="https://news.example.com/bamboo",
-        snippet="竹产业全产业链总产值突破280亿元。",
+        snippet="安吉县竹产业全产业链总产值突破280亿元。",
         content="竹产业全产业链总产值突破280亿元。",
         domain_type="news",
         credibility_score=0.85,

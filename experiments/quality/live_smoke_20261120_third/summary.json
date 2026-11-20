@@ -1,0 +1,297 @@
+{
+  "date": "2026-11-20",
+  "authorization": "user: 允许付费调用 + 跑一次 Live + 再跑一次 + 跑第三次 (2026-11-20)",
+  "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
+  "provider": {
+    "llm": "deepseek",
+    "model": "deepseek-flash",
+    "base_url": "https://api.deepseek.com/v1",
+    "search": "tavily",
+    "search_depth": "basic"
+  },
+  "model_ids": [
+    "deepseek-flash",
+    "deepseek-v4-pro"
+  ],
+  "preflight": {
+    "content_chars": 7,
+    "model": "deepseek-flash",
+    "total_tokens": 13
+  },
+  "capabilities": {
+    "status": 200,
+    "mode_label": "LIVE"
+  },
+  "job_id": "007487e8e7494e3fba1770c1f7b0781f",
+  "status": "SUCCEEDED",
+  "mode_label": "LIVE",
+  "outcome": "NO_PROGRESS",
+  "outcome_reason": "no_supported_claims",
+  "budget_enforcement": {
+    "enforced": [
+      "deadline_seconds"
+    ],
+    "bounded_per_call": [
+      "max_tokens",
+      "max_documents"
+    ],
+    "not_enforced_on_workflow_path": [
+      "max_steps",
+      "max_search_calls",
+      "max_cost"
+    ],
+    "elapsed_seconds": 22.749,
+    "deadline_seconds": 480.0
+  },
+  "event_count": 28,
+  "event_types": [
+    "job.queued",
+    "job.started",
+    "stage.collect.started",
+    "stage.collect.completed",
+    "stage.discover.started",
+    "stage.discover.completed",
+    "stage.evidence.started",
+    "stage.evidence.completed",
+    "stage.analyze.started",
+    "question_tree.created",
+    "evidence.ingested",
+    "question_tree.coverage",
+    "gaps.detected",
+    "conflicts.detected",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "agent.started",
+    "agent.completed",
+    "synthesis.started",
+    "synthesis.completed",
+    "stage.analyze.completed",
+    "evidence.persisted",
+    "stage.report.started",
+    "stage.report.completed",
+    "report.rendered",
+    "job.completed"
+  ],
+  "graph": {
+    "http_status": 200,
+    "total_nodes": 165,
+    "returned_nodes": 165,
+    "total_edges": 1077,
+    "returned_edges": 800,
+    "truncated": true
+  },
+  "report": {
+    "json_status": 200,
+    "markdown_status": 200,
+    "sections": [
+      "summary",
+      "verified-facts",
+      "disputes",
+      "gaps",
+      "sources",
+      "method"
+    ],
+    "verification": {
+      "verified": 0,
+      "unverified": 133,
+      "total": 133,
+      "notes": [
+        "NOT_COMPARABLE: 133",
+        "证据不足的结论不在事实表中复述。"
+      ],
+      "per_section": {
+        "verified": 0,
+        "disputes": 133,
+        "gaps": 2
+      }
+    },
+    "citation_count": 133,
+    "conflict_count": 6,
+    "gap_count": 2
+  },
+  "sources": {
+    "http_status": 200,
+    "count": 8,
+    "items": [
+      {
+        "title": "安吉县竹产业现状及发展对策",
+        "url": "https://zlxb.zafu.edu.cn/fileZJNLDXXB/journal/article/zjnldxxb/1996/1/PDF/13-1-13.pdf",
+        "published_at": null
+      },
+      {
+        "title": "(湖州市)2025年安吉县国民经济和社会发展统计公报-红黑统计公报库",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "published_at": "2025-01-01T00:00:00Z"
+      },
+      {
+        "title": "安吉县毛竹林下食用菌栽培产业发展现状与对策 - 浙江林业科技",
+        "url": "https://zjlykj.xml-journal.net/cn/article/pdf/preview/10.3969/j.issn.1001-3776.2023.03.017.pdf",
+        "published_at": null
+      },
+      {
+        "title": "【传统竹产业有了绿色新路径 （美丽中国·“以竹代塑”在行动①）】-国家发展和改革委员会",
+        "url": "https://ndrc.gov.cn/xwdt/ztzl/slwrzlzxd/202401/t20240108_1363146.html",
+        "published_at": "2022-01-01T00:00:00Z"
+      },
+      {
+        "title": "浙江省安吉县竹产业2011年预计产值可达130多亿_产业动态_产业发展_国际竹藤中心",
+        "url": "https://icbr.ac.cn/cyfz/cydt/content_7847",
+        "published_at": "2011-01-01T00:00:00Z"
+      },
+      {
+        "title": "小蜂观察：浙江省安吉县竹产业高质量发展路径分析-农小蜂",
+        "url": "https://abeedata.com/home/article/detail/id/25883",
+        "published_at": "2023-01-01T00:00:00Z"
+      },
+      {
+        "title": "走进安吉，看“绿水青山就是金山银山”_国家林业和草原局政府网",
+        "url": "https://forestry.gov.cn/c/www/lcdt/536049.jhtml",
+        "published_at": null
+      },
+      {
+        "title": "贵州省国民经济和社会发展第十五个五年规划纲要",
+        "url": "https://fgw.guizhou.gov.cn/zwgk/zdlyxx/ghjh/202602/t20260214_89548677.html",
+        "published_at": "2026-02-14T00:00:00Z"
+      }
+    ]
+  },
+  "guard": {
+    "llm_calls": 2,
+    "search_calls": 7,
+    "prompt_tokens": 3466,
+    "completion_tokens": 1227,
+    "total_tokens": 4693,
+    "llm_seconds": 7.59,
+    "search_seconds": 32.41,
+    "elapsed_seconds": 29.23,
+    "violations": [],
+    "llm_events": [
+      {
+        "call": 1,
+        "model": "deepseek-flash",
+        "prompt_tokens": 10,
+        "completion_tokens": 3,
+        "total_tokens": 13,
+        "seconds": 1.66
+      },
+      {
+        "call": 2,
+        "model": "deepseek-flash",
+        "prompt_tokens": 3456,
+        "completion_tokens": 1224,
+        "total_tokens": 4680,
+        "seconds": 5.93
+      }
+    ],
+    "search_events": [
+      {
+        "call": 3,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 4.29
+      },
+      {
+        "call": 4,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 4.52
+      },
+      {
+        "call": 5,
+        "query_chars": 22,
+        "documents": 6,
+        "seconds": 5.07
+      },
+      {
+        "call": 6,
+        "query_chars": 25,
+        "documents": 6,
+        "seconds": 4.17
+      },
+      {
+        "call": 7,
+        "query_chars": 28,
+        "documents": 6,
+        "seconds": 4.24
+      },
+      {
+        "call": 7,
+        "query_chars": 31,
+        "documents": 6,
+        "seconds": 5.53
+      },
+      {
+        "call": 7,
+        "query_chars": 26,
+        "documents": 6,
+        "seconds": 4.58
+      }
+    ]
+  },
+  "region_gate": {
+    "county": "安吉县",
+    "rounds": [],
+    "region_filtered_documents_total": 0,
+    "persisted_source_verdicts": {
+      "region": 7,
+      "other_region": 1
+    },
+    "persisted_sources": [
+      {
+        "title": "安吉县竹产业现状及发展对策",
+        "url": "https://zlxb.zafu.edu.cn/fileZJNLDXXB/journal/article/zjnldxxb/1996/1/PDF/13-1-13.pdf",
+        "verdict": "region"
+      },
+      {
+        "title": "(湖州市)2025年安吉县国民经济和社会发展统计公报-红黑统计公报库",
+        "url": "https://tjgb.hongheiku.com/xjtjgb/xj2020/69856.html",
+        "verdict": "region"
+      },
+      {
+        "title": "安吉县毛竹林下食用菌栽培产业发展现状与对策 - 浙江林业科技",
+        "url": "https://zjlykj.xml-journal.net/cn/article/pdf/preview/10.3969/j.issn.1001-3776.2023.03.017.pdf",
+        "verdict": "region"
+      },
+      {
+        "title": "【传统竹产业有了绿色新路径 （美丽中国·“以竹代塑”在行动①）】-国家发展和改革委员会",
+        "url": "https://ndrc.gov.cn/xwdt/ztzl/slwrzlzxd/202401/t20240108_1363146.html",
+        "verdict": "region"
+      },
+      {
+        "title": "浙江省安吉县竹产业2011年预计产值可达130多亿_产业动态_产业发展_国际竹藤中心",
+        "url": "https://icbr.ac.cn/cyfz/cydt/content_7847",
+        "verdict": "region"
+      },
+      {
+        "title": "小蜂观察：浙江省安吉县竹产业高质量发展路径分析-农小蜂",
+        "url": "https://abeedata.com/home/article/detail/id/25883",
+        "verdict": "region"
+      },
+      {
+        "title": "走进安吉，看“绿水青山就是金山银山”_国家林业和草原局政府网",
+        "url": "https://forestry.gov.cn/c/www/lcdt/536049.jhtml",
+        "verdict": "region"
+      },
+      {
+        "title": "贵州省国民经济和社会发展第十五个五年规划纲要",
+        "url": "https://fgw.guizhou.gov.cn/zwgk/zdlyxx/ghjh/202602/t20260214_89548677.html",
+        "verdict": "other_region"
+      }
+    ],
+    "collect_filter_events": [],
+    "note": "persisted sources reclassified offline with the fixed short-name rule; this run predates the retrieval.region_filtered event, so the collect-time drop count is unavailable; no provider calls were made for this post-processing"
+  },
+  "estimated_cost_usd": {
+    "llm_offpeak": 0.001256,
+    "llm_peak_worst_case": 0.002512,
+    "tavily_if_paid": 0.056,
+    "total_if_tavily_paid": 0.0585
+  },
+  "verdict_scope": "engineering_smoke_only",
+  "research_verdict": "NO_SUPPORTED_CLAIMS",
+  "verdict": "PASS_ENGINEERING",
+  "verdict_reason": "live plumbing works, but the verifier accepted zero claims",
+  "artifact_note": "region_gate.persisted_sources was reclassified offline on 2026-11-20 with the fixed short-name rule; provider usage and report evidence are unchanged."
+}

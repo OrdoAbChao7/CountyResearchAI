@@ -17,10 +17,12 @@ import logging
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as _TimeoutError
+from datetime import date
 
 from ..config import Settings, get_settings
 from ..exceptions import SearchError
 from ..models import RawDoc
+from ..observability import emit
 from .adaptive_retrieval import (
     AdaptiveCollectionResult,
     AdaptiveQueryPlan,
@@ -36,6 +38,7 @@ from .content_extractor import (
 )
 from .gov_data import GovDataProvider
 from .query_engine import GeneratedQuery, QueryEngine
+from .region_relevance import filter_documents_for_region
 from .web_search import create_provider
 
 logger = logging.getLogger(__name__)
@@ -143,8 +146,16 @@ class SearchCollector(SearchProvider):
         max_results: int = 0,
         *,
         mode: str = "snapshot",
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
     ) -> list[RawDoc]:
-        """主业务采集接口。优先采用动态消歧与 QueryEngine。"""
+        """主业务采集接口。优先采用动态消歧与 QueryEngine。
+
+        ``date_start``/``date_end`` are accepted so every layer receives the
+        contract window. They are deliberately not used to filter search
+        results by publication date: a 2025 bulletin may report 2024 data.
+        """
         n = max_results or self._max_results
         keywords = [kw for kw in [county, focus] if kw]
 
@@ -174,6 +185,7 @@ class SearchCollector(SearchProvider):
                 focus=focus,
                 mode=mode,
                 max_queries=10,
+                target_years=target_years,
             )
             for gq in generated_queries:
                 if gq.target_channel == "gov" and self._gov is not None:
@@ -187,13 +199,15 @@ class SearchCollector(SearchProvider):
             logger.warning("没有可用的搜索 provider,返回空结果")
             return []
 
-        docs = self._run_tasks(tasks)
+        docs = self._filter_region_documents(self._run_tasks(tasks), county)
         return self._dedup_and_rank(docs, top=n, keywords=keywords, county=county)
 
     def collect_supplemental(
         self,
         queries: list[str],
         max_results: int = 10,
+        *,
+        county: str = "",
     ) -> list[RawDoc]:
         """多轮反思补充检索接口。执行针对性查询。"""
         tasks: list[tuple[SearchProvider, str]] = []
@@ -206,7 +220,7 @@ class SearchCollector(SearchProvider):
         if not tasks:
             return []
 
-        docs = self._run_tasks(tasks)
+        docs = self._filter_region_documents(self._run_tasks(tasks), county)
         return self._dedup_and_rank(docs, top=max_results, keywords=queries)
 
     def collect_adaptive(
@@ -236,6 +250,16 @@ class SearchCollector(SearchProvider):
         raw_docs = self._run_tasks(tasks)
         if controller:
             controller.record_fetches(len(raw_docs))
+        region_filter = filter_documents_for_region(raw_docs, plan.spec.region_name)
+        region_docs = list(region_filter.kept)
+        if region_filter.dropped:
+            logger.info(
+                "区域相关性过滤 | county=%s | kept=%d | dropped=%d | dropped_urls=%s",
+                plan.spec.region_name,
+                len(region_docs),
+                len(region_filter.dropped),
+                [doc.url for doc, _ in region_filter.dropped][:5],
+            )
         slots = {slot.slot_id: slot for slot in plan.spec.question_slots}
         ranked_by_url: dict[str, tuple[float, RawDoc]] = {}
         for generated in queries:
@@ -243,7 +267,7 @@ class SearchCollector(SearchProvider):
             if slot is None:
                 continue
             for item in rank_documents_for_slot(
-                raw_docs,
+                region_docs,
                 slot,
                 query=generated.query,
             ):
@@ -259,46 +283,94 @@ class SearchCollector(SearchProvider):
             usage={
                 "search_queries": len(tasks),
                 "fetched_documents": len(raw_docs),
+                "region_filtered_documents": len(region_filter.dropped),
                 "returned_documents": len(ranked),
             },
         )
 
+    @staticmethod
+    def _filter_region_documents(
+        docs: list[RawDoc], county: str
+    ) -> list[RawDoc]:
+        """Drop results that positively belong to another region or to the nation."""
+        if not county:
+            return docs
+        result = filter_documents_for_region(docs, county)
+        if result.dropped:
+            verdicts: dict[str, int] = {}
+            for _, assessment in result.dropped:
+                verdicts[assessment.verdict.value] = (
+                    verdicts.get(assessment.verdict.value, 0) + 1
+                )
+            emit(
+                "retrieval.region_filtered",
+                stage="collect",
+                payload={
+                    "county": county,
+                    "kept": len(result.kept),
+                    "dropped": len(result.dropped),
+                    "verdicts": verdicts,
+                },
+            )
+            logger.info(
+                "区域相关性过滤 | county=%s | kept=%d | dropped=%d | dropped_urls=%s",
+                county,
+                len(result.kept),
+                len(result.dropped),
+                [doc.url for doc, _ in result.dropped][:5],
+            )
+        return list(result.kept)
+
     def _run_tasks(self, tasks: list[tuple[SearchProvider, str]]) -> list[RawDoc]:
-        """并发执行任务。"""
+        """并发执行任务。
+
+        A provider that returns no documents did not necessarily fail: an
+        adaptive gap query may legitimately have no matching result. Fail the
+        batch only when every task raised, so an empty follow-up round is left
+        to the controller's zero-marginal-evidence stop instead of aborting the
+        whole research job.
+        """
         results: list[RawDoc] = []
+        failed_tasks = 0
         per_task_timeout = max(10.0, float(self._settings.search.timeout) * 1.5)
 
-        def _worker(t: tuple[SearchProvider, str]) -> list[RawDoc]:
+        def _worker(t: tuple[SearchProvider, str]) -> tuple[list[RawDoc], bool]:
             provider, query = t
             name = provider.name
             try:
                 out = provider.search(query, max_results=self._max_results)
-                return out
+                return out, False
             except Exception as e:  # noqa: BLE001
                 logger.warning(
                     "收集失败(隔离) | provider=%s | query=%s | err=%s",
                     name, query, e,
                 )
-                return []
+                return [], True
 
         with ThreadPoolExecutor(max_workers=self._concurrency) as pool:
             futures = {pool.submit(_worker, t): t for t in tasks}
             for fut, (prov, query) in futures.items():
                 try:
-                    chunk = fut.result(timeout=per_task_timeout)
+                    chunk, failed = fut.result(timeout=per_task_timeout)
                 except _TimeoutError:
+                    failed_tasks += 1
                     logger.warning("收集超时 | provider=%s | query=%s", prov.name, query)
                     continue
                 except Exception as e:  # noqa: BLE001
+                    failed_tasks += 1
                     logger.warning("收集异常 | provider=%s | query=%s | err=%s", prov.name, query, e)
+                    continue
+                if failed:
+                    failed_tasks += 1
                     continue
                 results.extend(chunk)
 
-        if not results and self._fail_fast:
+        if not results and self._fail_fast and failed_tasks == len(tasks):
             raise SearchError(
                 "所有搜索任务均失败",
                 context={
                     "tasks_count": len(tasks),
+                    "failed_tasks": failed_tasks,
                     "providers": sorted({p.name for p, _ in tasks}),
                 },
             )

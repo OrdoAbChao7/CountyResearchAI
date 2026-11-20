@@ -20,6 +20,8 @@ from ..models import (
     QuestionTree,
     RawDoc,
 )
+from .claim_region import classify_claim_region
+from .measure import data_years
 
 # 常见产业统计指标抽取正则
 _NUMERICAL_STAT_PATTERNS = [
@@ -105,6 +107,7 @@ class EvidenceStore:
         self._raw_docs: list[RawDoc] = []
         self._conflicts: list[EvidenceConflict] = []
         self._conflict_origin_status: dict[str, str] = {}
+        self._county: str = ""
 
     def ingest_documents(
         self,
@@ -113,6 +116,7 @@ class EvidenceStore:
         focus: str = "",
     ) -> list[EvidenceItem]:
         """批量摄入原始文档并抽取结构化证据项。"""
+        self._county = (county or "").strip()
         new_items: list[EvidenceItem] = []
         for doc in docs:
             self._raw_docs.append(doc)
@@ -136,9 +140,10 @@ class EvidenceStore:
         lines = list(_iter_evidence_segments(full_text))
         extracted: list[EvidenceItem] = []
 
-        # 推断年份
-        year_match = re.search(r"(20[12]\d)年?", full_text[:400])
-        year_str = year_match.group(1) if year_match else None
+        # 推断年份：只接受唯一的、非发布/抓取标签的数据年份。
+        # 多个年份时保持为空，避免把文档级年份强加给每一条证据。
+        doc_years = sorted(set(data_years(full_text[:400])))
+        year_str = doc_years[0] if len(doc_years) == 1 else None
 
         seen_ids = set(self._items.keys())
 
@@ -163,6 +168,13 @@ class EvidenceStore:
                 if item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
+                region = classify_claim_region(
+                    county,
+                    title=doc.title,
+                    url=doc.url,
+                    statement=clause,
+                    quote=clause,
+                )
                 item = EvidenceItem(
                     id=item_id,
                     # Keep the source clause, not a synthesized "issued policy"
@@ -175,6 +187,8 @@ class EvidenceStore:
                     domain_type=doc.domain_type or "government",
                     credibility_score=max(doc.credibility_score, 0.9),
                     year=year_str,
+                    region_id=region.region_id,
+                    region_source=region.source,
                     indicator_caliber="政策规划",
                     verification_status="verified",
                     topic="policy",
@@ -194,6 +208,13 @@ class EvidenceStore:
                 if item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
+                region = classify_claim_region(
+                    county,
+                    title=doc.title,
+                    url=doc.url,
+                    statement=clause,
+                    quote=clause,
+                )
                 item = EvidenceItem(
                     id=item_id,
                     claim=clause,
@@ -204,6 +225,8 @@ class EvidenceStore:
                     domain_type=doc.domain_type or "company",
                     credibility_score=doc.credibility_score,
                     year=year_str,
+                    region_id=region.region_id,
+                    region_source=region.source,
                     indicator_caliber="骨干企业",
                     verification_status="unverified",
                     topic="industry",
@@ -266,6 +289,14 @@ class EvidenceStore:
                     continue
                 seen_ids.add(item_id)
 
+                region = classify_claim_region(
+                    county,
+                    title=doc.title,
+                    url=doc.url,
+                    statement=clause,
+                    quote=clause,
+                    scope=scope,
+                )
                 item = EvidenceItem(
                     id=item_id,
                     claim=clause,
@@ -277,6 +308,8 @@ class EvidenceStore:
                     credibility_score=doc.credibility_score,
                     year=year_str,
                     administrative_scope=scope,
+                    region_id=region.region_id,
+                    region_source=region.source,
                     indicator_caliber=caliber,
                     verification_status="verified" if doc.credibility_score >= 0.8 else "unverified",
                     topic="economic",
@@ -307,6 +340,30 @@ class EvidenceStore:
     def get_all(self) -> list[EvidenceItem]:
         return list(self._items.values())
 
+    def get_target_items(self) -> list[EvidenceItem]:
+        """Return only evidence attributable to the requested county.
+
+        Retrieval and report projections use this view so a cross-region claim
+        cannot enter the county's evidence graph or citations merely because it
+        arrived in the same search batch.
+        """
+        return [
+            item for item in self._items.values()
+            if self._is_target_region(item)
+        ]
+
+    def _is_target_region(self, item: EvidenceItem) -> bool:
+        """Whether an item may participate in the requested county's statistics.
+
+        An item positively attributed to another region, or still ``UNKNOWN``,
+        must not be silently counted as county data. Legacy callers that never
+        ran ingestion (empty ``_county``) keep their historical behaviour.
+        """
+        target = self._county
+        if not target:
+            return True
+        return bool(item.region_id) and item.region_id == target
+
     def get_conflicts(self) -> list[EvidenceConflict]:
         return self._conflicts
 
@@ -324,6 +381,8 @@ class EvidenceStore:
         # 按基础指标概念分组核验
         groups = defaultdict(list)
         for item in self._items.values():
+            if not self._is_target_region(item):
+                continue
             if item.topic == "economic" and item.indicator_caliber:
                 base_c = _get_base_concept(item.indicator_caliber)
                 groups[base_c].append(item)
@@ -437,8 +496,11 @@ class EvidenceStore:
             # 查找匹配证据：要求命中该问题的所需核心指标之一
             matched = [
                 it for it in self._items.values()
-                if any(ind in it.claim or ind in it.indicator_caliber for ind in q.required_indicators)
-                or (not q.required_indicators and it.topic == q.category)
+                if self._is_target_region(it)
+                and (
+                    any(ind in it.claim or ind in it.indicator_caliber for ind in q.required_indicators)
+                    or (not q.required_indicators and it.topic == q.category)
+                )
             ]
             if matched:
                 q.evidence_ids = [it.id for it in matched]
@@ -483,7 +545,7 @@ class EvidenceStore:
         # 去重相同 URL
         seen_urls = set()
         idx = 1
-        for item in sorted(self._items.values(), key=lambda x: x.credibility_score, reverse=True):
+        for item in sorted(self.get_target_items(), key=lambda x: x.credibility_score, reverse=True):
             if item.url in seen_urls:
                 continue
             seen_urls.add(item.url)

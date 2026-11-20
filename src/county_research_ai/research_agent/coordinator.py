@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any
 
 from ..domain.research_contracts import EvidencePack, ResearchSpec
@@ -75,6 +76,8 @@ class DeepResearchResult:
     coverage_rate: float | None = None
     retrieval_stop_reason: str = ""
     retrieval_usage: dict[str, int] = field(default_factory=dict)
+    period_coverage: dict[str, object] = field(default_factory=dict)
+    period_coverage_history: list[dict[str, object]] = field(default_factory=list)
 
 
 class DeepResearchCoordinator:
@@ -122,9 +125,16 @@ class DeepResearchCoordinator:
         focus: str | None = None,
         mode: str = "snapshot",
         existing_docs: list[RawDoc] | None = None,
+        *,
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
+        time_period: str = "",
     ) -> DeepResearchResult:
         c_info = CountyInfo.from_name(county)
         f_name = focus or ("兴衰规律" if mode == "rise-fall" else ("长周期兴衰史" if mode == "long-history" else "特色优势产业"))
+        years = list(target_years or _years_from_window(date_start, date_end))
+        period = time_period or _period_label(years)
 
         logger.info("=== 启动深度多智能体研究 === | county=%s | focus=%s | mode=%s", county, f_name, mode)
 
@@ -148,10 +158,18 @@ class DeepResearchCoordinator:
         final_ledger = None
         retrieval_stop_reason = ""
         retrieval_usage: dict[str, int] = {}
+        period_coverage_history: list[dict[str, object]] = []
+        period_coverage: dict[str, object] = {}
 
         # 2. 首轮检索（如果已有资料不足）
         if self.collector is not None and hasattr(self.collector, "collect_adaptive"):
-            research_spec = QueryEngine().generate_research_spec(county, f_name, mode)
+            research_spec = QueryEngine().generate_research_spec(
+                county,
+                f_name,
+                mode,
+                target_years=years,
+                time_period=period,
+            )
             budget = RetrievalBudget(max_queries=12, max_fetches=120)
             controller = AdaptiveRetrievalController(research_spec, budget=budget)
             if not all_docs:
@@ -162,6 +180,7 @@ class DeepResearchCoordinator:
                     payload={
                         "round": 1,
                         "queries": len(plan.queries),
+                        "query_texts": [query.query for query in plan.queries],
                         "supplemental": False,
                     },
                 )
@@ -201,6 +220,16 @@ class DeepResearchCoordinator:
                     previous_new_evidence=marginal if adaptive_turn > 1 else None,
                 )
                 retrieval_usage = controller._usage()
+                period_coverage = {
+                    "round": adaptive_turn,
+                    **decision.coverage.period_coverage_summary(),
+                }
+                period_coverage_history.append(period_coverage)
+                emit(
+                    "retrieval.period_coverage",
+                    stage="analyze",
+                    payload=period_coverage,
+                )
                 if decision.stop_reason:
                     retrieval_stop_reason = decision.stop_reason.value
                     break
@@ -213,6 +242,7 @@ class DeepResearchCoordinator:
                     payload={
                         "round": adaptive_turn + 1,
                         "queries": len(decision.queries),
+                        "query_texts": [query.query for query in decision.queries],
                         "supplemental": True,
                     },
                 )
@@ -266,7 +296,14 @@ class DeepResearchCoordinator:
                     stage="analyze",
                     payload={"round": 1, "queries": 0, "supplemental": False},
                 )
-                all_docs = self._collect_initial(county, f_name, mode)
+                all_docs = self._collect_initial(
+                    county,
+                    f_name,
+                    mode,
+                    date_start=date_start,
+                    date_end=date_end,
+                    target_years=years,
+                )
                 emit(
                     "retrieval.round.completed",
                     stage="analyze",
@@ -328,7 +365,7 @@ class DeepResearchCoordinator:
                     "supplemental": True,
                 },
             )
-            supp_docs = self._collect_supp(reflection.followup_queries)
+            supp_docs = self._collect_supp(reflection.followup_queries, county=county)
             emit(
                 "retrieval.round.completed",
                 stage="analyze",
@@ -425,6 +462,8 @@ class DeepResearchCoordinator:
                 coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
+                period_coverage=period_coverage,
+                period_coverage_history=period_coverage_history,
             )
         elif mode == "long-history":
             from ..llm.long_history_analyzer import LongHistoryAnalyzer
@@ -464,6 +503,8 @@ class DeepResearchCoordinator:
                 coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
+                period_coverage=period_coverage,
+                period_coverage_history=period_coverage_history,
             )
         else:
             # Snapshot / Industry 模式
@@ -577,23 +618,48 @@ class DeepResearchCoordinator:
                 coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
+                period_coverage=period_coverage,
+                period_coverage_history=period_coverage_history,
             )
 
-    def _collect_initial(self, county: str, focus: str, mode: str) -> list[RawDoc]:
+    def _collect_initial(
+        self,
+        county: str,
+        focus: str,
+        mode: str,
+        *,
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
+    ) -> list[RawDoc]:
         if hasattr(self.collector, "collect"):
+            kwargs = {"county": county, "focus": focus, "mode": mode}
+            if date_start is not None:
+                kwargs["date_start"] = date_start
+            if date_end is not None:
+                kwargs["date_end"] = date_end
+            if target_years:
+                kwargs["target_years"] = target_years
             try:
-                return self.collector.collect(county=county, focus=focus, mode=mode)
+                return self.collector.collect(**kwargs)
             except TypeError:
                 return self.collector.collect(county, focus, 10)
         elif hasattr(self.collector, "search"):
             return self.collector.search(f"{county} {focus}", max_results=10)
         return []
 
-    def _collect_supp(self, queries: list[str]) -> list[RawDoc]:
+    def _collect_supp(self, queries: list[str], *, county: str = "") -> list[RawDoc]:
         if not self.collector:
             return []
         if hasattr(self.collector, "collect_supplemental"):
-            return self.collector.collect_supplemental(queries=queries, max_results=8)
+            try:
+                return self.collector.collect_supplemental(
+                    queries=queries, max_results=8, county=county
+                )
+            except TypeError:
+                # Custom collectors from older integrations do not accept the
+                # region hint; they keep their previous behaviour.
+                return self.collector.collect_supplemental(queries=queries, max_results=8)
         elif hasattr(self.collector, "search"):
             results: list[RawDoc] = []
             for q in queries[:3]:
@@ -603,6 +669,24 @@ class DeepResearchCoordinator:
                     pass
             return results
         return []
+
+
+def _years_from_window(
+    date_start: date | None, date_end: date | None
+) -> list[str]:
+    years: list[str] = []
+    for value in (date_start, date_end):
+        if value is not None and str(value.year) not in years:
+            years.append(str(value.year))
+    return years
+
+
+def _period_label(years: list[str]) -> str:
+    if not years:
+        return ""
+    if len(years) == 1:
+        return years[0]
+    return f"{years[0]}-{years[-1]}"
 
 
 def _merge_gaps(*groups: list[EvidenceGap]) -> list[EvidenceGap]:
@@ -622,7 +706,8 @@ def _merge_gaps(*groups: list[EvidenceGap]) -> list[EvidenceGap]:
 def _emit_evidence_ingested(
     store: EvidenceStore, documents: int, *, round_number: int
 ) -> None:
-    items = store.get_all()
+    items = store.get_target_items()
+    excluded = len(store.get_all()) - len(items)
     topics: dict[str, int] = {}
     for item in items:
         topics[item.topic] = topics.get(item.topic, 0) + 1
@@ -634,5 +719,6 @@ def _emit_evidence_ingested(
             "documents": documents,
             "total": len(items),
             "topics": topics,
+            "region_excluded": excluded,
         },
     )

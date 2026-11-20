@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import cytoscape from "cytoscape";
 import type { GraphEdge, GraphNode, GraphView } from "../api";
+import { chooseGraphLayout, isLargeGraph } from "../graphLayout";
 
 interface Props {
   view: GraphView;
@@ -225,22 +226,68 @@ export default function GraphCanvas({
       })),
     ];
 
+    const layoutName = chooseGraphLayout(view.nodes.length);
+    const dense = isLargeGraph(view.nodes.length);
+    const styles: cytoscape.StylesheetJson = dense
+      ? [
+          ...STYLES,
+          {
+            selector: "node",
+            style: { "min-zoomed-font-size": 9 },
+          },
+          {
+            selector: "node.node-evidence",
+            style: {
+              "background-color": "#555555",
+              "border-width": 2,
+              width: 20,
+              height: 20,
+            },
+          },
+          {
+            selector: "node.node-source",
+            style: {
+              "background-color": "#6a6a6a",
+              "border-color": "#b0b0a8",
+              width: 14,
+              height: 14,
+            },
+          },
+          {
+            selector: "edge",
+            style: { "line-opacity": 0.28, width: 0.5 },
+          },
+        ]
+      : STYLES;
+    const layout: cytoscape.LayoutOptions =
+      layoutName === "concentric"
+        ? {
+            name: "concentric",
+            animate: false,
+            fit: true,
+            padding: 36,
+            minNodeSpacing: 18,
+            levelWidth: () => 3,
+            concentric: (node: cytoscape.NodeSingular) => node.degree(false),
+          }
+        : {
+            name: "cose",
+            animate: false,
+            fit: true,
+            padding: 36,
+            nodeRepulsion: () => 5200,
+            idealEdgeLength: () => 92,
+            edgeElasticity: () => 80,
+            gravity: 0.28,
+            numIter: 650,
+            randomize: true,
+          };
+
     const cy = cytoscape({
       container,
       elements,
-      style: STYLES,
-      layout: {
-        name: "cose",
-        animate: false,
-        fit: true,
-        padding: 36,
-        nodeRepulsion: () => 5200,
-        idealEdgeLength: () => 92,
-        edgeElasticity: () => 80,
-        gravity: 0.28,
-        numIter: 650,
-        randomize: true,
-      },
+      style: styles,
+      layout,
       wheelSensitivity: 0.18,
       minZoom: 0.18,
       maxZoom: 2.6,
@@ -296,6 +343,9 @@ export default function GraphCanvas({
       className="graph-canvas"
       aria-hidden="true"
       data-testid="graph-canvas"
+      data-layout={chooseGraphLayout(view.nodes.length)}
+      data-node-count={view.nodes.length}
+      data-edge-count={view.edges.length}
     />
   );
 }

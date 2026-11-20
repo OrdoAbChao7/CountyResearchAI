@@ -9,7 +9,7 @@
   --line: #cfcfc3;
   --line-strong: #96968a;
   --orange: #ff5a1f;
-  --orange-deep: #d9410a;
+  --orange-deep: #bf3504;
   --orange-soft: #ffeadf;
   --green: #1d7a45;
   --green-soft: #e2f1e7;
@@ -447,7 +447,7 @@ legend {
 .text-button {
   border: 0;
   background: transparent;
-  color: var(--orange);
+  color: var(--orange-deep);
   padding: 2px 0;
   font-family: var(--mono);
   font-size: 10px;
@@ -455,6 +455,14 @@ legend {
 
 .text-button:hover:not(:disabled) {
   background: transparent;
+  color: var(--ink);
+}
+
+.rail-runs .text-button {
+  color: var(--orange);
+}
+
+.rail-runs .text-button:hover:not(:disabled) {
   color: #fff;
 }
 
@@ -517,7 +525,7 @@ legend {
   border-top: 1px solid var(--rail-line);
   margin-top: 20px;
   padding-top: 12px;
-  color: #6f6f66;
+  color: #8a8a80;
   font-family: var(--mono);
   font-size: 9px;
   line-height: 1.6;
@@ -1129,7 +1137,7 @@ legend {
 }
 
 .event-seq {
-  color: #77776e;
+  color: #8a8a80;
 }
 
 .event-type {
@@ -2086,7 +2094,7 @@ legend {
 }
 
 .status-label {
-  color: #66665e;
+  color: #8a8a80;
   letter-spacing: 0.1em;
 }
 
@@ -2099,7 +2107,7 @@ legend {
 }
 
 .status-muted {
-  color: #77776e;
+  color: #8a8a80;
 }
 
 .layout-switch {
@@ -2241,6 +2249,11 @@ legend {
 .evidence-row.selected {
   border-left-color: var(--orange);
   background: var(--orange-soft);
+}
+
+.evidence-row.selected .credibility,
+.evidence-row.selected .evidence-meta {
+  color: #4f4f47;
 }
 
 .evidence-row-head {
@@ -2575,6 +2588,157 @@ legend {
   .event-time,
   .event-payload {
     display: none;
+  }
+}
+
+.detail-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.disputes-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.dispute-block {
+  min-width: 0;
+  background: var(--surface);
+  padding: 20px 22px;
+}
+
+.dispute-block.wide {
+  grid-column: 1 / -1;
+}
+
+.dispute-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dispute-head h3 {
+  font-size: 16px;
+}
+
+.conflict-list,
+.claim-conflict-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.conflict-card {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.conflict-card:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.conflict-card:last-child {
+  padding-bottom: 0;
+}
+
+.conflict-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.conflict-head code {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  word-break: break-all;
+}
+
+.conflict-card p {
+  margin: 6px 0 0;
+}
+
+.conflict-claims,
+.gap-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.conflict-claims th,
+.conflict-claims td,
+.gap-table th,
+.gap-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 7px 10px 7px 0;
+  border-top: 1px solid var(--line);
+}
+
+.conflict-claims thead th,
+.gap-table thead th {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.conflict-claims td:nth-child(-n + 3) {
+  white-space: nowrap;
+}
+
+.conflict-source {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  word-break: break-all;
+}
+
+.claim-conflict-list li {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.claim-conflict-list li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.claim-conflict-refs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.claim-conflict-refs .text-button {
+  padding: 0;
+}
+
+@media (max-width: 1180px) {
+  .disputes-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .dispute-block.wide {
+    grid-column: auto;
   }
 }
 

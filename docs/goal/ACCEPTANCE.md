@@ -44,7 +44,7 @@ Every PASS needs a command, exit code, observed count, artifact path, revision.
 | Observational hash | PASS | `4341ea07abbaa5495565052e7d8fd3a5a35eb03063f45b09680a0481142d5c1e` |
 | Strategy D measurement | PASS (dev + 2-task blind) | `experiments/quality/20261026_q3_strategy_d/`, `20261026_q4_blind_pilot/` |
 | Independent task set | PARTIAL | 2 blind tasks / 10 facts; 40–60 gap documented |
-| Live end-to-end | BLOCKED_EXTERNAL | no cost gate |
+| Live end-to-end | PARTIAL | five bounded smokes: `docs/goal/LIVE_SMOKE.md`; fourth failed in adaptive follow-up; fifth completed with 0 verified claims; no Live evaluation |
 | Ablations | PARTIAL | no-verifier, BM25/adaptive, old/new grouping; no-gap NOT_RUN |
 | Semantic Judge | NOT_RUN | — |
 | Human rubric/adjudication | NOT_RUN | — |
@@ -112,7 +112,138 @@ Not accepted here:
 | Item | Status | Why |
 | --- | --- | --- |
 | 40–60 sealed independent task set | NOT_MET | only pilot tasks exist; no new authorized corpus |
-| Live end-to-end / semantic Judge | BLOCKED_EXTERNAL | no paid cost gate; default remains MOCK |
+| Live end-to-end / semantic Judge | PARTIAL | five bounded Live smokes (`docs/goal/LIVE_SMOKE.md`); fourth failed before verification; fifth completed with 0 verified claims; semantic Judge and Live evaluation still not run |
 | Human rubric/adjudication | BLOCKED_HUMAN_ANNOTATION | no human labels |
 | Real 400-node browser benchmark | NOT_RUN | 400/800 cap tested on synthetic projection; browser E2E uses the small MOCK case |
 | Section-level streaming / token accounting | NOT_RUN | renderer is one-shot; UI explicitly presents post-completion reveal |
+
+Superseded on 2026-11-20: the 400/800 cap now has a browser test against a
+synthetic projection; a real-investigation benchmark remains NOT_RUN. See the
+Goal Mode section below.
+
+## Goal Mode acceptance (2026-11-20, second pass)
+
+Revision: `codex/finish-roadmap` @ `0adc236`; same `.venv` and `PYTHONPATH=src`.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Python suite | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `780 passed in 24.63s` |
+| P0 regressions | PASS | three P0 test modules | `47 passed in 2.96s` |
+| Ruff | PASS | `ruff check src tests scripts/run_finish_roadmap_demo.py` | all checks passed |
+| Frontend typecheck | PASS | `cd web; npm run typecheck` | exit 0 |
+| Frontend unit tests | PASS | `cd web; npm test` | 4 files / `20 passed` |
+| Frontend build | PASS | `cd web; npm run build` | main 208.21 kB, GraphCanvas 456.11 kB, CSS 35.98 kB |
+| Playwright E2E | PASS | `AXIOMSCOPE_E2E_PORT=8040 npx playwright test` | `4 passed (28.2s)` |
+| 400-node browser projection | PASS (synthetic) | Playwright large-graph test | 400 nodes / 800 edges: 505 ms first canvas, 204 ms list switch |
+| Accessibility | PASS (automated) | `@axe-core/playwright`, WCAG A/AA | define / run / report / disputes / graph list / drawer: 0 violations |
+| Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` | citation → drawer → graph-selected evidence |
+| Conflict/gap panel | PASS | E2E `09-disputes.png` | 2 conflicts, 3 gaps from the real MOCK run |
+| Dispute panel contrast | PASS | axe `color-contrast` | fixed orange token and selected-row secondary text |
+
+Not accepted here:
+
+| Item | Status | Why |
+| --- | --- | --- |
+| Real-investigation 400-node benchmark | NOT_RUN | browser test uses a synthetic 400/800 fixture |
+| Live end-to-end / semantic Judge | PARTIAL | five authorized bounded smokes (`docs/goal/LIVE_SMOKE.md`); the fourth failed before verification; the fifth completed with 0 verified claims; no Live evaluation or Judge |
+| 40–60 sealed tasks / human labels | NOT_MET | unchanged from M5 |
+| Screen-reader manual walkthrough | NOT_RUN | axe automation only |
+
+## Live smoke acceptance (2026-11-20)
+
+Revision: `codex/finish-roadmap` + `scripts/run_live_smoke.py`. These were five
+explicitly authorized paid smokes, not an evaluation.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Live provider call | PASS | `scripts/run_live_smoke.py --confirm-paid` | DeepSeek `deepseek-flash` + Tavily basic; first three: 2 LLM / 7 searches; fourth: 2 LLM / 11 searches; fifth: 2 LLM / 15 searches |
+| Live job execution (first) | PASS (engineering) | job `d367c9b277cf47d086d28f9824d661e5` | `SUCCEEDED` / `LIVE`; 28 events; 30.6 s |
+| Live job execution (second) | PASS (engineering) | job `fdf7f3e86d444419967124236c4cc1ad` | `SUCCEEDED` / `LIVE`; 28 events; 28.9 s |
+| Live job execution (third) | PASS (engineering) | job `007487e8e7494e3fba1770c1f7b0781f` | `SUCCEEDED` / `LIVE`; 28 events; 29.2 s |
+| Live job execution (fourth) | FAILED (engineering) | job `4f4d6610f48248a599e6b112ce5b9ee0` | `FAILED` / `LIVE`; 14 events; 31.85 s |
+| Live job execution (fifth) | PASS (engineering) | job `27a8fdb796f94b689ff4fbba78b2d798` | `SUCCEEDED` / `LIVE`; 35 events; 57.476 s |
+| Live 2024 period coverage (fourth) | PASS (live observability) | `retrieval.period_coverage` | target `2024`; 22 selected; 1 in-window claim/source; period met; topic missing 4 slots |
+| Live 2024 period coverage (fifth) | FAIL (research) | `retrieval.period_coverage` | target `2024`; 21→22 selected; 0 in-window claims/sources in both rounds; `period_gap=true`; no persisted claim has a 2024 period |
+| Live target-year follow-up queries (fourth) | PASS (live) | `retrieval.round.started` | 4 queries; real text recorded, including `2024年`; all routed to gov |
+| Live adaptive follow-up rounds (fifth) | PASS (engineering) | `retrieval.round.*` | rounds 2 and 3; 4 queries each; 3 documents each; 15 searches total; `max_rounds_reached`; `job.completed` |
+| Live adaptive follow-up failure (fourth) | FAILED | `job.failed` | all 4 gov queries returned zero whitelisted docs; `SearchError` fail-fast; `ResearchStageError` |
+| Adaptive follow-up empty-result fix | FIXED (offline) | `tests/test_search_collector.py` (3 new tests) | empty results no longer fail-fast; all-provider errors still raise; 830 passed |
+| Live claim-region finding (fifth) | FINDING | fifth `evidence.sqlite` | 10 claims `region_id=年全县` and 1 `占全县` from claim text; malformed place tokens; not among the 22 report findings; unresolved |
+| Live projections | PASS (engineering) | `experiments/quality/live_smoke_20261120*/` | first 273 nodes / 1,869 edges; second 256 / 1,785; third 165 / 1,077; fourth graph 409, report empty; fifth 45 / 139, 6-section report |
+| Explicit focus fix | PASS | `test_explicit_focus_wins_over_discovery`; `test_deep_mock_pipeline_emits_fine_grained_events` | second run focus `竹产业`; discovery completion 838 < 2,048; API/worker path asserted |
+| Region retrieval gate | PASS (live + offline) | `tests/test_region_relevance.py` (13 tests); fourth/fifth-run events | second-run recorded sources: 5 off-region dropped, 3 Anji kept; third run: 7 Anji / 1 false positive; fourth run: 27 kept / 4 dropped; fifth run: 24 kept / 7 dropped (6 other-region, 1 national), 9 `region` / 1 `unknown` persisted |
+| Region gate live finding | FIXED (offline) | third run sources + reclassification | Guizhou plan with “安吉精铸/正安吉他” was kept; full-name rule now marks it `OTHER_REGION` (7 region / 1 other-region); fifth run did not retrieve that plan, so the specific collision remains offline-only |
+| Backend suite after fixes | PASS | `PYTHONPATH=src python -m pytest --no-cov -q` | `795 passed in 37.07s` at the region-gate stage; `827 passed` after the 2024 fix; `830 passed` after the empty-result fix |
+| Live research quality | FAIL | report verification | first 0/239 `NOT_COMPARABLE`; second 0/224; third 0/133; fourth no verification (job failed); fifth 0/22 (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`); 7/7/6/4 conflicts; 2 gaps in runs 1, 2, 3 and 5 |
+| Cost gate | PASS | `docs/goal/LIVE_SMOKE_COST_GATE.md` | first ≤ $0.0578; second ≤ $0.0579; third ≤ $0.0585; fourth ≤ $0.0905; fifth ≤ $0.1227; 0 guard violations in all five |
+| Provider config | FINDING | root `.env` | Gemini endpoint/model configured with a DeepSeek key; smokes used process overrides, `.env` untouched |
+| Live evaluation / semantic Judge | NOT_RUN | — | five smokes do not satisfy M5 |
+
+The first three smokes and the fifth prove the real provider adapters and job
+path, not research quality. The first two runs returned off-region sources; the
+third run, after the region gate, was Anji-centred and exposed one short-name
+false positive (a Guizhou plan containing “安吉精铸”/“正安吉他”). The classifier
+was fixed to require the full `安吉县` in content and a word boundary for the
+short name; replaying the third run's stored sources now marks that plan
+`OTHER_REGION` (7 region / 1 other-region).
+
+The fourth run is the first live exercise of the 2024-window and adaptive
+plumbing. It kept 27 and dropped 4 documents at the region gate, recorded
+`target_years=["2024"]` with 1 in-window claim/source, and generated four
+target-year follow-up queries. It then failed in `collect_adaptive`: all four
+gov-channel queries returned zero whitelisted documents, and the pre-existing
+`fail_fast` branch in `SearchCollector._run_tasks` raised `SearchError`, which
+the worker reported as `ResearchStageError`. No verification, evidence
+persistence, graph or report was produced. No code was changed for this run;
+a fifth run was later authorized and completed. See `docs/goal/LIVE_SMOKE.md`
+for the root cause and offline reproduction.
+
+The fifth run completed the repaired path: region gate 24 kept / 7 dropped;
+initial coverage 21 selected / 0 in-window; rounds 2 and 3 each returned 3
+documents; stop `max_rounds_reached`; 35 events ending in `job.completed`;
+graph 45 nodes / 139 edges; 6-section report; 10 sources; 0 verified / 22
+unverified (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`). No persisted claim has a
+2024 period, so real 2024 retrieval remains unproven. The run also exposed an
+unresolved claim-region false positive: 10 claims tagged `年全县` and one
+`占全县`. These are malformed place tokens from county text such as
+`2023年全县...`; they are not among the 22 report findings and none is a 2024
+claim. The fifth run is an engineering pass, not a research-quality pass.
+
+## Adaptive follow-up fix acceptance (2026-11-20)
+
+Revision: `codex/finish-roadmap` after the fourth-run record.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Empty gov follow-up is not a failure | PASS | `pytest tests/test_search_collector.py` | `11 passed`; a gov query returning `[]` yields an empty result, not `SearchError` |
+| All-provider errors still fail fast | PASS | same | `SearchError` with `failed_tasks == tasks_count` |
+| Mixed empty/error is not all-failure | PASS | same | one empty success + one provider error returns `[]` |
+| Full backend suite | PASS | `pytest --no-cov -q` | `830 passed in 23.53s` |
+| Ruff | PASS | `ruff check src tests` | `All checks passed!` |
+| Fifth Live run | PASS (partial) | job `27a8fdb796f94b689ff4fbba78b2d798` | `SUCCEEDED` / `LIVE`; repaired adaptive path completed with two non-empty follow-up rounds; no empty round, so the empty branch remains offline-only |
+
+The fix changes only the failure classification in `SearchCollector._run_tasks`;
+it does not relax the verifier or change provider behavior. The fifth run later
+exercised the repaired path with non-empty follow-ups; the empty branch remains
+covered only by these offline tests.
+
+## 2024 period coverage and claim region fix acceptance (2026-11-20)
+
+Revision: `codex/finish-roadmap` @ `d186577`; `.venv` Python 3.13.7.
+Details and code locations: `docs/goal/2024_PERIOD_COVERAGE_FIX_REPORT.md`.
+
+| Check | Status | Command / artifact | Observed |
+| --- | --- | --- | --- |
+| Phase 1 claim region tests | PASS | `pytest tests/test_claim_region.py` | county claim allowed; Guizhou plan not county; mixed article yields two regions; UNKNOWN not promoted; cross-region conflict isolated; `region_present=false` blocks support |
+| Phase 2 window propagation | PASS | `pytest tests/test_date_window_propagation.py` | contract → request → application → collector → QueryEngine; all three modes include the target year; 2025-published/2024-data page retained |
+| Phase 3 adaptive period stop | PASS | `tests/test_adaptive_retrieval.py`, `tests/test_period_coverage_flow.py` | topical coverage alone does not set `quality_met`; period gap generates `2024年` query; event carries real query text and per-round coverage |
+| Phase 4 claim period | PASS | `tests/test_measure_identity.py`, `tests/test_evidence_ledger.py`, `tests/test_evidence_graph.py` | local 2018 wins over document 2023; 2030 plan target wins over 2026; `2024-2025` stays a span and is rejected for a 2024 window; 2023/2025 rejected |
+| Phase 5 provider dates/truncation | PASS | `tests/test_search_web.py`, `tests/test_deep_retrieval.py`, `tests/test_source_contract.py` | Tavily `published_date` parsed; `tYYYYMMDD` and `/YYYYMM/` URL dates; body-only date rejected; provider truncation sets `content_truncated=True` and original length |
+| Targeted new regressions | PASS | 8 modules listed in the fix report | `85 passed in 1.10s` |
+| P0 regressions | PASS | `test_evidence_store.py`, `test_evidence_graph.py`, `test_report_projection.py` | `49 passed in 2.96s` |
+| Full backend suite | PASS | `python -m pytest -q` | `827 passed in 35.24s`; `830 passed` after the separate empty-result fix |
+| Ruff (source and tests) | PASS | `python -m ruff check src tests` | `All checks passed!` |
+| API compatibility | PASS | worker/contract tests | optional date fields default to `None`; existing callers unchanged |
+| Real 2024 retrieval | FAIL (live) | fourth/fifth Live `retrieval.period_coverage` | fourth recorded target `2024` and 1 in-window claim/source but failed before verification; fifth completed with 0 in-window claims in both rounds and no 2024 period among 136 claims |
+| Claim-level region attribution | FINDING | fifth `evidence.sqlite` | 10 claims `region_id=年全县` and 1 `占全县` from claim text; malformed place tokens wrongfully exclude county claims; not among the 22 report findings; needs a fix and regression |
+| Live research quality | FAIL | fifth Live job `27a8fdb796f94b689ff4fbba78b2d798` | `SUCCEEDED` / `NO_PROGRESS`; 0 verified / 22 unverified; 4 conflicts, 2 gaps; this fix does not claim a SUFFICIENT Live outcome |

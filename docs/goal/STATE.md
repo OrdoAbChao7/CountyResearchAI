@@ -1,6 +1,6 @@
 # AxiomScope v2 — Goal State
 
-Updated: 2026-10-26
+Updated: 2026-11-20
 Branch: `codex/evidence-first-v2`
 Repository: `E:\Projects\AxiomScope` (formerly `E:\Projects\CountyResearchAI`)
 
@@ -20,10 +20,11 @@ Note: the venv editable install pointed at the pre-rename path
 `E:\Projects\CountyResearchAI\src`. It was reinstalled with
 `pip install -e . --no-deps` so `python -m county_research_ai.api` works.
 
-The table above is the historical M4-era baseline. Current Finish Roadmap
-numbers (780 Python tests, 18 Vitest, 2 Playwright) are recorded in the
-"Finish Roadmap goal" section at the end of this file and in
-`docs/goal/ACCEPTANCE.md`.
+The table above is the historical M4-era baseline. Finish Roadmap numbers at
+`88f210c` were 780 Python tests, 18 Vitest and 2 Playwright; the later Goal Mode
+pass adds 20 Vitest and 4 Playwright tests. Both are recorded in the
+"Finish Roadmap goal" and "Goal Mode verification" sections at the end of this
+file and in `docs/goal/ACCEPTANCE.md`.
 
 ## Milestone gate map
 
@@ -141,7 +142,7 @@ committed to.
 | T7 graph/report projections | PASS | `api/projections/{graph,report,questions,evidence}.py`, `/graph` + `/report.json`; stable IDs, URL dedupe, multiedges, 400/800 connected truncation, citation numbering, conflict/gap tests |
 | T10 report/evidence workbench | PASS | `web/src/components/*`; StepRail, ReportStudio, EvidenceDrawer, AgentTimeline, ContextPanel; screenshots + Vitest |
 | T12 Cytoscape graph | PASS | lazy `GraphCanvas` chunk, cose layout, filters, focus, list fallback, conflict/gap styles; 500-claim projection test |
-| T13 engineering hardening | PASS | 780 Python tests, scoped ruff clean, 18 Vitest, 2 Playwright E2E; event idempotency/recovery/concurrency, XSS and malicious-source regressions |
+| T13 engineering hardening | PASS | 780 Python tests, scoped ruff clean, 18 Vitest, 2 Playwright E2E at `88f210c`; Goal Mode adds 20 Vitest, 4 Playwright, axe; event idempotency/recovery/concurrency, XSS and malicious-source regressions |
 
 Skipped by instruction after verifying equivalents: T0 (executed as read-only
 audit, no code), T4/T5/T6/T8/T9/T11. No second RunManager, queue, JSONL store,
@@ -158,3 +159,136 @@ Remaining and not claimed as PASS:
   streaming remains future work.
 - Real supply-chain relations are not modelled; the graph shows only persisted
   evidence/topic/source/conflict/gap relations.
+
+## Goal Mode verification (2026-11-20)
+
+Second autonomous pass on the same branch, starting from `88f210c`. The main
+checkout stayed at `codex/quality-recovery` @ `144f4c8` with the same 62
+porcelain entries; its regenerated `git diff --binary` SHA256 equals the backup
+(`a770faad…`). Full log: `docs/goal/EXECUTION_LOG.md`.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| P0 regressions | PASS | 47 targeted tests; conflict retention, entity binding, report integrity |
+| T10 report workbench | PASS | `46112d0`: conflict/gap tab, citation → drawer → graph, context-panel graph locate |
+| T12 graph interaction | PASS | `0adc236`: concentric layout >240 nodes, zoom-aware labels, 400-node browser test |
+| T13 hardening | PASS | 795 Python, Ruff clean, 20 Vitest, Vite build, 4 Playwright, axe A/AA six surfaces |
+| 400-node browser test | PASS (synthetic) | 400 nodes / 800 edges: first canvas 505 ms, list switch 204 ms |
+| Report ↔ graph linkage | PASS | E2E `10-report-graph-link.png` |
+| Disputes/gaps panel | PASS | E2E `09-disputes.png`; real MOCK run: 2 conflicts, 3 gaps |
+
+Still not accepted: M5's 40–60 sealed tasks, live end-to-end + semantic Judge
+(cost gate), human adjudication, a real-investigation 400-node benchmark,
+section streaming/token accounting, and supply-chain relations. The 400-node
+number above is a synthetic projection test, not a real investigation.
+
+## Live smoke (2026-11-20)
+
+Five explicitly authorized paid smokes ran through the real API path: the
+initial run, one corrected follow-up (“再跑一次”), one region-gate verification
+(“跑第三次”), one 2024-window / adaptive-retrieval verification (“跑第四次
+Live”), and one verification of the repaired adaptive follow-up path
+(“跑第五次”). The fourth failed in adaptive follow-up collection before
+verification; the fifth completed. Full record: `docs/goal/LIVE_SMOKE.md`;
+budget and actual usage: `docs/goal/LIVE_SMOKE_COST_GATE.md`.
+
+| Item | First run | Second run | Third run | Fourth run | Fifth run |
+| --- | --- | --- | --- | --- | --- |
+| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` | `007487e8e7494e3fba1770c1f7b0781f` | `4f4d6610f48248a599e6b112ce5b9ee0` | `27a8fdb796f94b689ff4fbba78b2d798` |
+| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `FAILED` / `LIVE` | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` | `NO_PROGRESS` | `NO_PROGRESS` | `FAILED` (`execution_error`) | `NO_PROGRESS` (`no_supported_claims`) |
+| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) | `竹产业` | `竹产业` | `竹产业` |
+| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches | 2 LLM / 4,693 tokens; 7 searches | 2 LLM / 4,651 tokens; 11 searches | 2 LLM / 4,948 tokens; 15 searches |
+| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges | 165 nodes / 1,077 edges | — (graph 409; report empty) | 45 nodes / 139 edges |
+| Verification | 0 / 239 `NOT_COMPARABLE` | 0 / 224 `NOT_COMPARABLE` | 0 / 133 `NOT_COMPARABLE` | — (job failed before verification) | 0 / 22 (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`) |
+| Cost | ≤ $0.0578 | ≤ $0.0579 | ≤ $0.0585 | ≤ $0.0905 | ≤ $0.1227 |
+
+Findings: the root `.env` has a Gemini endpoint/model paired with a DeepSeek
+key (smokes used process overrides and left `.env` untouched). The focus fix
+works: `stage.discover.completed` and the question tree report `竹产业`. The
+first three runs and the fifth accepted zero claims; the 2024 window rejected
+the available 2023/2025/2026 (and 2011) material. A deterministic region gate
+(`search/region_relevance.py`) drops other-region, national and
+upper-level-only results before ranking and ingestion. The third run exercised
+it live: the national/Fujian/Luoyang pages from the second run were gone, and
+the remaining government pages are Anji-focused. It exposed one short-name
+false positive (a Guizhou plan containing “安吉精铸”/“正安吉他”); the rule now
+requires the full `安吉县` in content and a word boundary for the short name,
+and replaying the third run's stored sources marks that plan `OTHER_REGION`
+(7 region / 1 other-region).
+
+The fourth run is the first live exercise of the 2024-window / adaptive
+plumbing. The region gate kept 27 and dropped 4 documents (3 other-region,
+1 national). `retrieval.period_coverage` reported `target_years=["2024"]`,
+22 selected claims, 1 in-window claim and 1 in-window source, with period
+coverage met but topic coverage missing four slots. Round 2 generated four
+follow-up queries and recorded their real text, including target-year forms.
+All four were routed to the gov channel; `GovDataProvider` returned no
+whitelisted documents, and the pre-existing `fail_fast` branch in
+`SearchCollector._run_tasks` treated the empty aggregate as a provider failure
+and raised `SearchError`. The job failed before verification, evidence
+persistence, graph and report. No code was changed for this run; the root cause
+and an offline reproduction are recorded in `LIVE_SMOKE.md`.
+
+The fifth run is the first completed live exercise of the repaired adaptive
+path. The region gate kept 24 and dropped 7 (6 other-region, 1 national);
+9 persisted sources are `region` and 1 `unknown`. Initial coverage had 21
+selected claims and 0 in-window; rounds 2 and 3 each returned 3 documents, with
+coverage still 22 selected / 0 in-window, and the controller stopped with
+`max_rounds_reached` (`total_turns=2`). The job reached `job.completed` with 35
+events, graph 45 nodes / 139 edges and a 6-section report; 10 sources, 0 verified
+/ 22 unverified (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`), 4 conflicts and 2 gaps.
+No persisted claim has a 2024 period. The specific empty-follow-up branch was
+not reproduced. The run also exposed an unresolved claim-region false positive:
+10 claims are tagged `年全县` and one `占全县`; these are malformed place tokens
+for county text such as `2023年全县...`, and none is a 2024 claim. Details are in
+`LIVE_SMOKE.md`; the 22 report findings are not among these claims.
+
+Follow-up fix: `SearchCollector._run_tasks` now counts failed tasks separately
+from successful empty results and raises `SearchError` only when every task
+raised. An empty adaptive follow-up returns an empty result; the controller
+stops with `ZERO_MARGINAL_EVIDENCE` and the job continues with existing
+evidence. Three regressions were added in `tests/test_search_collector.py`;
+the full suite is `830 passed`, Ruff is clean, and no paid call was made for the
+fix. The fifth run later completed with non-empty follow-ups; the empty branch
+itself remains verified only offline, and no further paid run is authorized.
+
+## 2024 period coverage and claim region fix (2026-11-20)
+
+Worktree `E:\Projects\CountyResearchAI-finish-roadmap`, branch
+`codex/finish-roadmap`, code HEAD after this work `d186577`; the empty-result
+fix is `daa0b83`. Commits:
+
+| Phase | Commit | Result |
+| --- | --- | --- |
+| 1. Claim-level region | `e8021c8` | each claim independently classified; cross-region claims excluded from target packs, conflicts, coverage, citations and verifier support |
+| 2. Date window propagation | `36a7c4f` | contract `date_window` reaches `ResearchRequest`, application, search port, collector and QueryEngine; target year appears in generated queries; publication date is not a filter |
+| 3. Adaptive period coverage | `1da579c` | `CoverageSnapshot` separates topic and period coverage; `quality_met` requires at least one in-window claim; period-gap queries, real query text and per-round coverage are recorded |
+| 4. Claim period inference | `1f08ba1` | claim-local year first; multi-year spans preserved; document year only when no local year exists; window rejects a span reaching outside |
+| 5. Date parsing / truncation | `c6d98a6` | Tavily/Serper/Bing/DeepSeek publication dates parsed; `tYYYYMMDD` and `/YYYYMM/` URL dates; body-first-paragraph guessing removed; provider truncation records original length |
+| Adjacent-year test | `d186577` | 2023/2025 claims stay outside a 2024 window |
+
+Verification at code HEAD:
+
+| Check | Observed |
+| --- | --- |
+| Full backend suite | `830 passed` (`pytest -q`; 827 at `d186577`, plus 3 follow-up regressions) |
+| P0 regression modules | `49 passed` (`test_evidence_store`, `test_evidence_graph`, `test_report_projection`) |
+| Targeted new regressions | `85 passed` across region, window, adaptive, period, ledger and provider tests |
+| Ruff | `ruff check src tests` → `All checks passed!` |
+
+Not yet established: the fourth paid Live run failed in the adaptive follow-up
+before verification. It did show live 2024 period coverage (1 in-window
+claim/source) and target-year follow-up query texts, then aborted because
+`fail_fast` treated four empty gov-channel results as a search failure. The
+fifth paid run completed after that fix: it recorded the 2024 target window and
+two non-empty follow-up rounds, reached graph/report, but still had 0 in-window
+claims and 0 verified facts; no persisted claim has a 2024 period. The repaired
+path is therefore demonstrated for non-empty follow-ups, not for the empty
+branch itself. Real retrieval of 2024 material and a completed Live-style
+research outcome are still not demonstrated; the final outcome could still be
+`INSUFFICIENT_DATA`/`NO_PROGRESS` if the target year is absent. The fix changes
+retrieval and extraction, not the verifier's acceptance standard. The fifth run
+also exposed an unresolved claim-region false positive (`年全县` 10 claims,
+`占全县` 1) that is separate from the 2024 gap and still needs a fix and
+regression.

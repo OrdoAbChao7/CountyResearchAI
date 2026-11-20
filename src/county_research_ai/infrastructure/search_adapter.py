@@ -1,7 +1,19 @@
 from __future__ import annotations
 
+from datetime import date
+
 from ..domain.modes import ResearchMode
 from ..models import RawDoc
+from ..search.region_relevance import filter_documents_for_region
+
+
+def _year_token(target_years: list[str] | None) -> str:
+    years = [year for year in (target_years or []) if str(year).strip()]
+    if not years:
+        return ""
+    if len(years) == 1:
+        return f"{years[0]}年"
+    return f"{years[0]}-{years[-1]}年"
 
 
 class CollectorSearchAdapter:
@@ -11,9 +23,24 @@ class CollectorSearchAdapter:
         self.collector = collector
 
     def collect(
-        self, county: str, focus: str, max_results: int, *, mode: ResearchMode
+        self,
+        county: str,
+        focus: str,
+        max_results: int,
+        *,
+        mode: ResearchMode,
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
     ) -> list[RawDoc]:
-        return self.collector.collect(county, focus, max_results, mode=mode)
+        kwargs: dict[str, object] = {"mode": mode}
+        if date_start is not None:
+            kwargs["date_start"] = date_start
+        if date_end is not None:
+            kwargs["date_end"] = date_end
+        if target_years:
+            kwargs["target_years"] = target_years
+        return self.collector.collect(county, focus, max_results, **kwargs)
 
     def collect_supplemental(
         self, queries: list[str], max_results: int = 10
@@ -37,13 +64,24 @@ class ProviderSearchAdapter:
         self.provider = provider
 
     def collect(
-        self, county: str, focus: str, max_results: int, *, mode: ResearchMode
+        self,
+        county: str,
+        focus: str,
+        max_results: int,
+        *,
+        mode: ResearchMode,
+        date_start: date | None = None,
+        date_end: date | None = None,
+        target_years: list[str] | None = None,
     ) -> list[RawDoc]:
+        year_token = _year_token(target_years)
         queries = [
             f"{county} {focus or '产业'} 产业 发展",
             f"{county} {focus or '产业'} 产值 企业",
             f"{county} 产业 园区 规划",
         ]
+        if year_token:
+            queries = [f"{county} {year_token} {query[len(county):].strip()}" for query in queries]
         by_url: dict[str, RawDoc] = {}
         without_url: list[RawDoc] = []
         for query in queries:
@@ -52,7 +90,8 @@ class ProviderSearchAdapter:
                     without_url.append(doc)
                 elif doc.url not in by_url:
                     by_url[doc.url] = doc
-        return (list(by_url.values()) + without_url)[:max_results]
+        docs = (list(by_url.values()) + without_url)[:max_results]
+        return list(filter_documents_for_region(docs, county).kept)
 
     def collect_supplemental(
         self, queries: list[str], max_results: int = 10

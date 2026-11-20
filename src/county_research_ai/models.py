@@ -17,7 +17,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -110,6 +110,8 @@ class EvidenceItem(BaseModel):
     credibility_score: float = 0.5  # 0.0 - 1.0
     year: str | None = None  # 统计年份或发布年份
     administrative_scope: str = ""  # 县域本级 / 地级市全市 / 全省
+    region_id: str = ""  # 该条证据所属地区；无法判断时为 UNKNOWN
+    region_source: str = ""  # claim / document / scope / unknown
     indicator_caliber: str = ""  # 口径（如“规上工业总产值”、“全产业链产值”）
     verification_status: str = "unverified"  # verified / conflicting / unverified / insufficient
     corroborating_sources: list[str] = Field(default_factory=list)  # 交叉佐证的其它 URL
@@ -479,6 +481,30 @@ class ResearchRequest(BaseModel):
     focus: str | None = None  # 研究方向,如 "竹产业";None 则自动发现
     mode: str = "snapshot"  # 研究模式:snapshot / rise-fall
     options: dict[str, Any] = Field(default_factory=dict)
+    # Optional research window. Both sides are inclusive; None keeps the legacy
+    # unbounded behaviour. Dates are data periods, not web publication dates.
+    date_start: date | None = None
+    date_end: date | None = None
+
+    @property
+    def target_years(self) -> list[str]:
+        years: list[str] = []
+        for value in (self.date_start, self.date_end):
+            if value is not None and str(value.year) not in years:
+                years.append(str(value.year))
+        return years
+
+    @property
+    def time_period(self) -> str:
+        if self.date_start is not None and self.date_end is not None:
+            if self.date_start.year == self.date_end.year:
+                return str(self.date_start.year)
+            return f"{self.date_start.year}-{self.date_end.year}"
+        if self.date_start is not None:
+            return f"{self.date_start.year}至今"
+        if self.date_end is not None:
+            return f"{self.date_end.year}年以前"
+        return ""
 
 
 class ResearchReport(BaseModel):

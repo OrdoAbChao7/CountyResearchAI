@@ -85,6 +85,8 @@ class AtomicClaim(BaseModel):
     claim_id: str
     statement: str
     region_id: str = ""
+    # claim / document / scope / unknown; empty keeps legacy callers working.
+    region_source: str = ""
     metric_id: str = ""
     measure_id: str = ""
     value: str = ""

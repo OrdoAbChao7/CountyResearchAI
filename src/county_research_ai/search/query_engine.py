@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
@@ -65,6 +66,53 @@ _MODE_SLOT_DEFINITIONS: dict[str, tuple[tuple[str, str, tuple[str, ...], int], .
 }
 
 
+def _normalize_years(years: Iterable[str] | None) -> list[str]:
+    result: list[str] = []
+    for value in years or []:
+        text = str(value).strip()
+        if text and text not in result:
+            result.append(text)
+    return result
+
+
+def _year_token(years: Iterable[str] | None) -> str:
+    values = _normalize_years(years)
+    if not values:
+        return ""
+    if len(values) == 1:
+        return f"{values[0]}年"
+    return f"{values[0]}-{values[-1]}年"
+
+
+def _period_label(years: Iterable[str] | None) -> str:
+    values = _normalize_years(years)
+    if not values:
+        return ""
+    if len(values) == 1:
+        return values[0]
+    return f"{values[0]}-{values[-1]}"
+
+
+def _with_year_query(
+    queries: list[GeneratedQuery],
+    county: str,
+    year_token: str,
+) -> list[GeneratedQuery]:
+    """Ensure at least one statutory statistical query names the target year."""
+    if not year_token or any(year_token in query.query for query in queries):
+        return queries
+    return [
+        GeneratedQuery(
+            query=f"{county} {year_token} 统计公报 国民经济和社会发展统计公报",
+            intent=QueryIntent.ECONOMIC_SCALE,
+            target_channel="gov",
+            priority=1,
+            explanation="检索目标期间官方统计公报",
+        ),
+        *queries,
+    ]
+
+
 class QueryEngine:
     """多维度动态搜索词生成与查询展开引擎。"""
 
@@ -77,12 +125,15 @@ class QueryEngine:
         focus: str | None = None,
         mode: str = "snapshot",
         max_queries: int = 12,
+        *,
+        target_years: Iterable[str] | None = None,
     ) -> list[GeneratedQuery]:
         """根据县域、研究方向和研究模式动态生成首轮检索查询计划。"""
         disambig = disambiguate_region(county)
         clean_county = disambig.clean_name
         focus_term = (focus or "").strip()
         prefix = disambig.get_preferred_query_prefix()
+        year_token = _year_token(target_years)
 
         queries: list[GeneratedQuery] = []
 
@@ -91,11 +142,54 @@ class QueryEngine:
         elif mode == "long-history":
             queries.extend(self._generate_long_history_queries(clean_county, prefix, focus_term))
         else:
-            queries.extend(self._generate_snapshot_queries(clean_county, prefix, focus_term))
+            queries.extend(
+                self._generate_snapshot_queries(
+                    clean_county, prefix, focus_term, year_token=year_token
+                )
+            )
+        queries = _with_year_query(queries, clean_county, year_token)
 
         # 按优先级排序并截断
         queries.sort(key=lambda q: q.priority)
         return self._annotate_queries(queries[:max_queries], clean_county, focus_term, mode)
+
+    def generate_period_queries(
+        self,
+        county: str,
+        focus: str | None = None,
+        target_years: Iterable[str] | None = None,
+        *,
+        max_queries: int = 2,
+    ) -> list[GeneratedQuery]:
+        """Build supplemental queries that explicitly name the target period.
+
+        These are used when topical coverage is satisfied but no selected claim
+        falls inside the requested years. The wording differs from the first
+        snapshot query so a follow-up round does not repeat it verbatim.
+        """
+        year_token = _year_token(target_years)
+        if not year_token or max_queries <= 0:
+            return []
+        disambig = disambiguate_region(county)
+        clean_county = disambig.clean_name
+        focus_term = (focus or "产业").strip()
+        candidates = [
+            GeneratedQuery(
+                query=f"{clean_county} {year_token} 统计年鉴 统计公报 主要经济指标",
+                intent=QueryIntent.ECONOMIC_SCALE,
+                target_channel="gov",
+                priority=1,
+                explanation="补充目标期间官方统计资料",
+            ),
+            GeneratedQuery(
+                query=f"{clean_county} {focus_term} {year_token} 产值 产量 统计数据",
+                intent=QueryIntent.ECONOMIC_SCALE,
+                target_channel="web",
+                priority=1,
+                explanation="补充目标期间产业统计数据",
+            ),
+        ]
+        return candidates[:max_queries]
 
     def generate_question_slots(
         self,
@@ -104,10 +198,13 @@ class QueryEngine:
         mode: str = "snapshot",
         *,
         budget_chars: int = 12000,
+        target_years: Iterable[str] | None = None,
+        time_period: str = "",
     ) -> list[QuestionSlot]:
         """Return explicit, mode-specific evidence requirements."""
         county_name = disambiguate_region(county).clean_name
         focus_name = (focus or "主导产业").strip()
+        period = time_period or _period_label(target_years)
         definitions = _MODE_SLOT_DEFINITIONS.get(mode, _MODE_SLOT_DEFINITIONS["snapshot"])
         return [
             QuestionSlot(
@@ -115,6 +212,7 @@ class QueryEngine:
                 research_question=f"{county_name}{focus_name}{question}",
                 required_metrics=list(metrics),
                 region=county_name,
+                time_period=period,
                 priority=priority,
                 evidence_requirement="至少有一条可追溯原文片段和来源",
                 budget_chars=budget_chars,
@@ -129,16 +227,25 @@ class QueryEngine:
         mode: str = "snapshot",
         *,
         budget_chars: int = 12000,
+        target_years: Iterable[str] | None = None,
+        time_period: str = "",
     ) -> ResearchSpec:
         county_name = disambiguate_region(county).clean_name
+        years = _normalize_years(target_years)
         return ResearchSpec(
             region_id=county_name,
             region_name=county_name,
             mode=mode,
             research_focus=(focus or "").strip(),
+            target_years=years,
             architecture_version="evidence_first_v2",
             required_question_slots=self.generate_question_slots(
-                county_name, focus, mode, budget_chars=budget_chars
+                county_name,
+                focus,
+                mode,
+                budget_chars=budget_chars,
+                target_years=years,
+                time_period=time_period,
             ),
             budget=budget_chars,
         )
@@ -161,6 +268,7 @@ class QueryEngine:
                 spec.research_focus,
                 [{"description": f"{slot.research_question} {' '.join(slot.required_metrics)}"}],
                 max_queries=1,
+                target_years=spec.target_years,
             )
             for query in generated:
                 queries.append(
@@ -212,11 +320,14 @@ class QueryEngine:
         focus: str | None,
         gaps: list[dict[str, Any]] | list[str],
         max_queries: int = 5,
+        *,
+        target_years: Iterable[str] | None = None,
     ) -> list[GeneratedQuery]:
         """针对反思阶段发现的信息缺口，生成高针对性的补充检索词。"""
         disambig = disambiguate_region(county)
         c_name = disambig.clean_name
         focus_term = (focus or "").strip()
+        year_token = _year_token(target_years)
 
         reflection_queries: list[GeneratedQuery] = []
 
@@ -234,9 +345,14 @@ class QueryEngine:
                 q_text = f"{c_name} {focus_term} 历史 县志 发展历程 拐点 起源".strip()
             elif "产值" in gap_desc or "数据" in gap_desc or "面积" in gap_desc or "统计" in gap_desc:
                 intent = QueryIntent.ECONOMIC_SCALE
-                q_text = f"{c_name} 统计公报 国民经济 {focus_term} 产值 产量 面积 最新".strip()
+                q_text = (
+                    f"{c_name} {year_token} 统计公报 国民经济 {focus_term} 产值 产量 面积 最新".strip()
+                    if year_token
+                    else f"{c_name} 统计公报 国民经济 {focus_term} 产值 产量 面积 最新".strip()
+                )
             else:
-                q_text = f"{c_name} {focus_term} {gap_desc[:15]}".strip()
+                year_prefix = f"{year_token} " if year_token else ""
+                q_text = f"{c_name} {year_prefix}{focus_term} {gap_desc[:15]}".strip()
 
             reflection_queries.append(
                 GeneratedQuery(
@@ -251,13 +367,15 @@ class QueryEngine:
         return reflection_queries[:max_queries]
 
     def _generate_snapshot_queries(
-        self, county: str, prefix: str, focus: str
+        self, county: str, prefix: str, focus: str, *, year_token: str = ""
     ) -> list[GeneratedQuery]:
         focus_str = focus or "优势特色产业"
+        year_prefix = f"{year_token} " if year_token else ""
+        year_suffix = f" {year_token}" if year_token else ""
         queries = [
             # 维度 1：宏观公报与官方统计
             GeneratedQuery(
-                query=f"{county} 统计公报 国民经济和社会发展统计公报",
+                query=f"{county} {year_prefix}统计公报 国民经济和社会发展统计公报",
                 intent=QueryIntent.ECONOMIC_SCALE,
                 target_channel="gov",
                 priority=1,
@@ -265,7 +383,7 @@ class QueryEngine:
             ),
             # 维度 2：产业产值与经济贡献
             GeneratedQuery(
-                query=f"{county} {focus_str} 总产值 规上工业 增加值 增速 占比",
+                query=f"{county} {focus_str}{year_suffix} 总产值 规上工业 增加值 增速 占比",
                 intent=QueryIntent.ECONOMIC_SCALE,
                 target_channel="web",
                 priority=1,

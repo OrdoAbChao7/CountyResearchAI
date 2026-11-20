@@ -36,6 +36,7 @@ from ..config import Settings, get_settings
 from ..exceptions import SearchError
 from ..models import RawDoc
 from .base import SearchProvider
+from .content_extractor import parse_published_date
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,19 @@ def _truncate(text: str, max_chars: int) -> str:
     if max_chars <= 0 or len(text) <= max_chars:
         return text
     return text[: max_chars - 3] + "..."
+
+
+def _prepare_content(text: str, max_chars: int) -> tuple[str, int, bool, str]:
+    """Return truncated content plus the truthful pre-truncation metadata."""
+    original_length = len(text)
+    if max_chars <= 0 or original_length <= max_chars:
+        return text, original_length, False, ""
+    return (
+        _truncate(text, max_chars),
+        original_length,
+        True,
+        f"detail_max_chars:{max_chars}",
+    )
 
 
 # ===== 1. Tavily =====
@@ -161,7 +175,11 @@ class TavilySearchProvider(SearchProvider):
             raw = item.get("raw_content") or ""
             snippet = item.get("snippet", "")
             # 优先用 raw_content(Tavily 全文),退化用 snippet
-            content = _truncate(raw or snippet, self._detail_max_chars)
+            source_text = raw or snippet
+            content, original_length, truncated, reason = _prepare_content(
+                source_text, self._detail_max_chars
+            )
+            published_date = item.get("published_date")
             docs.append(RawDoc(
                 title=item.get("title", ""),
                 url=item.get("url", ""),
@@ -169,9 +187,14 @@ class TavilySearchProvider(SearchProvider):
                 content=content,
                 source=self.name,
                 fetched_at=_utcnow(),
+                published_at=parse_published_date(published_date),
+                content_original_length=original_length if source_text else None,
+                content_truncated=truncated,
+                truncation_reason=reason,
                 metadata={
                     "score": item.get("score"),
                     "content_type": item.get("content_type"),
+                    "published_date": published_date,
                 },
             ))
         return docs
@@ -263,7 +286,12 @@ class SerperSearchProvider(SearchProvider):
         docs: list[RawDoc] = []
         for item in organic:
             snippet = item.get("snippet", "")
-            content = _truncate(snippet, self._detail_max_chars) if self._fetch_detail else ""
+            if self._fetch_detail:
+                content, original_length, truncated, reason = _prepare_content(
+                    snippet, self._detail_max_chars
+                )
+            else:
+                content, original_length, truncated, reason = "", None, False, ""
             docs.append(RawDoc(
                 title=item.get("title", ""),
                 url=item.get("link", ""),
@@ -271,6 +299,10 @@ class SerperSearchProvider(SearchProvider):
                 content=content,
                 source=self.name,
                 fetched_at=_utcnow(),
+                published_at=parse_published_date(item.get("date")),
+                content_original_length=original_length,
+                content_truncated=truncated,
+                truncation_reason=reason,
                 metadata={
                     "position": item.get("position"),
                     "date": item.get("date"),
@@ -371,7 +403,12 @@ class BingSearchProvider(SearchProvider):
         docs: list[RawDoc] = []
         for item in web_pages:
             snippet = item.get("snippet", "")
-            content = _truncate(snippet, self._detail_max_chars) if self._fetch_detail else ""
+            if self._fetch_detail:
+                content, original_length, truncated, reason = _prepare_content(
+                    snippet, self._detail_max_chars
+                )
+            else:
+                content, original_length, truncated, reason = "", None, False, ""
             docs.append(RawDoc(
                 title=item.get("name", ""),
                 url=item.get("url", ""),
@@ -379,6 +416,10 @@ class BingSearchProvider(SearchProvider):
                 content=content,
                 source=self.name,
                 fetched_at=_utcnow(),
+                published_at=parse_published_date(item.get("datePublished")),
+                content_original_length=original_length,
+                content_truncated=truncated,
+                truncation_reason=reason,
                 metadata={
                     "id": item.get("id"),
                     "displayUrl": item.get("displayUrl"),
@@ -455,6 +496,7 @@ class DeepSeekSearchProvider(SearchProvider):
                     snippet=str(item.get("snippet", item.get("content", ""))),
                     content=content,
                     source=self.name,
+                    published_at=parse_published_date(item.get("published_date")),
                     metadata={
                         "published_date": item.get("published_date"),
                         "score": item.get("score"),

@@ -173,3 +173,92 @@ def test_initial_plan_respects_explicit_zero_query_limit():
 
     assert plan.queries == ()
     assert controller.budget.used_queries == 0
+
+
+_CORE_SUFFIXES = (
+    "economic_scale", "industry_structure", "origin", "growth",
+    "administration", "geography", "traditional",
+)
+
+
+def _core_packs(spec, *, period: str):
+    slots = [
+        slot
+        for slot in spec.question_slots
+        if slot.slot_id.rsplit(":", 1)[-1] in _CORE_SUFFIXES
+    ]
+    packs = [
+        _pack(
+            slot,
+            metric=slot.required_metrics[0],
+            url=f"https://anji.gov.cn/{slot.slot_id.rsplit(':', 1)[-1]}",
+            text=" ".join(slot.required_metrics),
+        )
+        for slot in slots
+    ]
+    return [
+        pack.model_copy(
+            update={
+                "selected_claims": [
+                    claim.model_copy(update={"period": period})
+                    for claim in pack.selected_claims
+                ]
+            }
+        )
+        for pack in packs
+    ]
+
+
+def test_quality_not_met_without_in_window_claim():
+    spec = QueryEngine().generate_research_spec(
+        "安吉县", "竹产业", "snapshot", target_years=["2024"]
+    )
+    packs = _core_packs(spec, period="2023")
+
+    coverage = assess_evidence_pack_coverage(spec, packs)
+
+    assert coverage.topic_coverage_met is True
+    assert coverage.period_coverage_met is False
+    assert coverage.in_window_claim_count == 0
+    assert coverage.quality_met is False
+
+
+def test_in_window_claim_satisfies_period_coverage():
+    spec = QueryEngine().generate_research_spec(
+        "安吉县", "竹产业", "snapshot", target_years=["2024"]
+    )
+    packs = _core_packs(spec, period="2024")
+
+    coverage = assess_evidence_pack_coverage(spec, packs)
+
+    assert coverage.in_window_claim_count == len(packs)
+    assert coverage.period_coverage_met is True
+    assert coverage.quality_met is True
+
+
+def test_period_gap_generates_year_query_and_records_text():
+    spec = QueryEngine().generate_research_spec(
+        "安吉县", "竹产业", "snapshot", target_years=["2024"]
+    )
+    packs = _core_packs(spec, period="2023")
+    controller = AdaptiveRetrievalController(spec, budget=RetrievalBudget(max_queries=4))
+
+    decision = controller.next_round(packs, round_number=1)
+
+    texts = [query.query for query in decision.queries]
+    assert decision.stop_reason is None
+    assert decision.coverage.period_gap is True
+    assert any("2024年" in text for text in texts), texts
+
+
+def test_multi_year_span_is_not_a_single_year_claim():
+    spec = QueryEngine().generate_research_spec(
+        "安吉县", "竹产业", "snapshot", target_years=["2024"]
+    )
+    packs = _core_packs(spec, period="2024-2025")
+
+    coverage = assess_evidence_pack_coverage(spec, packs)
+
+    assert coverage.in_window_claim_count == 0
+    assert coverage.period_coverage_met is False
+    assert coverage.quality_met is False

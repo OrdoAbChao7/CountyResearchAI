@@ -13,6 +13,7 @@ from ..evidence.graph import (
 )
 from ..evidence.ledger import EvidenceLedger
 from ..evidence.source_identity import source_groups
+from ..search.disambiguation import disambiguate_region
 
 
 def persist_run_evidence(
@@ -25,9 +26,17 @@ def persist_run_evidence(
 ) -> dict[str, Any]:
     """Persist the run graph and structured findings, then summarize support."""
     window = None
+    target_region = ""
     if contract is not None and contract.date_window.is_set:
         window = (contract.date_window.start, contract.date_window.end)
-    graph.save_ledger(ledger, run_id=run_id, window=window)
+    if contract is not None and contract.regions:
+        target_region = disambiguate_region(contract.regions[0]).clean_name
+    graph.save_ledger(
+        ledger,
+        run_id=run_id,
+        window=window,
+        target_region=target_region,
+    )
     findings: list[FindingRecord] = []
     seen: set[str] = set()
     for pack in packs:

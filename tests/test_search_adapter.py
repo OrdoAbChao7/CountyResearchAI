@@ -29,3 +29,17 @@ def test_provider_adapter_keeps_legacy_search_as_one_port() -> None:
     docs = adapter.collect("巴中", "茶产业", 5, mode="snapshot")
     assert len(docs) == 3
     assert docs[0].title == "巴中 茶产业 产业 发展"
+
+
+def test_provider_adapter_drops_other_region_results() -> None:
+    class Provider:
+        def search(self, query, max_results=10):
+            return [
+                RawDoc(title="巴中市2024年统计公报", url="https://bazhong.gov.cn/1"),
+                RawDoc(title="洛阳市2024年统计公报", url="https://ly.gov.cn/1"),
+            ]
+
+    adapter = ProviderSearchAdapter(Provider())
+
+    docs = adapter.collect("巴中", "茶产业", 5, mode="snapshot")
+    assert [doc.url for doc in docs] == ["https://bazhong.gov.cn/1"]

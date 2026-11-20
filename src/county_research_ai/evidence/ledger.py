@@ -12,7 +12,8 @@ from ..domain.research_contracts import (
     SourceDocument,
 )
 from ..models import ProcessedData
-from .measure import derive_measure_key, infer_period
+from .claim_region import classify_claim_region
+from .measure import derive_measure_key, infer_claim_period
 from .source_contract import serialize_source_documents
 from .store import EvidenceStore
 
@@ -35,6 +36,19 @@ def _period_match(year_hints: list[str], period: str) -> str:
         if start <= year <= end:
             return str(year)
     return ""
+
+
+def _claim_region_allowed(claim: AtomicClaim, target_region: str) -> bool:
+    """Keep target and unresolved claims; drop positively other-region claims.
+
+    ``UNKNOWN`` stays visible so the verifier can explain why it was not used,
+    but an explicit other province/city/county must not enter a target county's
+    evidence pack or conclusions. Empty region ids keep legacy callers working.
+    """
+    region = (claim.region_id or "").strip()
+    if not target_region or not region:
+        return True
+    return region == target_region or region.upper() == "UNKNOWN"
 
 
 def _filter_unmatched_candidates(
@@ -178,6 +192,7 @@ class EvidenceLedger:
         return sorted(matches, key=lambda item: item.claim_id)
 
     def select_evidence_pack(self, slot: QuestionSlot) -> EvidencePack:
+        target_region = (slot.region or "").strip()
         candidates: list[tuple[int, str, EvidenceChunk, str]] = []
         requested_years = set(
             re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", slot.research_question)
@@ -197,6 +212,15 @@ class EvidenceLedger:
                 period_excluded.append(chunk.chunk_id)
                 continue
             linked_claims = claim_by_chunk.get(chunk.chunk_id, [])
+            if (
+                target_region
+                and linked_claims
+                and not any(
+                    _claim_region_allowed(claim, target_region)
+                    for claim in linked_claims
+                )
+            ):
+                continue
             matched = [
                 metric
                 for metric in slot.required_metrics
@@ -263,6 +287,7 @@ class EvidenceLedger:
                 claim.claim_id: claim
                 for claim in self.claims.values()
                 if selected_ids.intersection(claim.evidence_chunk_ids)
+                and _claim_region_allowed(claim, target_region)
             }.values(),
             key=lambda item: item.claim_id,
         )
@@ -386,23 +411,33 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
         )
         if not chunk_text and source is not None:
             chunk_text = source.content
-        period = item.year or infer_period(
+        period = infer_claim_period(
             item.claim,
             chunk_text=chunk_text,
             value=value,
             title=source.source_title if source is not None else "",
             published_at=source.publish_date if source is not None else None,
             content_prefix=source.content if source is not None else "",
+            document_year=item.year or "",
         )
         source_ids = [source.doc_id] if source is not None else []
         for repost_url in item.corroborating_sources:
             repost = source_by_url.get(repost_url)
             if repost is not None and repost.doc_id not in source_ids:
                 source_ids.append(repost.doc_id)
+        region = classify_claim_region(
+            processed.county.name,
+            title=source.source_title if source is not None else item.title,
+            url=source.canonical_url if source is not None else item.url,
+            statement=item.claim,
+            quote=item.snippet or chunk_text,
+            scope=item.administrative_scope,
+        )
         claim = AtomicClaim(
             claim_id=item.id,
             statement=item.claim,
-            region_id=processed.county.name,
+            region_id=region.region_id,
+            region_source=region.source,
             metric_id=item.indicator_caliber or item.topic,
             measure_id=derive_measure_key(
                 item.claim, chunk_text=chunk_text, value=value

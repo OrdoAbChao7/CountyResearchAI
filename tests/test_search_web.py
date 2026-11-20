@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import httpx
 import pytest
 
@@ -239,6 +241,83 @@ class TestTavilyProvider:
     def test_empty_api_key_raises(self, tmp_settings_no_key):
         with pytest.raises(SearchError):
             TavilySearchProvider(api_key="", settings=tmp_settings_no_key)
+
+    def test_published_date_is_parsed_and_body_year_stays_body_text(
+        self, monkeypatch, tmp_settings
+    ):
+        raw = "2018年安吉县竹产业总产值达到180亿元。" + "统计背景" * 40
+
+        class Client:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def post(self, url, json=None, **kwargs):
+                return httpx.Response(
+                    200,
+                    json={
+                        "results": [
+                            {
+                                "title": "安吉县竹产业统计",
+                                "url": "https://anji.gov.cn/stat",
+                                "snippet": "安吉县竹产业统计",
+                                "raw_content": raw,
+                                "published_date": "2024-01-08",
+                            }
+                        ]
+                    },
+                )
+
+        monkeypatch.setattr(httpx, "Client", Client)
+        docs = TavilySearchProvider(api_key="k", settings=tmp_settings).search("q")
+
+        assert docs[0].published_at == datetime(2024, 1, 8, tzinfo=timezone.utc)
+        assert docs[0].metadata["published_date"] == "2024-01-08"
+        assert "2018年" in docs[0].content
+
+    def test_provider_truncation_records_original_length(self, monkeypatch, tmp_settings):
+        raw = "统计正文" * 100
+
+        class Client:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def post(self, url, json=None, **kwargs):
+                return httpx.Response(
+                    200,
+                    json={
+                        "results": [
+                            {
+                                "title": "长公报",
+                                "url": "https://anji.gov.cn/long",
+                                "snippet": "摘要",
+                                "raw_content": raw,
+                            }
+                        ]
+                    },
+                )
+
+        monkeypatch.setattr(httpx, "Client", Client)
+        p = TavilySearchProvider(
+            api_key="k", settings=tmp_settings, detail_max_chars=50
+        )
+        docs = p.search("q")
+
+        assert len(docs[0].content) == 50
+        assert docs[0].content_truncated is True
+        assert docs[0].content_original_length == len(raw)
+        assert docs[0].truncation_reason == "detail_max_chars:50"
 
 
 # ===== Serper =====

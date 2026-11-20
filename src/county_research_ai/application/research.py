@@ -55,6 +55,9 @@ class ResearchApplication:
                 context.focus,
                 self.config.max_search_results,
                 mode=normalize_mode(context.request.mode),
+                date_start=context.request.date_start,
+                date_end=context.request.date_end,
+                target_years=context.request.target_years,
             )
             return context.model_copy(update={"raw_docs": docs})
         except Exception as exc:  # noqa: BLE001
@@ -67,7 +70,11 @@ class ResearchApplication:
                 county=context.county,
                 raw_docs=context.raw_docs,
             )
-            focus = discovery.selected_focus or handler.default_focus
+            # An explicit contract focus is authoritative. Discovery still runs
+            # so its candidates can be shown, but it must not replace a focus
+            # the caller already chose (notably on the API/JobRunner path).
+            explicit_focus = (context.request.focus or "").strip()
+            focus = explicit_focus or discovery.selected_focus or handler.default_focus
             request = context.request.model_copy(update={"focus": focus})
             return context.model_copy(
                 update={"discovery": discovery, "focus": focus, "request": request}
@@ -116,17 +123,21 @@ class ResearchApplication:
         focus: str,
     ) -> ResearchContext:
         mode = normalize_mode(context.request.mode)
+        target_years = context.request.target_years
+        time_period = context.request.time_period
         research_spec = ResearchSpec(
             region_id=context.county.name,
             region_name=context.county.name,
             research_focus=focus,
             mode=mode,
+            target_years=target_years,
             architecture_version="evidence_first_v2",
             required_question_slots=[
                 QuestionSlot(
                     slot_id=f"legacy:{mode}:overview",
                     research_question=f"{context.county.name} 的 {focus} 研究概览",
                     region=context.county.name,
+                    time_period=time_period,
                     budget_chars=12000,
                 )
             ],
