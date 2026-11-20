@@ -153,6 +153,44 @@ class QueryEngine:
         queries.sort(key=lambda q: q.priority)
         return self._annotate_queries(queries[:max_queries], clean_county, focus_term, mode)
 
+    def generate_period_queries(
+        self,
+        county: str,
+        focus: str | None = None,
+        target_years: Iterable[str] | None = None,
+        *,
+        max_queries: int = 2,
+    ) -> list[GeneratedQuery]:
+        """Build supplemental queries that explicitly name the target period.
+
+        These are used when topical coverage is satisfied but no selected claim
+        falls inside the requested years. The wording differs from the first
+        snapshot query so a follow-up round does not repeat it verbatim.
+        """
+        year_token = _year_token(target_years)
+        if not year_token or max_queries <= 0:
+            return []
+        disambig = disambiguate_region(county)
+        clean_county = disambig.clean_name
+        focus_term = (focus or "产业").strip()
+        candidates = [
+            GeneratedQuery(
+                query=f"{clean_county} {year_token} 统计年鉴 统计公报 主要经济指标",
+                intent=QueryIntent.ECONOMIC_SCALE,
+                target_channel="gov",
+                priority=1,
+                explanation="补充目标期间官方统计资料",
+            ),
+            GeneratedQuery(
+                query=f"{clean_county} {focus_term} {year_token} 产值 产量 统计数据",
+                intent=QueryIntent.ECONOMIC_SCALE,
+                target_channel="web",
+                priority=1,
+                explanation="补充目标期间产业统计数据",
+            ),
+        ]
+        return candidates[:max_queries]
+
     def generate_question_slots(
         self,
         county: str,

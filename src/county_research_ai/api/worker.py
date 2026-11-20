@@ -384,6 +384,8 @@ class JobRunner:
             "reflection_turns": len(getattr(deep, "reflection_history", []) or []),
             "retrieval_stop_reason": getattr(deep, "retrieval_stop_reason", ""),
             "retrieval_usage": getattr(deep, "retrieval_usage", {}) or {},
+            "period_coverage": getattr(deep, "period_coverage", {}) or {},
+            "period_coverage_history": getattr(deep, "period_coverage_history", []) or [],
             "question_tree": (
                 question_tree.model_dump(mode="json") if question_tree is not None else None
             ),

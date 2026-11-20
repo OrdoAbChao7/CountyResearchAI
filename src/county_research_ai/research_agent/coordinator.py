@@ -76,6 +76,8 @@ class DeepResearchResult:
     coverage_rate: float | None = None
     retrieval_stop_reason: str = ""
     retrieval_usage: dict[str, int] = field(default_factory=dict)
+    period_coverage: dict[str, object] = field(default_factory=dict)
+    period_coverage_history: list[dict[str, object]] = field(default_factory=list)
 
 
 class DeepResearchCoordinator:
@@ -156,6 +158,8 @@ class DeepResearchCoordinator:
         final_ledger = None
         retrieval_stop_reason = ""
         retrieval_usage: dict[str, int] = {}
+        period_coverage_history: list[dict[str, object]] = []
+        period_coverage: dict[str, object] = {}
 
         # 2. 首轮检索（如果已有资料不足）
         if self.collector is not None and hasattr(self.collector, "collect_adaptive"):
@@ -176,6 +180,7 @@ class DeepResearchCoordinator:
                     payload={
                         "round": 1,
                         "queries": len(plan.queries),
+                        "query_texts": [query.query for query in plan.queries],
                         "supplemental": False,
                     },
                 )
@@ -215,6 +220,16 @@ class DeepResearchCoordinator:
                     previous_new_evidence=marginal if adaptive_turn > 1 else None,
                 )
                 retrieval_usage = controller._usage()
+                period_coverage = {
+                    "round": adaptive_turn,
+                    **decision.coverage.period_coverage_summary(),
+                }
+                period_coverage_history.append(period_coverage)
+                emit(
+                    "retrieval.period_coverage",
+                    stage="analyze",
+                    payload=period_coverage,
+                )
                 if decision.stop_reason:
                     retrieval_stop_reason = decision.stop_reason.value
                     break
@@ -227,6 +242,7 @@ class DeepResearchCoordinator:
                     payload={
                         "round": adaptive_turn + 1,
                         "queries": len(decision.queries),
+                        "query_texts": [query.query for query in decision.queries],
                         "supplemental": True,
                     },
                 )
@@ -446,6 +462,8 @@ class DeepResearchCoordinator:
                 coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
+                period_coverage=period_coverage,
+                period_coverage_history=period_coverage_history,
             )
         elif mode == "long-history":
             from ..llm.long_history_analyzer import LongHistoryAnalyzer
@@ -485,6 +503,8 @@ class DeepResearchCoordinator:
                 coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
+                period_coverage=period_coverage,
+                period_coverage_history=period_coverage_history,
             )
         else:
             # Snapshot / Industry 模式
@@ -598,6 +618,8 @@ class DeepResearchCoordinator:
                 coverage_rate=coverage_rate,
                 retrieval_stop_reason=retrieval_stop_reason,
                 retrieval_usage=retrieval_usage,
+                period_coverage=period_coverage,
+                period_coverage_history=period_coverage_history,
             )
 
     def _collect_initial(

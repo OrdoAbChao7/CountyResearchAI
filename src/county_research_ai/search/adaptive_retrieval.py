@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from ..domain.research_contracts import EvidencePack, ResearchSpec
+from ..domain.research_contracts import AtomicClaim, EvidencePack, ResearchSpec
 from ..models import RawDoc
 from .content_extractor import calculate_content_fingerprint, normalize_url
 from .query_engine import GeneratedQuery, QueryEngine
@@ -18,6 +19,27 @@ class RetrievalStopReason(StrEnum):
     ZERO_MARGINAL_EVIDENCE = "zero_marginal_evidence"
     NO_GAP_QUERY = "no_gap_query"
     MAX_ROUNDS = "max_rounds_reached"
+
+
+_YEAR = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
+
+
+def claim_period_in_window(
+    period: str, target_years: Iterable[str] | None
+) -> bool:
+    """Return whether a claim period is fully inside the requested years.
+
+    A multi-year span such as ``2024-2025`` is not a 2024 annual fact, so every
+    year named by the claim must be one of the target years. An empty claim
+    period is never promoted into the window.
+    """
+    targets = {str(year).strip() for year in target_years or [] if str(year).strip()}
+    if not targets:
+        return True
+    years = set(_YEAR.findall(period or ""))
+    if not years:
+        return False
+    return years <= targets
 
 
 @dataclass
@@ -86,6 +108,10 @@ class CoverageSnapshot:
     new_evidence_count: int
     independent_source_count: int
     conflict_count: int = 0
+    target_years: tuple[str, ...] = ()
+    selected_claim_count: int = 0
+    in_window_claim_count: int = 0
+    in_window_source_count: int = 0
 
     @property
     def satisfied_slot_ids(self) -> tuple[str, ...]:
@@ -104,9 +130,39 @@ class CoverageSnapshot:
         )
 
     @property
-    def quality_met(self) -> bool:
+    def topic_coverage_met(self) -> bool:
         core = [slot for slot in self.slots if self._is_core(slot)]
         return bool(core) and all(slot.status == "complete" for slot in core)
+
+    @property
+    def period_coverage_met(self) -> bool:
+        return not self.target_years or self.in_window_claim_count > 0
+
+    @property
+    def period_gap(self) -> bool:
+        return not self.period_coverage_met
+
+    @property
+    def quality_met(self) -> bool:
+        """Topic and target-period coverage must both hold.
+
+        Topical completeness alone is not evidence that the requested year was
+        actually researched.
+        """
+        return self.topic_coverage_met and self.period_coverage_met
+
+    def period_coverage_summary(self) -> dict[str, object]:
+        """Separate topic coverage from target-window coverage for reporting."""
+        return {
+            "target_years": list(self.target_years),
+            "selected_claim_count": self.selected_claim_count,
+            "in_window_claim_count": self.in_window_claim_count,
+            "in_window_source_count": self.in_window_source_count,
+            "topic_coverage_met": self.topic_coverage_met,
+            "period_coverage_met": self.period_coverage_met,
+            "period_gap": self.period_gap,
+            "missing_slot_ids": list(self.missing_slot_ids),
+        }
 
     @staticmethod
     def _is_core(slot: SlotCoverage) -> bool:
@@ -247,8 +303,13 @@ def assess_evidence_pack_coverage(
 ) -> CoverageSnapshot:
     by_slot = {pack.slot_id: pack for pack in packs}
     previous = previous_evidence_ids or set()
+    target_years = tuple(
+        dict.fromkeys(str(year).strip() for year in spec.target_years if str(year).strip())
+    )
     new_ids: set[str] = set()
     all_sources: set[str] = set()
+    selected_claims: dict[str, AtomicClaim] = {}
+    in_window_source_ids: set[str] = set()
     slot_results: list[SlotCoverage] = []
     for slot in spec.question_slots:
         pack = by_slot.get(slot.slot_id)
@@ -271,6 +332,13 @@ def assess_evidence_pack_coverage(
         new_ids.update(claim_ids - previous)
         for source in pack.source_map.values():
             all_sources.add(source.canonical_url or source.doc_id)
+        for claim in pack.selected_claims:
+            selected_claims.setdefault(claim.claim_id, claim)
+            if claim_period_in_window(claim.period, target_years):
+                if claim.source_ids:
+                    in_window_source_ids.update(claim.source_ids)
+                else:
+                    in_window_source_ids.update(pack.source_map)
         status = "complete" if not missing and pack.selected_chunks else ("partial" if pack.selected_chunks else "empty")
         slot_results.append(
             SlotCoverage(
@@ -282,11 +350,34 @@ def assess_evidence_pack_coverage(
                 status=status,
             )
         )
+    in_window_claim_count = sum(
+        1
+        for claim in selected_claims.values()
+        if claim_period_in_window(claim.period, target_years)
+    )
     return CoverageSnapshot(
         slots=tuple(slot_results),
         new_evidence_count=len(new_ids),
         independent_source_count=len(all_sources),
+        target_years=target_years,
+        selected_claim_count=len(selected_claims),
+        in_window_claim_count=in_window_claim_count,
+        in_window_source_count=len(in_window_source_ids),
     )
+
+
+def _merge_queries(*groups: Iterable[GeneratedQuery]) -> list[GeneratedQuery]:
+    """Keep first-seen query text so a period query is not duplicated by a gap query."""
+    merged: list[GeneratedQuery] = []
+    seen: set[str] = set()
+    for group in groups:
+        for query in group:
+            key = query.query.strip()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            merged.append(query)
+    return merged
 
 
 class AdaptiveRetrievalController:
@@ -346,6 +437,15 @@ class AdaptiveRetrievalController:
             list(coverage.missing_slot_ids),
             max_queries=min(max_queries, self.budget.remaining_queries),
         )
+        period_queries: list[GeneratedQuery] = []
+        if coverage.period_gap:
+            period_queries = self.query_engine.generate_period_queries(
+                self.spec.region_name,
+                self.spec.research_focus,
+                self.spec.target_years,
+                max_queries=min(2, self.budget.remaining_queries),
+            )
+        queries = _merge_queries(period_queries, queries)[:max_queries]
         if not queries:
             return RetrievalDecision(coverage, stop_reason=RetrievalStopReason.NO_GAP_QUERY, usage=self._usage())
         reserved = self.budget.reserve_queries(len(queries))
