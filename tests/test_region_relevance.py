@@ -121,13 +121,45 @@ def test_unidentified_region_is_kept_for_manual_context():
     assert assessment.evidence_bearing is True
 
 
-def test_short_county_name_in_content_is_enough_to_match():
+def test_full_county_name_in_content_is_enough_to_match():
     document = RawDoc(
         title="竹产业高质量发展观察",
         url="https://example.com/analysis",
         content="安吉县坚持绿水青山就是金山银山理念，全县竹林面积达101万亩。",
     )
     assert assess_region_relevance(document, "安吉县").verdict is RegionVerdict.REGION
+
+
+def test_short_name_embedded_in_another_word_does_not_match():
+    # Recorded by the third live run: a Guizhou plan contains “安吉精铸” and
+    # “正安吉他”; a naive substring match must not turn it into Anji evidence.
+    document = RawDoc(
+        title="贵州省国民经济和社会发展第十五个五年规划纲要",
+        url="https://fgw.guizhou.gov.cn/zwgk/zdlyxx/ghjh/202602/t20260214_89548677.html",
+        content=(
+            "建成安吉精铸航空产业园、安顺两机创擎产业园等项目。"
+            "加快发展正安吉他、玉屏箫笛等乐器制造。"
+        ),
+    )
+    assessment = assess_region_relevance(document, "安吉县")
+    assert assessment.verdict is RegionVerdict.OTHER_REGION
+
+
+def test_short_name_after_a_region_prefix_matches():
+    document = RawDoc(
+        title="浙江省安吉竹产业高质量发展路径分析",
+        url="https://example.com/analysis",
+    )
+    assert assess_region_relevance(document, "安吉县").verdict is RegionVerdict.REGION
+
+
+def test_short_name_alone_in_content_is_not_enough():
+    document = RawDoc(
+        title="竹产业观察",
+        url="https://example.com/analysis",
+        content="安吉竹产业产值持续增长。",
+    )
+    assert assess_region_relevance(document, "安吉县").verdict is RegionVerdict.UNKNOWN
 
 
 def test_no_county_requested_keeps_everything():

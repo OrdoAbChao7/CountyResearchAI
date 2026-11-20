@@ -298,6 +298,95 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     )
 
 
+def _source_contents(db_path: Path) -> dict[str, str]:
+    """Read persisted source text so post-run classification uses the same input."""
+    import sqlite3
+
+    if not db_path.is_file():
+        return {}
+    connection = sqlite3.connect(str(db_path))
+    try:
+        return {
+            url: content or ""
+            for url, content in connection.execute(
+                "select canonical_url, content from source_snapshots"
+            )
+        }
+    except sqlite3.Error:
+        return {}
+    finally:
+        connection.close()
+
+
+def _region_gate_summary(
+    events: list[dict[str, Any]],
+    sources: list[dict[str, Any]],
+    county: str,
+    *,
+    contents_by_url: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Summarize the region gate from retrieval events and persisted sources."""
+    from county_research_ai.models import RawDoc
+    from county_research_ai.search.region_relevance import assess_region_relevance
+
+    contents = contents_by_url or {}
+    rounds: list[dict[str, Any]] = []
+    collect_events: list[dict[str, Any]] = []
+    for event in events:
+        payload = event.get("payload") or {}
+        if event.get("event_type") == "retrieval.round.completed":
+            usage = payload.get("usage") or {}
+            rounds.append(
+                {
+                    "round": payload.get("round"),
+                    "region_filtered_documents": usage.get(
+                        "region_filtered_documents", 0
+                    ),
+                    "fetched_documents": usage.get("fetched_documents"),
+                    "returned_documents": usage.get("returned_documents"),
+                }
+            )
+        elif event.get("event_type") == "retrieval.region_filtered":
+            collect_events.append(
+                {
+                    "kept": payload.get("kept"),
+                    "dropped": payload.get("dropped"),
+                    "verdicts": payload.get("verdicts") or {},
+                }
+            )
+    verdicts: dict[str, int] = {}
+    items: list[dict[str, Any]] = []
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+        url = source.get("url", "")
+        document = RawDoc(
+            title=source.get("title", ""),
+            url=url,
+            content=contents.get(url, ""),
+        )
+        assessment = assess_region_relevance(document, county)
+        verdicts[assessment.verdict.value] = verdicts.get(assessment.verdict.value, 0) + 1
+        items.append(
+            {
+                "title": document.title,
+                "url": document.url,
+                "verdict": assessment.verdict.value,
+            }
+        )
+    return {
+        "county": county,
+        "rounds": rounds,
+        "collect_filter_events": collect_events,
+        "region_filtered_documents_total": sum(
+            int(item.get("region_filtered_documents") or 0) for item in rounds
+        )
+        + sum(int(item.get("dropped") or 0) for item in collect_events),
+        "persisted_source_verdicts": verdicts,
+        "persisted_sources": items,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", type=Path, default=DEFAULT_ENV_FILE)
@@ -349,7 +438,9 @@ def main() -> int:
     app = create_app(settings=settings, live_enabled=True)
     summary: dict[str, Any] = {
         "date": "2026-11-20",
-        "authorization": "user: 允许付费调用 + 跑一次 Live + 再跑一次 (2026-11-20)",
+        "authorization": (
+            "user: 允许付费调用 + 跑一次 Live + 再跑一次 + 跑第三次 (2026-11-20)"
+        ),
         "cost_gate": "docs/goal/LIVE_SMOKE_COST_GATE.md",
         "provider": {
             "llm": "deepseek",
@@ -463,6 +554,14 @@ def main() -> int:
             },
             "guard": guard.snapshot(),
         }
+    )
+    summary["region_gate"] = _region_gate_summary(
+        events,
+        sources_list,
+        CONTRACT["regions"][0],
+        contents_by_url=_source_contents(
+            RUN_DIR / "data" / "api" / "evidence.sqlite"
+        ),
     )
 
     live_ok = (

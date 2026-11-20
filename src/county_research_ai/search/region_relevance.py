@@ -18,6 +18,12 @@ Only ``REGION`` and ``UNKNOWN`` are evidence-bearing. ``UNKNOWN`` is kept
 because county government pages and company releases often omit the place name
 from the title; the other verdicts positively identify a scope that is not the
 county, so they are dropped before ranking and ingestion.
+
+A short county name (``安吉``) is only matched in the title/snippet/URL and only
+on a word boundary; the full administrative name (``安吉县``) is required inside
+document content. The third live run exposed why: a Guizhou five-year plan
+contains ``安吉精铸`` and ``正安吉他``, which a naive substring match mistook for
+the county and let a province-level plan into the county's evidence store.
 """
 from __future__ import annotations
 
@@ -31,6 +37,10 @@ from ..models import RawDoc
 from .disambiguation import disambiguate_region
 
 _ADMIN_SUFFIXES = ("自治县", "自治旗", "自治区", "特区", "林区", "旗", "县", "市", "区", "州", "盟")
+
+# Characters that may legitimately precede a short county name in a place
+# phrase ("浙江省安吉", "湖州市安吉", "安吉县").
+_REGION_BOUNDARY_CHARS = frozenset("省市县区州盟旗镇乡村")
 
 # A run of CJK characters followed by an administrative suffix. Examples:
 # 安吉县, 浙江省, 洛阳市, 福建省. The group is greedy, so a stacked name like
@@ -121,16 +131,34 @@ def _short_name(clean_name: str) -> str:
     return clean_name if len(clean_name) >= 2 else ""
 
 
-def _county_terms(county: str) -> tuple[str, ...]:
+def _admin_name_terms(county: str) -> tuple[str, str]:
+    """Return (full administrative name, short name) for a county input."""
     disambiguation = disambiguate_region(county)
     clean_name = (disambiguation.clean_name or county).strip()
     if not clean_name:
-        return ()
-    terms = [clean_name]
-    short = _short_name(clean_name)
-    if short and short != clean_name:
-        terms.append(short)
-    return tuple(dict.fromkeys(terms))
+        return "", ""
+    if any(clean_name.endswith(suffix) for suffix in _ADMIN_SUFFIXES):
+        return clean_name, _short_name(clean_name)
+    # Input without an administrative suffix is treated as a short name that
+    # must sit on a word boundary.
+    return "", clean_name
+
+
+def _short_name_on_boundary(short: str, text: str) -> bool:
+    """True when the short name is not embedded inside a longer word."""
+    if not short:
+        return False
+    start = 0
+    while True:
+        index = text.find(short, start)
+        if index < 0:
+            return False
+        if index == 0:
+            return True
+        previous = text[index - 1]
+        if previous in _REGION_BOUNDARY_CHARS or not ("一" <= previous <= "鿿"):
+            return True
+        start = index + 1
 
 
 def _host_is_national(url: str) -> bool:
@@ -160,17 +188,19 @@ def assess_region_relevance(document: RawDoc, county: str) -> RegionAssessment:
     if not county:
         return RegionAssessment(RegionVerdict.UNKNOWN, reason="no_region_requested")
 
-    terms = _county_terms(county)
+    full_name, short_name = _admin_name_terms(county)
     title = document.title or ""
     snippet = document.snippet or ""
-    haystack = "\n".join(
-        (title, snippet, document.url or "", (document.content or "")[:3000])
-    )
-    matched = tuple(term for term in terms if term in haystack)
+    title_area = "\n".join((title, snippet, document.url or ""))
+    matched: list[str] = []
+    if full_name and (full_name in title_area or full_name in (document.content or "")):
+        matched.append(full_name)
+    if not matched and _short_name_on_boundary(short_name, title_area):
+        matched.append(short_name)
     if matched:
         return RegionAssessment(
             RegionVerdict.REGION,
-            matched_terms=matched,
+            matched_terms=tuple(matched),
             reason="county_mentioned",
         )
 

@@ -21,6 +21,7 @@ from concurrent.futures import TimeoutError as _TimeoutError
 from ..config import Settings, get_settings
 from ..exceptions import SearchError
 from ..models import RawDoc
+from ..observability import emit
 from .adaptive_retrieval import (
     AdaptiveCollectionResult,
     AdaptiveQueryPlan,
@@ -286,6 +287,21 @@ class SearchCollector(SearchProvider):
             return docs
         result = filter_documents_for_region(docs, county)
         if result.dropped:
+            verdicts: dict[str, int] = {}
+            for _, assessment in result.dropped:
+                verdicts[assessment.verdict.value] = (
+                    verdicts.get(assessment.verdict.value, 0) + 1
+                )
+            emit(
+                "retrieval.region_filtered",
+                stage="collect",
+                payload={
+                    "county": county,
+                    "kept": len(result.kept),
+                    "dropped": len(result.dropped),
+                    "verdicts": verdicts,
+                },
+            )
             logger.info(
                 "区域相关性过滤 | county=%s | kept=%d | dropped=%d | dropped_urls=%s",
                 county,
