@@ -1,0 +1,28 @@
+{
+  "run_id": "judges_formal_target_deepseek_20261018_schema_final_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_judge_1",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立盲评 Agent。不要猜测实验组、运行编号或其他报告。只根据任务、冻结 Rubric 和匿名报告评分；只输出 JSON。\n任务：评价临泽县的snapshot研究报告，按冻结 Rubric 对各维度评分。\nRubric：{\"schema_version\": \"1.0\", \"status\": \"FROZEN\", \"freeze_date\": \"2026-10-18\", \"freeze_scope\": \"formal_blind_judge_rubric_v1\", \"scale\": {\"min\": 0, \"max\": 5, \"anchors\": {\"0\": \"absent_or_unusable\", \"1\": \"major_defects\", \"3\": \"usable_with_material_gaps\", \"5\": \"strong_and_well_supported\"}}, \"dimensions\": {\"factual_accuracy\": {\"weight\": 0.25, \"rule\": \"verified_correct_claims_over_verifiable_claims\"}, \"key_fact_coverage\": {\"weight\": 0.15, \"rule\": \"correctly_covered_frozen_ground_truth_claims_over_all_claims\"}, \"source_reliability\": {\"weight\": 0.1, \"rule\": \"authority_and_source_content_match\"}, \"industry_logic\": {\"weight\": 0.1, \"rule\": \"resource_to_chain_to_market reasoning\"}, \"historical_explanation\": {\"weight\": 0.1, \"rule\": \"time_ordered phases and evidence-backed turning points\"}, \"causal_analysis\": {\"weight\": 0.1, \"rule\": \"distinguishes evidence from hypothesis and alternative causes\"}, \"structure_completeness\": {\"weight\": 0.05, \"rule\": \"required sections and scope clarity\"}, \"risk_analysis\": {\"weight\": 0.1, \"rule\": \"concrete risks, indicators and uncertainty\"}, \"unsupported_inference\": {\"weight\": -0.05, \"rule\": \"penalty for claims without matching evidence\"}}, \"judge_policy\": {\"minimum_independent_judges\": 2, \"adjudication_required_if_absolute_dimension_gap_at_least\": 2, \"judge_input_may_include\": [\"anonymous_report\", \"rubric\", \"task_prompt\"], \"judge_input_must_not_include\": [\"group_id\", \"ground_truth_before_claim_scoring\", \"other_reports\", \"run_trace\"]}}\n匿名报告：\n"
+    }
+  ],
+  "response": {
+    "content": "{\"status\":\"unscorable_missing_anonymous_report\",\"reason\":\"任务提示中“匿名报告：”后无任何报告内容，无法依据报告文本核验事实、覆盖度、来源、产业逻辑、历史解释、因果分析、结构、风险或推断支持度。\",\"dimension_scores\":{\"factual_accuracy\":{\"score\":0,\"weight\":0.25,\"rationale\":\"无报告内容，无法评估可验证正确主张。\"},\"key_fact_coverage\":{\"score\":0,\"weight\":0.15,\"rationale\":\"无报告内容，无法评估冻结真值主张覆盖。\"},\"source_reliability\":{\"score\":0,\"weight\":0.1,\"rationale\":\"无报告内容，无法评估来源权威性与内容匹配。\"},\"industry_logic\":{\"score\":0,\"weight\":0.1,\"rationale\":\"无报告内容，无法评估资源到链条到市场的推理。\"},\"historical_explanation\":{\"score\":0,\"weight\":0.1,\"rationale\":\"无报告内容，无法评估时间阶段与转折点证据。\"},\"causal_analysis\":{\"score\":0,\"weight\":0.1,\"rationale\":\"无报告内容，无法评估证据与假设区分及替代原因。\"},\"structure_completeness\":{\"score\":0,\"weight\":0.05,\"rationale\":\"无报告内容，无法评估必需章节与范围清晰度。\"},\"risk_analysis\":{\"score\":0,\"weight\":0.1,\"rationale\":\"无报告内容，无法评估具体风险、指标与不确定性。\"},\"unsupported_inference\":{\"score\":0,\"weight\":-0.05,\"rationale\":\"无报告内容，无主张可判定为无证据推断；按缺失报告不施加额外负分。\"}},\"weighted_score\":0.0,\"scale_min\":0,\"scale_max\":5}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 544,
+    "completion_tokens": 804,
+    "total_tokens": 1348
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 544,
+    "completion_tokens": 804,
+    "total_tokens": 1348,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

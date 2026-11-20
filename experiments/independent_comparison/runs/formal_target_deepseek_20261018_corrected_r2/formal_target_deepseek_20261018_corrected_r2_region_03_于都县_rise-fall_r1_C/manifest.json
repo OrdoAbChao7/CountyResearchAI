@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:7290f43c635b2b8a7d833ee7d20fc5381ee74bb245f3ed51e2b24682f15c347b",
+    "sources": "sources.json:c47d28fbe6aabd383385dd88cd7d042f5d024017366d113e357c009fc14716f2"
+  },
+  "config_hash": "598c586876acd2046348782d8d3e59914d6e4da9f510030cd1f1d939881ea696",
+  "county": "于都县",
+  "created_at": "2026-10-18T14:28:51.697339+00:00",
+  "duration_seconds": 60.224514,
+  "error": null,
+  "experiment_id": "E1",
+  "formal_target": true,
+  "group": "C",
+  "mode": "rise-fall",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 9436,
+    "deepseek:search:search": 6
+  },
+  "run_id": "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_C",
+  "search_provider": "deepseek",
+  "status": "VALID",
+  "task_id": "rise-fall",
+  "updated_at": "2026-10-18T14:29:51.921237+00:00"
+}

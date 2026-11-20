@@ -1,0 +1,128 @@
+[
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_01_德清县_snapshot_r1_A",
+    "group": "A",
+    "county": "德清县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "19be1043127e8255ac021db438466c7a3b9f447201474945ef2752f3d39dce07"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_01_德清县_snapshot_r1_B",
+    "group": "B",
+    "county": "德清县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "a99486475f2f26917b9992e76760f803c2f056ee38754c0365b2f05d1faac3e7"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_01_德清县_snapshot_r1_C",
+    "group": "C",
+    "county": "德清县",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "ee594480efa07bac67e709b83baab954e4cf01337c569dddbd124e21a6553687"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_02_长汀县_long-history_r1_A",
+    "group": "A",
+    "county": "长汀县",
+    "task_id": "long-history",
+    "anonymous_report_hash": "a49dee12783e63af65ee94d43e3d3573e76848d035b824a06c0747521fc373c4"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_02_长汀县_long-history_r1_B",
+    "group": "B",
+    "county": "长汀县",
+    "task_id": "long-history",
+    "anonymous_report_hash": "49dc79ef30b6eea98af9fdff3e938af03c3f015048fa801f8ba34ea8ca68b7bb"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_02_长汀县_long-history_r1_C",
+    "group": "C",
+    "county": "长汀县",
+    "task_id": "long-history",
+    "anonymous_report_hash": "3f3be398aba1ddb3c074a14fd745f3d14e3fd05c717204a6ec5131d5241984b5"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_A",
+    "group": "A",
+    "county": "于都县",
+    "task_id": "rise-fall",
+    "anonymous_report_hash": "4de65d8b16991b83ae33f1c2ee4f3346c2874ff110f0f6c413809fdd93417fea"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_B",
+    "group": "B",
+    "county": "于都县",
+    "task_id": "rise-fall",
+    "anonymous_report_hash": "9e87cb09dec60e22724185c0e1eaf77d9dfb1323d677d80effe7a703aef34535"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_C",
+    "group": "C",
+    "county": "于都县",
+    "task_id": "rise-fall",
+    "anonymous_report_hash": "43b02a6d7fe8b22f05634e1c12b0701c4fb91329447f3726d1e81245b82dc798"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_A",
+    "group": "A",
+    "county": "攀枝花市",
+    "task_id": "rise-fall",
+    "anonymous_report_hash": "c853f7803e1d478984c4c1e2ea393b8ff5fe8a56dd2072aaf8406feea51991ea"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_B",
+    "group": "B",
+    "county": "攀枝花市",
+    "task_id": "rise-fall",
+    "anonymous_report_hash": "71a2e8032f47d8a9e35e1552ffecaf46e2308904fd9e8a61c88cc8b2a4a29046"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_C",
+    "group": "C",
+    "county": "攀枝花市",
+    "task_id": "rise-fall",
+    "anonymous_report_hash": "87645aa3dbc1e6623d6452870b611325108ab74bc5bb9aa3688ef486cf94e9c5"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_05_白山市_snapshot_r1_A",
+    "group": "A",
+    "county": "白山市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "01ddcce37ba54f3c205ad38ad31b29e9bf3974d1c064ae99cb9a5516e51c93ca"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_05_白山市_snapshot_r1_B",
+    "group": "B",
+    "county": "白山市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "43acb7dfb817640b6332e3a5302c06849b14f778d0ab5ed5277f324d64dbe569"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_05_白山市_snapshot_r1_C",
+    "group": "C",
+    "county": "白山市",
+    "task_id": "snapshot",
+    "anonymous_report_hash": "6cc10a98b9ab222957a4e4a542bdcefca199c9f546fc30548be90397f013523a"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_06_临泽县_long-history_r1_A",
+    "group": "A",
+    "county": "临泽县",
+    "task_id": "long-history",
+    "anonymous_report_hash": "d105f219e105eda17fefae847c50c9971db6ea18589d7d51b8c02f401f3389c1"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_06_临泽县_long-history_r1_B",
+    "group": "B",
+    "county": "临泽县",
+    "task_id": "long-history",
+    "anonymous_report_hash": "87d6016442b7c5f0c320dfe5bd59d4e3d92e18494cf89766fa1ae7151a208223"
+  },
+  {
+    "run_id": "formal_target_deepseek_20261018_corrected_r2_region_06_临泽县_long-history_r1_C",
+    "group": "C",
+    "county": "临泽县",
+    "task_id": "long-history",
+    "anonymous_report_hash": "36b46f80866c6cd1932722de1aa1436c4399d0514be4b52a7b7c98d82c63ea6c"
+  }
+]

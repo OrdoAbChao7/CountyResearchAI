@@ -1,0 +1,16 @@
+{
+  "artifacts": {},
+  "config_hash": "264925bdf3410c172d10ba00a5c8fd719a2ba1afdecb3a75ec02394b72fb12e6",
+  "county": "安吉县",
+  "created_at": "2026-10-18T09:56:38.923166+00:00",
+  "error": "ResearchStageError: research stage failed: analyze | context={'county': '安吉县', 'focus': '竹产业', 'mode': 'snapshot'}",
+  "experiment_id": "E1",
+  "group": "C",
+  "mode": "snapshot",
+  "model": "gemini-3.1-flash-lite",
+  "run_id": "smoke_20261018T095509Z_安吉县_C",
+  "search_provider": "tavily",
+  "status": "FAILED",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T09:57:36.014607+00:00"
+}

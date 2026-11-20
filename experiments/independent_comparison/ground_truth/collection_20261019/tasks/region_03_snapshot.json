@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_2bbe5e1ac20a",
+      "claim": "2024年于都县实现地区生产总值（GDP）3526094万元，按可比价计算同比增长4.9%。",
+      "source": "于都县2024年国民经济和社会发展统计公报",
+      "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+      "date": "2026-07-26T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "地区生产总值（GDP）",
+      "unit": "万元",
+      "evidence_excerpt": "2024年，全县实现地区生产总值（GDP）3526094万元，按可比价计算，同比增长4\\.9\\%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202503/8cd88400bff145998d99179596453b3a.shtml#1"
+      ],
+      "verification_contexts": [
+        "region_03_snapshot_official_bulletin",
+        "region_03_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "2024年，全县实现地区生产总值（GDP）3526094万元，按可比价计算，同比增长4\\.9\\%。",
+        "生产总值（GDP） \\| 万元 \\| 6\\.5左右 \\| 3526094 \\| 4\\.9 \\| 5\\.4 \\|"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年于都县地区生产总值（GDP）为3526094万元，按可比价计算同比增长4.9%。",
+      "source_title": "于都县2024年国民经济和社会发展统计公报",
+      "source_date": "2026-07-26T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "于都县县域本级"
+    },
+    {
+      "claim_id": "continuation_4404c4b2909b",
+      "claim": "2024年于都县第一产业增加值372937万元，同比增长3.6%。",
+      "source": "于都县2024年国民经济和社会发展统计公报",
+      "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+      "date": "2026-07-26T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "第一产业增加值",
+      "unit": "万元",
+      "evidence_excerpt": "第一产业增加值372937万元，增长3\\.6\\%；",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202503/8cd88400bff145998d99179596453b3a.shtml#1"
+      ],
+      "verification_contexts": [
+        "region_03_snapshot_official_bulletin",
+        "region_03_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第一产业增加值372937万元，增长3\\.6\\%；",
+        "第一产业 \\| 万元 \\| — \\| 372937 \\| 3\\.6 \\| 3\\.8 \\|"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年于都县第一产业增加值为372937万元，同比增长3.6%。",
+      "source_title": "于都县2024年国民经济和社会发展统计公报",
+      "source_date": "2026-07-26T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "于都县县域本级"
+    },
+    {
+      "claim_id": "continuation_b1c6f001b909",
+      "claim": "2024年于都县第二产业增加值1150281万元，同比增长8.6%。",
+      "source": "于都县2024年国民经济和社会发展统计公报",
+      "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+      "date": "2026-07-26T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "第二产业增加值",
+      "unit": "万元",
+      "evidence_excerpt": "第二产业增加值1150281万元，增长8\\.6\\%；",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202503/8cd88400bff145998d99179596453b3a.shtml#1"
+      ],
+      "verification_contexts": [
+        "region_03_snapshot_official_bulletin",
+        "region_03_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第二产业增加值1150281万元，增长8\\.6\\%；",
+        "第二产业 \\| 万元 \\| — \\| 1150281 \\| 8\\.6 \\| 7\\.6 \\|"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年于都县第二产业增加值为1150281万元，同比增长8.6%。",
+      "source_title": "于都县2024年国民经济和社会发展统计公报",
+      "source_date": "2026-07-26T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "于都县县域本级"
+    },
+    {
+      "claim_id": "continuation_6b721f697f70",
+      "claim": "2024年于都县第三产业增加值2002876万元，同比增长3.0%。",
+      "source": "于都县2024年国民经济和社会发展统计公报",
+      "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+      "date": "2026-07-26T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "第三产业增加值",
+      "unit": "万元",
+      "evidence_excerpt": "第三产业增加值2002876万元，增长3\\.0\\%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202503/8cd88400bff145998d99179596453b3a.shtml#1"
+      ],
+      "verification_contexts": [
+        "region_03_snapshot_official_bulletin",
+        "region_03_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第三产业增加值2002876万元，增长3\\.0\\%。",
+        "第三产业 \\| 万元 \\| — \\| 2002876 \\| 3 \\| 4\\.1 \\|"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年于都县第三产业增加值为2002876万元，同比增长3.0%。",
+      "source_title": "于都县2024年国民经济和社会发展统计公报",
+      "source_date": "2026-07-26T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "于都县县域本级"
+    },
+    {
+      "claim_id": "continuation_889c8f46c2d8",
+      "claim": "2024年于都县工业增加值947850万元，较上年增长9.7%。",
+      "source": "于都县2024年国民经济和社会发展统计公报",
+      "url": "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+      "date": "2026-07-26T16:00:00+00:00",
+      "region": "于都县",
+      "metric": "工业增加值",
+      "unit": "万元",
+      "evidence_excerpt": "2024年，全县实现工业增加值947850万元，较上年增长9\\.7\\%",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202504/e8b5a43705d442af8c725a75c9937465.shtml#1",
+        "https://www.yudu.gov.cn/ydxxxgk/c108380/202503/8cd88400bff145998d99179596453b3a.shtml#1"
+      ],
+      "verification_contexts": [
+        "region_03_snapshot_official_bulletin",
+        "region_03_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "2024年，全县实现工业增加值947850万元，较上年增长9\\.7\\%",
+        "\\* 工业 \\| 万元 \\| — \\| 947850 \\| 9\\.7 \\| 8\\.4 \\|"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年于都县工业增加值为947850万元，较上年增长9.7%。",
+      "source_title": "于都县2024年国民经济和社会发展统计公报",
+      "source_date": "2026-07-26T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "于都县县域本级"
+    }
+  ]
+}

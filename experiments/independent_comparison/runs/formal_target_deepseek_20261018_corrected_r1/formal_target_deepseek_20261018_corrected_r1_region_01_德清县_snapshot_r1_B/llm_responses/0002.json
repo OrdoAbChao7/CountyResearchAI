@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r1_region_01_德清县_snapshot_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网 AI。研究对象：德清县；方向：高端制造与县域产业升级；模式：snapshot。\n仅依据下列资料写一份中文研究报告。逐条区分事实、推断和资料缺口，每个关键事实给出匹配来源，不要编造没有资料支持的数字。\n\n资料：\n[1] 德清县经济和信息化局关于县政协十届四次会议第53号提案答复的函 - 索引号: | 11330521071634449J/2025-1010411785  | 成文时间 | 2025-11-11\nURL: http://www.deqing.gov.cn/zfxxgk/dfbmptlj/bmxxgk/xjxj/jytabl/art/2025/art_6b1393c5fabb4b989df9da288dd07605.html#1\n产业基础扎实稳固，高端装备和低空经济两大主导产业均为县“323”现代化产业体系的培育重点，其中高端装备与市八大新兴产业链中的新能源汽车及关键零部件、智能物流装备、仿生机器人及数控机床息息相关，低空经济与地理信息+深度融合 ... 2024年全镇完成制造业投资20.6亿元，其中80%以上为高端装备产业，全县5个“两新”项目被列入国家超长期特别国债大规模设备更新专项资金盘子，获得支持资金1.05亿元。\n\n[2] 群山已响，回望十年产业潮 ——写在湖州莫干山高新区升级国家高新区十周年之际（三）-德清新闻网\nURL: http://dqnews.zjol.com.cn/dqnews/system/2026/01/09/035129182.shtml\n高端装备制造和生物医药企业不仅在此扎根 ... 临杭产业新区拥有莫干山机场、保税物流中心等产业配套，带动鼎力机械、天马轴承等高端装备制造企业沿链聚合 ... 2018年，首届联合国世界地理信息大会在德清召开，推动我县地信产业嵌入全球价值链，链上能级和国际影响力显著提升。"
+    }
+  ],
+  "response": {
+    "content": "",
+    "model": "deepseek-flash",
+    "prompt_tokens": 464,
+    "completion_tokens": 2048,
+    "total_tokens": 2512
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 464,
+    "completion_tokens": 2048,
+    "total_tokens": 2512,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

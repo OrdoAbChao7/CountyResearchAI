@@ -1,0 +1,28 @@
+{
+  "run_id": "judges_formal_target_deepseek_20261018_retry_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_judge_1",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立盲评 Agent。不要猜测实验组、运行编号或其他报告。只根据任务、冻结 Rubric 和匿名报告评分；只输出 JSON。\n任务：评价白山市的snapshot研究报告，按冻结 Rubric 对各维度评分。\nRubric：{\"schema_version\": \"1.0\", \"status\": \"FROZEN\", \"freeze_date\": \"2026-10-18\", \"freeze_scope\": \"formal_blind_judge_rubric_v1\", \"scale\": {\"min\": 0, \"max\": 5, \"anchors\": {\"0\": \"absent_or_unusable\", \"1\": \"major_defects\", \"3\": \"usable_with_material_gaps\", \"5\": \"strong_and_well_supported\"}}, \"dimensions\": {\"factual_accuracy\": {\"weight\": 0.25, \"rule\": \"verified_correct_claims_over_verifiable_claims\"}, \"key_fact_coverage\": {\"weight\": 0.15, \"rule\": \"correctly_covered_frozen_ground_truth_claims_over_all_claims\"}, \"source_reliability\": {\"weight\": 0.1, \"rule\": \"authority_and_source_content_match\"}, \"industry_logic\": {\"weight\": 0.1, \"rule\": \"resource_to_chain_to_market reasoning\"}, \"historical_explanation\": {\"weight\": 0.1, \"rule\": \"time_ordered phases and evidence-backed turning points\"}, \"causal_analysis\": {\"weight\": 0.1, \"rule\": \"distinguishes evidence from hypothesis and alternative causes\"}, \"structure_completeness\": {\"weight\": 0.05, \"rule\": \"required sections and scope clarity\"}, \"risk_analysis\": {\"weight\": 0.1, \"rule\": \"concrete risks, indicators and uncertainty\"}, \"unsupported_inference\": {\"weight\": -0.05, \"rule\": \"penalty for claims without matching evidence\"}}, \"judge_policy\": {\"minimum_independent_judges\": 2, \"adjudication_required_if_absolute_dimension_gap_at_least\": 2, \"judge_input_may_include\": [\"anonymous_report\", \"rubric\", \"task_prompt\"], \"judge_input_must_not_include\": [\"group_id\", \"ground_truth_before_claim_scoring\", \"other_reports\", \"run_trace\"]}}\n匿名报告：\n"
+    }
+  ],
+  "response": {
+    "content": "{\n  \"judge_role\": \"independent_blind_judge\",\n  \"task\": \"评价白山市的snapshot研究报告\",\n  \"rubric_version\": \"1.0_FROZEN_2026-10-18\",\n  \"input_integrity\": {\n    \"anonymous_report_received\": false,\n    \"report_body_length\": 0,\n    \"detail\": \"任务提示后未附带任何匿名报告正文、表格或附件内容，可评分材料为空。\",\n    \"policy_compliance\": \"未使用group_id、run_trace、其他报告或预先标注的ground truth，仅依据任务、Rubric与所提供的（空）报告。\"\n  },\n  \"scale_reference\": {\n    \"0\": \"absent_or_unusable\",\n    \"1\": \"major_defects\",\n    \"3\": \"usable_with_material_gaps\",\n    \"5\": \"strong_and_well_supported\"\n  },\n  \"dimension_scores\": {\n    \"factual_accuracy\": {\n      \"score\": 0,\n      \"weight\": 0.25,\n      \"rationale\": \"无任何可核验陈述，无法评估正确率；按锚点判定为absent_or_unusable。\"\n    },\n    \"key_fact_coverage\": {\n      \"score\": 0,\n      \"weight\": 0.15,\n      \"rationale\": \"缺少报告正文，冻结Ground Truth中的关键事实覆盖量不可测。\"\n    },\n    \"source_reliability\": {\n      \"score\": 0,\n      \"weight\": 0.1,\n      \"rationale\": \"未列出任何来源、发布机构或数据口径，权威性与内容匹配均无法判定。\"\n    },\n    \"industry_logic\": {\n      \"score\": 0,\n      \"weight\": 0.1,\n      \"rationale\": \"无资源—产业链—市场环节的推理链条可供评估。\"\n    },\n    \"historical_explanation\": {\n      \"score\": 0,\n      \"weight\": 0.1,\n      \"rationale\": \"无时间序列分期，无证据支撑的转折点，历史解释维度缺失。\"\n    },\n    \"causal_analysis\": {\n      \"score\": 0,\n      \"weight\": 0.1,\n      \"rationale\": \"无因果关系论述，无法区分证据与假设，亦无替代性原因讨论。\"\n    },\n    \"structure_completeness\": {\n      \"score\": 0,\n      \"weight\": 0.05,\n      \"rationale\": \"报告为空，必需章节与范围界定全部缺失。\"\n    },\n    \"risk_analysis\": {\n      \"score\": 0,\n      \"weight\": 0.1,\n      \"rationale\": \"无具体风险、监测指标或不确定性说明。\"\n    },\n    \"unsupported_inference\": {\n      \"score\": 0,\n      \"weight\": -0.05,\n      \"penalty_applied\": 0.0,\n      \"rationale\": \"报告中不存在任何",
+    "model": "deepseek-flash",
+    "prompt_tokens": 544,
+    "completion_tokens": 1024,
+    "total_tokens": 1568
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 544,
+    "completion_tokens": 1024,
+    "total_tokens": 1568,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

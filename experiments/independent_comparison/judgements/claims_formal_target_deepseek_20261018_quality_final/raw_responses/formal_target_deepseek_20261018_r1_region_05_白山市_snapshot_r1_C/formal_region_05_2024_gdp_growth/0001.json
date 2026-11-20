@@ -1,0 +1,28 @@
+{
+  "run_id": "claims_formal_target_deepseek_20261018_quality_final_87219b0741718c17b37838c8f38fd5e036d2c23d6cfc7aa2365ca92ab2a1d369_formal_region_05_2024_gdp_growth",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立的声明级事实核验 Agent。当前已经进入 Ground Truth 评分阶段；只能依据研究报告和随报告归档的来源材料判断冻结 claim，不能读取其他实验组或运行轨迹。请区分报告没有提及、报告与 claim 矛盾、报告被来源支持和 claim 版本争议。只输出 JSON，字段为 status、evidence_supported、error_types、reason。status 必须是 SUPPORTED、CONTRADICTED、UNSUPPORTED、DISPUTED 或 UNVERIFIED。\n冻结 Claim：2024年白山市地区生产总值为567.85亿元，比上年增长3.4%。\nClaim 元数据：region=白山市; metric=地区生产总值及同比增速; unit=亿元；百分比; date=2024\n研究报告：\n# 白山市 产业结构与资源型经济产业研究报告\n\n> 生成日期: 2026-10-18 13:13 UT[GROUP]  \n> 报告版本: 0.1.0\n\n## 执行摘要\n\n\n\n## 一、产业现状分析\n\n\n\n> 数据参考来源数: 1\n## 数据来源\n\n- [白山市工信局召开近期工业运行情况新闻发布会](http://ljszx.gov.cn/zw/xwfbh/202505/t20250526_845965.html)\n\n\n归档来源材料：\n{\"report_path\":\"E:\\\\Projects\\\\CountyResearchAI\\\\experiments\\\\independent_comparison\\\\runs\\\\formal_target_deepseek_20261018_r1\\\\formal_target_deepseek_20261018_r1_region_05_白山市_snapshot_r1_C\\\\generated_reports\\\\白山市_产业结构与资源型经济_20261018.md\",\"sections\":[\"执行摘要\",\"一、产业现状分析\",\"数据来源\"]}"
+    }
+  ],
+  "response": {
+    "content": "{\n  \"status\": \"UNVERIFIED\",\n  \"evidence_supported\": false,\n  \"error_types\": [\"报告未提及\"],\n  \"reason\": \"研究报告正文为空，仅列出一个工信局新闻发布会来源，未提及2024年白山市地区生产总值567.85亿元或同比增长3.4%；归档材料也未提供可核验的相关内容。\"\n}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 401,
+    "completion_tokens": 672,
+    "total_tokens": 1073
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 401,
+    "completion_tokens": 672,
+    "total_tokens": 1073,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

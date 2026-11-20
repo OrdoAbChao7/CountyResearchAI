@@ -42,7 +42,7 @@ python -m pip install -e .
 Copy-Item .env.example .env
 ```
 
-在 `.env` 中填入 `LLM_API_KEY`，并为选用的搜索服务填写 `TAVILY_API_KEY`、`SERPER_API_KEY` 或 `BING_API_KEY`。模板默认使用 DeepSeek 和 Tavily；更换服务时相应调整 `LLM_PROVIDER`、`LLM_BASE_URL`、`LLM_MODEL` 和 `SEARCH_PROVIDER`。如需使用 Mock，请把模板中的 `YOUR_...` 占位值清空；空 Key 会启用对应环节的 Mock 实现。
+在 `.env` 中为通用兼容服务填写 `LLM_API_KEY`，或为 DeepSeek 同时使用 `DEEPSEEK_API_KEY`；搜索服务可填写 `TAVILY_API_KEY`、`SERPER_API_KEY`、`BING_API_KEY`。模板默认使用 DeepSeek LLM 和 Tavily Search；更换服务时相应调整 `LLM_PROVIDER`、`LLM_BASE_URL`、`LLM_MODEL` 和 `SEARCH_PROVIDER`。DeepSeek Search/Fetch 需要另外设置 `DEEPSEEK_SEARCH_ENABLED=true`，且只能在确认账户免费资格或明确授权付费后启用，默认关闭。如需使用 Mock，请把模板中的 `YOUR_...` 占位值清空；空 Key 会启用对应环节的 Mock 实现。
 
 ```powershell
 county-research -c 安吉县 -f 竹产业

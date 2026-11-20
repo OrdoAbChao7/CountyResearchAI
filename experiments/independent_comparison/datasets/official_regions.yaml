@@ -1,0 +1,46 @@
+schema_version: "1.0"
+status: UNFROZEN
+exclude_development_cases: [安吉县, 信丰县, 鹤岗市]
+regions:
+  - id: region_01
+    name: 德清县
+    province: 浙江省
+    level: county
+    type: developed_manufacturing
+    candidate_tasks: [snapshot, long-history]
+    rationale: manufacturing and county urbanization; candidate only until source audit
+  - id: region_02
+    name: 长汀县
+    province: 福建省
+    level: county
+    type: ecological_restoration_and_agriculture
+    candidate_tasks: [snapshot, long-history]
+    rationale: ecological governance and local industry transition; candidate only until source audit
+  - id: region_03
+    name: 于都县
+    province: 江西省
+    level: county
+    type: labor_intensive_manufacturing
+    candidate_tasks: [snapshot, rise-fall]
+    rationale: garment and labor-intensive industry; candidate only until source audit
+  - id: region_04
+    name: 攀枝花市
+    province: 四川省
+    level: prefecture_city
+    type: resource_manufacturing_transition
+    candidate_tasks: [rise-fall, long-history]
+    rationale: vanadium-titanium and resource-based industrial transition; candidate only until source audit
+  - id: region_05
+    name: 白山市
+    province: 吉林省
+    level: prefecture_city
+    type: resource_and_population_pressure
+    candidate_tasks: [rise-fall, snapshot]
+    rationale: resource economy and demographic pressure; candidate only until source audit
+  - id: region_06
+    name: 临泽县
+    province: 甘肃省
+    level: county
+    type: arid_agriculture_and_sparse_sources
+    candidate_tasks: [snapshot, long-history]
+    rationale: water-constrained agriculture and lower source density; candidate only until source audit

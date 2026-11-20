@@ -1,0 +1,16 @@
+{
+  "artifacts": {},
+  "config_hash": "3786484e22da2af86d1f9fe46cce9d47694e07239ef3dcf7ec8f0387c67e9610",
+  "county": "信丰县",
+  "created_at": "2026-10-18T09:58:12.577558+00:00",
+  "error": "ResourceExhaustedError: resource capacity exhausted: ('gemini', 'gemini-3.1-flash-lite', 'llm'); used=39061, reserved=0, requested=2048, capacity=40000",
+  "experiment_id": "E1",
+  "group": "B",
+  "mode": "snapshot",
+  "model": "gemini-3.1-flash-lite",
+  "run_id": "smoke_20261018T095509Z_信丰县_B",
+  "search_provider": "tavily",
+  "status": "FAILED",
+  "task_id": "snapshot",
+  "updated_at": "2026-10-18T09:58:43.497813+00:00"
+}

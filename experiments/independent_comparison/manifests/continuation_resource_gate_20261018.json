@@ -1,0 +1,46 @@
+{
+  "gate_id": "continuation_resource_gate_20261018",
+  "status": "READY_FOR_PREFLIGHT",
+  "created_at": "2026-10-18T00:00:00+08:00",
+  "updated_at": "2026-10-19T01:26:55.6600278+08:00",
+  "experiment_id": "goal-continuation-validity",
+  "business_api_calls_allowed": true,
+  "allow_paid_authorized": true,
+  "free_only": false,
+  "llm_provider": "deepseek",
+  "model": "deepseek-flash",
+  "search_provider": "tavily",
+  "resource_precheck": "resource_precheck_20261019.json",
+  "authorization_manifest": "resource_authorization_20261019.json",
+  "paid_authorization_manifest": "continuation_paid_authorization_20261019.json",
+  "ground_truth_manifest": "../ground_truth/continuation_ground_truth_20261019_manifest.json",
+  "protocol": "../protocol/continuation_protocol.yaml",
+  "scope": [
+    "continuation_natural_execution",
+    "continuation_matched_budget",
+    "continuation_claim_scoring",
+    "continuation_judging",
+    "continuation_report_qa"
+  ],
+  "blocked_providers": [],
+  "tavily_still_eligible": true,
+  "reason": "新鲜 DeepSeek LLM 用户授权/配置预检与 Tavily 免费层预检均通过；DeepSeek Search/Fetch 保持关闭。",
+  "account_balance_query_unavailable_is_global_blocker": false,
+  "stop_conditions": [
+    "provider free-plan quota is exhausted",
+    "PAYG or any overage signal is non-zero",
+    "provider configuration or model validation fails",
+    "resource manager capacity or concurrency circuit breaker trips"
+  ],
+  "historical_evidence": [
+    "experiments/independent_comparison/manifests/formal_target_gate_20261018.json",
+    "experiments/independent_comparison/manifests/resource_precheck_20261018_deepseek.json",
+    "experiments/independent_comparison/manifests/formal_launch_manifest_20261018.json",
+    "experiments/independent_comparison/reports/CONTINUATION_P0_AUDIT_20261018.md"
+  ],
+  "unlock_requires": [
+    "fresh DeepSeek LLM authorization/precheck and Tavily free-only precheck",
+    "offline benchmark and judge calibration passing",
+    "frozen continuation protocol and independent Ground Truth manifest"
+  ]
+}

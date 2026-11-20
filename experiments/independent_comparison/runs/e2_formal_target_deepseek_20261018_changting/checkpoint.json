@@ -1,0 +1,10 @@
+{
+  "config_hash": "0d0421fca2f26c7a2ca0c347fb9fd18ab496d2de2253bb5ada70cb0bf1b65456",
+  "state": {
+    "completed": {
+      "e2_formal_target_deepseek_20261018_changting_e2_candidate_20261018_changting_snapshot_A": "VALID",
+      "e2_formal_target_deepseek_20261018_changting_e2_candidate_20261018_changting_snapshot_B": "VALID",
+      "e2_formal_target_deepseek_20261018_changting_e2_candidate_20261018_changting_snapshot_C": "VALID"
+    }
+  }
+}

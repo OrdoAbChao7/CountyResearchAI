@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r2_region_04_攀枝花市_rise-fall_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网研究助手。为研究 攀枝花市 的 钒钛产业、先进材料与康养经济（任务模式 rise-fall），只输出 JSON：{\"queries\":[\"...\"]}，最多 3 个检索词。"
+    }
+  ],
+  "response": {
+    "content": "{\"queries\":[\"攀枝花 钒钛产业 先进材料 发展 2025\",\"攀枝花 康养经济 产业 2025\",\"攀枝花 钒钛 康养 融合 发展\"]}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 59,
+    "completion_tokens": 51,
+    "total_tokens": 110
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 59,
+    "completion_tokens": 51,
+    "total_tokens": 110,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

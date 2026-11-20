@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_8276b7f5f211",
+      "claim": "2024年长汀县全年实现地区生产总值357.8亿元，比上年增长4.9%。",
+      "source": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "url": "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+      "date": "2025-06-29T16:00:00+00:00",
+      "region": "长汀县",
+      "metric": "地区生产总值",
+      "unit": "亿元",
+      "evidence_excerpt": "据市统计局初步反馈，2024年，长汀县全年实现地区生产总值357.8亿元，比上年增长4.9%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+        "http://www.changting.gov.cn/xxgk/zfxxgk/zfzcbm/tjj/zfxxgkml/10/202501/t20250126_2197913.htm"
+      ],
+      "verification_contexts": [
+        "region_02_snapshot_official_bulletin",
+        "region_02_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "据市统计局初步反馈，2024年，长汀县全年实现地区生产总值357.8亿元，比上年增长4.9%。",
+        "一、地区生产总值\n\n亿元\n\n357.8\n\n4.9\n\n4"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年长汀县地区生产总值357.8亿元，比上年增长4.9%（初步统计数，按现价计算总量、可比价计算增速）。",
+      "source_title": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "source_date": "2025-06-29T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "长汀县县域本级"
+    },
+    {
+      "claim_id": "continuation_c743109433f9",
+      "claim": "2024年长汀县第一产业增加值43.9亿元，增长2.5%。",
+      "source": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "url": "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+      "date": "2025-06-29T16:00:00+00:00",
+      "region": "长汀县",
+      "metric": "第一产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第一产业增加值43.9亿元，增长2.5%；第二产业增加值133.5亿元，增长3.0%；第三产业增加值180.5亿元，增长7.1%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+        "http://www.changting.gov.cn/xxgk/zfxxgk/zfzcbm/tjj/zfxxgkml/10/202501/t20250126_2197913.htm"
+      ],
+      "verification_contexts": [
+        "region_02_snapshot_official_bulletin",
+        "region_02_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第一产业增加值43.9亿元，增长2.5%；第二产业增加值133.5亿元，增长3.0%；第三产业增加值180.5亿元，增长7.1%。",
+        "第一产业\n\n亿元\n\n43.9\n\n2.5\n\n6"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年长汀县第一产业增加值43.9亿元，比上年增长2.5%（初步统计数，按现价计算总量、可比价计算增速）。",
+      "source_title": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "source_date": "2025-06-29T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "长汀县县域本级"
+    },
+    {
+      "claim_id": "continuation_92f89ee3140d",
+      "claim": "2024年长汀县第二产业增加值133.5亿元，增长3.0%。",
+      "source": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "url": "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+      "date": "2025-06-29T16:00:00+00:00",
+      "region": "长汀县",
+      "metric": "第二产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第一产业增加值43.9亿元，增长2.5%；第二产业增加值133.5亿元，增长3.0%；第三产业增加值180.5亿元，增长7.1%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+        "http://www.changting.gov.cn/xxgk/zfxxgk/zfzcbm/tjj/zfxxgkml/10/202501/t20250126_2197913.htm"
+      ],
+      "verification_contexts": [
+        "region_02_snapshot_official_bulletin",
+        "region_02_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第一产业增加值43.9亿元，增长2.5%；第二产业增加值133.5亿元，增长3.0%；第三产业增加值180.5亿元，增长7.1%。",
+        "第二产业\n\n亿元\n\n133.5\n\n3.0\n\n2"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年长汀县第二产业增加值133.5亿元，比上年增长3.0%（初步统计数，按现价计算总量、可比价计算增速）。",
+      "source_title": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "source_date": "2025-06-29T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "长汀县县域本级"
+    },
+    {
+      "claim_id": "continuation_3984ff31acf0",
+      "claim": "2024年长汀县第三产业增加值180.5亿元，增长7.1%。",
+      "source": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "url": "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+      "date": "2025-06-29T16:00:00+00:00",
+      "region": "长汀县",
+      "metric": "第三产业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "第一产业增加值43.9亿元，增长2.5%；第二产业增加值133.5亿元，增长3.0%；第三产业增加值180.5亿元，增长7.1%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+        "http://www.changting.gov.cn/xxgk/zfxxgk/zfzcbm/tjj/zfxxgkml/10/202501/t20250126_2197913.htm"
+      ],
+      "verification_contexts": [
+        "region_02_snapshot_official_bulletin",
+        "region_02_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "第一产业增加值43.9亿元，增长2.5%；第二产业增加值133.5亿元，增长3.0%；第三产业增加值180.5亿元，增长7.1%。",
+        "第三产业\n\n亿元\n\n180.5\n\n7.1\n\n4"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年长汀县第三产业增加值180.5亿元，比上年增长7.1%（初步统计数，按现价计算总量、可比价计算增速）。",
+      "source_title": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "source_date": "2025-06-29T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "长汀县县域本级"
+    },
+    {
+      "claim_id": "continuation_3d437d2d0d6d",
+      "claim": "2024年长汀县工业增加值74.5亿元，同比增长3.1%。",
+      "source": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "url": "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+      "date": "2025-06-29T16:00:00+00:00",
+      "region": "长汀县",
+      "metric": "工业增加值",
+      "unit": "亿元",
+      "evidence_excerpt": "全年工业增加值74.5亿元，同比增长3.1%。",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.changting.gov.cn/xxgk/tjxx/tjgb/202506/t20250630_2226041.htm#1",
+        "http://www.changting.gov.cn/xxgk/zfxxgk/zfzcbm/tjj/zfxxgkml/10/202501/t20250126_2197913.htm"
+      ],
+      "verification_contexts": [
+        "region_02_snapshot_official_bulletin",
+        "region_02_snapshot_official_yearbook"
+      ],
+      "verification_excerpts": [
+        "全年工业增加值74.5亿元，同比增长3.1%。",
+        "#工业\n\n亿元\n\n74.5\n\n3.1"
+      ],
+      "research_mode": "snapshot",
+      "expected_answer": "2024年长汀县工业增加值74.5亿元，同比增长3.1%（初步统计数，按现价计算总量、可比价计算增速）。",
+      "source_title": "2024年长汀县国民经济和社会发展统计公报 - 2024年长汀县国民经济和社会发展统计公报",
+      "source_date": "2025-06-29T16:00:00+00:00",
+      "metric_year": "2024",
+      "administrative_scope": "长汀县县域本级"
+    }
+  ]
+}

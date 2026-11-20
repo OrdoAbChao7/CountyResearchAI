@@ -1,0 +1,159 @@
+{
+  "claims": [
+    {
+      "claim_id": "continuation_efe2bd675c7d",
+      "claim": "2006年德清县二产比重占59.1%。",
+      "source": "后工业时代的乡村“突围”",
+      "url": "https://www.news.cn/politics/2016-05/26/c_129016845.htm#1",
+      "date": "2016-05-25T16:00:00+00:00",
+      "region": "德清县",
+      "metric": "二产比重",
+      "unit": "百分比",
+      "evidence_excerpt": "2006年，二产的比重就占到了59.1%。",
+      "confidence": "medium",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "https://www.news.cn/politics/2016-05/26/c_129016845.htm#1",
+        "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1"
+      ],
+      "verification_contexts": [
+        "region_01_long-history_local_history",
+        "region_01_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "2006年，二产的比重就占到了59.1%。",
+        "一二三产比例从12.0:59.3:28.7调整为8.3:62.6:29.1"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2006年，德清县二产比重占59.1%。",
+      "source_title": "后工业时代的乡村“突围”",
+      "source_date": "2016-05-25T16:00:00+00:00",
+      "metric_year": "2006",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_fd393319eb21",
+      "claim": "2006年德清县工业总产值达513.6亿元。",
+      "source": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "url": "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+      "date": "2007-03-12T16:00:00+00:00",
+      "region": "德清县",
+      "metric": "工业总产值",
+      "unit": "亿元",
+      "evidence_excerpt": "2006年工业总产值达513.6亿元",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+        "http://dqnews.zjol.com.cn/dqnews/system/2012/02/13/014736380.shtml"
+      ],
+      "verification_contexts": [
+        "region_01_long-history_local_history",
+        "region_01_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "2006年工业总产值达513.6亿元",
+        "2006年工业总产值达513.6亿元"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2006年，德清县工业总产值达513.6亿元。",
+      "source_title": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "source_date": "2007-03-12T16:00:00+00:00",
+      "metric_year": "2006",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_69e6ba9494b6",
+      "claim": "2006年德清县规模企业产值完成289亿元。",
+      "source": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "url": "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+      "date": "2007-03-12T16:00:00+00:00",
+      "region": "德清县",
+      "metric": "规模企业产值",
+      "unit": "亿元",
+      "evidence_excerpt": "规模企业产值完成289亿元",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+        "http://dqnews.zjol.com.cn/dqnews/system/2012/02/13/014736380.shtml"
+      ],
+      "verification_contexts": [
+        "region_01_long-history_local_history",
+        "region_01_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "规模企业产值完成289亿元",
+        "规模企业产值完成289亿元"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2006年，德清县规模企业产值完成289亿元。",
+      "source_title": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "source_date": "2007-03-12T16:00:00+00:00",
+      "metric_year": "2006",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_623e72f2bcf7",
+      "claim": "2006年德清县全县规模以上企业达455家。",
+      "source": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "url": "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+      "date": "2007-03-12T16:00:00+00:00",
+      "region": "德清县",
+      "metric": "规模以上企业数量",
+      "unit": "家",
+      "evidence_excerpt": "全县规模以上企业达455家",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+        "http://dqnews.zjol.com.cn/dqnews/system/2012/02/13/014736380.shtml"
+      ],
+      "verification_contexts": [
+        "region_01_long-history_local_history",
+        "region_01_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "全县规模以上企业达455家",
+        "全县规模以上企业达455家"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2006年，德清县全县规模以上企业达455家。",
+      "source_title": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "source_date": "2007-03-12T16:00:00+00:00",
+      "metric_year": "2006",
+      "administrative_scope": "县域本级"
+    },
+    {
+      "claim_id": "continuation_3c74f07d1c21",
+      "claim": "2006年德清县生物（医药）化工、特色机电、新型建材、新型纺织四大特色主导产业占全县工业经济总量比重已达69%。",
+      "source": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "url": "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+      "date": "2007-03-12T16:00:00+00:00",
+      "region": "德清县",
+      "metric": "四大特色主导产业占工业经济总量比重",
+      "unit": "百分比",
+      "evidence_excerpt": "生物（医药）化工、特色机电、新型建材、新型纺织四大特色主导产业，占全县工业经济总量比重已达69%",
+      "confidence": "high",
+      "verification_status": "VERIFIED",
+      "verification_sources": [
+        "http://www.deqing.gov.cn/col/col1229877062/art/2025/art_1494458075.html#1",
+        "http://dqnews.zjol.com.cn/dqnews/system/2012/02/13/014736380.shtml"
+      ],
+      "verification_contexts": [
+        "region_01_long-history_local_history",
+        "region_01_long-history_industrial_history"
+      ],
+      "verification_excerpts": [
+        "生物（医药）化工、特色机电、新型建材、新型纺织四大特色主导产业，占全县工业经济总量比重已达69%",
+        "生物（医药）化工、特色机电、新型建材、新型纺织四大特色主导产业，占全县工业经济总量比重已达69%"
+      ],
+      "research_mode": "long-history",
+      "expected_answer": "2006年，德清县生物（医药）化工、特色机电、新型建材、新型纺织四大特色主导产业占全县工业经济总量比重已达69%。",
+      "source_title": "德清县2007年政府工作报告 - 索引号: | 330521/2007-00001  | 发文时间: | 2007-03-13",
+      "source_date": "2007-03-12T16:00:00+00:00",
+      "metric_year": "2006",
+      "administrative_scope": "县域本级"
+    }
+  ]
+}

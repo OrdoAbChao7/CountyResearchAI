@@ -1,0 +1,28 @@
+{
+  "run_id": "judges_formal_target_deepseek_20261018_corrected_r2_43acb7dfb817640b6332e3a5302c06849b14f778d0ab5ed5277f324d64dbe569_judge_1",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立盲评 Agent。不要猜测实验组、运行编号或其他报告。只根据任务、冻结 Rubric 和匿名报告评分；只输出 JSON。\n任务：评价白山市的snapshot研究报告，按冻结 Rubric 对各维度评分。\nRubric：{\"schema_version\": \"1.0\", \"status\": \"FROZEN\", \"freeze_date\": \"2026-10-18\", \"freeze_scope\": \"formal_blind_judge_rubric_v1\", \"scale\": {\"min\": 0, \"max\": 5, \"anchors\": {\"0\": \"absent_or_unusable\", \"1\": \"major_defects\", \"3\": \"usable_with_material_gaps\", \"5\": \"strong_and_well_supported\"}}, \"dimensions\": {\"factual_accuracy\": {\"weight\": 0.25, \"rule\": \"verified_correct_claims_over_verifiable_claims\"}, \"key_fact_coverage\": {\"weight\": 0.15, \"rule\": \"correctly_covered_frozen_ground_truth_claims_over_all_claims\"}, \"source_reliability\": {\"weight\": 0.1, \"rule\": \"authority_and_source_content_match\"}, \"industry_logic\": {\"weight\": 0.1, \"rule\": \"resource_to_chain_to_market reasoning\"}, \"historical_explanation\": {\"weight\": 0.1, \"rule\": \"time_ordered phases and evidence-backed turning points\"}, \"causal_analysis\": {\"weight\": 0.1, \"rule\": \"distinguishes evidence from hypothesis and alternative causes\"}, \"structure_completeness\": {\"weight\": 0.05, \"rule\": \"required sections and scope clarity\"}, \"risk_analysis\": {\"weight\": 0.1, \"rule\": \"concrete risks, indicators and uncertainty\"}, \"unsupported_inference\": {\"weight\": -0.05, \"rule\": \"penalty for claims without matching evidence\"}}, \"judge_policy\": {\"minimum_independent_judges\": 2, \"adjudication_required_if_absolute_dimension_gap_at_least\": 2, \"judge_input_may_include\": [\"anonymous_report\", \"rubric\", \"task_prompt\"], \"judge_input_must_not_include\": [\"group_id\", \"ground_truth_before_claim_scoring\", \"other_reports\", \"run_trace\"]}}\n匿名报告：\n# 白山市产业结构与资源型经济 snapshot 研究报告\n\n**说明**：本报告仅依据所给三则资料撰写，逐条标注[事实]（资料直接支持）、[推断]（基于资料的合理推论）、[缺口]（资料未覆盖、需补充核实）。凡资料未给出的数字，一律不填补。\n\n\n## 一、研究范围与方法\n\n本报告为\"snapshot\"式静态切片，聚焦白山市产业结构的资源型特征、转型进展与结构性矛盾。资料仅3条：吉林省政府网报道[1]、金融时报理论文章[2]、白山市市情简介[3]。样本量小、时间跨度不一（[3]为2018年前后文本，[1]为2026年3月，[2]为2025年12月），故结论为初步性质。\n\n\n## 二、核心事实梳理\n\n**1. 资源禀赋与产业矩阵**\n- [事实] 白山市拥有矿产、林业、特产、旅游、水能五大资源；已发现矿产100种，探明储量36种；被国际饮水组织命名为\"中国·白山国际矿泉城\"（来源[3]）。\n- [事实] 人参、矿泉、松花砚三大产业构成\"发展矩阵\"，分别依托抚松县\"中国人参之乡\"、靖宇\"中国长白山靖宇矿泉城\"、江源区\"中国松花石之乡\"（来源[1]）。\n- [事实] 矿泉水、人参、旅游、硅藻土、玄武岩被表述为\"世界级资源开发前景广阔\"（来源[3]）。\n\n**2. 资源型城市定位与转型方向**\n- [事实] 白山市被界定为\"吉林典型资源型城市\"，依托\"一山两江\"培育绿色产业和战略性新兴产业（来源[2]）。\n- [事实] 2025年上半年农林牧渔业总产值增长4.8%、林业产值增长20%，资料称\"资源型产业升级见效\"（来源[2]）。\n\n**3. 结构性矛盾**\n- [事实] 经济总量仍居全省末位，\"资源富集但效益转化不足\"矛盾突出，面临资源枯竭与环境约束压力（来源[2]）。\n\n\n## 三、分析与推断\n\n**推断1（产业结构判断）**：白山产业结构的核心特征是\"资源依赖型矩阵\"——以人参、矿泉、松花砚、矿产、林业等资源型产业为增长极[1][3]，绿色产业与战略性新兴产业尚处\"培育\"阶段[2]。即资源型产业仍是现实支撑，新兴产业是方向而非现状。\n\n**推断2（转型阶段判断）**：林业产值20%的高增速与农林牧渔业4.8%的增速并存[2]，说明增长主要由林业等资源型细分领域拉动，而非全产业面均衡升级；\"升级见效\"更宜理解为局部见效。\n\n**推断3（核心悖论）**：资源\"世界级前景\"[3]与经济总量\"全省末位\"[2]并存，指向\"资源—效益转化\"环节（加工深度、品牌溢价、产业链延伸）是主要瓶颈，而非资源存量不足。此为推断，资料未给出转化率数据。\n\n**推断4（产业矩阵的内在张力）**：人参、矿泉属可规模化、市场化的特色资源，松花砚属文化工艺品属性、市场容量有限[1]；三者并列为\"增长极\"的权重差异，资料未说明，需谨慎对待。\n\n\n## 四、资料缺口\n\n1. **量化结构数据缺失**：三次产业结构比例、各资源型产业占GDP/工业增加值比重、就业结构，三则资料均未提供。\n2. **\"资源枯竭\"具体指向不明**：[2]提及资源枯竭压力，但未说明枯竭矿种、枯竭程度与接续产业清单。\n3. **转型金融数据缺失**：[2]标题涉转型金融，但所给正文未含融资规模、工具类型、支持项目等数据。\n4. **时间口径不一致**：[3]为2018年前后文本，其\"世界级资源\"表述与[1][2]的2025—2026年表述存在时差，不能直接拼接为同一时点事实。\n5. **新兴产业清单缺失**：[2]仅笼统称\"绿色产业和战略性新兴产业\"，未列具体产业与规模。\n6. **效益转化指标缺失**：无资源深加工率、品牌溢价、人均产出等可验证\"转化不足\"的数据。\n\n\n## 五、结论（snapshot）\n\n[事实层面] 白山是吉林典型资源型城市，以人参、矿泉、松花砚及矿产、林业等资源型产业为增长矩阵，2025年上半年林业等局部领域增长较快，但经济总量居全省末位，\"资源富集—效益转化不足\"矛盾突出。[推断层面] 其产业结构仍处\"资源型产业主导、新兴产业培育\"的转型中期，核心瓶颈在转化环节而非资源存量。[缺口层面] 缺乏产业结构量化数据、枯竭资源清单与转型金融数据，本结论为初步判断，需补充统计年鉴与专项规划后修正。\n\n\n**来源清单**\n[1] 吉林省人民政府网《白山：绘就高质量发展新图景》 http://www.jl.gov.cn/yaowen/202603/t20260325_3597510.html\n[2] 金融时报《转型金融支持资源枯竭型城市高质量发展探析》 https://www.financialnews.com.cn/m/2025-12/08/content_438965.html\n[3] 白山市市情简介 http://www.ljszx.gov.cn/zw/tzgg/201806/W020180611334404547088.docx"
+    }
+  ],
+  "response": {
+    "content": "{\"factual_accuracy\": 4, \"key_fact_coverage\": 4, \"source_reliability\": 4, \"industry_logic\": 4, \"historical_explanation\": 2, \"causal_analysis\": 4, \"structure_completeness\": 4, \"risk_analysis\": 2, \"unsupported_inference\": 4}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 1729,
+    "completion_tokens": 79,
+    "total_tokens": 1808
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 1729,
+    "completion_tokens": 79,
+    "total_tokens": 1808,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

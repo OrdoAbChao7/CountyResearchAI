@@ -1,0 +1,49 @@
+{
+  "county": {
+    "name": "白山市",
+    "province": "",
+    "prefecture": "",
+    "full_name": ""
+  },
+  "focus": "产业结构与资源型经济",
+  "docs": [
+    {
+      "title": "白山市2024年国民经济和社会发展统计公报",
+      "url": "https://tjj.jl.gov.cn/tjsj/tjgb/ndgb/202508/t20250806_3488030.html",
+      "snippet": "吉林省统计局 2025-08-06 发布的白山市年度统计公报摘录。",
+      "content": "初步核算，2024年白山市全年实现地区生产总值567.85亿元，比上年增长3.4%。其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元，增长0.2%；第三产业增加值353.67亿元，增长4.3%；三次产业结构比重为12.8:24.9:62.3。全年全市149户规模以上工业增加值同比下降5.3%。全市固定资产投资（不含农户）比上年增长4.1%，其中第一产业投资增长37.9%，第二产业投资下降27.2%，第三产业投资增长18.9%；基础设施投资增长64.7%，民间投资增长55.2%。GDP及产业增加值绝对数按现价计算，增长速度按不变价格计算。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00Z",
+      "metadata": {
+        "snapshot_kind": "bounded_excerpt",
+        "administrative_scope": "白山市全市",
+        "retrieval_date": "2026-10-18"
+      },
+      "published_at": "2025-08-06T00:00:00Z",
+      "domain_type": "government",
+      "credibility_score": 0.95,
+      "evidence_type": "fact",
+      "source_summary": "官方年度统计公报，含 GDP、三次产业、工业和投资指标及统计口径。"
+    },
+    {
+      "title": "2024年1—4季度地区生产总值",
+      "url": "https://tjj.jl.gov.cn/tjsj/jdsj/dqsczz/202502/t20250226_3396365.html",
+      "snippet": "吉林省统计局 2025-02-26 发布的季度 GDP 表。",
+      "content": "吉林省统计局表格列示：白山市 2024年1—4季度地区生产总值绝对量为567.85亿元，增速为3.4%。该表为吉林省地市 GDP 对比数据，行政范围为白山市全市。",
+      "source": "official-web-snapshot",
+      "fetched_at": "2026-10-18T00:00:00Z",
+      "metadata": {
+        "snapshot_kind": "bounded_excerpt",
+        "administrative_scope": "白山市全市",
+        "retrieval_date": "2026-10-18"
+      },
+      "published_at": "2025-02-26T00:00:00Z",
+      "domain_type": "government",
+      "credibility_score": 0.95,
+      "evidence_type": "fact",
+      "source_summary": "官方省级季度 GDP 对比表，用于交叉核对白山市 GDP 总量和增速。"
+    }
+  ],
+  "total_chars": 431,
+  "processed_at": "2026-10-18T13:17:05.504601Z"
+}

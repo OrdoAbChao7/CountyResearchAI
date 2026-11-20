@@ -1,0 +1,28 @@
+{
+  "run_id": "formal_target_deepseek_20261018_corrected_r2_region_03_于都县_rise-fall_r1_B",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是通用联网研究助手。为研究 于都县 的 产业结构与工业发展（任务模式 rise-fall），只输出 JSON：{\"queries\":[\"...\"]}，最多 3 个检索词。"
+    }
+  ],
+  "response": {
+    "content": "{\"queries\":[\"于都县 产业结构 工业发展\",\"于都县 主导产业 工业园区\",\"于都县 统计公报 工业 产值\"]}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 51,
+    "completion_tokens": 35,
+    "total_tokens": 86
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 51,
+    "completion_tokens": 35,
+    "total_tokens": 86,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

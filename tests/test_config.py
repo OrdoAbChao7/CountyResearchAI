@@ -82,6 +82,16 @@ class TestMergeEnv:
         merged = _merge_env({})
         assert "api_key" not in merged.get("llm", {})
 
+    def test_gemini_provider_prefers_provider_specific_key_over_generic_key(self, monkeypatch):
+        monkeypatch.setenv("LLM_PROVIDER", "gemini")
+        monkeypatch.setenv("LLM_API_KEY", "generic-key")
+        monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+        from county_research_ai.config import _merge_env
+
+        merged = _merge_env({"llm": {}, "search": {}})
+
+        assert merged["llm"]["api_key"] == "gemini-key"
+
     def test_search_provider_key_mapping(self, monkeypatch):
         monkeypatch.setenv("SEARCH_PROVIDER", "serper")
         monkeypatch.setenv("SERPER_API_KEY", "serper-test-key")
@@ -96,6 +106,50 @@ class TestMergeEnv:
         from county_research_ai.config import _merge_env
         merged = _merge_env({})
         assert merged["search"]["api_key"] == "tvly-test-key"
+
+    def test_deepseek_key_mapping_supports_search_and_llm_without_copying_secret(
+        self, monkeypatch
+    ):
+        monkeypatch.setenv("LLM_PROVIDER", "deepseek")
+        monkeypatch.setenv("SEARCH_PROVIDER", "deepseek")
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "ds-test-key")
+        monkeypatch.delenv("LLM_API_KEY", raising=False)
+        from county_research_ai.config import _merge_env
+
+        merged = _merge_env({})
+
+        assert merged["llm"]["api_key"] == "ds-test-key"
+        assert merged["search"]["api_key"] == "ds-test-key"
+
+    def test_explicit_generic_llm_key_remains_preferred_over_provider_key(
+        self, monkeypatch
+    ):
+        monkeypatch.setenv("LLM_PROVIDER", "deepseek")
+        monkeypatch.setenv("LLM_API_KEY", "generic-test-key")
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "provider-test-key")
+        from county_research_ai.config import _merge_env
+
+        merged = _merge_env({})
+
+        assert merged["llm"]["api_key"] == "generic-test-key"
+
+    def test_deepseek_llm_defaults_to_official_compatible_endpoint(self, monkeypatch):
+        monkeypatch.setenv("LLM_PROVIDER", "deepseek")
+        monkeypatch.delenv("LLM_BASE_URL", raising=False)
+        from county_research_ai.config import _merge_env
+
+        merged = _merge_env({})
+
+        assert merged["llm"]["base_url"] == "https://api.deepseek.com/v1"
+
+    def test_deepseek_search_is_disabled_unless_explicitly_enabled(self, monkeypatch):
+        monkeypatch.setenv("SEARCH_PROVIDER", "deepseek")
+        monkeypatch.setenv("DEEPSEEK_SEARCH_ENABLED", "true")
+        from county_research_ai.config import _merge_env
+
+        merged = _merge_env({})
+
+        assert merged["search"]["deepseek_enabled"] is True
 
     def test_numeric_env_conversion(self, monkeypatch):
         monkeypatch.setenv("LLM_TEMPERATURE", "0.7")

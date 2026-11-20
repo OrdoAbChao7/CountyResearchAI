@@ -1,0 +1,28 @@
+{
+  "run_id": "claims_formal_target_deepseek_20261018_retry_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855_formal_region_05_2024_gdp_growth",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你是独立的声明级事实核验 Agent。当前已经进入 Ground Truth 评分阶段；只能依据研究报告和随报告归档的来源材料判断冻结 claim，不能读取其他实验组或运行轨迹。请区分报告没有提及、报告与 claim 矛盾、报告被来源支持和 claim 版本争议。只输出 JSON，字段为 status、evidence_supported、error_types、reason。status 必须是 SUPPORTED、CONTRADICTED、UNSUPPORTED、DISPUTED 或 UNVERIFIED。\n冻结 Claim：2024年白山市地区生产总值为567.85亿元，比上年增长3.4%。\nClaim 元数据：region=白山市; metric=地区生产总值及同比增速; unit=亿元；百分比; date=2024\n研究报告：\n\n归档来源材料：\n[\n  {\n    \"title\": \"白山市2024年国民经济和社会发展统计公报\",\n    \"url\": \"https://tjj.jl.gov.cn/tjsj/tjgb/ndgb/202508/t20250806_3488030.html\",\n    \"content\": \"初步核算，2024年白山市全年实现地区生产总值567.85亿元，比上年增长3.4%。其中，第一产业增加值72.80亿元，增长4.7%；第二产业增加值141.38亿元，增长0.2%；第三产业增加值353.67亿元，增长4.3%；三次产业结构比重为12.8:24.9:62.3。全年全市149户规模以上工业增加值同比下降5.3%。全市固定资产投资（不含农户）比上年增长4.1%，其中第一产业投资增长37.9%，第二产业投资下降27.2%，第三产业投资增长18.9%；基础设施投资增长64.7%，民间投资增长55.2%。GDP及产业增加值绝对数按现价计算，增长速度按不变价格计算。\",\n    \"source\": \"official-web-snapshot\",\n    \"metadata\": {\n      \"snapshot_kind\": \"bounded_excerpt\",\n      \"administrative_scope\": \"白山市全市\",\n      \"retrieval_date\": \"2026-10-18\"\n    }\n  },\n  {\n    \"title\": \"2024年1—4季度地区生产总值\",\n    \"url\": \"https://tjj.jl.gov.cn/tjsj/jdsj/dqsczz/202502/t20250226_3396365.html\",\n    \"content\": \"吉林省统计局表格列示：白山市 2024年1—4季度地区生产总值绝对量为567.85亿元，增速为3.4%。该表为吉林省地市 GDP 对比数据，行政范围为白山市全市。\",\n    \"source\": \"official-web-snapshot\",\n    \"metadata\": {\n      \"snapshot_kind\": \"bounded_excerpt\",\n      \"administrative_scope\": \"白山市全市\",\n      \"retrieval_date\": \"2026-10-18\"\n    }\n  }\n]"
+    }
+  ],
+  "response": {
+    "content": "{\"status\":\"SUPPORTED\",\"evidence_supported\":true,\"error_types\":[],\"reason\":\"归档来源材料中的白山市2024年统计公报及吉林省统计局数据均明确列示：2024年白山市地区生产总值为567.85亿元，比上年增长3.4%，与冻结Claim完全一致。\"}",
+    "model": "deepseek-flash",
+    "prompt_tokens": 639,
+    "completion_tokens": 233,
+    "total_tokens": 872
+  },
+  "usage": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "prompt_tokens": 639,
+    "completion_tokens": 233,
+    "total_tokens": 872,
+    "known": true,
+    "requests": 1,
+    "credits": null
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "report": "report.md:756c9c73378c9443cb367c3780fd6d61646b1ec760fd4ffe11a0ff65956dfbf5",
+    "sources": "sources.json:fe727d2bdbd121ab3f7bcef4fc1c4e99c34d29b62e006e86f0aebf81037ed9e5"
+  },
+  "config_hash": "bd7e6d0f34c786bc82ca9dae1c2f7fd03602bc075dffac895b98f46ce23efb1b",
+  "county": "于都县",
+  "created_at": "2026-10-18T19:26:10.499952+00:00",
+  "duration_seconds": 83.789772,
+  "error": null,
+  "experiment_id": "continuation-matched-budget",
+  "formal_target": true,
+  "group": "C",
+  "mode": "rise-fall",
+  "model": "deepseek-flash",
+  "resource_usage": {
+    "deepseek:deepseek-flash:llm": 27676,
+    "tavily:search:search": 6
+  },
+  "run_id": "continuation_matched_budget_deepseek_flash_20261019_region_03_rise-fall_r1_C",
+  "search_provider": "tavily",
+  "status": "VALID",
+  "task_id": "rise-fall",
+  "updated_at": "2026-10-18T19:27:34.289328+00:00"
+}
