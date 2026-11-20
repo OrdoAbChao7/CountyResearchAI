@@ -33,7 +33,7 @@ class CollectorSearchAdapter:
         date_end: date | None = None,
         target_years: list[str] | None = None,
     ) -> list[RawDoc]:
-        kwargs = {"mode": mode}
+        kwargs: dict[str, object] = {"mode": mode}
         if date_start is not None:
             kwargs["date_start"] = date_start
         if date_end is not None:
