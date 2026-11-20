@@ -119,13 +119,16 @@ def _resolve_recorded_path(
         candidate = (Path.cwd() / recorded).resolve()
         if candidate.is_file():
             return candidate, "relative_to_cwd"
-    parts = recorded.parts
+    # Frozen manifests use Windows separators even when the audit runs on POSIX.
+    parts = [
+        part for part in str(recorded).replace("\\", "/").split("/") if part not in {"", "."}
+    ]
     for index, part in enumerate(parts):
         if part.lower() == "experiments":
-            candidate = (repo_root / Path(*parts[index:])).resolve()
+            candidate = (repo_root.joinpath(*parts[index:])).resolve()
             if candidate.is_file():
                 return candidate, "relocated_repo_relative"
-    candidate = (search_dir / recorded.name).resolve()
+    candidate = (search_dir / parts[-1]).resolve() if parts else search_dir
     if candidate.is_file():
         return candidate, "relocated_by_name"
     return recorded, "missing"
