@@ -3,6 +3,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from county_research_ai.domain.research_contracts import (
+    EvidenceChunk,
+    EvidencePack,
+    QuestionSlot,
+    SourceDocument,
+)
 from county_research_ai.models import (
     AnalysisResult,
     CountyInfo,
@@ -125,6 +131,54 @@ class TestProcessedData:
         pd = ProcessedData(county=sample_county, focus="竹产业", docs=[], total_chars=0)
         text = pd.render_for_llm()
         assert text == ""
+
+    def test_evidence_pack_render_records_budget_truncation(self, sample_county):
+        source = SourceDocument(
+            doc_id="source-12345678",
+            source_title="统计公报",
+            canonical_url="https://example.gov.cn/report",
+        )
+        chunk = EvidenceChunk(
+            chunk_id="chunk-with-gdp-value",
+            document_id=source.doc_id,
+            text="2024年县域经济情况：" + "发展" * 30 + "GDP为722.5亿元。",
+            start_offset=0,
+            end_offset=48,
+            offset_status="exact",
+        )
+        pack = EvidencePack(
+            research_slot=QuestionSlot(slot_id="gdp", research_question="GDP"),
+            selected_chunks=[chunk],
+            source_map={source.doc_id: source},
+            token_budget=200,
+            total_chars=len(chunk.text),
+            status="partial",
+        )
+        data = ProcessedData(county=sample_county, focus="经济", evidence_pack=pack)
+
+        rendered = data.render_for_llm(max_chars=100)
+
+        assert len(rendered) <= 100
+        assert data.render_audit.exclusion_reasons[chunk.chunk_id] == "budget_truncated"
+        assert data.render_audit.allocated_chars[chunk.chunk_id] <= len(chunk.text)
+
+    def test_empty_evidence_pack_does_not_fall_back_to_unselected_documents(self, sample_county):
+        pack = EvidencePack(
+            research_slot=QuestionSlot(slot_id="empty", research_question="缺失数据"),
+            selected_chunks=[],
+            status="empty",
+        )
+        data = ProcessedData(
+            county=sample_county,
+            focus="经济",
+            docs=[RawDoc(title="未选中的来源", url="https://example.gov.cn/unselected", content="不应进入证据上下文")],
+            evidence_pack=pack,
+        )
+
+        rendered = data.render_for_llm(max_chars=500)
+
+        assert rendered == ""
+        assert "未选中的来源" not in rendered
 
     def test_processed_at_auto_filled(self, sample_county):
         pd = ProcessedData(county=sample_county, focus="竹产业")

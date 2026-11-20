@@ -15,8 +15,14 @@ from __future__ import annotations
 
 import logging
 
+from ..domain.research_contracts import EvidencePack, ResearchSpec
 from ..evidence.store import EvidenceStore
 from ..models import QuestionTree, ReflectionResult
+from ..search.adaptive_retrieval import (
+    AdaptiveRetrievalController,
+    RetrievalBudget,
+    RetrievalDecision,
+)
 from ..search.query_engine import QueryEngine
 
 logger = logging.getLogger(__name__)
@@ -97,4 +103,35 @@ class ResearchCritic:
             conflicts=conflicts,
             followup_queries=followup_queries,
             reasoning="；".join(reasons),
+        )
+
+    def reflect_adaptive(
+        self,
+        spec: ResearchSpec,
+        evidence_packs: list[EvidencePack],
+        *,
+        current_turn: int = 1,
+        previous_evidence_ids: set[str] | None = None,
+        previous_new_evidence: int | None = None,
+        budget: RetrievalBudget | None = None,
+    ) -> RetrievalDecision:
+        """Return only gap-linked follow-ups and an explicit stop reason."""
+        controller = AdaptiveRetrievalController(
+            spec,
+            query_engine=self.query_engine,
+            budget=budget,
+        )
+        if current_turn >= self.max_turns:
+            decision = controller.next_round(
+                evidence_packs,
+                round_number=current_turn,
+                previous_evidence_ids=previous_evidence_ids,
+                previous_new_evidence=0,
+            )
+            return decision
+        return controller.next_round(
+            evidence_packs,
+            round_number=current_turn,
+            previous_evidence_ids=previous_evidence_ids,
+            previous_new_evidence=previous_new_evidence,
         )

@@ -1,109 +1,134 @@
-# CountyResearchAI
+# AxiomScope
 
-输入县名与可选的产业方向，采集公开资料并生成带来源链接的县域产业研究初稿。
+**Evidence-Native Research Intelligence Platform** — 县域与区域产业研究。
 
-[![CI](https://github.com/OrdoAbChao7/CountyResearchAI/actions/workflows/ci.yml/badge.svg)](https://github.com/OrdoAbChao7/CountyResearchAI/actions/workflows/ci.yml) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+AxiomScope 是本仓库 Public 产品名；项目原名为 **CountyResearchAI**。它把县域产业研究从“生成一篇报告”升级为“可追溯到精确引文的结构化证据链”：每条结论都要回到不可变来源快照中的 quote、偏移与哈希，未满足证据门槛的结论会被显式隐藏或标注，而不是被自然语言包装成事实。
 
-这是一个研究原型。报告供人工核查和继续研究使用：公开资料的覆盖度取决于地区与搜索服务，模型生成的判断也可能遗漏背景或缺少依据。未配置 API Key 时使用 Mock 数据，只适合验证流程，不能作为研究证据。项目当前的验证边界见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
+> 这是一个研究原型。公开资料覆盖度取决于地区与搜索服务；MOCK 模式只验证产品链路与证据校验，不代表真实检索或模型质量。详见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 与 [docs/goal/STATE.md](docs/goal/STATE.md)。
 
-## 能做什么
+## 现在能做什么
 
-| 模式 | 命令参数 | 研究内容 |
-| :--- | :--- | :--- |
-| 产业现状 | `snapshot`（默认，`industry` 为别名） | 产业现状、优势、短板和建议 |
-| 产业兴衰 | `rise-fall` | 产业起源、扩张、衰退及规律 |
-| 长周期历史 | `long-history` | 从县域形成到当代的发展脉络 |
+| 能力 | 状态 |
+| --- | --- |
+| `ResearchContract`：目标、地区、时间窗、必答问题、证据门槛、预算上限 | 已实现并有校验测试 |
+| 来源快照：canonical URL、观测/发布时间、内容哈希、精确偏移 | 已实现 |
+| SQLite 证据图谱：snapshot → span → claim → finding | 已实现，重启后可重载 |
+| 确定性校验：引文偏移/哈希、数值/单位、期间/范围/口径、时间窗 | 已实现；**不是语义蕴含** |
+| 冲突与不可比：`SUPPORTED / CONTRADICTED / INSUFFICIENT / NOT_COMPARABLE / OUTDATED / NEEDS_REVIEW` | 已实现 |
+| 本地 API：任务、SSE、取消/恢复、findings、sources、brief | 已实现 |
+| React + Vite 工作台：任务提交、时间线、证据浏览器、简报下载 | 已实现 |
+| 真实多基线质量结论 | **未完成**（见 [docs/evaluation/FINAL_REPORT.md](docs/evaluation/FINAL_REPORT.md)） |
 
-不指定 `--focus` 时，程序会根据检索材料推荐候选产业方向；推荐结果仍需人工确认。固定流程由 Workflow 执行，Agent 模式则在限定步骤内规划工具调用，并可保存 JSON 执行轨迹。两者共用搜索、分析和报告能力。
+## 快速开始（本地 Demo）
 
-```mermaid
-flowchart TD
-    A["县名、方向与模式"] --> B["问题树规划 (Question Tree)"]
-    B --> C["动态多意图检索 (QueryEngine + 消歧)"]
-    C --> D["结构化事实库 (EvidenceStore)"]
-    D --> E["反思评价与证据缺口 (ResearchCritic)"]
-    E -->|存在关键缺口| F["定向补充检索 (Supplemental Search)"]
-    F --> D
-    E -->|证据充足| G["专业智能体协同分析 (经济/政策/产业)"]
-    G --> H["事实核验与冲突消解 (FactVerifier)"]
-    H --> I["Markdown 深度研究报告 (带可信溯源角标)"]
-```
-
-## 快速开始
-
-需要 Python 3.10 或更高版本。以下命令在 PowerShell 中运行：
+需要 Python 3.10+ 与 Node 20+。Windows PowerShell：
 
 ```powershell
-git clone https://github.com/OrdoAbChao7/CountyResearchAI.git
-cd CountyResearchAI
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e .
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+cd web
+npm install
+npm run build
+cd ..
 Copy-Item .env.example .env
+.\scripts\start_api.ps1
 ```
 
-在 `.env` 中为通用兼容服务填写 `LLM_API_KEY`，或为 DeepSeek 同时使用 `DEEPSEEK_API_KEY`；搜索服务可填写 `TAVILY_API_KEY`、`SERPER_API_KEY`、`BING_API_KEY`。模板默认使用 DeepSeek LLM 和 Tavily Search；更换服务时相应调整 `LLM_PROVIDER`、`LLM_BASE_URL`、`LLM_MODEL` 和 `SEARCH_PROVIDER`。DeepSeek Search/Fetch 需要另外设置 `DEEPSEEK_SEARCH_ENABLED=true`，且只能在确认账户免费资格或明确授权付费后启用，默认关闭。如需使用 Mock，请把模板中的 `YOUR_...` 占位值清空；空 Key 会启用对应环节的 Mock 实现。
+打开 <http://127.0.0.1:8000>。未设置 `AXIOMSCOPE_API_LIVE=true` 时，即使 `.env` 中有 Key，API 任务也强制走 **MOCK**，避免误触发付费调用。Linux/WSL 等价步骤见 [docs/demo/DEMO_SCRIPT.md](docs/demo/DEMO_SCRIPT.md)。
+
+前后端分离开发：
+
+```powershell
+.\scripts\start_api.ps1     # API :8000
+.\scripts\start_web.ps1     # Vite :5173，代理到 :8000
+```
+
+## 证据模型
+
+```text
+SourceSnapshot (append-only, content hash)
+    └── EvidenceSpan (exact quote + offsets + span hash)
+            └── ClaimEvidenceEdge (supports / contradicts / context)
+                    └── Claim (region, metric, value, unit, period, scope, caliber, version)
+                            └── Finding (structured, persisted before Markdown)
+                                    └── Decision brief / API / UI
+```
+
+- 来源与 span 为 append-only；同 id 不同内容会报错而不是覆盖。
+- 独立支持按 canonical URL 计数，转载不会放大证据。
+- 结论数值必须出现在引文中；期间必须落在 `date_window` 内。
+- 两条各自有支持的冲突结论标记 `NEEDS_REVIEW`；无支持的冲突不能推翻有支持的结论。
+- 未支持的结论在决策简报中**只列 id 与原因，不复述内容**。
+
+## API
+
+`/api/v1`，OpenAPI 文档在 `/docs`，健康检查 `/health`。核心端点：
+
+```text
+POST /api/v1/research/tasks
+GET  /api/v1/research/tasks
+GET  /api/v1/research/tasks/{id}
+POST /api/v1/research/tasks/{id}/cancel
+POST /api/v1/research/tasks/{id}/resume
+GET  /api/v1/research/tasks/{id}/stream        # SSE
+GET  /api/v1/research/tasks/{id}/findings
+GET  /api/v1/research/tasks/{id}/claims/{claim_id}
+GET  /api/v1/research/tasks/{id}/sources
+GET  /api/v1/research/tasks/{id}/brief
+GET  /api/v1/research/sources/{snapshot_id}
+```
+
+错误统一为 `{"error": {"code", "message", "details?"}}`。API 不抓取用户提供的任意 URL，不返回模型密钥或堆栈；报告文件必须位于 reports 根目录内。端点与运行限制详见 [docs/architecture/OVERVIEW.md](docs/architecture/OVERVIEW.md)。
+
+## 保留的旧 CLI
+
+原有 `county-research` CLI 与三种研究模式（`snapshot`、`rise-fall`、`long-history`）继续可用：
 
 ```powershell
 county-research -c 安吉县 -f 竹产业
+county-research -c 鹤岗市 --mode rise-fall
+county-research agent -c 安吉县 --max-steps 8
 ```
 
-报告默认写入 `reports/`；原始资料和处理结果默认写入 `data/`。可通过 `.env` 中的 `REPORTS_DIR` 和 `DATA_DIR` 调整位置，其他运行参数见 [`config/settings.yaml`](config/settings.yaml) 和 [`config/sources.yaml`](config/sources.yaml)。
-
-## 常用命令
+## 验证与评测
 
 ```powershell
-county-research -c 安吉县                         # 自动发现产业方向 (snapshot)
-county-research workflow -c 安吉县 -f 竹产业      # 显式使用固定工作流
-county-research -c 安吉县 -f 竹产业 --deep        # 启用深度多智能体与证据核验研究
-county-research -c 鹤岗市 --mode rise-fall        # 产业兴衰规律研究
-county-research -c 信丰县 --mode long-history     # 县域长周期兴衰史研究
-county-research agent -c 安吉县 -f 竹产业 --mode snapshot  # 运行 Plan-and-Execute Agent
-county-research agent -c 安吉县 --max-steps 8 --dry-run   # 校验 Agent 参数与步数限制
+.venv\Scripts\python.exe -m pytest --no-cov -q          # Python 测试
+cd web; npm run typecheck; npm test; npm run build      # 前端检查
+.venv\Scripts\python.exe scripts\run_multi_baseline_offline.py
 ```
 
-| 选项 | 用途 |
-| :--- | :--- |
-| `-c, --county` | 县名，运行研究时必填 |
-| `-f, --focus` | 产业方向；省略时自动发现 |
-| `-m, --mode` | 研究模式；默认 `snapshot` |
-| `--deep` | 启用深度多智能体协同研究（问题树拆解、Critic反思补检、经济/政策/产业分工及事实核验） |
-| `--historical` / `--long-history` | 固定流程中选择对应模式的快捷开关 |
-| `--no-cache` | 固定流程中跳过缓存 |
-| `--dry-run` | 只检查参数，不运行研究 |
+当前实测：
 
-`agent` 另支持 `--max-steps` 和 `--no-trace`。执行轨迹默认保存在 `agent_traces/`。完整参数以 `county-research --help`、`county-research workflow --help` 和 `county-research agent --help` 为准。
+- Python 测试 **675 passed**；前端 4 tests、`tsc` 与 Vite build 通过（2026-10-26）。
+- 本地 `MOCK` 端到端：任务 `SUCCEEDED` / `SUFFICIENT`，3 个来源、6 条结构化结论；2025/2027 结论在 2024 时间窗内被正确判为 `NOT_COMPARABLE`。
+- 冻结 matched-budget 离线 A/B/C 复算：C 组在现有小样本上落后 A/B 且资源消耗更高。**不能**据此得出 v2 优于基线的结论；D 组、40–60 独立任务、消融、真实 Provider 与语义 Judge 均未运行/未获授权。
 
-## 基准评测 (Benchmark)
+完整、区分 offline/fixture/replay/live 的报告见 [docs/evaluation/FINAL_REPORT.md](docs/evaluation/FINAL_REPORT.md)。评测设计见 [docs/evaluation/DESIGN.md](docs/evaluation/DESIGN.md)。
 
-项目内置了针对县域产业研究真实质量的客观基准评测系统（`src/county_research_ai/evaluation/`），涵盖安吉县竹产业、信丰县脐橙产业、鹤岗市产业转型三个基准案例。
+## 代码结构
 
-评测指标涵盖：
-
-- **检索质量**：Precision@K、Recall@K（核心事实覆盖率）、官方权威来源占比、内容去重率；
-- **研究深度与可靠性**：关键事实支持率（Claim-Evidence 闭环）、冲突与口径差异检出率。
-
-完整评测报告与数据详见 [docs/BENCHMARK_REPORT.md](docs/BENCHMARK_REPORT.md)。评测复现命令：
-
-```powershell
-python -c "from county_research_ai.evaluation.runner import BenchmarkRunner; runner = BenchmarkRunner(); reports = runner.run_all_cases(); [print(r.to_markdown()) for r in reports.values()]"
+```text
+src/county_research_ai/
+  domain/      契约、时间窗、结果枚举
+  search/      搜索适配器、adaptive retrieval、BM25 基线
+  evidence/    source contract、ledger、SQLite 图谱、确定性校验
+  application/ collect → discover → evidence → analyze → report
+  modes/       snapshot / rise-fall / long-history
+  agent/       有界 Plan-and-Execute（兼容旧 CLI）
+  api/         FastAPI、持久化任务、SSE、简报
+  evaluation/  离线复算与指标
+web/           React + Vite 工作台
+docs/           架构、ADR、Demo、评测、目标状态
 ```
 
-## 代码与验证
+## 边界
 
-核心代码位于 `src/county_research_ai/`：`application/` 编排研究步骤，`modes/` 定义模式，`search/` 和 `llm/` 接入资料与模型，`reporting/` 生成报告，`agent/` 负责 Agent 流程。提示词位于 `prompts/`，测试位于 `tests/`。
+- 范围是县域/区域产业研究；不提供医疗、法律、证券投资建议，也不是通用 Agent。
+- `max_steps`、`max_search_calls`、`max_cost` 在旧 workflow 路径未强制执行；API 会如实报告 `not_enforced_on_workflow_path`。`max_tokens`/`max_documents` 是单次调用/单次采集上限，不是累计配额；只有 `deadline_seconds` 会触发 `BUDGET_EXHAUSTED`。
+- 确定性校验不识别语义改写/别名；未命中的正确结论会保持 `INSUFFICIENT`。
+- 单进程线程池适合本地 Demo，不是分布式任务队列。
 
-```powershell
-python -m pip install -e ".[dev]"
-python -m pytest --no-cov -q
-```
+## 许可
 
-示例初稿见 [`reports/`](reports/)。这些文件展示输出形式，不代表其事实内容已经逐条核实。项目采用 Python、Click、Pydantic、httpx、Jinja2 和兼容 OpenAI API 的模型客户端；依赖清单以 [`pyproject.toml`](pyproject.toml) 为准。
-
-短视频内容与渲染扩展维护在 `codex/video-content` 分支，不属于默认研究流程。
-
-## 协作与贡献
-
-欢迎提交 Issue 与 Pull Request 共同完善县域产业研报生成工具。
-
-本项目欢迎学术研究人员与开发者参与贡献。讨论交流请前往 [Discussions](https://github.com/OrdoAbChao7/CountyResearchAI/discussions)。
+MIT。历史 CountyResearchAI 代码与实验工件保留在原分支与目录中，未改写。

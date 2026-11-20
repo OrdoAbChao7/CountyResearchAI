@@ -20,7 +20,10 @@ from county_research_ai.evaluation.experiment_agents import (
     GeneralPurposeAIResearcher,
     TraditionalSearchResearcher,
 )
-from county_research_ai.evaluation.experiment_models import RunArtifact
+from county_research_ai.evaluation.experiment_models import (
+    RunArtifact,
+    architecture_version_for_group,
+)
 from county_research_ai.evaluation.experiment_runner import (
     ExperimentRunner,
     ExperimentRunSpec,
@@ -95,6 +98,7 @@ def main() -> int:
         model=args.model,
         search_provider=args.search_provider,
         config={
+            "architecture_version": architecture_version_for_group(args.group),
             "formal_target": True,
             "model": args.model,
             "search_provider": args.search_provider,

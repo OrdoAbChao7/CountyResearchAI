@@ -1,0 +1,1 @@
+{"confirmed_count": 4, "confirmed_traceability": 1.0, "idempotent": true, "impact_fn": 0, "impact_fp": 0, "impact_precision": 1.0, "impact_recall": 1.0, "impact_tp": 2, "input_value_fidelity": true, "product_benefit": "NOT_VALIDATED", "repost_no_new_facts": true, "scope_cases": 1, "synthetic": true, "unaffected_not_pending": true, "wrong_scope_calculations": 0}

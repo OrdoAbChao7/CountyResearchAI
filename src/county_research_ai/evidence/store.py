@@ -127,7 +127,9 @@ class EvidenceStore:
                 continue
 
             extracted.extend(
-                self._extract_numerical_from_line(doc, line, year_str, seen_ids)
+                self._extract_numerical_from_line(
+                    doc, line, year_str, seen_ids, county=county
+                )
             )
 
             # 2. 抽取政策文件
@@ -184,6 +186,8 @@ class EvidenceStore:
         line: str,
         year_str: str | None,
         seen_ids: set[str],
+        *,
+        county: str = "",
     ) -> list[EvidenceItem]:
         items: list[EvidenceItem] = []
         for pattern, indicator_type in _NUMERICAL_STAT_PATTERNS:
@@ -207,8 +211,13 @@ class EvidenceStore:
 
                 # 判断行政范围
                 scope = "县域本级"
-                target_context = clause if any(k in clause for k in ("全市", "地级市", "全省")) else line
-                if "全市" in target_context or "地级市" in target_context:
+                target_context = f"{doc.title}\n{line}"
+                is_national_gdp = "国内生产总值" in target_context and (
+                    not county or county not in target_context
+                )
+                if "全国" in target_context or is_national_gdp:
+                    scope = "全国范围"
+                elif "全市" in target_context or "地级市" in target_context:
                     scope = "全市范围"
                 elif "全省" in target_context:
                     scope = "全省范围"

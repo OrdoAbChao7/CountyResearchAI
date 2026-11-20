@@ -17,7 +17,10 @@ from county_research_ai.evaluation.experiment_agents import (
     GeneralPurposeAIResearcher,
     TraditionalSearchResearcher,
 )
-from county_research_ai.evaluation.experiment_models import RunArtifact
+from county_research_ai.evaluation.experiment_models import (
+    RunArtifact,
+    architecture_version_for_group,
+)
 from county_research_ai.evaluation.experiment_runner import (
     ExecutionOutcome,
     ExperimentRunner,
@@ -29,6 +32,7 @@ from county_research_ai.evaluation.providers import (
 )
 from county_research_ai.evaluation.resource_manager import ResourceLimit, ResourceManager
 from county_research_ai.evaluation.strict_container import StrictRealContainer
+from county_research_ai.evidence.source_contract import serialize_source_documents
 from county_research_ai.llm.client import OpenAICompatibleClient
 from county_research_ai.models import ResearchRequest
 from county_research_ai.search.web_search import create_provider
@@ -51,6 +55,7 @@ def build_smoke_specs(*, model: str, search_provider: str, batch_id: str) -> lis
                     model=model,
                     search_provider=search_provider,
                     config={
+                        "architecture_version": architecture_version_for_group(group),
                         "batch_id": batch_id,
                         "model": model,
                         "search_provider": search_provider,
@@ -76,6 +81,7 @@ def build_c_probe_spec(*, model: str, search_provider: str, batch_id: str) -> Ex
         model=model,
         search_provider=search_provider,
         config={
+            "architecture_version": architecture_version_for_group("C"),
             "batch_id": batch_id,
             "model": model,
             "search_provider": search_provider,
@@ -102,6 +108,7 @@ def build_pilot_specs(*, model: str, search_provider: str, batch_id: str) -> lis
             model=model,
             search_provider=search_provider,
             config={
+                "architecture_version": architecture_version_for_group(group),
                 "batch_id": batch_id,
                 "model": model,
                 "search_provider": search_provider,
@@ -260,16 +267,7 @@ def _run_county_research_ai(
         raise ValueError("C report generated without archived source documents")
     sources_path, _ = artifact.write_json(
         "sources.json",
-        [
-            {
-                "title": doc.title,
-                "url": doc.url,
-                "content": doc.content,
-                "source": doc.source,
-                "metadata": doc.metadata,
-            }
-            for doc in source_docs
-        ],
+        serialize_source_documents(source_docs),
     )
     return ExecutionOutcome(
         artifacts={

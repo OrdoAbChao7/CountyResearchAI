@@ -17,7 +17,10 @@ import yaml
 
 from county_research_ai.config import load_settings
 from county_research_ai.evaluation.checkpoints import CheckpointStore
-from county_research_ai.evaluation.experiment_models import RunStatus
+from county_research_ai.evaluation.experiment_models import (
+    RunStatus,
+    architecture_version_for_group,
+)
 from county_research_ai.evaluation.experiment_runner import ExperimentRunSpec
 from county_research_ai.evaluation.gate import (
     require_formal_api_gate,
@@ -85,6 +88,7 @@ def build_formal_specs(
                         model=model,
                         search_provider=search_provider,
                         config={
+                            "architecture_version": architecture_version_for_group(group),
                             "batch_id": batch_id,
                             "formal_target": True,
                             "model": model,

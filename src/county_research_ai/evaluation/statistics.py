@@ -15,6 +15,7 @@ _QUALITY_METRICS = {
     "evidence_support_rate",
     "factual_error_rate",
     "unverifiable_rate",
+    "non_comparable_rate",
     "error_rate",
     "analysis_depth",
     "report_qa_accuracy",

@@ -8,6 +8,7 @@ from typing import Any
 
 from ..application.context import ResearchContext
 from ..domain.modes import normalize_mode
+from ..evidence.source_contract import serialize_source_documents
 from ..llm.base import LLMResponse
 from ..models import RawDoc, ResearchRequest
 from .fixed_input import FixedInputPack
@@ -316,16 +317,7 @@ def _persist_result(output_dir: Path, result: ResearchAgentResult) -> None:
     (output_dir / "report.md").write_text(result.report, encoding="utf-8")
     (output_dir / "sources.json").write_text(
         json.dumps(
-            [
-                {
-                    "title": doc.title,
-                    "url": doc.url,
-                    "content": doc.content,
-                    "source": doc.source,
-                    "metadata": doc.metadata,
-                }
-                for doc in result.documents
-            ],
+            serialize_source_documents(result.documents),
             ensure_ascii=False,
             indent=2,
         ),

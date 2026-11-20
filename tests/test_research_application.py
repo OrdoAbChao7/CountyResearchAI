@@ -128,6 +128,9 @@ def test_application_runs_each_stage_and_writes_report(tmp_path):
     assert context.focus == "特色农业"
     context = application.build_evidence(context)
     assert context.processed is not None
+    assert context.research_spec is not None
+    assert context.evidence_ledger is not None
+    assert context.evidence_pack is not None
     context = application.analyze(context)
     assert context.snapshot_analyses
     result = application.render_report(context)
@@ -165,6 +168,35 @@ def test_no_cache_skips_storage_cache_lookup(tmp_path):
     application.build_evidence(application.collect_materials(context))
 
     assert storage.load_calls == 0
+
+
+def test_cache_hit_also_attaches_structured_evidence(tmp_path):
+    class CachedStorage(StaticStorage):
+        def load_processed(self, county, focus, max_age_hours=0):
+            self.load_calls += 1
+            return ProcessedData(
+                county=ResearchContext.from_request(
+                    ResearchRequest(county=county)
+                ).county,
+                focus=focus,
+                docs=[RawDoc(title="缓存材料", url="https://example.com/cached")],
+            )
+
+    storage = CachedStorage(tmp_path)
+    application, _, _ = make_application(tmp_path, storage=storage)
+    context = ResearchContext.from_request(
+        ResearchRequest(county="安吉县", focus="竹产业", mode="snapshot")
+    )
+
+    result = application.build_evidence(context)
+
+    assert storage.load_calls == 1
+    assert result.research_spec is not None
+    assert result.research_spec.architecture_version == "evidence_first_v2"
+    assert result.evidence_ledger is not None
+    assert result.evidence_pack is not None
+    assert result.processed is not None
+    assert result.processed.evidence_pack is result.evidence_pack
 
 
 def test_provider_failure_becomes_safe_retryable_stage_error(tmp_path):

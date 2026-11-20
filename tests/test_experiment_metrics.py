@@ -65,6 +65,27 @@ def test_metrics_use_report_claims_for_precision_and_ground_truth_for_recall():
     assert result.unmatched_claims == 2
 
 
+def test_metrics_exclude_non_comparable_claims_from_accuracy_denominators():
+    result = MetricsCalculator.calculate(
+        ["gt-1", "gt-2"],
+        [
+            ClaimEvaluation(
+                "gt-1", ClaimStatus.NON_COMPARABLE, error_types=("period_mismatch",)
+            ),
+            ClaimEvaluation("gt-2", ClaimStatus.SUPPORTED, evidence_supported=True),
+            ClaimEvaluation(
+                "extra-1", ClaimStatus.NON_COMPARABLE, error_types=("region_mismatch",)
+            ),
+        ],
+    )
+
+    assert result.fact_precision == pytest.approx(1.0)
+    assert result.ground_truth_recall == pytest.approx(1 / 2)
+    assert result.factual_error_rate == pytest.approx(0.0)
+    assert result.non_comparable_claims == 2
+    assert result.non_comparable_rate == pytest.approx(2 / 3)
+
+
 def test_metrics_count_claims_outside_ground_truth_as_unmatched():
     result = MetricsCalculator.calculate(
         ["gt-1"],

@@ -95,7 +95,8 @@ def test_specialized_agents_and_synthesizer():
 
     assert "280亿元" in "".join(econ.output_values) or "280" in "".join(econ.output_values)
     assert len(pol.policy_documents) >= 1
-    assert len(ind.bottlenecks_and_risks) >= 1
+    assert ind.bottlenecks_and_risks == []
+    assert "当前材料未支持具体瓶颈判断" in ind.summary
 
     synth = ResearchSynthesizer()
     c_info = CountyInfo.from_name("安吉县")
@@ -109,6 +110,7 @@ def test_specialized_agents_and_synthesizer():
     )
 
     assert len(analyses) == 4
+    assert all(analysis.tokens_used == 0 for analysis in analyses)
     tasks = {a.task for a in analyses}
     assert tasks == {"industry_status", "advantages", "shortcomings", "recommendations"}
 
@@ -117,6 +119,32 @@ def test_specialized_agents_and_synthesizer():
     assert "附录：研究证据链与可信度审计记录" in last_content
     assert "核心参考文献与证据溯源表" in last_content
 
+
+def test_empty_evidence_does_not_emit_preset_county_facts():
+    store = EvidenceStore()
+    econ = EconomicResearchAgent().analyze("德清县", "竹产业", store)
+    policy = PolicyResearchAgent().analyze("德清县", "竹产业", store)
+    industry = IndustryResearchAgent().analyze("德清县", "竹产业", store)
+
+    assert "根据官方国民经济统计公报" not in econ.markdown_content
+    assert "发挥了关键体制机制保障作用" not in policy.markdown_content
+    assert "劳动力老龄化加剧" not in industry.markdown_content
+    assert "强化区域公共品牌" not in policy.markdown_content
+
+    analyses = ResearchSynthesizer().synthesize(
+        county=CountyInfo.from_name("德清县"),
+        focus="竹产业",
+        economic_out=econ,
+        policy_out=policy,
+        industry_out=industry,
+        evidence_store=store,
+    )
+    summary = ResearchSynthesizer().generate_executive_summary(
+        CountyInfo.from_name("德清县"), "竹产业", analyses
+    )
+    assert "产业基础扎实" not in summary
+    assert "全部核心数据均经过多来源交叉核验" not in summary
+    assert "国家级与省级现代产业园" not in analyses[-1].content
 
 def test_deep_research_coordinator_workflow(tmp_settings):
     from county_research_ai.mocks.search import MockSearchProvider
@@ -133,6 +161,10 @@ def test_deep_research_coordinator_workflow(tmp_settings):
     assert len(result.question_tree.questions) >= 5
     assert result.total_turns >= 1
     assert result.executive_summary
+    assert result.research_spec is not None
+    assert result.evidence_packs
+    assert result.retrieval_usage["search_queries"] > 0
+    assert result.retrieval_stop_reason
 
 
 def test_agent_tools_support_deep_research_lifecycle(tool_context):

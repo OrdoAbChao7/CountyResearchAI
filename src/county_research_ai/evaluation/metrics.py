@@ -13,6 +13,7 @@ class ClaimStatus(StrEnum):
     UNSUPPORTED = "UNSUPPORTED"
     DISPUTED = "DISPUTED"
     UNVERIFIED = "UNVERIFIED"
+    NON_COMPARABLE = "NON_COMPARABLE"
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,8 @@ class MetricsResult:
     unverifiable_rate: float | None = None
     report_claim_count: int = 0
     verifiable_report_claims: int = 0
+    non_comparable_claims: int = 0
+    non_comparable_rate: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -64,6 +67,8 @@ class MetricsResult:
             "unverifiable_rate": self.unverifiable_rate,
             "report_claim_count": self.report_claim_count,
             "verifiable_report_claims": self.verifiable_report_claims,
+            "non_comparable_claims": self.non_comparable_claims,
+            "non_comparable_rate": self.non_comparable_rate,
         }
 
 
@@ -101,7 +106,8 @@ class MetricsCalculator:
         evidence_candidates = [
             evaluation
             for evaluation in all_evaluations
-            if evaluation.status not in {ClaimStatus.UNVERIFIED, ClaimStatus.DISPUTED}
+            if evaluation.status
+            not in {ClaimStatus.UNVERIFIED, ClaimStatus.DISPUTED, ClaimStatus.NON_COMPARABLE}
         ]
         unverifiable = [
             evaluation
@@ -110,7 +116,13 @@ class MetricsCalculator:
                 ClaimStatus.UNSUPPORTED,
                 ClaimStatus.UNVERIFIED,
                 ClaimStatus.DISPUTED,
+                ClaimStatus.NON_COMPARABLE,
             }
+        ]
+        non_comparable = [
+            evaluation
+            for evaluation in all_evaluations
+            if evaluation.status is ClaimStatus.NON_COMPARABLE
         ]
         errors = Counter(
             error_type
@@ -121,7 +133,7 @@ class MetricsCalculator:
             [
                 evaluation
                 for evaluation in relevant
-                if evaluation.status in {ClaimStatus.SUPPORTED, ClaimStatus.CONTRADICTED}
+            if evaluation.status in {ClaimStatus.SUPPORTED, ClaimStatus.CONTRADICTED}
             ]
         )
         precision_denominator = len(truth_determined)
@@ -168,4 +180,8 @@ class MetricsCalculator:
             ),
             report_claim_count=len(all_evaluations),
             verifiable_report_claims=precision_denominator,
+            non_comparable_claims=len(non_comparable),
+            non_comparable_rate=(
+                len(non_comparable) / len(all_evaluations) if all_evaluations else None
+            ),
         )

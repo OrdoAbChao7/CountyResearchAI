@@ -17,6 +17,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..domain.research_contracts import EvidencePack, ResearchSpec
+from ..evidence.ledger import build_evidence_ledger
 from ..evidence.store import EvidenceStore
 from ..models import (
     AnalysisResult,
@@ -29,6 +31,13 @@ from ..models import (
     RawDoc,
     ReflectionResult,
 )
+from ..search.adaptive_retrieval import (
+    AdaptiveQueryPlan,
+    AdaptiveRetrievalController,
+    RetrievalBudget,
+    RetrievalStopReason,
+)
+from ..search.query_engine import QueryEngine
 from .critic import ResearchCritic
 from .specialized.economic import EconomicAnalysisOutput, EconomicResearchAgent
 from .specialized.industry import IndustryAnalysisOutput, IndustryResearchAgent
@@ -59,6 +68,10 @@ class DeepResearchResult:
     total_turns: int = 1
     conflicts: list[EvidenceConflict] = field(default_factory=list)
     gaps: list[EvidenceGap] = field(default_factory=list)
+    research_spec: ResearchSpec | None = None
+    evidence_packs: list[EvidencePack] = field(default_factory=list)
+    retrieval_stop_reason: str = ""
+    retrieval_usage: dict[str, int] = field(default_factory=dict)
 
 
 class DeepResearchCoordinator:
@@ -116,21 +129,91 @@ class DeepResearchCoordinator:
         qtree = build_question_tree(county=county, focus=f_name, mode=mode)
         evidence_store = EvidenceStore()
         all_docs: list[RawDoc] = list(existing_docs or [])
+        research_spec: ResearchSpec | None = None
+        evidence_packs: list[EvidencePack] = []
+        retrieval_stop_reason = ""
+        retrieval_usage: dict[str, int] = {}
 
         # 2. 首轮检索（如果已有资料不足）
-        if not all_docs and self.collector is not None:
-            logger.info("执行首轮多角度定向检索...")
-            all_docs = self._collect_initial(county, f_name, mode)
+        if self.collector is not None and hasattr(self.collector, "collect_adaptive"):
+            research_spec = QueryEngine().generate_research_spec(county, f_name, mode)
+            budget = RetrievalBudget(max_queries=12, max_fetches=120)
+            controller = AdaptiveRetrievalController(research_spec, budget=budget)
+            if not all_docs:
+                plan = controller.initial_plan()
+                collected = self.collector.collect_adaptive(plan, controller=controller)
+                all_docs.extend(collected.documents)
+                retrieval_usage = dict(collected.usage)
+            seen_claim_ids: set[str] = set()
 
-        # 3. 证据提取与摄入
-        evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
+            for adaptive_turn in range(1, max(1, self.max_turns) + 1):
+                from ..processor import DocumentProcessor
+                processed = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
+                ledger = build_evidence_ledger(processed)
+                evidence_packs = [
+                    ledger.select_evidence_pack(slot)
+                    for slot in research_spec.question_slots
+                ]
+                current_ids = {
+                    claim.claim_id
+                    for pack in evidence_packs
+                    for claim in pack.selected_claims
+                }
+                marginal = len(current_ids - seen_claim_ids)
+                seen_claim_ids = current_ids
+                decision = controller.next_round(
+                    evidence_packs,
+                    round_number=adaptive_turn,
+                    previous_new_evidence=marginal if adaptive_turn > 1 else None,
+                )
+                retrieval_usage = controller._usage()
+                if decision.stop_reason:
+                    retrieval_stop_reason = decision.stop_reason.value
+                    break
+                if not decision.queries:
+                    retrieval_stop_reason = RetrievalStopReason.NO_GAP_QUERY.value
+                    break
+                followup = self.collector.collect_adaptive(
+                    AdaptiveQueryPlan(research_spec, decision.queries, adaptive_turn + 1),
+                    controller=controller,
+                )
+                retrieval_usage = controller._usage()
+                if not followup.documents:
+                    retrieval_stop_reason = RetrievalStopReason.ZERO_MARGINAL_EVIDENCE.value
+                    break
+                all_docs.extend(followup.documents)
+            else:
+                retrieval_stop_reason = (
+                    RetrievalStopReason.BUDGET_EXHAUSTED.value
+                    if budget.remaining_queries == 0 or budget.remaining_fetches == 0
+                    else RetrievalStopReason.MAX_ROUNDS.value
+                )
+            from ..processor import DocumentProcessor
+            processed = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
+            ledger = build_evidence_ledger(processed)
+            evidence_packs = [
+                ledger.select_evidence_pack(slot)
+                for slot in research_spec.question_slots
+            ]
+            evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
+            reflection_history: list[ReflectionResult] = []
+            turn = max(1, adaptive_turn)
+            last_gaps: list[EvidenceGap] = []
+        else:
+            seen_claim_ids = set()
+            reflection_history = []
+            turn = 1
+            last_gaps = []
+            if not all_docs and self.collector is not None:
+                logger.info("执行首轮多角度定向检索...")
+                all_docs = self._collect_initial(county, f_name, mode)
 
-        # 4. 检索—反思—补充循环
-        reflection_history: list[ReflectionResult] = []
-        turn = 1
-        last_gaps: list[EvidenceGap] = []
+            # 3. 证据提取与摄入
+            evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
 
-        while turn <= self.max_turns:
+            # 4. Legacy collector reflection fallback.
+
+        while research_spec is None and turn <= self.max_turns:
             reflection = self.critic.reflect(
                 evidence_store=evidence_store,
                 question_tree=qtree,
@@ -178,6 +261,10 @@ class DeepResearchCoordinator:
                 total_turns=turn,
                 conflicts=evidence_store.get_conflicts(),
                 gaps=last_gaps,
+                research_spec=research_spec,
+                evidence_packs=evidence_packs,
+                retrieval_stop_reason=retrieval_stop_reason,
+                retrieval_usage=retrieval_usage,
             )
         elif mode == "long-history":
             from ..llm.long_history_analyzer import LongHistoryAnalyzer
@@ -197,6 +284,10 @@ class DeepResearchCoordinator:
                 total_turns=turn,
                 conflicts=evidence_store.get_conflicts(),
                 gaps=last_gaps,
+                research_spec=research_spec,
+                evidence_packs=evidence_packs,
+                retrieval_stop_reason=retrieval_stop_reason,
+                retrieval_usage=retrieval_usage,
             )
         else:
             # Snapshot / Industry 模式
@@ -214,6 +305,7 @@ class DeepResearchCoordinator:
                 industry_out=ind_out,
                 evidence_store=evidence_store,
                 gaps=last_gaps,
+                evidence_packs=evidence_packs,
             )
             summary = self.synthesizer.generate_executive_summary(
                 county=c_info, focus=f_name, analyses=analyses
@@ -235,6 +327,10 @@ class DeepResearchCoordinator:
                 total_turns=turn,
                 conflicts=evidence_store.get_conflicts(),
                 gaps=last_gaps,
+                research_spec=research_spec,
+                evidence_packs=evidence_packs,
+                retrieval_stop_reason=retrieval_stop_reason,
+                retrieval_usage=retrieval_usage,
             )
 
     def _collect_initial(self, county: str, focus: str, mode: str) -> list[RawDoc]:

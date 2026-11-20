@@ -6,7 +6,7 @@ from ..application.context import ResearchContext
 from ..models import CountyRiseFallAnalysis, ReportSection, ResearchReport
 from ..ports.analysis import RiseFallAnalyzerPort
 from ..ports.reporting import RiseFallRendererPort
-from .base import RenderedReport
+from .base import RenderedReport, audit_markdown, render_evidence_pack_appendix
 
 _TITLES = [
     "执行摘要", "一、县域基本画像", "二、起家产业", "三、兴起逻辑",
@@ -53,6 +53,9 @@ class RiseFallModeHandler:
                     "focus": focus,
                     "rise_fall_analysis": result.rise_fall_analysis,
                     "raw_docs": result.all_raw_docs,
+                    "research_spec": result.research_spec or context.research_spec,
+                    "evidence_packs": result.evidence_packs or context.evidence_packs,
+                    "evidence_pack": (result.evidence_packs[0] if result.evidence_packs else context.evidence_pack),
                 }
             )
         else:
@@ -72,6 +75,7 @@ class RiseFallModeHandler:
         docs = context.processed.docs if context.processed else context.raw_docs
         report = _compatibility_report(context.county, focus, _TITLES)
         rendered_md = self.renderer.render(analysis, docs)
+        rendered_md = audit_markdown(context, rendered_md)
         if context.request.options.get("deep_research"):
             from ..evidence.store import EvidenceStore
             store = EvidenceStore()
@@ -82,6 +86,7 @@ class RiseFallModeHandler:
                 f"#### 核心参考文献与证据溯源表\n{store.render_citations_table()}\n"
             )
             rendered_md = f"{rendered_md}{appendix}"
+        rendered_md = f"{rendered_md}{render_evidence_pack_appendix(context)}"
         return RenderedReport(
             report=report,
             markdown=rendered_md,

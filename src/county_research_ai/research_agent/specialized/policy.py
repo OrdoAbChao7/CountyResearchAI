@@ -40,8 +40,6 @@ class PolicyResearchAgent:
         lines = [
             f"### 二、{county}{focus}产业政策扶持与规划蓝图",
             "",
-            "党委政府在引导、扶持产业发展中发挥了关键体制机制保障作用：",
-            "",
         ]
 
         if policy_docs:
@@ -52,17 +50,22 @@ class PolicyResearchAgent:
         else:
             lines.append(f"- _注：检索材料中暂未检索到专属于{focus}的省级或县级专项政策全文。_")
 
-        lines.extend([
-            "**2. 核心支持举措与制度供给**",
-            "- 加强财政资金扶持与专项补贴，重点向科技创新、绿色转型与链主培育倾斜；",
-            "- 优化产业用地、用林与环评审批要素保障，建设标准化产业集聚示范园；",
-            "- 强化区域公共品牌保护与知识产权维权机制，提升产业区域影响力。",
-            "",
-        ])
+        if policy_docs:
+            lines.extend([
+                "**2. 核心支持举措与制度供给**",
+                "- 上述材料仅用于确认已公开的政策依据；具体财政、土地、品牌等措施须以原文条款为准。",
+                "",
+            ])
+        else:
+            lines.append("- 证据不足：当前材料未能支持对本地政策措施作具体判断。")
 
         md = "\n".join(lines)
         return PolicyAnalysisOutput(
-            summary=f"已梳理 {len(policy_docs)} 项重点政策规划与配套要素支持措施。",
+            summary=(
+                f"已关联 {len(policy_docs)} 项政策材料。"
+                if policy_docs
+                else "未找到可追溯的专项政策材料。"
+            ),
             policy_documents=policy_docs,
             evidence_items=policy_evidence,
             markdown_content=md,

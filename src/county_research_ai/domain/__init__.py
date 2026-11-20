@@ -20,6 +20,14 @@ from .long_history import (
 )
 from .modes import ResearchMode, normalize_mode, normalize_request
 from .reports import ReportSection, ResearchReport
+from .research_contracts import (
+    AtomicClaim,
+    EvidenceChunk,
+    EvidencePack,
+    QuestionSlot,
+    ResearchSpec,
+    SourceDocument,
+)
 from .rise_fall import (
     CountyRiseFallAnalysis,
     DeclineFactor,
@@ -39,5 +47,6 @@ __all__ = [
     "ProcessedData", "QuestionTree", "RawDoc", "ReflectionResult",
     "ReportSection", "ResearchQuestion", "ResearchReport",
     "ResearchRequest", "RiseFactor", "TimelineEvent", "ResearchMode",
-    "normalize_mode", "normalize_request",
+    "normalize_mode", "normalize_request", "AtomicClaim", "EvidenceChunk",
+    "EvidencePack", "QuestionSlot", "ResearchSpec", "SourceDocument",
 ]

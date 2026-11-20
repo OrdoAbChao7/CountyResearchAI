@@ -1,0 +1,13 @@
+{
+  "affected": [
+    "report#growth-anji",
+    "report#text-anji"
+  ],
+  "scope_attempts": 1,
+  "expected_values_round1": [
+    "100",
+    "110",
+    "200",
+    "220"
+  ]
+}

@@ -53,7 +53,7 @@ class EconomicResearchAgent:
         lines = [
             f"### 一、{county}{focus}产业经济规模与产值统计",
             "",
-            f"根据官方国民经济统计公报及行业公开数据{year_str}，核心经济规模指标如下：",
+            f"检索到的经济材料{year_str}及可提取指标如下：",
             "",
         ]
 

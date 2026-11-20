@@ -1,0 +1,20 @@
+{
+  "status": "OK_OFFLINE",
+  "rescore_version": "continuation_matched_budget_deepseek_flash_20261019_v4_offline",
+  "runs": 48,
+  "valid_observations": 240,
+  "provider_calls": 0,
+  "source_material_status_counts": {
+    "archived_source_contract": 36,
+    "rebuilt_from_saved_raw_docs": 12
+  },
+  "classification_changes": 28,
+  "classification_change_counts": {
+    "CONTRADICTED->DISPUTED": 5,
+    "CONTRADICTED->NON_COMPARABLE": 8,
+    "SUPPORTED->NON_COMPARABLE": 9,
+    "UNSUPPORTED->NON_COMPARABLE": 4,
+    "UNSUPPORTED->SUPPORTED": 2
+  },
+  "baseline_path": "experiments\\independent_comparison\\claim_scores\\continuation_matched_budget_deepseek_flash_20261019_v3\\claim_observations.jsonl"
+}

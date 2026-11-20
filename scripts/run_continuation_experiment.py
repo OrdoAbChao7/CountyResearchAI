@@ -14,7 +14,11 @@ from county_research_ai.evaluation.experiment_agents import (
     GeneralPurposeAIResearcher,
     TraditionalSearchResearcher,
 )
-from county_research_ai.evaluation.experiment_models import RunArtifact, RunStatus
+from county_research_ai.evaluation.experiment_models import (
+    RunArtifact,
+    RunStatus,
+    architecture_version_for_group,
+)
 from county_research_ai.evaluation.experiment_runner import ExperimentRunner, ExperimentRunSpec
 from county_research_ai.evaluation.gate import require_formal_api_gate
 from county_research_ai.evaluation.ground_truth import GroundTruthStore
@@ -132,6 +136,7 @@ def build_continuation_specs(
                             model=model,
                             search_provider=search_provider,
                             config={
+                                "architecture_version": architecture_version_for_group(group),
                                 "batch_id": batch_id,
                                 "formal_target": True,
                                 "continuation_benchmark": True,

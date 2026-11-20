@@ -4,8 +4,10 @@ from __future__ import annotations
 import pytest
 
 from county_research_ai.config import reset_settings
+from county_research_ai.domain.research_contracts import ResearchSpec
 from county_research_ai.models import ResearchRequest
 from county_research_ai.pipeline import create_default_pipeline
+from county_research_ai.search.query_engine import QueryEngine
 
 
 @pytest.fixture
@@ -24,6 +26,31 @@ def test_pipeline_does_not_mutate_request_mode(isolated_env):
     create_default_pipeline().run(request)
 
     assert request.mode == "industry"
+
+
+def test_query_engine_declares_supported_evidence_first_architecture():
+    spec = QueryEngine().generate_research_spec("安吉县", "竹产业", "snapshot")
+
+    assert spec.architecture_version == "evidence_first_v2"
+
+
+def test_research_spec_normalizes_legacy_architecture_spelling():
+    spec = ResearchSpec(
+        region_id="安吉县",
+        region_name="安吉县",
+        architecture_version="evidence-first-v2",
+    )
+
+    assert spec.architecture_version == "evidence_first_v2"
+
+
+def test_research_spec_rejects_unknown_architecture_version():
+    with pytest.raises(ValueError):
+        ResearchSpec(
+            region_id="安吉县",
+            region_name="安吉县",
+            architecture_version="evidence_first_v99",
+        )
 
 
 @pytest.mark.parametrize(

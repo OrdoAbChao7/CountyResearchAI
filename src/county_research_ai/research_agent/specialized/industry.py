@@ -42,11 +42,7 @@ class IndustryResearchAgent:
             if "骨干企业" in it.indicator_caliber or "企业" in it.claim:
                 enterprises.append(it.claim)
 
-        bottlenecks = [
-            "要素成本与劳动力老龄化加剧，对传统粗放加工环节形成挤压；",
-            "精深加工比例仍有提升空间，高附加值衍生品与终端品牌溢价能力不足；",
-            "外部同质化竞争与市场价格周期波动风险增加。",
-        ]
+        bottlenecks = []
         for it in risk_evidence:
             bottlenecks.append(f"{it.claim}（依据: [{it.title}]({it.url})）")
 
@@ -62,22 +58,30 @@ class IndustryResearchAgent:
         else:
             lines.append("- _注：检索材料中暂未直接提取到该县明确标明的单家专精特新链主企业名单。_")
 
-        lines.extend([
-            "",
-            "**2. 销售流通渠道与市场拓展**",
-            "- 依托电商平台、产地直供展会与现代物流冷链体系，打通线上线下立体营销网络；",
-            "- 推动初级产品向高附加值文创、深加工产品延伸，强化区域公共品牌溢价效应。",
-            "",
-            "**3. 突出短板瓶颈与外部风险**",
-        ])
+        lines.extend(["", "**2. 销售流通渠道与市场拓展**"])
+        channel_evidence = [
+            item for item in industry_evidence
+            if any(term in item.claim for term in ("市场", "销售", "电商"))
+        ]
+        if channel_evidence:
+            lines.extend(f"- {item.claim}（来源: [{item.title}]({item.url})）" for item in channel_evidence[:5])
+        else:
+            lines.append("- 证据不足：未找到可追溯材料说明本地销售渠道或市场格局。")
+        lines.extend(["", "**3. 突出短板瓶颈与外部风险**"])
 
         for b in bottlenecks[:5]:
             lines.append(f"- {b}")
+        if not bottlenecks:
+            lines.append("- 证据不足：未找到可追溯材料支持具体瓶颈判断。")
         lines.append("")
 
         md = "\n".join(lines)
         return IndustryAnalysisOutput(
-            summary=f"已剖析产业链上下游及市场格局，包含 {len(enterprises)} 家重点企业线索与突出痛点风险。",
+            summary=(
+                f"已提取 {len(enterprises)} 家重点企业线索与 {len(bottlenecks)} 条风险材料。"
+                if bottlenecks
+                else f"已提取 {len(enterprises)} 家重点企业线索；当前材料未支持具体瓶颈判断。"
+            ),
             leading_enterprises=enterprises,
             bottlenecks_and_risks=bottlenecks,
             evidence_items=industry_evidence + risk_evidence,

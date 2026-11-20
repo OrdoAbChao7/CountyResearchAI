@@ -19,13 +19,22 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from pydantic import TypeAdapter
 
 from ..config import Settings, get_settings
+from ..domain.research_contracts import EvidenceChunk, EvidencePack, QuestionSlot
+from ..evaluation.checkpoints import CheckpointStore
+from ..evidence.ledger import EvidenceLedger, build_evidence_ledger
 from ..models import (
     CountyInfo,
     CountyLongHistoryAnalysis,
@@ -209,10 +218,26 @@ class LongHistoryAnalyzer:
         llm: LLMClient | None = None,
         prompt_loader: PromptLoader | None = None,
         settings: Settings | None = None,
+        checkpoint_path: Path | str | None = None,
     ) -> None:
         self._settings = settings or get_settings()
         self._llm = llm or OpenAICompatibleClient(settings=self._settings)
         self._prompt_loader = prompt_loader or PromptLoader(settings=self._settings)
+        self._checkpoint_store = (
+            CheckpointStore(Path(checkpoint_path)) if checkpoint_path is not None else None
+        )
+        self._checkpoint_config: dict[str, Any] | None = None
+        self._checkpoint_results: dict[str, Any] = {}
+        self._checkpoint_analysis_date: str | None = None
+
+    def with_checkpoint(self, path: Path | str) -> LongHistoryAnalyzer:
+        """Return an analyzer configured to persist and resume one analysis run."""
+        return LongHistoryAnalyzer(
+            llm=self._llm,
+            prompt_loader=self._prompt_loader,
+            settings=self._settings,
+            checkpoint_path=path,
+        )
 
     # ---- 总入口 ----
 
@@ -225,36 +250,119 @@ class LongHistoryAnalyzer:
         date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         data_text = data.render_for_llm(max_chars=18000)
         county_display = county.display()
+        if self._checkpoint_store is not None:
+            input_hash = hashlib.sha256(data.model_dump_json().encode("utf-8")).hexdigest()
+            self._checkpoint_config = {
+                "schema_version": 2,
+                "county": county_display,
+                "provider": self._settings.llm.provider,
+                "model": self._settings.llm.model,
+                "temperature": self._settings.llm.temperature,
+                "max_tokens": self._settings.llm.max_tokens,
+                "input_sha256": input_hash,
+                "prompt_sha256": self._prompt_fingerprint(),
+            }
+            state = self._checkpoint_store.start(
+                config=self._checkpoint_config,
+                resume=self._checkpoint_store.path.exists(),
+            )
+            results = state.get("results", {})
+            if not isinstance(results, dict):
+                raise ValueError("long-history checkpoint results must be an object")
+            self._checkpoint_results = results
+            checkpoint_date = state.get("analysis_date")
+            if not isinstance(checkpoint_date, str) or not checkpoint_date:
+                checkpoint_date = date_str
+            self._checkpoint_analysis_date = checkpoint_date
+            if state.get("analysis_date") != checkpoint_date:
+                self._checkpoint_store.save(
+                    config=self._checkpoint_config,
+                    state={"analysis_date": checkpoint_date, "results": results},
+                )
+            date_str = checkpoint_date
 
         logger.info("长周期研究启动 | 县=%s", county_display)
+        ledger = build_evidence_ledger(data)
+        period_ledger = self._build_period_ledger(ledger)
 
         # 1. 历史阶段划分
-        periods = self.extract_periods(
-            county=county_display, date_str=date_str, data_text=data_text,
+        periods = self._run_checkpointed(
+            "periods",
+            lambda: self.extract_periods(
+                county=county_display, date_str=date_str, data_text=data_text,
+            ),
+            list[HistoricalPeriod],
         )
         # 2. 建县与地理逻辑
-        geo_factors = self.analyze_geo_origin(
-            county=county_display, date_str=date_str, data_text=data_text,
+        geo_context, geo_pack = self._history_pack_context(
+            data, period_ledger, "地理 建县 区位 河流 交通 行政", "", 6000
+        )
+        geo_factors = self._run_checkpointed(
+            "geo_factors",
+            lambda: self.analyze_geo_origin(
+                county=county_display, date_str=date_str, data_text=geo_context,
+            ),
+            list[GeoHistoricalFactor],
         )
         # 3. 传统时代生存方式
-        traditional = self.analyze_traditional_economy(
-            county=county_display, date_str=date_str, data_text=data_text,
+        traditional_range = self._resolve_period_for_task(periods, "before 1840")
+        traditional_context, traditional_pack = self._history_pack_context(
+            data, period_ledger, "传统 农业 手工业 商贸 盐业", traditional_range, 6000
+        )
+        traditional = self._run_checkpointed(
+            "traditional",
+            lambda: self.analyze_traditional_economy(
+                county=county_display, date_str=date_str, data_text=traditional_context,
+            ),
+            str,
         )
         # 4. 近代冲击
-        modern = self.analyze_modern_shocks(
-            county=county_display, date_str=date_str, data_text=data_text,
+        modern_range = self._resolve_period_for_task(periods, "1840-1948")
+        modern_context, modern_pack = self._history_pack_context(
+            data, period_ledger, "近代 战争 铁路 公路 口岸 工业", modern_range, 6000
+        )
+        modern = self._run_checkpointed(
+            "modern",
+            lambda: self.analyze_modern_shocks(
+                county=county_display, date_str=date_str, data_text=modern_context,
+            ),
+            str,
         )
         # 5. 计划经济
-        state_period = self.analyze_state_period(
-            county=county_display, date_str=date_str, data_text=data_text,
+        state_range = self._resolve_period_for_task(periods, "1949-1978")
+        state_context, state_pack = self._history_pack_context(
+            data, period_ledger, "计划经济 国营 工厂 水利 矿山 1950 1960 1970", state_range, 6000
+        )
+        state_period = self._run_checkpointed(
+            "state_period",
+            lambda: self.analyze_state_period(
+                county=county_display, date_str=date_str, data_text=state_context,
+            ),
+            str,
         )
         # 6. 改革开放
-        reform = self.analyze_reform_period(
-            county=county_display, date_str=date_str, data_text=data_text,
+        reform_range = self._resolve_period_for_task(periods, "1978-2000")
+        reform_context, reform_pack = self._history_pack_context(
+            data, period_ledger, "改革开放 乡镇企业 外资 民营 1980 1990", reform_range, 6000
+        )
+        reform = self._run_checkpointed(
+            "reform",
+            lambda: self.analyze_reform_period(
+                county=county_display, date_str=date_str, data_text=reform_context,
+            ),
+            str,
         )
         # 7. 新世纪
-        contemporary = self.analyze_contemporary_status(
-            county=county_display, date_str=date_str, data_text=data_text,
+        contemporary_range = self._resolve_period_for_task(periods, "2001-至今")
+        contemporary_context, contemporary_pack = self._history_pack_context(
+            data, period_ledger, "新世纪 产业 转型 发展 2000 2010 2020", contemporary_range, 6000
+        )
+        contemporary = self._run_checkpointed(
+            "contemporary",
+            lambda: self.analyze_contemporary_status(
+                county=county_display, date_str=date_str, data_text=contemporary_context,
+            ),
+            str,
         )
 
         # 8. 长周期模型归纳(输入前 7 项结果)
@@ -264,8 +372,12 @@ class LongHistoryAnalyzer:
             state_period=state_period, reform=reform,
             contemporary=contemporary,
         )
-        long_pattern = self.classify_long_history_pattern(
-            county=county_display, date_str=date_str, analysis_content=pattern_input,
+        long_pattern = self._run_checkpointed(
+            "long_pattern",
+            lambda: self.classify_long_history_pattern(
+                county=county_display, date_str=date_str, analysis_content=pattern_input,
+            ),
+            LongHistoryPattern,
         )
 
         # 9. 执行摘要
@@ -275,8 +387,12 @@ class LongHistoryAnalyzer:
             state_period=state_period, reform=reform,
             contemporary=contemporary, long_pattern=long_pattern,
         )
-        summary = self.generate_summary(
-            county=county_display, analysis_content=summary_input,
+        summary = self._run_checkpointed(
+            "summary",
+            lambda: self.generate_summary(
+                county=county_display, analysis_content=summary_input,
+            ),
+            str,
         )
 
         return CountyLongHistoryAnalysis(
@@ -290,7 +406,258 @@ class LongHistoryAnalyzer:
             contemporary_status=contemporary,
             long_history_pattern=long_pattern,
             summary=summary,
+            evidence_packs=[
+                geo_pack,
+                traditional_pack,
+                modern_pack,
+                state_pack,
+                reform_pack,
+                contemporary_pack,
+            ],
         )
+
+    def _run_checkpointed(
+        self, key: str, operation: Callable[[], Any], result_type: Any
+    ) -> Any:
+        if self._checkpoint_store is None or self._checkpoint_config is None:
+            return operation()
+        adapter = TypeAdapter(result_type)
+        if key in self._checkpoint_results:
+            return adapter.validate_python(self._checkpoint_results[key])
+        result = operation()
+        self._checkpoint_results[key] = adapter.dump_python(result, mode="json")
+        self._checkpoint_store.save(
+            config=self._checkpoint_config,
+            state={
+                "analysis_date": self._checkpoint_analysis_date,
+                "results": self._checkpoint_results,
+            },
+        )
+        return result
+
+    def _prompt_fingerprint(self) -> str:
+        digest = hashlib.sha256()
+        configs = (
+            self.PERIODS_CONFIG,
+            self.GEO_ORIGIN_CONFIG,
+            self.TRADITIONAL_CONFIG,
+            self.MODERN_CONFIG,
+            self.STATE_CONFIG,
+            self.REFORM_CONFIG,
+            self.CONTEMPORARY_CONFIG,
+            self.PATTERN_CONFIG,
+            self.SUMMARY_CONFIG,
+        )
+        for config in configs:
+            digest.update((config.template_name or "").encode("utf-8"))
+            digest.update(config.fallback_prompt.encode("utf-8"))
+            if config.template_name and self._prompt_loader.has_template(config.template_name):
+                template = self._prompt_loader.get_template(config.template_name)
+                if template.filename:
+                    digest.update(Path(template.filename).read_bytes())
+        return digest.hexdigest()
+
+    @staticmethod
+    def _build_period_ledger(ledger: EvidenceLedger) -> EvidenceLedger:
+        period_ledger = EvidenceLedger()
+        derived_by_parent: dict[str, list[EvidenceChunk]] = {}
+        for source in ledger.sources.values():
+            derived_chunks = []
+            for passage_start, passage_end in LongHistoryAnalyzer._sentence_spans(source.content):
+                raw_text = source.content[passage_start:passage_end]
+                leading = len(raw_text) - len(raw_text.lstrip())
+                trailing = len(raw_text.rstrip())
+                start = passage_start + leading
+                end = passage_start + trailing
+                text = source.content[start:end]
+                if not text:
+                    continue
+                parent = next(
+                    (
+                        chunk
+                        for chunk in source.chunks
+                        if chunk.start_offset is not None
+                        and chunk.end_offset is not None
+                        and chunk.start_offset <= start < chunk.end_offset
+                    ),
+                    None,
+                )
+                parent_id = parent.chunk_id if parent else ""
+                derived_chunks.append(EvidenceChunk(
+                    chunk_id=f"{parent_id or source.doc_id}:period:{start}:{end}",
+                    document_id=source.doc_id,
+                    parent_chunk_id=parent_id,
+                    text=text,
+                    start_offset=start,
+                    end_offset=end,
+                    offset_status="exact",
+                    year_hints=sorted(set(re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", text))),
+                ))
+                if parent_id:
+                    derived_by_parent.setdefault(parent_id, []).append(derived_chunks[-1])
+            period_ledger.add_source(source.model_copy(update={"chunks": derived_chunks}))
+        for claim in ledger.claims.values():
+            mapped_chunks = [
+                chunk
+                for parent_id in claim.evidence_chunk_ids
+                for chunk in derived_by_parent.get(parent_id, [])
+            ]
+            statement = " ".join(claim.statement.split())
+            matching_chunks = [
+                chunk
+                for chunk in mapped_chunks
+                if statement and statement in " ".join(chunk.text.split())
+            ]
+            if not matching_chunks and claim.value and claim.metric_id:
+                matching_chunks = [
+                    chunk
+                    for chunk in mapped_chunks
+                    if claim.value in chunk.text and claim.metric_id in chunk.text
+                ]
+            if not matching_chunks:
+                continue
+            remapped_claim = claim.model_copy(update={
+                "evidence_chunk_ids": [chunk.chunk_id for chunk in matching_chunks],
+                "source_ids": [
+                    source_id for source_id in claim.source_ids
+                    if source_id in period_ledger.sources
+                ],
+            })
+            period_ledger.add_claim(remapped_claim)
+        return period_ledger
+
+    @staticmethod
+    def _sentence_spans(text: str) -> list[tuple[int, int]]:
+        """Split passages without treating decimal points as sentence endings."""
+        spans = []
+        start = 0
+        for index, char in enumerate(text):
+            boundary = char in "。！？!?；;\n"
+            if char == ".":
+                previous_is_digit = index > 0 and text[index - 1].isdigit()
+                next_is_digit = index + 1 < len(text) and text[index + 1].isdigit()
+                boundary = not (previous_is_digit and next_is_digit)
+            if boundary:
+                spans.append((start, index + 1))
+                start = index + 1
+        if start < len(text):
+            spans.append((start, len(text)))
+        return spans
+
+    @staticmethod
+    def _resolve_period_for_task(
+        periods: list[HistoricalPeriod], fallback: str
+    ) -> str:
+        """Narrow a task's evidence window to extracted historical periods."""
+        fallback_years = [
+            int(year)
+            for year in re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", fallback)
+        ]
+        if re.search(r"before|prior|之前|以前|前", fallback, re.IGNORECASE):
+            task_start, task_end = 1, max(fallback_years, default=1840)
+        elif re.search(r"至今|现在|目前|present", fallback, re.IGNORECASE):
+            task_start, task_end = min(fallback_years, default=2001), 9999
+        elif fallback_years:
+            task_start, task_end = min(fallback_years), max(fallback_years)
+        else:
+            return fallback
+
+        overlapping = []
+        for period in periods:
+            start_years = re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", period.start)
+            end_years = re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", period.end)
+            if not start_years:
+                continue
+            start_year = int(start_years[0])
+            if end_years:
+                end_year = int(end_years[-1])
+            elif re.search(r"至今|现在|目前|present", period.end, re.IGNORECASE):
+                end_year = task_end
+            else:
+                end_year = start_year
+            clipped_start = max(task_start, start_year)
+            clipped_end = min(task_end, end_year)
+            if clipped_start <= clipped_end:
+                overlapping.append((clipped_start, clipped_end))
+        if not overlapping:
+            return fallback
+        start = min(window[0] for window in overlapping)
+        end = max(window[1] for window in overlapping)
+        return f"{start}-{end}"
+
+    @staticmethod
+    def _history_pack_context(
+        data: ProcessedData,
+        ledger: EvidenceLedger,
+        keywords: str,
+        period: str,
+        max_chars: int,
+    ) -> tuple[str, EvidencePack]:
+        terms = [term for term in keywords.split() if not term.isdigit()]
+        slot = QuestionSlot(
+            slot_id=f"long_history:{period or 'geography'}",
+            research_question=f"长周期历史任务：{keywords} {period}".strip(),
+            required_metrics=terms,
+            region=data.county.name,
+            time_period=period,
+            budget_chars=max_chars,
+        )
+        pack = ledger.select_evidence_pack(slot)
+        if not pack.selected_chunks:
+            return LongHistoryAnalyzer._history_context(data, keywords, max_chars), pack
+        rendered = data.model_copy(update={"evidence_pack": pack}).render_for_llm(max_chars)
+        return rendered, pack
+
+    @staticmethod
+    def _history_context(data: ProcessedData, keywords: str, max_chars: int) -> str:
+        """Select a source-diverse, topic-relevant context for a historical subtask."""
+        terms = tuple(keywords.split())
+        per_document: list[tuple[object, list[tuple[int, str]]]] = []
+        for doc in data.docs:
+            body = doc.content or doc.snippet
+            passages = [
+                body[start:end].strip()
+                for start, end in LongHistoryAnalyzer._sentence_spans(body)
+                if body[start:end].strip()
+            ]
+            if not passages:
+                passages = [doc.snippet or doc.title]
+            ranked_passages = sorted(
+                ((sum(part.count(term) for term in terms), part) for part in passages),
+                key=lambda item: item[0],
+                reverse=True,
+            )
+            per_document.append((doc, ranked_passages))
+
+        candidates = sorted(
+            (
+                (score, doc_index, passage)
+                for doc_index, (_, passages) in enumerate(per_document)
+                for score, passage in passages
+            ),
+            key=lambda item: item[0],
+            reverse=True,
+        )
+        selected: dict[int, list[str]] = {i: [] for i in range(len(per_document))}
+        used = 0
+        for _, doc_index, passage in candidates:
+            doc, _ = per_document[doc_index]
+            header_cost = len(f"[{doc.title}]\n来源: {doc.url}\n") if not selected[doc_index] else 0
+            separator_cost = 2 if used else 0
+            available = max_chars - used - header_cost - separator_cost
+            if available > 0:
+                excerpt = passage[:available]
+                selected[doc_index].append(excerpt)
+                used += header_cost + len(excerpt) + separator_cost
+
+        blocks = []
+        for index, (doc, _) in enumerate(per_document):
+            if selected[index]:
+                blocks.append(f"[{doc.title}]\n来源: {doc.url}\n" + "\n".join(selected[index]))
+        context = "\n\n".join(blocks)
+        if context:
+            return context[:max_chars]
+        return data.render_for_llm(max_chars=max_chars)
 
     # ---- 各子任务 ----
 

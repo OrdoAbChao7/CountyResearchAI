@@ -34,6 +34,8 @@ class RiseFallAnalyzerPort(Protocol):
 
 
 class LongHistoryAnalyzerPort(Protocol):
+    def with_checkpoint(self, path: str) -> LongHistoryAnalyzerPort: ...
+
     def analyze(
         self, county: CountyInfo, data: ProcessedData
     ) -> CountyLongHistoryAnalysis: ...

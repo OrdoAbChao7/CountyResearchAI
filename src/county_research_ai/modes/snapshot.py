@@ -6,7 +6,7 @@ from ..application.context import ResearchContext
 from ..models import ReportSection, ResearchReport
 from ..ports.analysis import SnapshotAnalyzerPort
 from ..ports.reporting import SnapshotRendererPort
-from .base import RenderedReport
+from .base import RenderedReport, audit_analysis_results, render_evidence_pack_appendix
 
 
 class SnapshotModeHandler:
@@ -47,6 +47,9 @@ class SnapshotModeHandler:
                     "focus": focus,
                     "snapshot_analyses": result.analyses,
                     "raw_docs": result.all_raw_docs,
+                    "research_spec": result.research_spec or context.research_spec,
+                    "evidence_packs": result.evidence_packs or context.evidence_packs,
+                    "evidence_pack": (result.evidence_packs[0] if result.evidence_packs else context.evidence_pack),
                 }
             )
         else:
@@ -61,8 +64,8 @@ class SnapshotModeHandler:
 
     def render(self, context: ResearchContext) -> RenderedReport:
         focus = context.focus or self.default_focus
-        analyses = context.snapshot_analyses
-        if context.request.options.get("deep_research"):
+        analyses = audit_analysis_results(context, context.snapshot_analyses)
+        if context.request.options.get("deep_research") or context.evidence_pack:
             from ..research_agent.specialized import ResearchSynthesizer
             summary = ResearchSynthesizer().generate_executive_summary(
                 county=context.county,
@@ -88,7 +91,7 @@ class SnapshotModeHandler:
                 sections.append(
                     ReportSection(
                         title=title_map[analysis.task],
-                        content=analysis.content,
+                    content=analysis.content,
                         order=order,
                         sources=[doc.url for doc in docs[:10]],
                     )
@@ -105,7 +108,9 @@ class SnapshotModeHandler:
             sections=sections,
             analyses=analyses,
         )
+        markdown = self.renderer.render_markdown(report)
+        markdown = f"{markdown}{render_evidence_pack_appendix(context)}"
         return RenderedReport(
             report=report,
-            markdown=self.renderer.render_markdown(report),
+            markdown=markdown,
         )

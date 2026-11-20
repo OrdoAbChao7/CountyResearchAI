@@ -7,7 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .experiment_models import RunArtifact, RunManifest, RunStatus
+from .experiment_models import (
+    SUPPORTED_ARCHITECTURE_VERSIONS,
+    RunArtifact,
+    RunManifest,
+    RunStatus,
+)
 from .resource_manager import ResourceExhaustedError, ResourceManager, ResourceOverrunError
 
 
@@ -67,6 +72,20 @@ class ExperimentRunner:
         )
         manifest_path = run_dir / "manifest.json"
         manifest.write(manifest_path)
+        if manifest.architecture_version == "unspecified":
+            manifest.transition(
+                RunStatus.INVALID_CONFIG,
+                error="architecture_version is required in experiment config",
+            )
+        elif manifest.architecture_version not in SUPPORTED_ARCHITECTURE_VERSIONS:
+            manifest.transition(
+                RunStatus.INVALID_CONFIG,
+                error=f"unsupported architecture_version: {manifest.architecture_version}",
+            )
+        if manifest.status == RunStatus.INVALID_CONFIG:
+            manifest.duration_seconds = round(time.perf_counter() - started, 6)
+            manifest.write(manifest_path)
+            return manifest
         manifest.transition(RunStatus.RUNNING)
         manifest.write(manifest_path)
 
@@ -81,7 +100,17 @@ class ExperimentRunner:
                 for name, (path, digest) in outcome.artifacts.items()
             }
             elapsed = time.perf_counter() - started
-            if outcome.mock_detected:
+            if manifest.architecture_version == "unspecified":
+                manifest.transition(
+                    RunStatus.INVALID_CONFIG,
+                    error="architecture_version is required in experiment config",
+                )
+            elif manifest.architecture_version not in SUPPORTED_ARCHITECTURE_VERSIONS:
+                manifest.transition(
+                    RunStatus.INVALID_CONFIG,
+                    error=f"unsupported architecture_version: {manifest.architecture_version}",
+                )
+            elif outcome.mock_detected:
                 manifest.transition(RunStatus.INVALID_MOCK, error="Mock component or output detected")
             elif active_leases or not outcome.resource_accounting_valid:
                 manifest.transition(

@@ -11,6 +11,26 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+SUPPORTED_ARCHITECTURE_VERSIONS = frozenset({
+    "workflow_legacy",
+    "deep_legacy",
+    "evidence_first_v2",
+    "traditional_search_baseline",
+    "general_ai_baseline",
+})
+
+
+def architecture_version_for_group(group: str) -> str:
+    """Return the implemented researcher path represented by an A/B/C group."""
+    try:
+        return {
+            "A": "traditional_search_baseline",
+            "B": "general_ai_baseline",
+            "C": "evidence_first_v2",
+        }[group]
+    except KeyError as exc:
+        raise ValueError(f"unknown experiment group: {group}") from exc
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -36,7 +56,12 @@ class RunStatus(StrEnum):
 
 
 _TRANSITIONS: dict[RunStatus, set[RunStatus]] = {
-    RunStatus.PLANNED: {RunStatus.RUNNING, RunStatus.BLOCKED, RunStatus.NOT_RUN},
+    RunStatus.PLANNED: {
+        RunStatus.RUNNING,
+        RunStatus.INVALID_CONFIG,
+        RunStatus.BLOCKED,
+        RunStatus.NOT_RUN,
+    },
     RunStatus.RUNNING: {
         RunStatus.VALID,
         RunStatus.INVALID_MOCK,
@@ -67,6 +92,7 @@ class RunManifest:
     model: str
     search_provider: str
     config_hash: str
+    architecture_version: str = "unspecified"
     formal_target: bool = False
     status: RunStatus = RunStatus.PLANNED
     created_at: str = field(default_factory=_now)
@@ -100,6 +126,7 @@ class RunManifest:
             model=model,
             search_provider=search_provider,
             config_hash=config_hash(config),
+            architecture_version=str(config.get("architecture_version") or "unspecified"),
             formal_target=bool(config.get("formal_target", False)),
         )
 
@@ -123,6 +150,7 @@ class RunManifest:
             "model": self.model,
             "search_provider": self.search_provider,
             "config_hash": self.config_hash,
+            "architecture_version": self.architecture_version,
             "formal_target": self.formal_target,
             "status": self.status.value,
             "created_at": self.created_at,

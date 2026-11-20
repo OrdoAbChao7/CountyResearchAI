@@ -89,6 +89,9 @@ class RawDoc(BaseModel):
     credibility_score: float = 0.5
     evidence_type: str = "unknown"
     source_summary: str = ""
+    content_original_length: int | None = None  # 清洗/截断前正文长度
+    content_truncated: bool = False  # 正文是否因质量配置被截断
+    truncation_reason: str = ""  # 截断原因，例如 max_evidence_length:8000
 
 
 # ===== 结构化证据与反思模型 =====
@@ -171,6 +174,17 @@ class ReflectionResult(BaseModel):
 # ===== 流程中间产物 =====
 
 
+class ContextRenderAudit(BaseModel):
+    """记录一次 LLM 上下文渲染的预算分配与排除原因。"""
+
+    max_chars: int = 0
+    included_doc_indices: list[int] = Field(default_factory=list)
+    truncated_doc_indices: list[int] = Field(default_factory=list)
+    excluded_doc_indices: list[int] = Field(default_factory=list)
+    allocated_chars: dict[str, int] = Field(default_factory=dict)
+    exclusion_reasons: dict[str, str] = Field(default_factory=dict)
+
+
 class ProcessedData(BaseModel):
     """清洗后的结构化数据,供 LLM 消费。
 
@@ -185,15 +199,22 @@ class ProcessedData(BaseModel):
     docs: list[RawDoc] = Field(default_factory=list)
     total_chars: int = 0  # 全部文档总字符数(用于估算 token 与截断)
     processed_at: datetime = Field(default_factory=_utcnow)
+    render_audit: ContextRenderAudit = Field(default_factory=ContextRenderAudit)
+    # EvidencePack is attached by the Evidence-First adapter. ``Any`` keeps the
+    # legacy model import graph acyclic while allowing cached dict payloads.
+    evidence_pack: Any = None
 
     def render_for_llm(self, max_chars: int = 0) -> str:
         """Build a bounded, source-diverse evidence context for LLMs.
 
-        When evidence exceeds the budget, keep a bounded excerpt from *each*
-        document instead of discarding entire later sources. More selective
-        metric-aware chunk retrieval is handled by a future evidence-pack layer.
+        When a task-specific EvidencePack is attached, render its selected
+        chunks first. Otherwise keep a bounded excerpt from *each* document
+        instead of discarding entire later sources.
         """
+        if self.evidence_pack is not None:
+            return self._render_evidence_pack(max_chars)
         if not self.docs:
+            self.render_audit = ContextRenderAudit(max_chars=max_chars)
             return ""
         divider = "\n\n---\n\n"
         headers = [
@@ -202,9 +223,15 @@ class ProcessedData(BaseModel):
         ]
         contents = [doc.content or doc.snippet for doc in self.docs]
         if max_chars <= 0:
-            return divider.join(
-                header + content for header, content in zip(headers, contents, strict=False)
+            rendered = divider.join(
+                header + content for header, content in zip(headers, contents, strict=True)
             )
+            self.render_audit = ContextRenderAudit(
+                max_chars=max_chars,
+                included_doc_indices=list(range(1, len(self.docs) + 1)),
+                allocated_chars={str(i): len(content) for i, content in enumerate(contents, 1)},
+            )
+            return rendered
 
         # Reserve all source labels first, preventing an early long document
         # from hiding later county-specific evidence entirely.
@@ -212,14 +239,30 @@ class ProcessedData(BaseModel):
         overhead = sum(len(h) + len(marker) for h in headers)
         overhead += len(divider) * (len(headers) - 1)
         if overhead >= max_chars:
-            return f"[1] {marker}{self.docs[0].title}\n来源: {self.docs[0].url}"
+            block = f"[1] {marker}{self.docs[0].title}\n来源: {self.docs[0].url}"
+            self.render_audit = ContextRenderAudit(
+                max_chars=max_chars,
+                included_doc_indices=[1],
+                excluded_doc_indices=list(range(2, len(self.docs) + 1)),
+                exclusion_reasons={
+                    str(i): "budget_headers_only" for i in range(2, len(self.docs) + 1)
+                },
+            )
+            return block[:max_chars]
 
         available = max_chars - overhead
         share = available // len(contents)
         allocations = [min(len(content), share) for content in contents]
         available -= sum(allocations)
-        # Give spare space back to sources still containing unseen information.
-        for i, content in enumerate(contents):
+        # Give spare space to local/government sources first, then to other
+        # sources. This is a bounded precursor to task-aware EvidencePack selection.
+        priority_order = sorted(
+            range(len(self.docs)),
+            key=lambda i: self._render_priority(self.docs[i]),
+            reverse=True,
+        )
+        for i in priority_order:
+            content = contents[i]
             additional = min(available, len(content) - allocations[i])
             allocations[i] += additional
             available -= additional
@@ -227,12 +270,138 @@ class ProcessedData(BaseModel):
                 break
 
         blocks = []
-        for header, content, limit in zip(headers, contents, allocations, strict=False):
+        truncated_indices: list[int] = []
+        allocated_chars: dict[str, int] = {}
+        exclusion_reasons: dict[str, str] = {}
+        for index, (header, content, limit) in enumerate(
+            zip(headers, contents, allocations, strict=True), start=1
+        ):
             clipped = limit < len(content)
+            if clipped:
+                truncated_indices.append(index)
+                exclusion_reasons[str(index)] = "budget_excerpt"
             prefix = marker if clipped else ""
-            excerpt = content[:limit]
+            excerpt = self._render_excerpt(content, limit)
             blocks.append(header.replace("\n来源:", f" {prefix}\n来源:", 1) + excerpt)
-        return divider.join(blocks)[:max_chars]
+            allocated_chars[str(index)] = len(excerpt)
+        rendered = divider.join(blocks)
+        self.render_audit = ContextRenderAudit(
+            max_chars=max_chars,
+            included_doc_indices=list(range(1, len(self.docs) + 1)),
+            truncated_doc_indices=truncated_indices,
+            allocated_chars=allocated_chars,
+            exclusion_reasons=exclusion_reasons,
+        )
+        return rendered[:max_chars]
+
+    def _render_evidence_pack(self, max_chars: int) -> str:
+        """Render the selected EvidencePack so analyzers consume ledger output."""
+        pack = self.evidence_pack
+        chunks = getattr(pack, "selected_chunks", None)
+        if chunks is None and isinstance(pack, dict):
+            chunks = pack.get("selected_chunks", [])
+        chunks = chunks or []
+        if not chunks:
+            return ""
+        source_map = getattr(pack, "source_map", None)
+        if source_map is None and isinstance(pack, dict):
+            source_map = pack.get("source_map", {})
+        source_map = source_map or {}
+
+        grouped: dict[str, list[tuple[str, str, str]]] = {}
+        for chunk in chunks:
+            source_id = getattr(chunk, "document_id", None)
+            chunk_id = getattr(chunk, "chunk_id", "")
+            parent_chunk_id = getattr(chunk, "parent_chunk_id", "")
+            text = getattr(chunk, "text", "")
+            if isinstance(chunk, dict):
+                source_id = chunk.get("document_id", chunk.get("source_id", ""))
+                chunk_id = chunk.get("chunk_id", "")
+                parent_chunk_id = chunk.get("parent_chunk_id", "")
+                text = chunk.get("text", "")
+            grouped.setdefault(str(source_id or ""), []).append(
+                (str(chunk_id), str(parent_chunk_id), str(text))
+            )
+
+        rendered_parts: list[str] = []
+        selected_by_id = {getattr(chunk, "chunk_id", ""): chunk for chunk in chunks}
+        omitted = getattr(pack, "excluded_evidence_reasons", None)
+        if isinstance(pack, dict):
+            omitted = pack.get("excluded_evidence_reasons", omitted)
+        exclusion_reasons = {str(key): value for key, value in (omitted or {}).items()}
+        allocated_chars: dict[str, int] = {}
+        used_chars = 0
+        rendered_source_ids: set[str] = set()
+        for source_id, source_chunks in grouped.items():
+            source = source_map.get(source_id) if isinstance(source_map, dict) else None
+            title = getattr(source, "source_title", "") if source else ""
+            url = getattr(source, "canonical_url", "") if source else ""
+            if isinstance(source, dict):
+                title = source.get("source_title", source.get("title", ""))
+                url = source.get("canonical_url", source.get("url", ""))
+            source_label = source_id[:8] if len(source_id) > 8 else source_id
+            source_header = f"[{source_label}] {title}\n来源: {url}"
+            for chunk_id, _, text in source_chunks:
+                chunk = selected_by_id.get(chunk_id)
+                start = getattr(chunk, "start_offset", None) if chunk else None
+                end = getattr(chunk, "end_offset", None) if chunk else None
+                span = f"{start}-{end}" if start is not None and end is not None else chunk_id[:12]
+                chunk_prefix = f"\n[片段 {span}]\n"
+                separator = "\n\n---\n\n" if rendered_parts else ""
+                header = source_header if source_id not in rendered_source_ids else ""
+                prefix = separator + header + chunk_prefix
+                if max_chars <= 0 or used_chars + len(prefix) + len(text) <= max_chars:
+                    rendered_parts.append(prefix + text)
+                    used_chars += len(prefix) + len(text)
+                    allocated_chars[chunk_id] = len(text)
+                    rendered_source_ids.add(source_id)
+                    continue
+
+                if max_chars > 0:
+                    marker = "…[预算截断]"
+                    available = max_chars - used_chars - len(prefix)
+                    if available > len(marker):
+                        excerpt = text[: available - len(marker)] + marker
+                        rendered_parts.append(prefix + excerpt)
+                        used_chars += len(prefix) + len(excerpt)
+                        allocated_chars[chunk_id] = len(excerpt)
+                        exclusion_reasons[chunk_id] = "budget_truncated"
+                        rendered_source_ids.add(source_id)
+                    else:
+                        exclusion_reasons[chunk_id] = "budget_exceeded"
+
+        rendered = "".join(rendered_parts)
+        self.render_audit = ContextRenderAudit(
+            max_chars=max_chars,
+            allocated_chars=allocated_chars,
+            exclusion_reasons=exclusion_reasons,
+        )
+        return rendered
+
+    def _render_priority(self, doc: RawDoc) -> float:
+        """Prefer county-local and explicitly prioritized documents."""
+        explicit = doc.metadata.get("evidence_priority", 0)
+        try:
+            priority = float(explicit)
+        except (TypeError, ValueError):
+            priority = 0.0
+        county_name = self.county.display() or self.county.name
+        if county_name and county_name in f"{doc.title}\n{doc.content}\n{doc.snippet}":
+            priority += 100.0
+        if doc.domain_type == "government":
+            priority += 10.0
+        return priority
+
+    @staticmethod
+    def _render_excerpt(content: str, limit: int) -> str:
+        if limit >= len(content):
+            return content
+        marker = "\n…\n"
+        if limit <= len(marker) + 1:
+            return content[:limit]
+        head = max(1, int((limit - len(marker)) * 0.6))
+        tail = limit - len(marker) - head
+        return content[:head] + marker + content[-tail:]
 
 
 class AnalysisResult(BaseModel):
@@ -564,6 +733,7 @@ class CountyLongHistoryAnalysis(BaseModel):
 
     long_history_pattern: LongHistoryPattern = Field(default_factory=LongHistoryPattern)
     summary: str = ""
+    evidence_packs: list[Any] = Field(default_factory=list)
     analyzed_at: datetime = Field(default_factory=_utcnow)
 
 

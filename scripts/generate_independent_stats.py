@@ -22,6 +22,7 @@ _PAIRABLE_METRICS = (
     "ground_truth_recall",
     "factual_error_rate",
     "unverifiable_rate",
+    "non_comparable_rate",
     "fact_accuracy",
     "key_fact_coverage",
     "evidence_support_rate",
@@ -38,6 +39,7 @@ _FIGURE_METRICS = (
     "ground_truth_recall",
     "factual_error_rate",
     "unverifiable_rate",
+    "non_comparable_rate",
     "fact_accuracy",
     "key_fact_coverage",
     "evidence_support_rate",
@@ -116,7 +118,7 @@ def _load_observations(path: Path) -> list[MetricObservation]:
         if not line.strip():
             continue
         value = json.loads(line)
-        if value.get("status") != RunStatus.VALID.value:
+        if value.get("status") not in {RunStatus.VALID.value, "VALID_OFFLINE"}:
             continue
         run_id = str(value["run_id"])
         if run_id in seen_run_ids:

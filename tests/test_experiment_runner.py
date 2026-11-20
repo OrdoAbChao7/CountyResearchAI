@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from dataclasses import replace
 from pathlib import Path
 
 from county_research_ai.evaluation.experiment_models import RunStatus
@@ -28,7 +29,7 @@ def _spec(run_id: str = "run-1") -> ExperimentRunSpec:
         mode="snapshot",
         model="gemini-3.1-flash-lite",
         search_provider="tavily",
-        config={"model": "gemini-3.1-flash-lite", "task": "snapshot"},
+        config={"model": "gemini-3.1-flash-lite", "task": "snapshot", "architecture_version": "workflow_legacy"},
     )
 
 
@@ -93,6 +94,41 @@ def test_runner_marks_missing_usage_invalid_without_dropping_failure_evidence(tm
 
     assert manifest.status == RunStatus.INVALID_USAGE_UNKNOWN
     assert (tmp_path / "runs" / "run-1" / "manifest.json").is_file()
+
+
+def test_runner_rejects_runs_without_declared_architecture_version(tmp_path):
+    runner = ExperimentRunner(tmp_path / "runs", ResourceManager(tmp_path / "resources.sqlite", limits={}))
+    spec = replace(_spec(), config={"model": "gemini-3.1-flash-lite", "task": "snapshot"})
+    executed = False
+
+    def execute(artifact):
+        nonlocal executed
+        executed = True
+        return ExecutionOutcome(artifacts={}, usage_known=True)
+
+    manifest = runner.run(spec, execute)
+
+    assert manifest.status == RunStatus.INVALID_CONFIG
+    assert manifest.architecture_version == "unspecified"
+    assert not executed
+
+
+def test_runner_rejects_unknown_architecture_version(tmp_path):
+    runner = ExperimentRunner(tmp_path / "runs", ResourceManager(tmp_path / "resources.sqlite", limits={}))
+    spec = replace(_spec(), config={"architecture_version": "evidence_first_v99"})
+
+    executed = False
+
+    def execute(artifact):
+        nonlocal executed
+        executed = True
+        return ExecutionOutcome(artifacts={}, usage_known=True)
+
+    manifest = runner.run(spec, execute)
+
+    assert manifest.status == RunStatus.INVALID_CONFIG
+    assert "unsupported architecture_version" in (manifest.error or "")
+    assert not executed
 
 
 def test_runner_marks_wall_clock_budget_exhaustion(tmp_path):

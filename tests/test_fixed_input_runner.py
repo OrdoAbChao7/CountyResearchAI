@@ -45,6 +45,11 @@ def test_e2_specs_freeze_pack_identity_and_disable_search():
     assert {spec.config["input_hash"] for spec in specs} == {pack.source_hash}
     assert all(spec.config["search_enabled"] is False for spec in specs)
     assert all(spec.config["formal_target"] is True for spec in specs)
+    assert [spec.config["architecture_version"] for spec in specs] == [
+        "traditional_search_baseline",
+        "general_ai_baseline",
+        "evidence_first_v2",
+    ]
 
 
 def test_e2_batch_root_is_absolute_and_project_scoped():

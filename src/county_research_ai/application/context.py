@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..domain.modes import normalize_request
+from ..domain.research_contracts import EvidencePack, ResearchSpec
+from ..evidence.ledger import EvidenceLedger
 from ..models import (
     AnalysisResult,
     CountyInfo,
@@ -20,12 +22,18 @@ from ..models import (
 
 
 class ResearchContext(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     request: ResearchRequest
     county: CountyInfo
     focus: str = ""
     raw_docs: list[RawDoc] = Field(default_factory=list)
     discovery: DiscoveryResult | None = None
     processed: ProcessedData | None = None
+    research_spec: ResearchSpec | None = None
+    evidence_ledger: EvidenceLedger | None = None
+    evidence_pack: EvidencePack | None = None
+    evidence_packs: list[EvidencePack] = Field(default_factory=list)
     snapshot_analyses: list[AnalysisResult] = Field(default_factory=list)
     rise_fall_analysis: CountyRiseFallAnalysis | None = None
     long_history_analysis: CountyLongHistoryAnalysis | None = None

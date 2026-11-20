@@ -1,0 +1,18 @@
+# 增量更新报告
+
+历史事件保留；待办仅反映当前未确认状态。
+
+## 历史变更事件（已解决事件不代表当前冲突）
+
+- new_fact: c8590d97d748645b966bc7b9 related=[]
+- new_fact: ed93356b2a7ac6be9a11d69c related=[]
+- new_fact: b590240c3216e6af3623682c related=[]
+- new_period: b590240c3216e6af3623682c related=[]
+- new_fact: 1f6d2ea047d42c51a91407ad related=[]
+- new_period: 1f6d2ea047d42c51a91407ad related=[]
+
+## 当前未解决冲突
+
+## 当前待复核
+
+## 受影响计算和文字输出（禁止自动确认）

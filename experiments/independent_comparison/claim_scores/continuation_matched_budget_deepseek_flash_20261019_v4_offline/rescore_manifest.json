@@ -1,0 +1,9 @@
+{
+  "status": "FROZEN_OFFLINE_RESCORE",
+  "rescore_version": "continuation_matched_budget_deepseek_flash_20261019_v4_offline",
+  "ground_truth": "E:\\Projects\\CountyResearchAI\\experiments\\independent_comparison\\ground_truth\\continuation_ground_truth_20261019.jsonl",
+  "runs_root": "experiments\\independent_comparison\\runs\\continuation_matched_budget_deepseek_flash_20261019",
+  "baseline_claim_observations": "experiments\\independent_comparison\\claim_scores\\continuation_matched_budget_deepseek_flash_20261019_v3\\claim_observations.jsonl",
+  "provider_calls": 0,
+  "semantic_judge_calls": 0
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "metric_id": "bamboo_output",
+    "name": "竹产业总产值",
+    "unit": "亿元",
+    "definition": "县域竹产业年度总产值；统计覆盖与价格口径仍须来源说明",
+    "status": "supported_lexical_rule"
+  },
+  {
+    "metric_id": "bamboo_reported_growth",
+    "name": "竹产业总产值同比增长",
+    "unit": "%",
+    "definition": "来源报告的同比增速，不由系统反推",
+    "status": "supported_lexical_rule"
+  },
+  {
+    "metric_id": "bamboo_revenue",
+    "name": "竹产业营业收入",
+    "unit": "亿元",
+    "definition": "县域竹产业企业年度营业收入，不等于产值",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_firms",
+    "name": "竹加工企业数量",
+    "unit": "个",
+    "definition": "期末竹加工企业数，须区分规上及全部",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_employment",
+    "name": "竹产业从业人员",
+    "unit": "人",
+    "definition": "期末竹产业就业人数，须区分直接与间接",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_area",
+    "name": "竹林面积",
+    "unit": "亩",
+    "definition": "县域期末竹林面积，不等于流转签约面积",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_harvest",
+    "name": "毛竹采伐量",
+    "unit": "根",
+    "definition": "县域年度采伐毛竹根数，不混算吨",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_exports",
+    "name": "竹产品出口额",
+    "unit": "万元",
+    "definition": "年度竹产品出口金额，须注明币种和贸易口径",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_value_added",
+    "name": "竹产业增加值",
+    "unit": "亿元",
+    "definition": "年度竹产业增加值，不等于总产值",
+    "status": "definition_only_missing_data"
+  },
+  {
+    "metric_id": "bamboo_investment",
+    "name": "竹产业固定资产投资",
+    "unit": "亿元",
+    "definition": "年度竹产业固定资产投资完成额，不等于签约额",
+    "status": "definition_only_missing_data"
+  }
+]

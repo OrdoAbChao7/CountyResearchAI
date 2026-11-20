@@ -151,6 +151,9 @@ class DocumentProcessor:
 
         同时推断 domain_type 和 credibility_score(如未设置)。
         """
+        if doc.content and doc.content_original_length is None:
+            doc.content_original_length = len(doc.content)
+
         # 清洗 content
         cleaned_content = self._clean_text(doc.content)
         if cleaned_content != doc.content:
@@ -165,6 +168,8 @@ class DocumentProcessor:
         max_len = self._quality.max_evidence_length
         if doc.content and len(doc.content) > max_len:
             doc.content = doc.content[: max_len - 3] + "..."
+            doc.content_truncated = True
+            doc.truncation_reason = f"max_evidence_length:{max_len}"
 
         # 推断 domain_type(如未设置)
         if doc.domain_type == "unknown":
