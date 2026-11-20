@@ -50,7 +50,7 @@ def test_foreign_absolute_path_resolves_via_experiments_suffix(tmp_path: Path) -
     repo_root, runs_dir, batch_root = _repo_layout(tmp_path)
     db_name = "continuation_resource_manager_20261019.sqlite"
     _make_resource_db(runs_dir / db_name)
-    recorded = Path(r"E:\Projects\CountyResearchAI") / "experiments" / (
+    recorded = Path(r"\\nonexistent-host.invalid\CountyResearchAI") / "experiments" / (
         "independent_comparison/runs"
     ) / db_name
 
@@ -95,7 +95,7 @@ def test_audit_reports_relocated_path_and_closed_ledger(tmp_path: Path) -> None:
     repo_root, runs_dir, batch_root = _repo_layout(tmp_path)
     db_name = "continuation_resource_manager_20261019.sqlite"
     _make_resource_db(runs_dir / db_name)
-    recorded = Path(r"E:\Projects\CountyResearchAI") / "experiments" / (
+    recorded = Path(r"\\nonexistent-host.invalid\CountyResearchAI") / "experiments" / (
         "independent_comparison/runs"
     ) / db_name
 
