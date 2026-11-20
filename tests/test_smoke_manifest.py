@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -74,7 +75,7 @@ def test_pilot_worker_command_is_process_isolated(tmp_path):
 
     command = _pilot_worker_command(spec, tmp_path)
 
-    assert command[0].endswith("python.exe")
+    assert command[0] == sys.executable
     assert command[1:3] == ["-m", "scripts.run_independent_worker"]
     assert "--run-id" in command
     assert spec.run_id in command
