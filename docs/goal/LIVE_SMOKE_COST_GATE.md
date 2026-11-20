@@ -1,6 +1,6 @@
 # Live Smoke Cost Gate — 2026-11-20
 
-Status: `THREE_SMOKES_AUTHORIZED_2026-11-20`
+Status: `FIVE_SMOKES_AUTHORIZED_2026-11-20`
 
 ## Authorization
 
@@ -9,9 +9,10 @@ The user explicitly authorized paid provider calls and asked for one Live run:
 - 2026-11-20: “需要api我可以提供ds 的api在根目录的.env文件夹下面，允许付费调用”
 - 2026-11-20: “跑一次 Live”
 
-This authorization covers **one** bounded smoke run only. It does not authorize a
-Live evaluation campaign, a semantic Judge, a 40–60 task benchmark, retries
-beyond the limits below, or any deployment/push.
+This authorization covers **one** bounded smoke run only. Each later user
+message below adds exactly one further bounded run; together they do not
+authorize a Live evaluation campaign, a semantic Judge, a 40–60 task benchmark,
+retries beyond the limits below, or any deployment/push.
 
 The user then asked “再跑一次” after the first smoke exposed a truncated
 discovery response and a fallback focus. That authorizes **one additional**
@@ -24,6 +25,15 @@ second run's recorded sources, the user said “跑第三次”. That authorizes
 does not authorize a Live evaluation, a semantic Judge, a 40–60 task benchmark,
 retries beyond the limits below, or any deployment/push. Any further paid run
 needs a new explicit authorization.
+
+After the 2024-window / claim-region fix, the user said “跑第四次 Live”. That
+authorizes **exactly one more** bounded smoke to verify the target-window and
+adaptive-retrieval plumbing. The run failed in adaptive follow-up and is
+recorded below.
+
+After the empty-result fail-fast fix, the user said “跑第五次”. That authorizes
+**exactly one more** bounded smoke to verify the repaired adaptive follow-up path
+with a real provider. No further paid run is authorized.
 
 ## Provider and endpoint
 
@@ -341,3 +351,70 @@ made. Root cause and evidence: `docs/goal/LIVE_SMOKE.md` (fourth run section).
 
 The offline follow-up fix (empty-result handling) made no provider calls, so
 the fourth-run cost above is unchanged and no additional budget was spent.
+
+## Fifth run budget (same caps as the fourth, 2026-11-20)
+
+Authorized by “跑第五次” after the empty-result fix and its three regressions.
+The script constants were unchanged, so the comparison stays clean:
+
+| Item | Cap |
+| --- | --- |
+| Additional research jobs | 1 |
+| LLM calls | 3 total (1 tiny preflight + at most 2 job calls) |
+| LLM output per call | ≤ 2,048 tokens |
+| LLM input per call | ≤ 16,000 tokens |
+| LLM retries | 0 |
+| Search requests | ≤ 24 |
+| Results per search | ≤ 6 |
+| Search retries | 0 |
+| Wall clock | 480 s guard; 600 s hard process timeout |
+| Maximum estimated spend | **$0.25** |
+| Contract | `安吉县 竹产业`, 2024 window, explicit focus |
+| Run root | `experiments/quality/live_smoke_20261120_fifth/` |
+
+Worst-case arithmetic at peak: 3 × 16k input × $0.30/M = $0.0144;
+3 × 2,048 output × $1.20/M = $0.0074; 24 Tavily credits × $0.008 = $0.192.
+Total ≤ $0.214, under the $0.25 cap.
+
+Expected live evidence: the repaired adaptive path should reach a terminal
+state, evidence persistence, graph and report; an empty follow-up should be
+recorded as `ZERO_MARGINAL_EVIDENCE`, not raised as a search failure. The run
+could still be `NO_PROGRESS`; it is not required to find a 2024 claim, and the
+verifier is not relaxed.
+
+## Fifth run actual usage (2026-11-20)
+
+The user said “跑第五次”. Job
+`27a8fdb796f94b689ff4fbba78b2d798` finished `SUCCEEDED` / `LIVE` /
+`NO_PROGRESS` (`no_supported_claims`) in 57.476 s. The guard observed:
+
+| Item | Actual | Cap |
+| --- | --- | --- |
+| LLM calls | 2 (preflight + discovery) | 3 |
+| Prompt tokens | 3,547 | ~48,000 |
+| Completion tokens | 1,401 | 6,144 |
+| Discovery completion | 1,398 | 2,048 |
+| Tavily basic searches | 15 (7 initial + 4 round 2 + 4 round 3) | 24 |
+| Guard violations | 0 | 0 |
+| Job elapsed | 57.476 s | 480 s |
+| Total elapsed (guard) | 66.69 s | 480 s |
+
+Estimated cost:
+
+- DeepSeek off-peak: 3,547 × $0.15/M + 1,401 × $0.60/M = **$0.001373**.
+- Tavily: 15 credits × $0.008 = **$0.12** if paid; $0 if still on free credits.
+- Worst-case total if Tavily was paid: **$0.1227**, below the $0.25 cap.
+
+Result: 35 events ending in `job.completed`; graph 45 nodes / 139 edges (not
+truncated); report 6 sections / 22 citations; 10 sources; 0 verified / 22
+unverified (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`); 4 conflicts; 2 gaps. The
+region gate kept 24 and dropped 7 (6 `other_region`, 1 `national`); persisted
+source verdicts are 9 `region` / 1 `unknown`.
+
+Both supplemental rounds returned three documents each, so the empty-follow-up
+branch was not exercised live; the three offline regressions remain its direct
+evidence. The target window still produced zero in-window claims: of 136 persisted
+claims, none has a 2024 period. The fifth run also exposed an unresolved
+claim-region false positive (`年全县` 10 claims, `占全县` 1) recorded in
+`docs/goal/LIVE_SMOKE.md`; it does not explain the 2024 gap because none of those
+claims is 2024. This is an engineering pass, not a research-quality pass.

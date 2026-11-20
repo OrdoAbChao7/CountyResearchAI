@@ -4,7 +4,7 @@
 分支：`codex/finish-roadmap`
 工作树：`E:\Projects\CountyResearchAI-finish-roadmap`
 实施起点：`d7a5dc4b3fa3bf8648487af418bee3e3971d0fb4`
-代码 HEAD：`d186577`
+代码 HEAD：`d186577`；补充修复：`daa0b83`
 依据：`docs/goal/2024_PERIOD_COVERAGE_AUDIT.md`
 
 性质：离线实施与离线测试。未调用真实付费 LLM/搜索 API，未修改 `.env`，
@@ -12,8 +12,9 @@
 Verifier，未制造 2024 年数据。
 
 追加（2026-11-20）：用户随后说“跑第四次 Live”，授权并执行了一次受限付费
-Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节保留修复实施时的
-记录。
+Live；该运行在自适应补充检索阶段失败，见 §11。用户又说“跑第五次”，授权并
+执行了空结果修复后的验证运行；该运行完成但研究结果仍为 `NO_PROGRESS`，见
+§13。第 1–10 节保留修复实施时的记录。
 
 ## 1. 结果摘要
 
@@ -26,6 +27,7 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 | 5. 日期解析与内容截断 | `c6d98a6` | 完成 |
 | 补充回归：相邻年份窗口 | `d186577` | 完成 |
 | 补充：adaptive 空结果处理 | `daa0b83` | 完成 |
+| 补充 Live：第五次验证 | §13 | 工程完成；研究仍 `NO_PROGRESS`，无 2024 Claim |
 
 最终验证：
 
@@ -33,10 +35,11 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 | --- | --- |
 | 新增/相关目标回归（8 个模块） | `85 passed in 1.10s` |
 | P0 三个模块 | `49 passed in 2.96s` |
-| 全量后端 | `827 passed in 35.24s` |
+| 全量后端 | `827 passed in 35.24s`；空结果修复后 `830 passed` |
 | Ruff | `ruff check src tests` → `All checks passed!` |
 
-真实 2024 检索与 Live outcome 未验证，见 §8。
+真实 2024 检索与 Live outcome 未验证，见 §8；第五次已完成，但仍为
+0 in-window / 0 verified，见 §13。
 
 ## 2. Phase 1：Claim 级区域归属
 
@@ -216,11 +219,12 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 
 ## 8. 未解决问题与未验证事项
 
-1. **第四次付费 Live 已执行，但未完成**。2026-11-20 的第四次 Live 在
-   `collect_adaptive` 补充检索阶段因空 gov 结果触发 `fail_fast` 而 `FAILED`；
-   真实 2024 资料是否可验证、最终 outcome 是否改善仍未验证。当前结论仍为
-   工程修复，见 §11。该失败的空结果处理已在 §12 修复并加回归；仍需第五次
-   Live 验证。
+1. **第四次付费 Live 失败，第五次完成但研究未达标**。2026-11-20 的第四次
+   Live 在 `collect_adaptive` 补充检索阶段因空 gov 结果触发 `fail_fast` 而
+   `FAILED`；空结果处理已在 §12 修复并加回归。第五次 Live 随后完成，job
+   `SUCCEEDED`，两轮补充均为 3 条文档，最终 0 in-window / 0 verified，
+   `NO_PROGRESS`。真实 2024 资料是否可验证仍未证明，见 §13。修复没有放宽
+   Verifier。
 2. **没有制造 2024 数据**。若公开资料中缺少目标年，系统会保持
    `INSUFFICIENT_DATA` / `NO_PROGRESS`，这是预期行为。
 3. **区域分类器未重写**。`search/region_relevance.py` 只增加公开包装；文档级
@@ -237,6 +241,13 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 8. **任务描述中的 `search/processor.py` 不存在**。正文清洗与截断实际位于
    `src/county_research_ai/processor.py`，本次已检查并保持 provider 元数据；
    `config.py` 的 `detail_max_chars` / `max_evidence_length` 阈值未修改。
+9. **第五次 Live 暴露 Claim 级区域误判，尚未修复**。10 条 Claim 的
+   `region_id=年全县`、1 条为 `占全县`，均来自 `region_source=claim`。
+   `search/region_relevance.py:48` 的地名正则把 `2023年全县...` 取成
+   `年全县`；`evidence/claim_region.py:153` 只检查完整 `安吉县`，随后将该
+   token 当作其他区域（`:174`）。这 11 条不在 22 条报告 finding 中，也没有
+   2024 期间，因此不是 2024 缺口的解释；但它会错误排除县域 Claim，需单独
+   修复并加回归，不能通过放宽 Verifier 解决。
 
 ## 9. 文件变更范围
 
@@ -296,11 +307,20 @@ Live；该运行在自适应补充检索阶段失败，见 §11。第 1–10 节
 - `experiments/quality/live_smoke_20261120_fourth/report.json`
 - `experiments/quality/live_smoke_20261120_fourth/report.md`
 
+第五次运行追加：
+
+- `scripts/run_live_smoke.py`（授权字符串追加“跑第五次”）
+- `experiments/quality/live_smoke_20261120_fifth/README.md`
+- `experiments/quality/live_smoke_20261120_fifth/summary.json`
+- `experiments/quality/live_smoke_20261120_fifth/report.json`
+- `experiments/quality/live_smoke_20261120_fifth/report.md`
+
 ## 10. 停止状态
 
 五个 Phase 已独立提交、独立测试。工作树在本次修复提交后保持干净（文档提交除
 外）。按当时的授权要求停止，不执行第四次 Live、不 Push、不合并主线。追加：
-2026-11-20 用户授权并执行了第四次 Live，结果见 §11；仍未 Push、未合并主线。
+2026-11-20 用户授权并执行了第四次 Live，结果见 §11；随后授权并执行第五次
+Live，结果见 §13；仍未 Push、未合并主线。
 
 ## 11. 第四次 Live（2026-11-20 追加）
 
@@ -347,7 +367,8 @@ PYTHONPATH=src python scripts/run_live_smoke.py \
 结论：第四次 Live 是工程链路的**部分**验证，不是 2024 检索成功，也不是 Live
 quality PASS。它证明区域闸门、2024 目标年传递、期间覆盖事件和补充查询文本在真实
 provider 下工作；但 job 在补充检索阶段失败，未产生验证、图谱或报告。空结果处理
-已按 §12 修复并加回归；下一步需申请第五次授权，验证真实 provider 路径。
+已按 §12 修复并加回归；第五次随后获授权并完成（§13），证明非空补充轮可以完成，
+但目标年仍为 0 in-window，空轮分支仍只有离线回归。
 
 ## 12. 补充修复：adaptive 补充检索空结果（2026-11-20）
 
@@ -381,4 +402,68 @@ provider 下工作；但 job 在补充检索阶段失败，未产生验证、图
 | 全量后端 | `830 passed in 23.53s` |
 | Ruff | `ruff check src tests` → `All checks passed!` |
 | 付费调用 | 无 |
-| 第五次 Live | 未执行；需单独授权 |
+| 第五次 Live | 已执行；见 §13 |
+
+## 13. 第五次 Live（2026-11-20 追加）
+
+用户说“跑第五次”，授权一次受限付费 smoke，验证空结果修复后的 adaptive
+补充路径。命令：
+
+```bash
+cd E:/Projects/CountyResearchAI-finish-roadmap
+LIVE_SMOKE_RUN_ROOT=experiments/quality/live_smoke_20261120_fifth \
+LLM_PROVIDER=deepseek \
+LLM_BASE_URL=https://api.deepseek.com/v1 \
+LLM_MODEL=deepseek-flash \
+SEARCH_PROVIDER=tavily \
+PYTHONPATH=E:/Projects/CountyResearchAI-finish-roadmap/src \
+python scripts/run_live_smoke.py \
+  --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
+```
+
+| 检查 | 结果 |
+| --- | --- |
+| Job | `27a8fdb796f94b689ff4fbba78b2d798` |
+| 状态 | `SUCCEEDED` / `LIVE` / `NO_PROGRESS`（`no_supported_claims`） |
+| 用量 | 2 LLM / 4,948 tokens（发现 completion 1,398）；15 Tavily（7 初次 + 4 第二轮 + 4 第三轮）；0 违规 |
+| 时间 | job 57.476s；guard 66.69s |
+| 事件 | 35，最后 `job.completed` |
+| 区域闸门 | 初次 kept 24 / dropped 7（other_region 6, national 1）；持久化 9 region / 1 unknown |
+| 期间覆盖 | 首轮 target 2024；21 selected / 0 in-window；第二轮 22 selected / 0 in-window；5 个 missing slots；`period_gap=true` |
+| 补充轮 | 第二轮 4 条查询、抓取 12、保留 3；第三轮同 4 条查询、抓取 24、保留 3；`max_rounds_reached`；`total_turns=2` |
+| 证据 | 14 documents / 119 items / 17 region-excluded；question tree 4/6；gaps `q_policy`、`q_risks` |
+| 验证 | 0 verified / 22 unverified（21 `NOT_COMPARABLE`，1 `INSUFFICIENT`）；4 conflicts；2 gaps |
+| 图谱/报告 | 45 nodes / 139 edges（未截断）；6 sections / 22 citations / 10,578 chars |
+| 来源 | 10；来源 verdict 9 region / 1 unknown |
+| 成本 | 模型 $0.001373；Tavily 15 credits $0.12；≤ $0.1227 |
+
+### 结果与诊断
+
+- 修复后的路径完成：job 进入验证、证据持久化、图谱和报告，没有再因补充检索
+  空结果抛 `SearchError`，也没有进入 `job.failed`。
+- 空结果分支本身**未被**真实触发：第二轮和第三轮各返回 3 条文档；空 gov
+  分支仍只有 3 条离线回归作为证据。这次 Live 证明的是“非空补充轮可以完成”，
+  不是“空轮在真实 provider 下也已验证”。
+- 目标年仍未覆盖：136 条 Claim 中 110 条为 2025、16 条无期间、4 条 2023、
+  3 条 2022，另有 2018/2007/2005 各 1 条；没有任何 2024 期间 Claim，两轮
+  补充均为 0 in-window。报告 22 条 finding 中，17 条 2025 期间和 4 条无期间
+  为 `NOT_COMPARABLE`，1 条 2007 且区域未知为 `INSUFFICIENT`。
+- 第三轮重复了第二轮的 4 条查询，未带来新的 in-window Claim；这是效率问题，
+  不是失败，15 次搜索仍在 24 次上限内。
+- 第五次暴露一个独立的 Claim 级区域误判：10 条 Claim 的
+  `region_id=年全县`、1 条为 `占全县`，均来自 `region_source=claim`。
+  `search/region_relevance.py:48` 的地名正则把 `2023年全县...` 取成
+  `年全县`；`evidence/claim_region.py:153` 只检查完整 `安吉县`，随后将该
+  token 当作其他区域（`:174`）。这 11 条不在 22 条报告 finding 中，也没有
+  2024 期间，因此不是 2024 缺口的解释；但它会错误排除县域 Claim，需单独
+  修复和加回归，不能通过放宽 Verifier 解决。
+- `summary.json` 的 `verdict` 是 `PASS_ENGINEERING`，不是研究质量结论；
+  `research_verdict` 为 `NO_SUPPORTED_CLAIMS`。没有制造 2024 数据，没有
+  放宽期间或区域核验标准。
+
+### 结论
+
+第五次 Live 证明空结果修复后的 adaptive 路径可以完成并产出图谱/报告，但
+没有证明空轮本身、也没有证明真实 2024 检索。工程结论为
+`PASS_ENGINEERING`，研究结论仍为 `NO_PROGRESS`；第六次 Live 未获授权，
+未 Push、未合并主线。

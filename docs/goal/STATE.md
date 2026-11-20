@@ -184,29 +184,30 @@ number above is a synthetic projection test, not a real investigation.
 
 ## Live smoke (2026-11-20)
 
-Four explicitly authorized paid smokes ran through the real API path: the
+Five explicitly authorized paid smokes ran through the real API path: the
 initial run, one corrected follow-up (“再跑一次”), one region-gate verification
-(“跑第三次”), and one 2024-window / adaptive-retrieval verification
-(“跑第四次 Live”). The fourth failed in adaptive follow-up collection before
-verification. Full record: `docs/goal/LIVE_SMOKE.md`; budget and actual usage:
-`docs/goal/LIVE_SMOKE_COST_GATE.md`.
+(“跑第三次”), one 2024-window / adaptive-retrieval verification (“跑第四次
+Live”), and one verification of the repaired adaptive follow-up path
+(“跑第五次”). The fourth failed in adaptive follow-up collection before
+verification; the fifth completed. Full record: `docs/goal/LIVE_SMOKE.md`;
+budget and actual usage: `docs/goal/LIVE_SMOKE_COST_GATE.md`.
 
-| Item | First run | Second run | Third run | Fourth run |
-| --- | --- | --- | --- | --- |
-| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` | `007487e8e7494e3fba1770c1f7b0781f` | `4f4d6610f48248a599e6b112ce5b9ee0` |
-| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `FAILED` / `LIVE` |
-| Outcome | `NO_PROGRESS` | `NO_PROGRESS` | `NO_PROGRESS` | `FAILED` (`execution_error`) |
-| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) | `竹产业` | `竹产业` |
-| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches | 2 LLM / 4,693 tokens; 7 searches | 2 LLM / 4,651 tokens; 11 searches |
-| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges | 165 nodes / 1,077 edges | — (graph 409; report empty) |
-| Verification | 0 / 239 `NOT_COMPARABLE` | 0 / 224 `NOT_COMPARABLE` | 0 / 133 `NOT_COMPARABLE` | — (job failed before verification) |
-| Cost | ≤ $0.0578 | ≤ $0.0579 | ≤ $0.0585 | ≤ $0.0905 |
+| Item | First run | Second run | Third run | Fourth run | Fifth run |
+| --- | --- | --- | --- | --- | --- |
+| Job | `d367c9b2…` | `fdf7f3e86d444419967124236c4cc1ad` | `007487e8e7494e3fba1770c1f7b0781f` | `4f4d6610f48248a599e6b112ce5b9ee0` | `27a8fdb796f94b689ff4fbba78b2d798` |
+| Status | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `SUCCEEDED` / `LIVE` | `FAILED` / `LIVE` | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` | `NO_PROGRESS` | `NO_PROGRESS` | `FAILED` (`execution_error`) | `NO_PROGRESS` (`no_supported_claims`) |
+| Focus | `特色农业` (768 cap hit) | `竹产业` (explicit focus preserved) | `竹产业` | `竹产业` | `竹产业` |
+| Usage | 2 LLM / 3,619 tokens; 7 searches | 2 LLM / 3,944 tokens; 7 searches | 2 LLM / 4,693 tokens; 7 searches | 2 LLM / 4,651 tokens; 11 searches | 2 LLM / 4,948 tokens; 15 searches |
+| Projections | 273 nodes / 1,869 edges | 256 nodes / 1,785 edges | 165 nodes / 1,077 edges | — (graph 409; report empty) | 45 nodes / 139 edges |
+| Verification | 0 / 239 `NOT_COMPARABLE` | 0 / 224 `NOT_COMPARABLE` | 0 / 133 `NOT_COMPARABLE` | — (job failed before verification) | 0 / 22 (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`) |
+| Cost | ≤ $0.0578 | ≤ $0.0579 | ≤ $0.0585 | ≤ $0.0905 | ≤ $0.1227 |
 
 Findings: the root `.env` has a Gemini endpoint/model paired with a DeepSeek
 key (smokes used process overrides and left `.env` untouched). The focus fix
 works: `stage.discover.completed` and the question tree report `竹产业`. The
-first three runs accepted zero claims; the 2024 window rejected the available
-2023/2025/2026 (and 2011) material. A deterministic region gate
+first three runs and the fifth accepted zero claims; the 2024 window rejected
+the available 2023/2025/2026 (and 2011) material. A deterministic region gate
 (`search/region_relevance.py`) drops other-region, national and
 upper-level-only results before ranking and ingestion. The third run exercised
 it live: the national/Fujian/Luoyang pages from the second run were gone, and
@@ -229,18 +230,34 @@ and raised `SearchError`. The job failed before verification, evidence
 persistence, graph and report. No code was changed for this run; the root cause
 and an offline reproduction are recorded in `LIVE_SMOKE.md`.
 
+The fifth run is the first completed live exercise of the repaired adaptive
+path. The region gate kept 24 and dropped 7 (6 other-region, 1 national);
+9 persisted sources are `region` and 1 `unknown`. Initial coverage had 21
+selected claims and 0 in-window; rounds 2 and 3 each returned 3 documents, with
+coverage still 22 selected / 0 in-window, and the controller stopped with
+`max_rounds_reached` (`total_turns=2`). The job reached `job.completed` with 35
+events, graph 45 nodes / 139 edges and a 6-section report; 10 sources, 0 verified
+/ 22 unverified (21 `NOT_COMPARABLE`, 1 `INSUFFICIENT`), 4 conflicts and 2 gaps.
+No persisted claim has a 2024 period. The specific empty-follow-up branch was
+not reproduced. The run also exposed an unresolved claim-region false positive:
+10 claims are tagged `年全县` and one `占全县`; these are malformed place tokens
+for county text such as `2023年全县...`, and none is a 2024 claim. Details are in
+`LIVE_SMOKE.md`; the 22 report findings are not among these claims.
+
 Follow-up fix: `SearchCollector._run_tasks` now counts failed tasks separately
 from successful empty results and raises `SearchError` only when every task
 raised. An empty adaptive follow-up returns an empty result; the controller
 stops with `ZERO_MARGINAL_EVIDENCE` and the job continues with existing
 evidence. Three regressions were added in `tests/test_search_collector.py`;
-the full suite is `830 passed`, Ruff is clean, and no paid call was made. A
-fifth Live run has not been made and still needs a fresh authorization.
+the full suite is `830 passed`, Ruff is clean, and no paid call was made for the
+fix. The fifth run later completed with non-empty follow-ups; the empty branch
+itself remains verified only offline, and no further paid run is authorized.
 
 ## 2024 period coverage and claim region fix (2026-11-20)
 
 Worktree `E:\Projects\CountyResearchAI-finish-roadmap`, branch
-`codex/finish-roadmap`, code HEAD after this work `d186577`. Commits:
+`codex/finish-roadmap`, code HEAD after this work `d186577`; the empty-result
+fix is `daa0b83`. Commits:
 
 | Phase | Commit | Result |
 | --- | --- | --- |
@@ -260,11 +277,18 @@ Verification at code HEAD:
 | Targeted new regressions | `85 passed` across region, window, adaptive, period, ledger and provider tests |
 | Ruff | `ruff check src tests` → `All checks passed!` |
 
-Not yet established: a fourth paid Live run was executed on 2026-11-20, but it
-failed in the adaptive follow-up before verification. It did show live 2024
-period coverage (1 in-window claim/source) and target-year follow-up query
-texts, then aborted because `fail_fast` treated four empty gov-channel results
-as a search failure. Real retrieval of 2024 material and a completed Live-style
-outcome are therefore still not demonstrated; the final outcome could still be
+Not yet established: the fourth paid Live run failed in the adaptive follow-up
+before verification. It did show live 2024 period coverage (1 in-window
+claim/source) and target-year follow-up query texts, then aborted because
+`fail_fast` treated four empty gov-channel results as a search failure. The
+fifth paid run completed after that fix: it recorded the 2024 target window and
+two non-empty follow-up rounds, reached graph/report, but still had 0 in-window
+claims and 0 verified facts; no persisted claim has a 2024 period. The repaired
+path is therefore demonstrated for non-empty follow-ups, not for the empty
+branch itself. Real retrieval of 2024 material and a completed Live-style
+research outcome are still not demonstrated; the final outcome could still be
 `INSUFFICIENT_DATA`/`NO_PROGRESS` if the target year is absent. The fix changes
-retrieval and extraction, not the verifier's acceptance standard.
+retrieval and extraction, not the verifier's acceptance standard. The fifth run
+also exposed an unresolved claim-region false positive (`年全县` 10 claims,
+`占全县` 1) that is separate from the 2024 gap and still needs a fix and
+regression.

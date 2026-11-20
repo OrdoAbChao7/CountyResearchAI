@@ -1,24 +1,28 @@
 # Live Smoke Record — 2026-11-20
 
-Status: runs 1–3 `PASS_ENGINEERING`; run 4 `FAILED` / `NO_SUPPORTED_CLAIMS`;
-follow-up fix offline
+Status: runs 1–3 and 5 `PASS_ENGINEERING`; run 4 `FAILED`; run 5
+`NO_PROGRESS` (`no_supported_claims`); adaptive path completed, empty branch
+offline-only
 
-This records **four** explicitly authorized Live runs: the initial smoke, one
+This records **five** explicitly authorized Live runs: the initial smoke, one
 corrected follow-up (“再跑一次”), one region-gate verification (“跑第三次”),
-and one 2024-window / adaptive-retrieval verification (“跑第四次 Live”). Runs
-1–3 completed; run 4 failed in the adaptive follow-up collection before
+one 2024-window / adaptive-retrieval verification (“跑第四次 Live”), and one
+verification of the repaired adaptive follow-up path (“跑第五次”). Runs 1–3 and
+5 completed; run 4 failed in the adaptive follow-up collection before
 verification. They prove that the real FastAPI job path, DeepSeek client,
-Tavily provider, event stream, region gate and (for runs 1–3) evidence graph and
-report projections work together. They are **not** a Live evaluation, do not
-replace MOCK tests, and do not satisfy M5.
+Tavily provider, event stream, region gate, evidence graph and report
+projections work together (runs 1–3 and 5) and that the repaired follow-up path
+can finish with real providers (run 5). They are **not** a Live evaluation, do
+not replace MOCK tests, and do not satisfy M5.
 
 - Cost gate: [LIVE_SMOKE_COST_GATE.md](LIVE_SMOKE_COST_GATE.md)
 - Script: `scripts/run_live_smoke.py`
 - Artifacts: `experiments/quality/live_smoke_20261120/`,
   `experiments/quality/live_smoke_20261120_second/`,
   `experiments/quality/live_smoke_20261120_third/`,
-  `experiments/quality/live_smoke_20261120_fourth/`
-- Job: `d367c9b277cf47d086d28f9824d661e5`
+  `experiments/quality/live_smoke_20261120_fourth/`,
+  `experiments/quality/live_smoke_20261120_fifth/`
+- First job: `d367c9b277cf47d086d28f9824d661e5`
 - Command:
 
 ```bash
@@ -317,8 +321,8 @@ Consequences:
   `FAILED` state, not evidence that no sources existed.
 - The single in-window claim is only a coverage count. It was not verified and
   is not a 2024 research result.
-- No second paid attempt was made after the failure. A fifth run would need a
-  fresh authorization to verify the fixed follow-up path live.
+- No second paid attempt was made after the failure. A fifth run was later
+  authorized by “跑第五次”; it completed and is recorded below.
 
 ### Follow-up fix (offline, 2026-11-20)
 
@@ -337,8 +341,96 @@ Regressions in `tests/test_search_collector.py`:
 - `test_mixed_empty_and_error_does_not_fail_fast` — one empty success plus one
   provider error is not an all-task failure.
 
-`pytest --no-cov -q` → `830 passed`; `ruff check src tests` → clean. No fifth
-Live run has been made; it still needs a fresh authorization.
+`pytest --no-cov -q` → `830 passed`; `ruff check src tests` → clean. The fifth
+run was later authorized and exercised this repaired path with a real provider;
+because both follow-up rounds returned documents, it did not exercise the empty
+branch itself. See the fifth-run section below.
+
+## Fifth run (adaptive follow-up verification, 2026-11-20)
+
+The user then said “跑第五次”, authorizing one further bounded smoke to verify
+the repaired adaptive follow-up path with a real provider. Command:
+
+```bash
+LIVE_SMOKE_RUN_ROOT=experiments/quality/live_smoke_20261120_fifth \
+LLM_PROVIDER=deepseek \
+LLM_BASE_URL=https://api.deepseek.com/v1 \
+LLM_MODEL=deepseek-flash \
+SEARCH_PROVIDER=tavily \
+PYTHONPATH=src python scripts/run_live_smoke.py \
+  --env-file E:/Projects/CountyResearchAI/.env --confirm-paid
+```
+
+| Item | Fifth run |
+| --- | --- |
+| Job | `27a8fdb796f94b689ff4fbba78b2d798` |
+| Status / mode | `SUCCEEDED` / `LIVE` |
+| Outcome | `NO_PROGRESS` (`no_supported_claims`) |
+| Focus | `竹产业` |
+| LLM / tokens | 2 / 4,948 (preflight 13; discovery completion 1,398 < 2,048) |
+| Searches | 15 Tavily basic (7 initial + 4 round 2 + 4 round 3) |
+| Events | 35, ending in `job.completed` |
+| Graph | 45 nodes / 139 edges, not truncated |
+| Report | 6 sections, 22 citations, 10,578 characters |
+| Verification | 0 verified / 22 unverified: 21 `NOT_COMPARABLE`, 1 `INSUFFICIENT` |
+| Conflicts / gaps | 4 / 2 |
+| Sources | 10; persisted verdicts 9 `region` / 1 `unknown` |
+| Region gate | 24 kept / 7 dropped (6 `other_region`, 1 `national`) |
+| Adaptive stop | `max_rounds_reached`; `total_turns=2` |
+| Guard | 0 violations; job 57.476 s; guard 66.69 s |
+| Estimated cost | model $0.001373; Tavily $0.12; ≤ $0.1227 |
+
+What the repaired path did:
+
+- The initial `retrieval.period_coverage` reported target `2024`, 21 selected
+  claims, 0 in-window claims/sources, `period_gap=true`, and five missing slots.
+- Round 2 generated four target-year queries:
+  `安吉县 2024年 统计年鉴 统计公报 主要经济指标`,
+  `安吉县 竹产业 2024年 产值 产量 统计数据`,
+  `安吉县 2024年 统计公报 国民经济 竹产业 产值 产量 面积 最新`, and
+  `安吉县 2024年 竹产业 安吉县竹产业产业结构与县域贡献`.
+  It fetched 12 documents and kept 3; coverage stayed at 22 selected, 0
+  in-window.
+- Round 3 sent the same four queries, fetched 24 documents (cumulative) and
+  kept 3; the controller then stopped with `max_rounds_reached`. The repeated
+  query set produced no new in-window claim; this is an efficiency observation,
+  not a failure, and all 15 searches remained within the 24-search cap.
+- The job continued through `evidence.ingested` (14 documents / 119 items / 17
+  region-excluded), question-tree coverage 4/6, gaps `q_policy`/`q_risks`,
+  conflicts, synthesis, evidence persistence, graph projection and report
+  rendering. This is the repaired path completing instead of raising
+  `SearchError`.
+
+What the run found:
+
+- The verifier accepted no claim. The 22 report findings are 21
+  `NOT_COMPARABLE` (17 outside the requested window with period `2025`, four
+  with a missing period) plus one `INSUFFICIENT` claim from 2007 with an unknown
+  region.
+- No persisted claim has a 2024 period. Of 136 claims, 110 are `2025`, 16 have
+  no period, four are `2023`, three are `2022`, and one each is
+  `2018`/`2007`/`2005`. The supplemental rounds changed the source mix but did
+  not produce a 2024 claim. The 2024 statistical bulletin was not present in
+  this result set; no 2024 data was fabricated.
+- The specific empty-follow-up branch was **not** exercised: both supplemental
+  rounds returned three documents. The three offline regressions remain the
+  direct evidence for that fix.
+- A separate claim-region false positive is visible in the evidence store: 10
+  claims have `region_id=年全县` and one has `占全县`, all with
+  `region_source=claim`. Statements such as `2023年全县竹产业总产值达到180.28亿元`
+  are tokenised as `年全县` by the place-name regex
+  (`search/region_relevance.py:48`); `classify_claim_region` checks the full
+  `安吉县` in claim text and then treats that token as another region
+  (`evidence/claim_region.py:153`, `:174`). The 22 report findings are not among
+  these 11 claims, and none of the 11 carries a 2024 period, so this is not the
+  explanation for the 2024 gap. It is an unresolved claim-attribution defect:
+  it wrongly excludes county-level claims and needs a separate fix and
+  regression before another quality conclusion.
+
+Verdict: engineering `PASS_ENGINEERING`; research `NO_PROGRESS`; real 2024
+coverage is still **not demonstrated**. The run proves that the repaired
+adaptive path completes with non-empty follow-ups, not that the empty branch is
+live-correct, and not that the live 2024 retrieval problem is solved.
 
 ## What this does and does not prove
 
@@ -348,44 +440,62 @@ Proved:
 - Tavily basic search with the existing provider adapter;
 - real job execution through the existing SQLite `JobStore`/`JobRunner`;
 - fine-grained events, evidence persistence, graph projection and report
-  projection on live data (runs 1–3; run 4 failed before persistence);
+  projection on live data (runs 1–3 and 5; run 4 failed before persistence);
 - an explicit contract focus is preserved through discovery after the fix;
 - the region gate runs live: the third run kept its persisted set Anji-centred,
-  and the fourth run dropped 3 other-region plus 1 national result before
-  ingestion;
+  the fourth run dropped 3 other-region plus 1 national result before ingestion,
+  and the fifth run kept 24 / dropped 7 (6 other-region, 1 national) with 9
+  `region` / 1 `unknown` persisted source verdicts;
 - the fourth run recorded a 2024 `retrieval.period_coverage` event (1 in-window
   claim/source) and four target-year follow-up query texts, so the Phase 2/3
   window and coverage plumbing is active with a real provider;
-- the retry/call caps and cost gate were respected in all four runs (no
+- the fifth run completed the repaired adaptive path with two non-empty
+  follow-up rounds and reached evidence persistence, graph and report instead of
+  failing in `collect_adaptive`;
+- the fifth run recorded a 2024 target window, real target-year query text and
+  `in_window_claim_count=0` in both rounds, so the absence of a 2024 result is
+  visible rather than silently promoted;
+- the retry/call caps and cost gate were respected in all five runs (no
   violations).
 
 Not proved:
 
 - Live research quality or supported-claim coverage;
 - that the fixed short-name rule behaves correctly under a fresh live provider
-  response (the fourth run exercised the gate but failed before completing);
-- that the 2024 fixes produce a verified 2024 claim or a completed report; the
-  fourth run failed in the adaptive follow-up before verification;
-- that the fixed adaptive follow-up path completes a full paid run; it has only
-  offline regressions so far;
+  response; the fifth run's source set did not exercise the Guizhou-plan
+  collision, so the third-run false positive still has only offline replay
+  evidence;
+- that the 2024 fixes produce a verified 2024 claim; the fifth run completed but
+  had zero in-window claims and zero verified facts;
+- that the fixed empty-follow-up branch completes a full paid run; the fifth
+  run's follow-up rounds both returned documents, so that branch has only
+  offline regressions;
+- that claim-level region attribution is correct in production; the fifth run
+  exposed 10 `年全县` and one `占全县` false positives (see above);
 - a Live evaluation, semantic Judge, 40–60 sealed tasks, or human adjudication;
-- that a fifth run is authorized.
+- that a sixth run is authorized.
 
 ## Next actions (not executed)
 
 1. Fix the root `.env` provider/model mismatch, or make the override explicit in
    a local launch profile.
-2. The adaptive follow-up error handling is fixed offline (see the follow-up
-   fix above). A fifth paid run is still needed to verify the changed path with
-   a real provider.
-3. Region relevance: the deterministic gate ran live in the fourth run (27 kept
-   / 4 dropped), but the specific short-name false positive from the third run
-   still has only offline replay evidence. Re-check it in the next completed
-   run.
-4. Inspect the `2024 → outside_requested_window:2026` claim against its source
+2. The adaptive empty-result handling is fixed offline. The fifth run verified
+   the repaired path with non-empty follow-ups; a future Live run whose
+   follow-up is genuinely all-empty would be needed to exercise the empty branch
+   itself. Do not run it without a new authorization.
+3. Fix the claim-region false positive: `年全县` / `占全县` tokens must not be
+   treated as other regions, and a boundary-safe short county name in claim text
+   must be considered. Add regressions using `2023年全县...` and
+   `2022年全县...` claims; do not loosen the verifier or the document gate.
+4. Region relevance: the deterministic gate ran live in the fourth and fifth
+   runs, but the specific short-name false positive from the third run still has
+   only offline replay evidence. Re-check it in a future completed run that
+   retrieves the Guizhou plan.
+5. Inspect the `2024 → outside_requested_window:2026` claim against its source
    span and add a regression if the period parser is wrong.
-5. Decide whether the smoke contract should use a wider date window or a
-   2024-specific source set; the current 2024 window rejects most available
-   live material.
-6. Ask for a fresh authorization before a fifth paid run; then repeat the
+6. Investigate the 2024 retrieval gap: the fifth run found a 2025 bulletin and
+   older material but no 2024 period, so the query/source set, not only the
+   verifier, needs review. Decide whether the smoke contract should use a wider
+   window or a 2024-specific source set; do not relax the period guard.
+7. Ask for a fresh authorization before a sixth paid run; then repeat the
    bounded smoke and compare.
