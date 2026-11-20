@@ -263,6 +263,42 @@ def test_legacy_adapter_extracts_year_hints_for_period_packs():
     assert {"1956", "2018"}.issubset(years)
 
 
+def test_claim_period_uses_the_quote_year_not_the_document_year():
+    processed = ProcessedData(
+        county=CountyInfo.from_name("安吉县"),
+        focus="竹产业",
+        docs=[RawDoc(
+            title="2023年安吉县竹产业专报",
+            url="https://example.gov.cn/bamboo-2018",
+            content="2018年，安吉县竹产业总产值达到280亿元。",
+        )],
+    )
+
+    ledger = build_evidence_ledger(processed)
+
+    periods = {claim.period for claim in ledger.claims.values()}
+    assert "2018" in periods
+    assert "2023" not in periods
+
+
+def test_claim_period_keeps_a_plan_target_outside_the_document_year():
+    processed = ProcessedData(
+        county=CountyInfo.from_name("安吉县"),
+        focus="竹产业",
+        docs=[RawDoc(
+            title="2026年安吉县竹产业发展规划",
+            url="https://example.gov.cn/plan-2030",
+            content="到2030年，安吉县竹产业总产值目标达到500亿元。",
+        )],
+    )
+
+    ledger = build_evidence_ledger(processed)
+
+    periods = {claim.period for claim in ledger.claims.values()}
+    assert "2030" in periods
+    assert "2026" not in periods
+
+
 def test_ledger_keeps_versioned_values_as_distinct_claims_and_missing_evidence_visible():
     ledger = EvidenceLedger()
     ledger.add_source(_source("source-1", "https://example.gov.cn/1", "旧值"))

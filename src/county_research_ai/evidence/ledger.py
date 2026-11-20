@@ -13,7 +13,7 @@ from ..domain.research_contracts import (
 )
 from ..models import ProcessedData
 from .claim_region import classify_claim_region
-from .measure import derive_measure_key, infer_period
+from .measure import derive_measure_key, infer_claim_period
 from .source_contract import serialize_source_documents
 from .store import EvidenceStore
 
@@ -411,13 +411,14 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
         )
         if not chunk_text and source is not None:
             chunk_text = source.content
-        period = item.year or infer_period(
+        period = infer_claim_period(
             item.claim,
             chunk_text=chunk_text,
             value=value,
             title=source.source_title if source is not None else "",
             published_at=source.publish_date if source is not None else None,
             content_prefix=source.content if source is not None else "",
+            document_year=item.year or "",
         )
         source_ids = [source.doc_id] if source is not None else []
         for repost_url in item.corroborating_sources:

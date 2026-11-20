@@ -171,3 +171,58 @@ def test_period_is_inferred_only_from_evidence():
         == ""
     )
     assert infer_period("没有年份的声明") == ""
+
+
+def test_infer_claim_period_prefers_local_data_year():
+    from county_research_ai.evidence.measure import infer_claim_period
+
+    assert (
+        infer_claim_period(
+            "2018年安吉县竹产业总产值达到280亿元",
+            title="2023年安吉县竹产业专报",
+            document_year="2023",
+        )
+        == "2018"
+    )
+    assert (
+        infer_claim_period(
+            "到2030年，安吉县竹产业总产值目标达到500亿元",
+            title="2026年安吉县竹产业发展规划",
+            document_year="2026",
+        )
+        == "2030"
+    )
+
+
+def test_infer_claim_period_keeps_multi_year_span():
+    from county_research_ai.evidence.measure import infer_claim_period
+
+    assert (
+        infer_claim_period(
+            "2024-2025年安吉县竹产业累计产值达到500亿元",
+            title="2025年安吉县统计公报",
+            document_year="2025",
+        )
+        == "2024-2025"
+    )
+
+
+def test_infer_claim_period_uses_document_year_only_without_any_local_year():
+    from county_research_ai.evidence.measure import infer_claim_period
+
+    assert (
+        infer_claim_period(
+            "安吉县竹产业总产值达到280亿元",
+            title="安吉县竹产业专报",
+            document_year="2018",
+        )
+        == "2018"
+    )
+    assert (
+        infer_claim_period(
+            "2026年发布的数据显示安吉县竹产业产值达到280亿元",
+            title="安吉县竹产业专报",
+            document_year="2026",
+        )
+        == ""
+    )

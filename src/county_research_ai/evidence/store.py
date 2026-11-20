@@ -21,6 +21,7 @@ from ..models import (
     RawDoc,
 )
 from .claim_region import classify_claim_region
+from .measure import data_years
 
 # 常见产业统计指标抽取正则
 _NUMERICAL_STAT_PATTERNS = [
@@ -139,9 +140,10 @@ class EvidenceStore:
         lines = list(_iter_evidence_segments(full_text))
         extracted: list[EvidenceItem] = []
 
-        # 推断年份
-        year_match = re.search(r"(20[12]\d)年?", full_text[:400])
-        year_str = year_match.group(1) if year_match else None
+        # 推断年份：只接受唯一的、非发布/抓取标签的数据年份。
+        # 多个年份时保持为空，避免把文档级年份强加给每一条证据。
+        doc_years = sorted(set(data_years(full_text[:400])))
+        year_str = doc_years[0] if len(doc_years) == 1 else None
 
         seen_ids = set(self._items.keys())
 

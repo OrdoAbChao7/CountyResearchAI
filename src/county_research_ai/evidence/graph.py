@@ -1447,9 +1447,10 @@ class EvidenceGraphStore:
             return "claim_period_missing_for_window"
         low = start.year if start is not None else -9999
         high = end.year if end is not None else 9999
-        if any(low <= year <= high for year in years):
-            return ""
-        return f"outside_requested_window:{min(years)}"
+        outside = [year for year in years if not (low <= year <= high)]
+        if outside:
+            return f"outside_requested_window:{min(outside)}"
+        return ""
 
     def _has_supported_superseder(
         self,
