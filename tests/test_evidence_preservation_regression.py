@@ -2,9 +2,9 @@
 
 These cases reproduce data loss seen in the 2026-10-19 Deqing experiment.
 """
+from county_research_ai.evidence.store import EvidenceStore
 from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
 from county_research_ai.processor import DocumentProcessor
-from county_research_ai.evidence.store import EvidenceStore
 
 
 def test_long_statistics_report_is_extractable_after_cleaning():
