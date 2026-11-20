@@ -5,8 +5,12 @@
 """
 from __future__ import annotations
 
+import pytest
+
+from county_research_ai.exceptions import SearchError
 from county_research_ai.models import RawDoc
 from county_research_ai.search.adaptive_retrieval import (
+    AdaptiveQueryPlan,
     AdaptiveRetrievalController,
     RetrievalBudget,
 )
@@ -167,3 +171,81 @@ def test_collect_adaptive_executes_queries_already_reserved_by_controller(tmp_se
     assert len(plan.queries) == 1
     assert provider.calls == ["德清县 GDP"]
     assert result.usage["search_queries"] == 1
+
+
+class EmptyProvider(SearchProvider):
+    """A provider that successfully returns no result."""
+
+    name = "empty"
+
+    def __init__(self, name: str = "empty") -> None:
+        self.name = name
+        self.calls: list[str] = []
+
+    def search(self, query, max_results=10):
+        self.calls.append(query)
+        return []
+
+
+class FailingProvider(SearchProvider):
+    name = "failing"
+
+    def search(self, query, max_results=10):
+        raise RuntimeError("provider down")
+
+
+def _gov_plan():
+    spec = QueryEngine().generate_research_spec("安吉县", "竹产业", "snapshot")
+    query = GeneratedQuery(
+        query="安吉县 2024年 统计公报 国民经济 竹产业",
+        intent=QueryIntent.ECONOMIC_SCALE,
+        slot_id="snapshot:economic_scale",
+        target_channel="gov",
+    )
+    return AdaptiveQueryPlan(spec, [query], 2), query
+
+
+def test_empty_gov_followup_is_not_a_search_failure(tmp_settings):
+    plan, query = _gov_plan()
+    gov = EmptyProvider("empty-gov")
+    collector = SearchCollector(
+        web_provider=EmptyProvider("empty-web"),
+        gov_provider=gov,
+        settings=tmp_settings,
+    )
+
+    result = collector.collect_adaptive(plan)
+
+    assert gov.calls == [query.query]
+    assert result.documents == ()
+    assert result.usage["search_queries"] == 1
+    assert result.usage["fetched_documents"] == 0
+
+
+def test_all_provider_errors_still_fail_fast(tmp_settings):
+    collector = SearchCollector(
+        web_provider=FailingProvider(),
+        gov_provider=FailingProvider(),
+        settings=tmp_settings,
+        query_templates=["{county} {focus} 现状"],
+        gov_query_templates=["{county} 统计公报"],
+    )
+
+    with pytest.raises(SearchError) as excinfo:
+        collector.collect(county="安吉县", focus="竹产业")
+
+    context = excinfo.value.context
+    assert context["tasks_count"] == 2
+    assert context["failed_tasks"] == 2
+
+
+def test_mixed_empty_and_error_does_not_fail_fast(tmp_settings):
+    collector = SearchCollector(
+        web_provider=EmptyProvider("empty-web"),
+        gov_provider=FailingProvider(),
+        settings=tmp_settings,
+        query_templates=["{county} {focus} 现状"],
+        gov_query_templates=["{county} 统计公报"],
+    )
+
+    assert collector.collect(county="安吉县", focus="竹产业") == []

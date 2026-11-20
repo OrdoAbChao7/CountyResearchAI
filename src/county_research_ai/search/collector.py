@@ -322,41 +322,55 @@ class SearchCollector(SearchProvider):
         return list(result.kept)
 
     def _run_tasks(self, tasks: list[tuple[SearchProvider, str]]) -> list[RawDoc]:
-        """并发执行任务。"""
+        """并发执行任务。
+
+        A provider that returns no documents did not necessarily fail: an
+        adaptive gap query may legitimately have no matching result. Fail the
+        batch only when every task raised, so an empty follow-up round is left
+        to the controller's zero-marginal-evidence stop instead of aborting the
+        whole research job.
+        """
         results: list[RawDoc] = []
+        failed_tasks = 0
         per_task_timeout = max(10.0, float(self._settings.search.timeout) * 1.5)
 
-        def _worker(t: tuple[SearchProvider, str]) -> list[RawDoc]:
+        def _worker(t: tuple[SearchProvider, str]) -> tuple[list[RawDoc], bool]:
             provider, query = t
             name = provider.name
             try:
                 out = provider.search(query, max_results=self._max_results)
-                return out
+                return out, False
             except Exception as e:  # noqa: BLE001
                 logger.warning(
                     "收集失败(隔离) | provider=%s | query=%s | err=%s",
                     name, query, e,
                 )
-                return []
+                return [], True
 
         with ThreadPoolExecutor(max_workers=self._concurrency) as pool:
             futures = {pool.submit(_worker, t): t for t in tasks}
             for fut, (prov, query) in futures.items():
                 try:
-                    chunk = fut.result(timeout=per_task_timeout)
+                    chunk, failed = fut.result(timeout=per_task_timeout)
                 except _TimeoutError:
+                    failed_tasks += 1
                     logger.warning("收集超时 | provider=%s | query=%s", prov.name, query)
                     continue
                 except Exception as e:  # noqa: BLE001
+                    failed_tasks += 1
                     logger.warning("收集异常 | provider=%s | query=%s | err=%s", prov.name, query, e)
+                    continue
+                if failed:
+                    failed_tasks += 1
                     continue
                 results.extend(chunk)
 
-        if not results and self._fail_fast:
+        if not results and self._fail_fast and failed_tasks == len(tasks):
             raise SearchError(
                 "所有搜索任务均失败",
                 context={
                     "tasks_count": len(tasks),
+                    "failed_tasks": failed_tasks,
                     "providers": sorted({p.name for p, _ in tasks}),
                 },
             )
