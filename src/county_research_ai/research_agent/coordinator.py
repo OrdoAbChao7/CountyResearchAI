@@ -328,7 +328,7 @@ class DeepResearchCoordinator:
                     "supplemental": True,
                 },
             )
-            supp_docs = self._collect_supp(reflection.followup_queries)
+            supp_docs = self._collect_supp(reflection.followup_queries, county=county)
             emit(
                 "retrieval.round.completed",
                 stage="analyze",
@@ -589,11 +589,18 @@ class DeepResearchCoordinator:
             return self.collector.search(f"{county} {focus}", max_results=10)
         return []
 
-    def _collect_supp(self, queries: list[str]) -> list[RawDoc]:
+    def _collect_supp(self, queries: list[str], *, county: str = "") -> list[RawDoc]:
         if not self.collector:
             return []
         if hasattr(self.collector, "collect_supplemental"):
-            return self.collector.collect_supplemental(queries=queries, max_results=8)
+            try:
+                return self.collector.collect_supplemental(
+                    queries=queries, max_results=8, county=county
+                )
+            except TypeError:
+                # Custom collectors from older integrations do not accept the
+                # region hint; they keep their previous behaviour.
+                return self.collector.collect_supplemental(queries=queries, max_results=8)
         elif hasattr(self.collector, "search"):
             results: list[RawDoc] = []
             for q in queries[:3]:

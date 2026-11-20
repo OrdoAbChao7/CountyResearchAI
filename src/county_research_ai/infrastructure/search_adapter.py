@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ..domain.modes import ResearchMode
 from ..models import RawDoc
+from ..search.region_relevance import filter_documents_for_region
 
 
 class CollectorSearchAdapter:
@@ -52,7 +53,8 @@ class ProviderSearchAdapter:
                     without_url.append(doc)
                 elif doc.url not in by_url:
                     by_url[doc.url] = doc
-        return (list(by_url.values()) + without_url)[:max_results]
+        docs = (list(by_url.values()) + without_url)[:max_results]
+        return list(filter_documents_for_region(docs, county).kept)
 
     def collect_supplemental(
         self, queries: list[str], max_results: int = 10

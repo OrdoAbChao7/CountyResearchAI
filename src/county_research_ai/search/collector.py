@@ -36,6 +36,7 @@ from .content_extractor import (
 )
 from .gov_data import GovDataProvider
 from .query_engine import GeneratedQuery, QueryEngine
+from .region_relevance import filter_documents_for_region
 from .web_search import create_provider
 
 logger = logging.getLogger(__name__)
@@ -187,13 +188,15 @@ class SearchCollector(SearchProvider):
             logger.warning("没有可用的搜索 provider,返回空结果")
             return []
 
-        docs = self._run_tasks(tasks)
+        docs = self._filter_region_documents(self._run_tasks(tasks), county)
         return self._dedup_and_rank(docs, top=n, keywords=keywords, county=county)
 
     def collect_supplemental(
         self,
         queries: list[str],
         max_results: int = 10,
+        *,
+        county: str = "",
     ) -> list[RawDoc]:
         """多轮反思补充检索接口。执行针对性查询。"""
         tasks: list[tuple[SearchProvider, str]] = []
@@ -206,7 +209,7 @@ class SearchCollector(SearchProvider):
         if not tasks:
             return []
 
-        docs = self._run_tasks(tasks)
+        docs = self._filter_region_documents(self._run_tasks(tasks), county)
         return self._dedup_and_rank(docs, top=max_results, keywords=queries)
 
     def collect_adaptive(
@@ -236,6 +239,16 @@ class SearchCollector(SearchProvider):
         raw_docs = self._run_tasks(tasks)
         if controller:
             controller.record_fetches(len(raw_docs))
+        region_filter = filter_documents_for_region(raw_docs, plan.spec.region_name)
+        region_docs = list(region_filter.kept)
+        if region_filter.dropped:
+            logger.info(
+                "区域相关性过滤 | county=%s | kept=%d | dropped=%d | dropped_urls=%s",
+                plan.spec.region_name,
+                len(region_docs),
+                len(region_filter.dropped),
+                [doc.url for doc, _ in region_filter.dropped][:5],
+            )
         slots = {slot.slot_id: slot for slot in plan.spec.question_slots}
         ranked_by_url: dict[str, tuple[float, RawDoc]] = {}
         for generated in queries:
@@ -243,7 +256,7 @@ class SearchCollector(SearchProvider):
             if slot is None:
                 continue
             for item in rank_documents_for_slot(
-                raw_docs,
+                region_docs,
                 slot,
                 query=generated.query,
             ):
@@ -259,9 +272,28 @@ class SearchCollector(SearchProvider):
             usage={
                 "search_queries": len(tasks),
                 "fetched_documents": len(raw_docs),
+                "region_filtered_documents": len(region_filter.dropped),
                 "returned_documents": len(ranked),
             },
         )
+
+    @staticmethod
+    def _filter_region_documents(
+        docs: list[RawDoc], county: str
+    ) -> list[RawDoc]:
+        """Drop results that positively belong to another region or to the nation."""
+        if not county:
+            return docs
+        result = filter_documents_for_region(docs, county)
+        if result.dropped:
+            logger.info(
+                "区域相关性过滤 | county=%s | kept=%d | dropped=%d | dropped_urls=%s",
+                county,
+                len(result.kept),
+                len(result.dropped),
+                [doc.url for doc, _ in result.dropped][:5],
+            )
+        return list(result.kept)
 
     def _run_tasks(self, tasks: list[tuple[SearchProvider, str]]) -> list[RawDoc]:
         """并发执行任务。"""
