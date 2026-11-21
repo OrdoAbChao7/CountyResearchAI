@@ -74,3 +74,11 @@ class WorkflowRunner:
         # A report is the public result of a pipeline run. The disabled-report
         # path remains explicit so callers get a useful configuration error.
         raise RuntimeError("report stage is disabled; no ResearchRunResult exists")
+
+    @staticmethod
+    def _raise_if_cancelled(
+        should_cancel: Callable[[], bool] | None,
+        stage: str,
+    ) -> None:
+        if should_cancel is not None and should_cancel():
+            raise ResearchCancelledError(stage)
