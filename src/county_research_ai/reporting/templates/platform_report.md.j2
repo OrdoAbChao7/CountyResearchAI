@@ -1,0 +1,74 @@
+# {{ county }}{% if report.focus %} · {{ report.focus }}{% endif %} 产业智能研究报告
+
+> 生成时间：{{ generated_at }}　|　Run ID：`{{ report.run_id or "未记录" }}`
+> 研究问题：{{ report.research_question or "（由 Supervisor 自动拆解）" }}
+{% if report.degraded %}
+> ⚠ 本次运行在部分外部服务不可用的降级模式下完成；标注为 inferred/unverified 的结论需进一步核实。
+{% endif %}
+
+## 执行摘要
+
+{{ report.executive_summary or "_本次运行未生成执行摘要。_" }}
+
+{% for section in report.sections %}
+## {{ section.title }}
+
+{{ section.content }}
+
+{% endfor %}
+
+{% if report.opportunities %}
+## 产业链缺口与招商机会（Star A: Gap Radar）
+
+| # | 机会 | 缺口类型 | 评分 | 证据状态 |
+| :--- | :--- | :--- | :---: | :--- |
+{% for op in report.opportunities %}
+| {{ loop.index }} | {{ op.title }}{% if op.segment %}（{{ op.segment }}）{% endif %} | {{ op.gap_type.value }} | {{ "%.2f"|format(op.score) }} | {{ op.verification_status.value }} |
+{% endfor %}
+
+{% for op in report.opportunities %}
+### {{ loop.index }}. {{ op.title }}
+
+- **缺口判断**：{{ op.description }}
+- **依据**：{{ op.rationale }}
+{% if op.target_enterprises %}- **候选目标企业**：{{ op.target_enterprises | join("、") }}{% endif %}
+{% if op.suggested_actions %}- **建议动作**：{{ op.suggested_actions | join("；") }}{% endif %}
+- **证据**：{% if op.evidence_ids %}{{ op.evidence_ids | join(", ") }}{% else %}暂无直接证据（该机会为模型推断）{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if report.agent_summaries %}
+## Agent 研究结论
+
+{% for agent, summary in report.agent_summaries.items() %}
+### {{ agent }}
+
+{{ summary }}
+
+{% endfor %}
+{% endif %}
+
+{% if report.gaps %}
+## 研究缺口与待核实事项
+
+{% for gap in report.gaps %}
+- {{ gap }}
+{% endfor %}
+{% endif %}
+
+## 证据索引
+
+{% if report.evidence_index %}
+| Evidence ID | 结论/事实 | 来源 | 可信度 | 状态 |
+| :--- | :--- | :--- | :---: | :--- |
+{% for item in report.evidence_index %}
+| `{{ item.id }}` | {{ item.claim[:60] }}{% if item.claim|length > 60 %}…{% endif %} | [{{ item.title[:30] }}]({{ item.url }}) | {{ "%.2f"|format(item.credibility_score) }} | {{ item.verification_status }} |
+{% endfor %}
+{% else %}
+_本次运行未产生结构化证据项。_
+{% endif %}
+
+---
+
+_本报告由 Agentic Industrial Intelligence Platform 生成。所有数值型结论均由确定性算法或证据条目支撑；模型推断内容已显式标注。_

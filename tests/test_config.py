@@ -30,12 +30,20 @@ class TestSettingsDefaults:
         assert s.search.concurrency == 3
         assert s.search.fetch_detail is True
 
-    def test_default_pipeline_config(self):
+    def test_default_agent_runtime_config(self):
         s = Settings()
-        assert s.pipeline.mode == "sequential"
-        assert s.pipeline.fail_fast is True
-        assert s.pipeline.stages.search is True
-        assert s.pipeline.stages.analyze is True
+        assert s.runtime.fail_fast is False
+        assert s.agents.max_steps >= 1
+        assert s.agents.max_llm_calls >= 1
+        assert s.agents.max_rounds >= 1
+        assert s.agents.max_specialists >= 3
+
+    def test_default_graph_and_api_config(self):
+        s = Settings()
+        assert s.graph.backend == "memory"
+        assert s.api.port == 8000
+        assert s.simulation.engine == "baseline"
+        assert s.temporal.enabled is True
 
     def test_path_constants(self):
         s = Settings()
@@ -178,6 +186,7 @@ class TestResolvePaths:
         # 未设置 storage.data_dir 时,使用项目默认路径
         assert s.data_dir == PROJECT_ROOT / "data"
         assert s.reports_dir == PROJECT_ROOT / "reports"
+        assert s.runs_dir == PROJECT_ROOT / "data" / "runs"
 
     def test_custom_paths(self, tmp_path):
         s = Settings(
@@ -190,6 +199,7 @@ class TestResolvePaths:
         s = _resolve_paths(s)
         assert s.data_dir == (tmp_path / "mydata").resolve()
         assert s.reports_dir == (tmp_path / "myreports").resolve()
+        assert s.runs_dir == (tmp_path / "mydata" / "runs").resolve()
 
 
 class TestLoadSettings:
@@ -197,10 +207,10 @@ class TestLoadSettings:
         """load_settings 能正常加载 config/settings.yaml。"""
         reset_settings()
         s = load_settings()
-        assert s.app.name == "AI县域产业研究助手"
-        assert s.app.version == "0.1.0"
+        assert s.app.name == "CountyResearchAI · Agentic Industrial Intelligence Platform"
+        assert s.app.version == "0.2.0"
         assert s.llm.temperature == 0.3
-        assert s.pipeline.mode == "sequential"
+        assert s.agents.max_rounds >= 1
 
     def test_get_settings_caches_in_singleton(self):
         """get_settings 单例:多次调用返回同一实例;load_settings 不写入单例。"""
