@@ -231,7 +231,7 @@ class LLMAnalyzer:
             return resp.content
         except Exception as e:
             logger.warning("摘要生成失败(降级为简易摘要) | err=%s", e)
-            if self._settings.pipeline.fail_fast:
+            if self._settings.runtime.fail_fast:
                 raise
             # 降级:从首个分析抽取首段
             return self._fallback_summary(county, focus, analyses)
@@ -290,7 +290,7 @@ class LLMAnalyzer:
             logger.warning(
                 "产业方向发现失败(降级为通用推断) | err=%s", e, exc_info=True,
             )
-            if self._settings.pipeline.fail_fast:
+            if self._settings.runtime.fail_fast:
                 raise
             return self._fallback_discovery(county)
 
@@ -468,7 +468,7 @@ class LLMAnalyzer:
                 "分析任务失败(降级为占位) | task=%s | err=%s",
                 task, e, exc_info=True,
             )
-            if self._settings.pipeline.fail_fast:
+            if self._settings.runtime.fail_fast:
                 raise
             return AnalysisResult(
                 task=task,

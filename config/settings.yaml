@@ -8,8 +8,8 @@
 # ===========================================
 
 app:
-  name: "AI县域产业研究助手"
-  version: "0.1.0"
+  name: "CountyResearchAI · Agentic Industrial Intelligence Platform"
+  version: "0.2.0"
   # 报告文件命名模板(Jinja2)
   report_filename_template: "{{ county }}_{{ focus }}_{{ date }}.md"
 
@@ -49,6 +49,7 @@ storage:
   reports_dir: ""           # 覆盖 REPORTS_DIR
   raw_subdir: "raw"         # data/raw/
   processed_subdir: "processed"  # data/processed/
+  runs_subdir: "runs"       # data/runs/：运行记录、事件、检查点、报告
   # 原始数据归档格式:按 {县名}/{日期}/ 组织
   archive_layout: "{county}/{date}"
 
@@ -59,18 +60,50 @@ cache:
   # 缓存键 = hash(县名 + 方向 + 数据源)
   key_fields: ["county", "focus", "provider"]
 
-# ---------- Pipeline 配置 ----------
-pipeline:
-  # 单线程顺序执行,MVP阶段保证可调试
-  mode: "sequential"
-  # 任一阶段失败是否终止全流程
-  fail_fast: true
-  # 阶段开关(调试时可单独关闭)
-  stages:
-    search: true
-    process: true
-    analyze: true
-    report: true
+# ---------- 运行时容错 ----------
+runtime:
+  # 单步失败是否抛错；默认降级继续（Agent 会标记 degraded）
+  fail_fast: false
+
+# ---------- Multi-Agent 预算 ----------
+agents:
+  max_steps: 6              # 单个 Agent 最大工具步数
+  max_llm_calls: 6          # 单个 Agent 最大 LLM 调用次数
+  max_specialists: 6        # 单轮最多并行专业 Agent 数
+  max_rounds: 2             # Supervisor 反思补充研究最大轮数
+  max_followup_queries: 4   # Critic 单轮最多补充检索词
+  recursion_limit: 120
+  agent_timeout_seconds: 300
+
+# ---------- 知识图谱 ----------
+graph:
+  # memory: 无需外部服务；neo4j: 需安装 graph 可选依赖并配置连接
+  backend: "memory"
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  database: "neo4j"
+  connection_timeout: 10
+
+# ---------- API ----------
+api:
+  host: "127.0.0.1"
+  port: 8000
+  cors_origins:
+    - "http://localhost:5173"
+  max_concurrent_runs: 2
+  run_retention_days: 30
+
+# ---------- Star B: 数字孪生 ----------
+simulation:
+  enabled: true
+  engine: "baseline"        # mesa 为后续经校准引擎，当前明确不可用
+  default_horizon_years: 5
+  max_scenarios: 50
+
+# ---------- Star C: 时序图谱 ----------
+temporal:
+  enabled: true
+  default_as_of: ""
 
 # ---------- 日志配置 ----------
 logging:

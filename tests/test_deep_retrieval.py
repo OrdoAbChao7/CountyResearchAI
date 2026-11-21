@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from pydantic import SecretStr
+
 from county_research_ai.models import RawDoc
 from county_research_ai.search.content_extractor import (
     calculate_content_fingerprint,
@@ -148,6 +150,7 @@ def test_disambiguation_for_prefecture_with_province():
 def test_create_provider_with_settings_positional(tmp_settings):
     from county_research_ai.search.web_search import create_provider
     # 验证将 Settings 实例作为首个位置参数传入不会引发 AttributeError
+    tmp_settings.search.api_key = SecretStr("test-key")
     provider = create_provider(tmp_settings)
     assert provider is not None
     assert provider.name in {"tavily", "serper", "bing"}

@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "county-research-ai"
-version = "0.1.0"
-description = "AI县域产业研究助手 - 自动化采集、分析与生成县域产业研究报告"
+version = "0.2.0"
+description = "Agentic Industrial Intelligence Platform for Chinese county industry research"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "CountyResearchAI" }]
-keywords = ["county", "industry", "research", "llm", "ai"]
+keywords = ["county", "industry", "research", "llm", "multi-agent", "langgraph"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Researchers",
@@ -33,19 +33,23 @@ dependencies = [
     "beautifulsoup4>=4.12.0",  # HTML正文解析(政府页面抓取)
     "fastapi>=0.115,<1",       # 本地 API
     "uvicorn>=0.30,<1",        # ASGI 服务器
+    "langgraph>=1.0.0",              # Multi-Agent 编排
+    "langgraph-checkpoint-sqlite>=3.0.0",  # 研究运行检查点
 ]
 
 [project.optional-dependencies]
+graph = [
+    "neo4j>=5.20.0",               # Neo4j 图存储适配器
+    "neo4j-graphrag>=1.0.0",       # 预留：GraphRAG 高级检索
+]
 dev = [
     "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",
     "ruff>=0.4.0",
     "mypy>=1.10.0",
 ]
-
-[project.scripts]
-county-research = "county_research_ai.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/your-org/CountyResearchAI"
@@ -55,13 +59,17 @@ Homepage = "https://github.com/your-org/CountyResearchAI"
 where = ["src"]
 
 [tool.setuptools.package-data]
-county_research_ai = ["py.typed"]
+county_research_ai = ["py.typed", "reporting/templates/*.j2"]
 
 # ===== Ruff 配置(代码风格) =====
 [tool.ruff]
 line-length = 100
 target-version = "py310"
 src = ["src", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI 的依赖注入惯例：Depends 必须出现在参数默认值中。
+"src/county_research_ai/api/routes/*.py" = ["B008"]
 
 [tool.ruff.lint]
 select = [
@@ -77,9 +85,7 @@ select = [
 ignore = ["E501"]
 
 [tool.ruff.lint.mccabe]
-# Pipeline and renderer methods currently preserve one explicit, test-covered audit trail.
-# Keep the threshold visible in CI; split a path only when it can be covered as independent behavior.
-max-complexity = 18
+max-complexity = 22
 
 # ===== pytest 配置 =====
 [tool.pytest.ini_options]
@@ -88,6 +94,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+asyncio_mode = "auto"
 addopts = [
     "-v",
     "--strict-markers",

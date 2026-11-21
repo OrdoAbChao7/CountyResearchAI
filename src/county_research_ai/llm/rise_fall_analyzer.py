@@ -486,7 +486,7 @@ class RiseFallAnalyzer:
             logger.warning(
                 "%s 失败(降级) | err=%s", config.description, e, exc_info=True,
             )
-            if self._settings.pipeline.fail_fast:
+            if self._settings.runtime.fail_fast:
                 raise
             return None
 
