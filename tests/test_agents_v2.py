@@ -325,9 +325,9 @@ class TestCritic:
         ids = [item.id for item in evidence.all()]
         assert len(ids) >= 5
         results = [
-            _agent_result(AgentKind.MACRO, "宏观结论", ids[:2]),
-            _agent_result(AgentKind.INDUSTRY, "产业结论", ids[2:4]),
-            _agent_result(AgentKind.ENTERPRISE, "企业结论", ids[4:5]),
+            _agent_result(AgentKind.MACRO, evidence.get(ids[0]).claim, ids[:1]),
+            _agent_result(AgentKind.INDUSTRY, evidence.get(ids[2]).claim, ids[2:3]),
+            _agent_result(AgentKind.ENTERPRISE, evidence.get(ids[4]).claim, ids[4:5]),
         ]
         critic = CriticAgent(None, v2_container.services.tools)
         report = critic.review(context, results, round_no=1)
@@ -341,9 +341,9 @@ class TestCritic:
         context, evidence = _context(v2_container.services, sample_docs)
         ids = [item.id for item in evidence.all()]
         results = [
-            _agent_result(AgentKind.MACRO, "有证据结论", ids[:2]),
+            _agent_result(AgentKind.MACRO, evidence.get(ids[0]).claim, ids[:1]),
             _agent_result(AgentKind.INDUSTRY, "无证据结论", []),
-            _agent_result(AgentKind.ENTERPRISE, "有证据结论", ids[2:3]),
+            _agent_result(AgentKind.ENTERPRISE, evidence.get(ids[2]).claim, ids[2:3]),
         ]
         critic = CriticAgent(None, v2_container.services.tools)
         report = critic.review(context, results, round_no=1)
@@ -356,7 +356,9 @@ class TestCritic:
     def test_missing_required_dimensions_reported(self, v2_container, sample_docs):
         context, evidence = _context(v2_container.services, sample_docs)
         ids = [item.id for item in evidence.all()]
-        results = [_agent_result(AgentKind.INDUSTRY, "只有产业维度", ids[:2])]
+        results = [
+            _agent_result(AgentKind.INDUSTRY, evidence.get(ids[0]).claim, ids[:1])
+        ]
         critic = CriticAgent(None, v2_container.services.tools)
         report = critic.review(context, results, round_no=1)
 
@@ -370,10 +372,12 @@ class TestCritic:
         ids = [item.id for item in evidence.all()]
         results = [
             _agent_result(
-                AgentKind.INDUSTRY, "引用不存在证据", [ids[0], "ev-does-not-exist"]
+                AgentKind.INDUSTRY,
+                evidence.get(ids[0]).claim,
+                [ids[0], "ev-does-not-exist"],
             ),
-            _agent_result(AgentKind.MACRO, "正常", ids[:2]),
-            _agent_result(AgentKind.ENTERPRISE, "正常", ids[2:3]),
+            _agent_result(AgentKind.MACRO, evidence.get(ids[1]).claim, ids[1:2]),
+            _agent_result(AgentKind.ENTERPRISE, evidence.get(ids[2]).claim, ids[2:3]),
         ]
         critic = CriticAgent(None, v2_container.services.tools)
         report = critic.review(context, results, round_no=1)
@@ -384,9 +388,9 @@ class TestCritic:
         context, evidence = _context(v2_container.services, sample_docs)
         ids = [item.id for item in evidence.all()]
         results = [
-            _agent_result(AgentKind.MACRO, "有证据", ids[:2]),
+            _agent_result(AgentKind.MACRO, evidence.get(ids[0]).claim, ids[:1]),
             _agent_result(AgentKind.INDUSTRY, "无证据", []),
-            _agent_result(AgentKind.ENTERPRISE, "有证据", ids[2:3]),
+            _agent_result(AgentKind.ENTERPRISE, evidence.get(ids[2]).claim, ids[2:3]),
         ]
         llm = scripted_llm(
             [

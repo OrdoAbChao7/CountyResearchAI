@@ -5,6 +5,7 @@ import re
 
 from pydantic import BaseModel, Field
 
+from ...domain.intelligence import VerificationStatus
 from ..graph_store.base import GraphStore, Subgraph
 from ..ontology.entities import EntityType, KGEntity
 
@@ -110,16 +111,32 @@ class GraphRetriever:
         focus: str = "",
         max_hops: int | None = None,
         include_inferred: bool = False,
+        include_pending: bool = False,
+        include_unverified: bool = False,
     ) -> RetrievedContext:
+        allowed_statuses = {VerificationStatus.VERIFIED}
+        if include_inferred:
+            allowed_statuses.add(VerificationStatus.INFERRED)
+        if include_pending:
+            allowed_statuses.add(VerificationStatus.PENDING)
+        if include_unverified:
+            allowed_statuses.add(VerificationStatus.UNVERIFIED)
+
+        def usable(entity: KGEntity) -> bool:
+            return entity.verification_status in allowed_statuses
+
         terms = self._terms(question)
         pool: dict[str, KGEntity] = {}
         for entity in self._graph.find_entities(county=county, limit=500) if county else []:
-            pool[entity.id] = entity
+            if usable(entity):
+                pool[entity.id] = entity
         for entity in self._graph.find_entities(name=focus, limit=20) if focus else []:
-            pool[entity.id] = entity
+            if usable(entity):
+                pool[entity.id] = entity
         for term in terms:
             for entity in self._graph.find_entities(name=term, limit=10):
-                pool.setdefault(entity.id, entity)
+                if usable(entity):
+                    pool.setdefault(entity.id, entity)
 
         scored = sorted(
             ((self._score(e, question, terms, focus), e) for e in pool.values()),
@@ -142,11 +159,20 @@ class GraphRetriever:
                     limit=self.entity_limit,
                 )
             )
-        # 保证种子实体在结果中
+        # 保证种子实体在结果中；默认只返回已验证实体，避免推断/待核验节点
+        # 进入事实查询。调用方必须显式 include_inferred/include_pending。
         present = {e.id for e in merged.entities}
-        entities = list(merged.entities) + [s for s in seeds if s.id not in present]
-        entities = entities[: self.entity_limit]
-        relations = merged.relations[: self.entity_limit * 2]
+        entities = [
+            e
+            for e in list(merged.entities) + [s for s in seeds if s.id not in present]
+            if usable(e)
+        ][: self.entity_limit]
+        visible_ids = {e.id for e in entities}
+        relations = [
+            r
+            for r in merged.relations
+            if r.source_entity_id in visible_ids and r.target_entity_id in visible_ids
+        ][: self.entity_limit * 2]
         evidence: list[str] = []
         for entity in entities:
             evidence.extend(entity.evidence_ids)

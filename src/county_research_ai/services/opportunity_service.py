@@ -73,7 +73,7 @@ class GapRadarService:
         enterprises = [e for e in subgraph.entities if e.type == EntityType.ENTERPRISE]
         evidence_ids: list[str] = []
 
-        segment_enterprises: dict[str, list[EntityType]] = {}
+        segment_enterprises: dict[str, list[str]] = {}
         segment_entity_map: dict[str, KGEntity] = {}
         for segment in segments:
             segment_entity_map[segment.id] = segment
@@ -90,51 +90,61 @@ class GapRadarService:
                     and by_id[relation.source_entity_id].type == EntityType.ENTERPRISE
                 ):
                     members.append(relation.source_entity_id)
-            segment_enterprises[segment.id] = list(dict.fromkeys(members))  # type: ignore[assignment]
+            segment_enterprises[segment.id] = list(dict.fromkeys(members))
             evidence_ids.extend(segment.evidence_ids)
 
         # 1) 缺失环节 / 本地配套不足
-        for segment in segments:
-            members = segment_enterprises.get(segment.id, [])
-            segment_evidence = list(dict.fromkeys(segment.evidence_ids))
-            if not members:
-                report.missing_segments.append(segment.name)
-                report.opportunities.append(
-                    self._candidate(
-                        county=county,
-                        industry=industry,
-                        gap_type=GapType.MISSING_SEGMENT,
-                        segment=segment.name,
-                        description=f"图谱中存在「{segment.name}」环节，但没有任何本地企业关联。",
-                        rationale="产业链环节缺少本地承载主体，存在补链/招商空间。",
-                        evidence_ids=segment_evidence,
-                        targets=[],
-                        actions=[
-                            f"围绕「{segment.name}」开展定向招商",
-                            "梳理该环节的全国龙头与专精特新企业清单",
-                        ],
+        # 区分「真实缺口」与「企业覆盖数据缺失」：如果图谱里根本没有企业，
+        # 或企业存在但没有任何环节归属关系，不能把空成员列表解释为缺失环节。
+        membership_known = bool(enterprises) and any(segment_enterprises.values())
+        if segments and not membership_known:
+            report.notes.append(
+                "企业实体或企业—环节关系覆盖不足，无法区分真实缺口与数据缺失；"
+                "本次不生成缺失/弱配套机会。"
+            )
+            report.degraded = True
+        else:
+            for segment in segments:
+                members = segment_enterprises.get(segment.id, [])
+                segment_evidence = list(dict.fromkeys(segment.evidence_ids))
+                if not members:
+                    report.missing_segments.append(segment.name)
+                    report.opportunities.append(
+                        self._candidate(
+                            county=county,
+                            industry=industry,
+                            gap_type=GapType.MISSING_SEGMENT,
+                            segment=segment.name,
+                            description=f"图谱中存在「{segment.name}」环节，但没有任何本地企业关联。",
+                            rationale="产业链环节缺少本地承载主体，存在补链/招商空间。",
+                            evidence_ids=segment_evidence,
+                            targets=[],
+                            actions=[
+                                f"围绕「{segment.name}」开展定向招商",
+                                "梳理该环节的全国龙头与专精特新企业清单",
+                            ],
+                        )
                     )
-                )
-            elif len(members) == 1:
-                member = by_id.get(members[0])
-                report.weak_segments.append(segment.name)
-                report.opportunities.append(
-                    self._candidate(
-                        county=county,
-                        industry=industry,
-                        gap_type=GapType.WEAK_LOCAL_SUPPLY,
-                        segment=segment.name,
-                        description=(
-                            f"「{segment.name}」环节仅有 1 家本地企业"
-                            + (f"（{member.name}）" if member else "")
-                            + "，配套能力薄弱。"
-                        ),
-                        rationale="单一企业支撑整个环节，存在供给集中风险与扩链空间。",
-                        evidence_ids=segment_evidence,
-                        targets=[member.name] if member else [],
-                        actions=["培育第二供应商", "引进配套中小企业"],
+                elif len(members) == 1:
+                    member = by_id.get(members[0])
+                    report.weak_segments.append(segment.name)
+                    report.opportunities.append(
+                        self._candidate(
+                            county=county,
+                            industry=industry,
+                            gap_type=GapType.WEAK_LOCAL_SUPPLY,
+                            segment=segment.name,
+                            description=(
+                                f"「{segment.name}」环节仅有 1 家本地企业"
+                                + (f"（{member.name}）" if member else "")
+                                + "，配套能力薄弱。"
+                            ),
+                            rationale="单一企业支撑整个环节，存在供给集中风险与扩链空间。",
+                            evidence_ids=segment_evidence,
+                            targets=[member.name] if member else [],
+                            actions=["培育第二供应商", "引进配套中小企业"],
+                        )
                     )
-                )
 
         # 2) 外部依赖
         external_map: dict[str, list[str]] = {}

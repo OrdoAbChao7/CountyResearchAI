@@ -408,13 +408,14 @@ def graph_build_node(state: ResearchState, config: RunnableConfig) -> dict[str, 
             evidence_service=context.evidence,
         )
         stats = build_stats.to_dict()
-        evidence_ids = context.evidence.evidence_ids(limit=5)
+        evidence_ids = context.evidence.evidence_ids(limit=20)
         if evidence_ids:
             seed_core_graph(
                 services.graph_store,
                 county=state.get("county", ""),
                 focus=state.get("focus", ""),
                 evidence_ids=evidence_ids,
+                evidence_service=context.evidence,
             )
     except Exception as exc:  # noqa: BLE001
         logger.exception("知识图谱构建失败（研究继续）")
