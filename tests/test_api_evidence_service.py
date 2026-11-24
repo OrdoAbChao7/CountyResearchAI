@@ -192,3 +192,26 @@ def test_brief_sections_and_withholding(tmp_path):
     assert "已隐去的无支持结论（1）" in markdown
     assert "德清县2024年地区生产总值为700亿元" not in markdown
     assert "不是语义蕴含证明" in markdown
+
+
+def test_claim_selected_by_two_slots_keeps_one_finding_and_both_links(tmp_path):
+    ledger = _ledger()
+    graph = EvidenceGraphStore(tmp_path / "evidence.sqlite")
+    slots = [
+        QuestionSlot(
+            slot_id=f"contract:{index}",
+            research_question="2024年地区生产总值是多少？",
+            required_metrics=["地区生产总值"],
+            budget_chars=2000,
+        )
+        for index in range(2)
+    ]
+    packs = [ledger.select_evidence_pack(slot) for slot in slots]
+
+    persist_run_evidence(graph, ledger, packs, run_id="run-1")
+
+    findings = graph.list_findings("run-1")
+    good = [item for item in findings if item.finding.claim_id == "claim-good"]
+    assert len(good) == 1
+    assert set(good[0].finding.slot_ids) == {"contract:0", "contract:1"}
+

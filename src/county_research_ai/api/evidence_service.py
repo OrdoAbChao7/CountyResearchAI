@@ -38,6 +38,13 @@ def persist_run_evidence(
         target_region=target_region,
     )
     findings: list[FindingRecord] = []
+    # A Claim is stored once per run, yet every question whose pack selected it stays linked.
+    slots_by_claim: dict[str, list[str]] = {}
+    for pack in packs:
+        for claim in pack.selected_claims:
+            linked = slots_by_claim.setdefault(claim.claim_id, [])
+            if pack.slot_id not in linked:
+                linked.append(pack.slot_id)
     seen: set[str] = set()
     for pack in packs:
         for claim in pack.selected_claims:
@@ -56,6 +63,7 @@ def persist_run_evidence(
                     run_id=run_id,
                     claim_id=claim.claim_id,
                     section=pack.slot_id,
+                    slot_ids=slots_by_claim[claim.claim_id],
                     text=claim.statement,
                     status=status,
                 )

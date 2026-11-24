@@ -43,7 +43,7 @@ from .numeric_support import numeric_context_matches
 from .source_contract import meets_source_credibility_threshold
 from .source_identity import source_groups
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 DETERMINISTIC_VERIFIER_VERSION = "deterministic_v2_local_binding"
 
 _YEAR_RE = re.compile(r"(?<!\d)(?:1[89]\d{2}|20\d{2})(?!\d)")
@@ -156,14 +156,40 @@ class FindingRecord(BaseModel):
     run_id: str
     claim_id: str
     section: str = ""
+    # Every question slot whose evidence pack selected this Claim. The Claim and its
+    # verification stay global; a slot link only says "considered for this question".
+    slot_ids: list[str] = Field(default_factory=list)
     text: str = ""
     status: VerificationStatus = VerificationStatus.INSUFFICIENT
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def linked_slot_ids(self) -> list[str]:
+        """Slot links, falling back to the single legacy section for older rows."""
+        return list(self.slot_ids) or ([self.section] if self.section else [])
 
 
 class VerifiedFinding(BaseModel):
     finding: FindingRecord
     chain: ClaimChain
+
+    def with_verification_status(
+        self, status: VerificationStatus, reason: str, *, checks: dict[str, Any] | None = None,
+    ) -> VerifiedFinding:
+        record = self.chain.verification
+        if record is not None:
+            record = record.model_copy(update={
+                "status": status, "reason": reason,
+                "deterministic_checks": record.deterministic_checks if checks is None else checks,
+            })
+        return self.model_copy(update={
+            "finding": self.finding.model_copy(update={"status": status}),
+            "chain": self.chain.model_copy(update={
+                "claim": self.chain.claim.model_copy(update={
+                    "verification_status": status.value.lower(), "verification_reason": reason,
+                }),
+                "verification": record,
+            }),
+        })
 
 
 class SpanIntegrityIssue(BaseModel):
@@ -625,6 +651,14 @@ class EvidenceGraphStore:
                     status TEXT NOT NULL DEFAULT 'INSUFFICIENT',
                     created_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS finding_slots (
+                    finding_id TEXT NOT NULL,
+                    run_id TEXT NOT NULL,
+                    slot_id TEXT NOT NULL,
+                    position INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (finding_id, slot_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_finding_slots_run ON finding_slots(run_id);
                 CREATE TABLE IF NOT EXISTS run_snapshots (
                     run_id TEXT NOT NULL,
                     snapshot_id TEXT NOT NULL REFERENCES source_snapshots(snapshot_id),
@@ -1588,6 +1622,41 @@ class EvidenceGraphStore:
                 return True
         return False
 
+    @staticmethod
+    def _insert_verification(
+        connection: sqlite3.Connection, record: VerificationRecord, reason: str, *, update_global: bool = True,
+    ) -> None:
+        connection.execute(
+            "INSERT OR REPLACE INTO verification_records"
+            " (record_id, claim_id, status, deterministic_checks_json,"
+            " judge_assessment_json, uncertainty, human_review_json,"
+            " verifier_version, run_id, reason, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                record.record_id,
+                record.claim_id,
+                record.status.value,
+                json.dumps(record.deterministic_checks, ensure_ascii=False, default=str),
+                json.dumps(record.judge_assessment, ensure_ascii=False)
+                if record.judge_assessment is not None
+                else None,
+                record.uncertainty,
+                json.dumps(record.human_review, ensure_ascii=False)
+                if record.human_review is not None
+                else None,
+                record.verifier_version,
+                record.run_id,
+                reason,
+                record.created_at.isoformat(),
+            ),
+        )
+        if update_global:
+            connection.execute(
+                "UPDATE claims SET verification_status = ?, verification_reason = ?"
+                " WHERE claim_id = ?",
+                (record.status.value, reason, record.claim_id),
+            )
+
     def save_verification(
         self, record: VerificationRecord, *, reason: str = ""
     ) -> None:
@@ -1645,10 +1714,20 @@ class EvidenceGraphStore:
 
     # ---------------------------------------------------------------- findings
 
-    def save_findings(self, run_id: str, findings: list[FindingRecord]) -> None:
+    def save_findings(
+        self, run_id: str, findings: list[FindingRecord], *,
+        verifications: list[VerificationRecord] | None = None,
+    ) -> None:
         with self._connect() as connection:
+            for record in verifications or ():
+                if record.run_id != run_id:
+                    raise ValueError("finding verification belongs to another run")
+                self._insert_verification(connection, record, record.reason, update_global=False)
             connection.execute("DELETE FROM findings WHERE run_id = ?", (run_id,))
+            connection.execute("DELETE FROM finding_slots WHERE run_id = ?", (run_id,))
             for finding in findings:
+                if finding.run_id != run_id:
+                    raise ValueError("finding belongs to another run")
                 connection.execute(
                     "INSERT OR REPLACE INTO findings"
                     " (finding_id, run_id, claim_id, section, text, status, created_at)"
@@ -1663,6 +1742,12 @@ class EvidenceGraphStore:
                         finding.created_at.isoformat(),
                     ),
                 )
+                for position, slot_id in enumerate(dict.fromkeys(finding.slot_ids)):
+                    connection.execute(
+                        "INSERT INTO finding_slots (finding_id, run_id, slot_id, position)"
+                        " VALUES (?, ?, ?, ?)",
+                        (finding.finding_id, run_id, slot_id, position),
+                    )
 
     def list_findings(self, run_id: str) -> list[VerifiedFinding]:
         with self._connect() as connection:
@@ -1670,13 +1755,22 @@ class EvidenceGraphStore:
                 "SELECT * FROM findings WHERE run_id = ? ORDER BY finding_id",
                 (run_id,),
             ).fetchall()
+            slots_by_finding: dict[str, list[str]] = {}
+            for link in connection.execute(
+                "SELECT finding_id, slot_id FROM finding_slots WHERE run_id = ?"
+                " ORDER BY finding_id, position",
+                (run_id,),
+            ):
+                slots_by_finding.setdefault(link["finding_id"], []).append(link["slot_id"])
         findings: list[VerifiedFinding] = []
         for row in rows:
+            legacy_slots = [row["section"]] if row["section"] else []
             finding = FindingRecord(
                 finding_id=row["finding_id"],
                 run_id=row["run_id"],
                 claim_id=row["claim_id"],
                 section=row["section"],
+                slot_ids=slots_by_finding.get(row["finding_id"], legacy_slots),
                 text=row["text"],
                 status=VerificationStatus(row["status"]),
                 created_at=_parse_datetime(row["created_at"]) or _utcnow(),
@@ -1698,6 +1792,7 @@ class EvidenceGraphStore:
         with self._connect() as connection:
             for table in (
                 "findings",
+                "finding_slots",
                 "run_snapshots",
                 "claim_relations",
                 "verification_records",
