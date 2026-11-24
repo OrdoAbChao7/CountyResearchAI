@@ -111,9 +111,14 @@ class GovDataProvider(SearchProvider):
 
     def search(self, query: str, max_results: int = 10) -> list[RawDoc]:
         """执行政府数据搜索(三步骤:搜→过滤→抓详情)。"""
-        # 1) 使用 Web provider 搜索
-        raw = self._web.search(query, max_results=max_results or self._max_results)
+        backend, limit = self.search_backend(max_results)
+        return self.process_search_results(backend.search(query, max_results=limit), limit)
 
+    def search_backend(self, max_results: int) -> tuple[SearchProvider, int]:
+        return self._web, max_results or self._max_results
+
+    def process_search_results(self, raw: list[RawDoc], max_results: int) -> list[RawDoc]:
+        """Apply the government route to raw results from the shared backend."""
         # 2) 白名单过滤
         filtered = [d for d in raw if self._match_whitelist(d.url)]
         logger.info("政府搜索过滤 | input=%d, after_whitelist=%d", len(raw), len(filtered))
@@ -158,7 +163,8 @@ class GovDataProvider(SearchProvider):
                 return self._match_path(path, gd.path_keywords)
             # Glob 模式
             if gd.pattern and (
-                fnmatch.fnmatch(host, gd.pattern) or host.endswith(gd.pattern.lstrip("*."))
+                fnmatch.fnmatch(host, gd.pattern)
+                or (gd.pattern.startswith("*.") and host == gd.pattern[2:])
             ):
                 return self._match_path(path, gd.path_keywords)
         return False

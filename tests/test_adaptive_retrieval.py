@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import pytest
+
 from county_research_ai.domain.research_contracts import (
     AtomicClaim,
     EvidenceChunk,
     EvidencePack,
+    ResearchContract,
     SourceDocument,
 )
-from county_research_ai.models import RawDoc
+from county_research_ai.evidence.ledger import build_evidence_ledger
+from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
 from county_research_ai.search.adaptive_retrieval import (
     AdaptiveRetrievalController,
     RetrievalBudget,
@@ -53,6 +57,62 @@ def _pack(slot, *, metric: str, url: str, text: str) -> EvidencePack:
         total_chars=len(text),
         status="complete",
     )
+
+
+def test_weak_candidate_stays_selected_but_keeps_contract_retrieval_open():
+    spec = ResearchContract(
+        objective="核验年度竹产业总产值", regions=["安吉县"],
+        required_questions=["2024年安吉县竹产业总产值是多少？"],
+    ).to_research_spec()
+    slot, = spec.question_slots
+    doc = RawDoc(
+        title="安吉县竹产业资料", url="https://example.com/bamboo", credibility_score=0.5,
+        content="2024年安吉县竹产业总产值为192亿元。",
+    )
+    ledger = build_evidence_ledger(ProcessedData(county=CountyInfo.from_name("安吉县"), focus="竹产业", docs=[doc]))
+    pack = ledger.select_evidence_pack(slot)
+
+    coverage = assess_evidence_pack_coverage(spec, [pack])
+
+    assert [claim.value for claim in pack.selected_claims] == ["192"]
+    result, = coverage.slots
+    assert result.status == "partial"
+    assert result.missing_metrics == ("竹产业总产值",)
+
+
+@pytest.mark.parametrize(("same_text", "groups"), [(True, 1), (False, 2)], ids=["mirror", "distinct-text"])
+def test_adaptive_candidate_sources_group_reprints(same_text, groups):
+    spec = ResearchContract(
+        objective="核验年度竹产业总产值", regions=["安吉县"],
+        required_questions=["2024年安吉县竹产业总产值是多少？"],
+    ).to_research_spec()
+    statement = "2024年安吉县竹产业总产值为280亿元。"
+    documents = [
+        RawDoc(title="安吉县竹产业统计", url="https://example.gov.cn/statistics", credibility_score=0.9,
+               content=statement + "该统计覆盖全县生产与加工。"),
+        RawDoc(title="安吉县竹产业资料", url="https://example.org/data", credibility_score=0.7,
+               content=statement + ("该统计覆盖全县生产与加工。" if same_text else "资料汇总了县内企业报送的年度数据。")),
+    ]
+    ledger = build_evidence_ledger(ProcessedData(county=CountyInfo.from_name("安吉县"), focus="竹产业", docs=documents))
+    pack = ledger.select_evidence_pack(spec.question_slots[0])
+
+    coverage = assess_evidence_pack_coverage(spec, [pack])
+
+    assert coverage.quality_met and len(pack.source_map) == 2
+    assert coverage.independent_source_count == groups
+
+
+def test_contract_stop_distinguishes_unavailable_route():
+    spec = ResearchContract(
+        objective="核验年度竹产业总产值", regions=["安吉县"],
+        required_questions=["2024年安吉县竹产业总产值是多少？"],
+    ).to_research_spec()
+    controller = AdaptiveRetrievalController(spec, request_keys=lambda query: None)
+
+    decision = controller.next_round([], round_number=1)
+
+    assert decision.stop_reason == "search_source_unavailable"
+    assert not decision.queries and controller.budget.used_queries == 0
 
 
 def test_mode_specific_plans_have_different_question_slots():

@@ -3,22 +3,31 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum
 
-from ..domain.research_contracts import AtomicClaim, EvidencePack, ResearchSpec
+from ..domain.question_targets import contract_period_in_window, question_target
+from ..domain.research_contracts import EvidencePack, QuestionSlot, ResearchSpec, SourceDocument
+from ..evidence.source_contract import meets_source_credibility_threshold
+from ..evidence.source_identity import source_groups
 from ..models import RawDoc
 from .content_extractor import calculate_content_fingerprint, normalize_url
 from .query_engine import GeneratedQuery, QueryEngine
+from .request_history import SearchRequestHistory, SearchRequestKey, normalize_query
 
 
-class RetrievalStopReason(StrEnum):
+class RetrievalStopReason(str, Enum):
     QUALITY_MET = "quality_met"
     BUDGET_EXHAUSTED = "budget_exhausted"
     ZERO_MARGINAL_EVIDENCE = "zero_marginal_evidence"
     NO_GAP_QUERY = "no_gap_query"
     MAX_ROUNDS = "max_rounds_reached"
+    STRATEGY_EXHAUSTED = "strategy_exhausted"
+    SEARCH_SOURCE_UNAVAILABLE = "search_source_unavailable"
+    SEARCH_SOURCE_NO_RESULTS = "search_source_no_results"
+
+    __str__ = str.__str__
 
 
 _YEAR = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
@@ -112,6 +121,7 @@ class CoverageSnapshot:
     selected_claim_count: int = 0
     in_window_claim_count: int = 0
     in_window_source_count: int = 0
+    eligible_claim_ids: frozenset[str] = frozenset()
 
     @property
     def satisfied_slot_ids(self) -> tuple[str, ...]:
@@ -166,9 +176,58 @@ class CoverageSnapshot:
 
     @staticmethod
     def _is_core(slot: SlotCoverage) -> bool:
-        return slot.slot_id.rsplit(":", 1)[-1] in {
+        return slot.slot_id.startswith("contract:") or slot.slot_id.rsplit(":", 1)[-1] in {
             "economic_scale", "industry_structure", "origin", "growth",
             "administration", "geography", "traditional",
+        }
+
+
+@dataclass
+class ContractRetrievalProgress:
+    """Per-run evidence deltas before final verification and contract acceptance."""
+
+    document_ids: set[str] = field(default_factory=set)
+    claim_ids: set[str] = field(default_factory=set)
+    eligible_claim_ids: set[str] = field(default_factory=set)
+    covered_slot_ids: set[str] = field(default_factory=set)
+
+    def observe(
+        self,
+        sources: Mapping[str, SourceDocument],
+        claim_ids: Iterable[str],
+        coverage: CoverageSnapshot,
+    ) -> dict[str, object]:
+        new_documents = sources.keys() - self.document_ids
+        new_claims = set(claim_ids) - self.claim_ids
+        new_eligible = coverage.eligible_claim_ids - self.eligible_claim_ids
+        covered = set(coverage.satisfied_slot_ids)
+        newly_covered = covered - self.covered_slot_ids
+        new_groups = sum(
+            not self.document_ids.intersection(group["source_ids"])
+            for group in source_groups(sources.values())
+        )
+        if newly_covered:
+            progress = "contract_coverage_improved"
+        elif not new_documents:
+            progress = "no_new_documents"
+        elif not new_claims:
+            progress = "no_new_claims"
+        else:
+            progress = "new_claims_without_contract_coverage"
+        self.document_ids.update(sources)
+        self.claim_ids.update(new_claims)
+        self.eligible_claim_ids.update(new_eligible)
+        self.covered_slot_ids = covered
+        return {
+            "evidence_progress": progress,
+            "new_document_count": len(new_documents),
+            "new_claim_count": len(new_claims),
+            "new_selected_claim_count": coverage.new_evidence_count,
+            "new_eligible_claim_count": len(new_eligible),
+            "new_source_group_count": new_groups,
+            "new_covered_slot_count": len(newly_covered),
+            "eligible_claim_count": len(coverage.eligible_claim_ids),
+            "eligible_source_group_count": coverage.independent_source_count,
         }
 
 
@@ -184,23 +243,26 @@ def build_adaptive_query_plan(
     spec: ResearchSpec,
     query_engine: QueryEngine | None = None,
     *,
-    max_queries: int = 12,
+    max_queries: int | None = 12,
     round_number: int = 1,
 ) -> AdaptiveQueryPlan:
     engine = query_engine or QueryEngine()
-    queries = engine.generate_research_queries(
-        spec.region_name,
-        focus=spec.research_focus,
-        mode=spec.mode,
-        max_queries=max_queries,
-        target_years=spec.target_years,
-    )
+    if any(slot.is_contract_question for slot in spec.question_slots):
+        queries = engine.generate_contract_queries(spec)[:max_queries]
+    else:
+        queries = engine.generate_research_queries(
+            spec.region_name,
+            focus=spec.research_focus,
+            mode=spec.mode,
+            max_queries=max_queries,
+            target_years=spec.target_years,
+        )
     return AdaptiveQueryPlan(spec=spec, queries=tuple(queries), round_number=round_number)
 
 
 def score_document_for_slot(
     document: RawDoc,
-    slot,
+    slot: QuestionSlot,
     *,
     query: str = "",
     known_fingerprints: set[str] | None = None,
@@ -208,7 +270,8 @@ def score_document_for_slot(
     """Score a result with explainable relevance, scope, time, reliability and novelty."""
     full_text = "\n".join((document.title, document.snippet, document.content))
     lower_text = full_text.lower()
-    required = tuple(slot.required_metrics)
+    target = question_target(slot) if slot.is_contract_question else None
+    required = (target.label,) if target else tuple(slot.required_metrics)
     matched = tuple(metric for metric in required if metric.lower() in lower_text)
     query_terms = tuple(term for term in re.findall(r"\w+|[\u4e00-\u9fff]{2,}", query) if len(term) > 1)
     query_hits = sum(term.lower() in lower_text for term in query_terms)
@@ -225,7 +288,7 @@ def score_document_for_slot(
     reliability = max(0.0, min(1.0, document.credibility_score))
     if document.domain_type == "government" or ".gov.cn" in document.url.lower():
         reliability = min(1.0, reliability + 0.1)
-    fingerprint = calculate_content_fingerprint(document.content or document.snippet)
+    fingerprint = calculate_content_fingerprint(document.content or document.snippet, title=document.title)
     novelty = 0.0 if fingerprint and fingerprint in (known_fingerprints or set()) else 1.0
     components = {
         "task_relevance": task_relevance,
@@ -295,11 +358,47 @@ def rank_documents_for_slot(
     return sorted(deduped, key=lambda item: (-item.score, item.document.url, item.document.title))
 
 
+def _incoming_source_eligible(source: SourceDocument) -> bool:
+    return meets_source_credibility_threshold(source.metadata, allow_unscored=True)
+
+
+def _contract_slot_candidates(
+    slot: QuestionSlot,
+    pack: EvidencePack,
+    target_years: tuple[str, ...],
+    source_credibility_check: Callable[[SourceDocument], bool],
+) -> tuple[str, set[str], dict[str, SourceDocument]]:
+    target = question_target(slot)
+    if target is None or slot.evidence_requirement:
+        return slot.research_question, set(), {}
+    chunks = {chunk.chunk_id: chunk for chunk in pack.selected_chunks}
+    claim_ids: set[str] = set()
+    sources: dict[str, SourceDocument] = {}
+    for claim in pack.selected_claims:
+        if not target.matches_claim(slot, claim):
+            continue
+        if not slot.time_period and not claim_period_in_window(claim.period, target_years):
+            continue
+        for chunk_id in claim.evidence_chunk_ids:
+            chunk = chunks.get(chunk_id)
+            source = pack.source_map.get(chunk.document_id) if chunk else None
+            if (
+                chunk is not None
+                and source is not None
+                and target.has_factual_quote(claim, chunk.text, title=source.title, content=source.content)
+                and source_credibility_check(source)
+            ):
+                claim_ids.add(claim.claim_id)
+                sources[source.doc_id] = source
+    return target.label, claim_ids, sources
+
+
 def assess_evidence_pack_coverage(
     spec: ResearchSpec,
     packs: list[EvidencePack],
     *,
     previous_evidence_ids: set[str] | None = None,
+    source_credibility_check: Callable[[SourceDocument], bool] = _incoming_source_eligible,
 ) -> CoverageSnapshot:
     by_slot = {pack.slot_id: pack for pack in packs}
     previous = previous_evidence_ids or set()
@@ -308,7 +407,10 @@ def assess_evidence_pack_coverage(
     )
     new_ids: set[str] = set()
     all_sources: set[str] = set()
-    selected_claims: dict[str, AtomicClaim] = {}
+    eligible_claims: set[str] = set()
+    eligible_sources: dict[str, SourceDocument] = {}
+    selected_claim_ids: set[str] = set()
+    in_window_claim_ids: set[str] = set()
     in_window_source_ids: set[str] = set()
     slot_results: list[SlotCoverage] = []
     for slot in spec.question_slots:
@@ -318,28 +420,39 @@ def assess_evidence_pack_coverage(
                 SlotCoverage(slot.slot_id, (), tuple(slot.required_metrics), 0, 0, "empty")
             )
             continue
-        matched = {
-            metric
-            for metric in slot.required_metrics
-            if any(
-                metric in chunk.text
-                for chunk in pack.selected_chunks
+        missing: tuple[str, ...]
+        if slot.is_contract_question:
+            label, candidates, candidate_sources = _contract_slot_candidates(
+                slot, pack, target_years, source_credibility_check,
             )
-            or any(metric in claim.metric_id for claim in pack.selected_claims)
-        }
-        missing = tuple(metric for metric in slot.required_metrics if metric not in matched)
+            eligible_claims.update(candidates)
+            eligible_sources.update(candidate_sources)
+            ready = bool(candidates)
+            matched, missing = ({label}, ()) if ready else (set(), (label,))
+        else:
+            matched = {
+                metric
+                for metric in slot.required_metrics
+                if any(metric in chunk.text for chunk in pack.selected_chunks)
+                or any(metric in claim.metric_id for claim in pack.selected_claims)
+            }
+            missing = tuple(metric for metric in slot.required_metrics if metric not in matched)
+            ready = not missing and bool(pack.selected_chunks)
         claim_ids = {claim.claim_id for claim in pack.selected_claims}
         new_ids.update(claim_ids - previous)
         for source in pack.source_map.values():
             all_sources.add(source.canonical_url or source.doc_id)
         for claim in pack.selected_claims:
-            selected_claims.setdefault(claim.claim_id, claim)
-            if claim_period_in_window(claim.period, target_years):
-                if claim.source_ids:
-                    in_window_source_ids.update(claim.source_ids)
-                else:
-                    in_window_source_ids.update(pack.source_map)
-        status = "complete" if not missing and pack.selected_chunks else ("partial" if pack.selected_chunks else "empty")
+            selected_claim_ids.add(claim.claim_id)
+            in_window = (
+                contract_period_in_window(claim.period, slot.time_period)
+                if slot.is_contract_question and slot.time_period
+                else claim_period_in_window(claim.period, target_years)
+            )
+            if in_window:
+                in_window_claim_ids.add(claim.claim_id)
+                in_window_source_ids.update(claim.source_ids or pack.source_map)
+        status = "complete" if ready else ("partial" if pack.selected_chunks else "empty")
         slot_results.append(
             SlotCoverage(
                 slot_id=slot.slot_id,
@@ -350,34 +463,27 @@ def assess_evidence_pack_coverage(
                 status=status,
             )
         )
-    in_window_claim_count = sum(
-        1
-        for claim in selected_claims.values()
-        if claim_period_in_window(claim.period, target_years)
-    )
+    has_contract_questions = any(slot.is_contract_question for slot in spec.question_slots)
+    independent_sources = len(source_groups(eligible_sources.values())) if has_contract_questions else len(all_sources)
     return CoverageSnapshot(
         slots=tuple(slot_results),
         new_evidence_count=len(new_ids),
-        independent_source_count=len(all_sources),
+        independent_source_count=independent_sources,
         target_years=target_years,
-        selected_claim_count=len(selected_claims),
-        in_window_claim_count=in_window_claim_count,
+        selected_claim_count=len(selected_claim_ids),
+        in_window_claim_count=len(in_window_claim_ids),
         in_window_source_count=len(in_window_source_ids),
+        eligible_claim_ids=frozenset(eligible_claims),
     )
 
 
-def _merge_queries(*groups: Iterable[GeneratedQuery]) -> list[GeneratedQuery]:
-    """Keep first-seen query text so a period query is not duplicated by a gap query."""
-    merged: list[GeneratedQuery] = []
-    seen: set[str] = set()
-    for group in groups:
-        for query in group:
-            key = query.query.strip()
-            if not key or key in seen:
-                continue
-            seen.add(key)
-            merged.append(query)
-    return merged
+def _channel_request_keys(query: GeneratedQuery) -> tuple[SearchRequestKey, SearchRequestKey] | None:
+    """Plan by channel when a collector has no provider-key resolver."""
+    text = normalize_query(query.query)
+    if not text:
+        return None
+    key = (query.target_channel, text, 0)
+    return key, key
 
 
 class AdaptiveRetrievalController:
@@ -389,27 +495,50 @@ class AdaptiveRetrievalController:
         *,
         query_engine: QueryEngine | None = None,
         budget: RetrievalBudget | None = None,
+        search_history: SearchRequestHistory | None = None,
+        request_keys: Callable[[GeneratedQuery], tuple[SearchRequestKey, SearchRequestKey] | None] | None = None,
+        source_credibility_check: Callable[[SourceDocument], bool] | None = None,
     ) -> None:
         self.spec = spec
         self.query_engine = query_engine or QueryEngine()
         self.budget = budget or RetrievalBudget(max_queries=spec.budget)
+        self.search_history = search_history or SearchRequestHistory()
+        self._request_keys = request_keys or _channel_request_keys
+        self._source_credibility_check = source_credibility_check or _incoming_source_eligible
+
+    def _reserve_queries(
+        self, candidates: Iterable[GeneratedQuery], max_requests: int, *, one_per_slot: bool = False,
+    ) -> tuple[GeneratedQuery, ...]:
+        limit = min(max(0, max_requests), self.budget.remaining_queries)
+        new_requests: set[SearchRequestKey] = set()
+        selected_uses: set[tuple[SearchRequestKey, str]] = set()
+        selected_slots: set[str] = set()
+        selected: list[GeneratedQuery] = []
+        for query in candidates:
+            if one_per_slot and query.slot_id in selected_slots:
+                continue
+            keys = self._request_keys(query)
+            if keys is None or not self.search_history.can_use(*keys, query.slot_id):
+                continue
+            request, route = keys
+            use = (route, query.slot_id)
+            if use in selected_uses:
+                continue
+            if request not in new_requests and request not in self.search_history.responses:
+                if len(new_requests) >= limit:
+                    continue
+                new_requests.add(request)
+            selected_uses.add(use)
+            selected_slots.add(query.slot_id)
+            # Retain each slot and route even when its backend request is shared.
+            selected.append(query)
+        self.budget.reserve_queries(len(new_requests))
+        return tuple(selected)
 
     def initial_plan(self, *, max_queries: int | None = None) -> AdaptiveQueryPlan:
-        requested_limit = self.budget.remaining_queries if max_queries is None else max_queries
-        limit = min(max(0, requested_limit), self.budget.remaining_queries)
-        queries = self.query_engine.generate_research_queries(
-            self.spec.region_name,
-            focus=self.spec.research_focus,
-            mode=self.spec.mode,
-            max_queries=limit,
-            target_years=self.spec.target_years,
-        )
-        reserved = self.budget.reserve_queries(len(queries))
-        return AdaptiveQueryPlan(
-            spec=self.spec,
-            queries=tuple(queries[:reserved]),
-            round_number=1,
-        )
+        limit = self.budget.remaining_queries if max_queries is None else max_queries
+        initial = build_adaptive_query_plan(self.spec, self.query_engine, max_queries=None)
+        return AdaptiveQueryPlan(self.spec, self._reserve_queries(initial.queries, limit))
 
     def next_round(
         self,
@@ -419,41 +548,68 @@ class AdaptiveRetrievalController:
         previous_evidence_ids: set[str] | None = None,
         previous_new_evidence: int | None = None,
         max_queries: int = 4,
+        allow_followup: bool = True,
     ) -> RetrievalDecision:
         coverage = assess_evidence_pack_coverage(
             self.spec,
             packs,
             previous_evidence_ids=previous_evidence_ids,
+            source_credibility_check=self._source_credibility_check,
         )
         if coverage.quality_met:
             return RetrievalDecision(coverage, stop_reason=RetrievalStopReason.QUALITY_MET, usage=self._usage())
-        if self.budget.remaining_queries <= 0 or self.budget.remaining_fetches <= 0:
+        if self.budget.remaining_fetches <= 0:
             return RetrievalDecision(coverage, stop_reason=RetrievalStopReason.BUDGET_EXHAUSTED, usage=self._usage())
-        if round_number > 1 and previous_new_evidence == 0:
-            return RetrievalDecision(coverage, stop_reason=RetrievalStopReason.ZERO_MARGINAL_EVIDENCE, usage=self._usage())
+        if any(slot.is_contract_question for slot in self.spec.question_slots):
+            candidates = self.query_engine.generate_contract_queries(self.spec, slot_ids=coverage.missing_slot_ids)
+            candidates.extend(self.query_engine.generate_contract_queries(
+                self.spec, slot_ids=coverage.missing_slot_ids, supplemental=True,
+            ))
+            queries = self._reserve_queries(candidates, max_queries, one_per_slot=True) if allow_followup else ()
+            reason = self._contract_stop_reason(candidates, allow_followup) if not queries else None
+            return RetrievalDecision(coverage, queries=queries, stop_reason=reason, usage=self._usage())
 
-        queries = self.query_engine.generate_gap_queries(
-            self.spec,
-            list(coverage.missing_slot_ids),
-            max_queries=min(max_queries, self.budget.remaining_queries),
-        )
-        period_queries: list[GeneratedQuery] = []
-        if coverage.period_gap:
-            period_queries = self.query_engine.generate_period_queries(
-                self.spec.region_name,
-                self.spec.research_focus,
-                self.spec.target_years,
-                max_queries=min(2, self.budget.remaining_queries),
+        no_search_budget = self.budget.remaining_queries <= 0
+        if round_number > 1 and previous_new_evidence == 0:
+            reason = (
+                RetrievalStopReason.BUDGET_EXHAUSTED if no_search_budget
+                else RetrievalStopReason.ZERO_MARGINAL_EVIDENCE
             )
-        queries = _merge_queries(period_queries, queries)[:max_queries]
-        if not queries:
-            return RetrievalDecision(coverage, stop_reason=RetrievalStopReason.NO_GAP_QUERY, usage=self._usage())
-        reserved = self.budget.reserve_queries(len(queries))
-        return RetrievalDecision(
-            coverage,
-            queries=tuple(queries[:reserved]),
-            usage=self._usage(),
+            return RetrievalDecision(coverage, stop_reason=reason, usage=self._usage())
+
+        candidates = self.query_engine.generate_gap_queries(
+            self.spec, list(coverage.missing_slot_ids), max_queries=None,
         )
+        if coverage.period_gap:
+            candidates = self.query_engine.generate_period_queries(
+                self.spec.region_name, self.spec.research_focus, self.spec.target_years,
+            ) + candidates
+        queries = self._reserve_queries(candidates, max_queries)
+        if not queries:
+            reason = (
+                RetrievalStopReason.BUDGET_EXHAUSTED if no_search_budget
+                else RetrievalStopReason.NO_GAP_QUERY
+            )
+            return RetrievalDecision(coverage, stop_reason=reason, usage=self._usage())
+        return RetrievalDecision(coverage, queries=queries, usage=self._usage())
+
+    def _contract_stop_reason(
+        self, candidates: list[GeneratedQuery], allow_followup: bool,
+    ) -> RetrievalStopReason:
+        if self.budget.remaining_queries <= 0:
+            return RetrievalStopReason.BUDGET_EXHAUSTED
+        routed = [(keys, query.slot_id) for query in candidates if (keys := self._request_keys(query)) is not None]
+        if not routed:
+            return RetrievalStopReason.SEARCH_SOURCE_UNAVAILABLE
+        history = self.search_history
+        if any(history.can_use(*keys, slot_id) for keys, slot_id in routed):
+            return RetrievalStopReason.BUDGET_EXHAUSTED if allow_followup else RetrievalStopReason.MAX_ROUNDS
+        responses = [history.responses[key] for (key, _), _ in routed if key in history.responses]
+        if responses and not any(responses):
+            if all(response is None for response in responses):
+                return RetrievalStopReason.SEARCH_SOURCE_UNAVAILABLE
+            return RetrievalStopReason.SEARCH_SOURCE_NO_RESULTS
+        return RetrievalStopReason.STRATEGY_EXHAUSTED
 
     def record_fetches(self, count: int) -> int:
         return self.budget.record_fetches(count)

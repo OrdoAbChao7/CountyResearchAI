@@ -13,13 +13,17 @@
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 from collections.abc import Iterable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from concurrent.futures import TimeoutError as _TimeoutError
+from dataclasses import dataclass
 from datetime import date
+from typing import Literal
 
 from ..config import Settings, get_settings
+from ..domain.research_contracts import QuestionSlot
 from ..exceptions import SearchError
 from ..models import RawDoc
 from ..observability import emit
@@ -27,6 +31,9 @@ from .adaptive_retrieval import (
     AdaptiveCollectionResult,
     AdaptiveQueryPlan,
     AdaptiveRetrievalController,
+    RankedDocument,
+    RetrievalStopReason,
+    build_adaptive_query_plan,
     rank_documents_for_slot,
 )
 from .base import SearchProvider
@@ -39,6 +46,14 @@ from .content_extractor import (
 from .gov_data import GovDataProvider
 from .query_engine import GeneratedQuery, QueryEngine
 from .region_relevance import filter_documents_for_region
+from .request_history import (
+    SearchDocumentRecord,
+    SearchExecution,
+    SearchRequestHistory,
+    SearchRequestKey,
+    current_search_history,
+    normalize_query,
+)
 from .web_search import create_provider
 
 logger = logging.getLogger(__name__)
@@ -85,6 +100,68 @@ _LONG_HISTORY_QUERY_TEMPLATES = [
 ]
 
 
+def _document_records(docs: Iterable[RawDoc]) -> list[SearchDocumentRecord]:
+    """Describe provider results without claiming their content was parsed."""
+    records: list[SearchDocumentRecord] = []
+    for doc in docs:
+        content = doc.content or ""
+        snippet = doc.snippet or ""
+        text = content or snippet
+        text_origin: Literal["content", "snippet", "none"] = (
+            "content" if content else ("snippet" if snippet else "none")
+        )
+        content_type = str(doc.metadata.get("content_type") or "").strip()
+        url_without_query = doc.url.lower().split("?", 1)[0]
+        is_pdf = "pdf" in content_type.lower() or url_without_query.endswith(".pdf")
+        parse_status: Literal[
+            "text", "pdf_text_from_provider", "pdf_not_parsed", "no_text"
+        ]
+        if is_pdf and content:
+            # Provider body text exists, but the app did not parse the PDF bytes.
+            parse_status, parse_reason = "pdf_text_from_provider", "pdf_body_not_parsed_by_app"
+        elif is_pdf:
+            parse_status, parse_reason = "pdf_not_parsed", "pdf_content_not_supported"
+        elif content:
+            parse_status, parse_reason = "text", ""
+        else:
+            parse_status, parse_reason = "no_text", "no_text_content"
+        records.append(SearchDocumentRecord(
+            url=doc.url,
+            title=doc.title,
+            content_type=content_type,
+            content_chars=len(content),
+            snippet_chars=len(snippet),
+            text_sha256=hashlib.sha256(text.encode("utf-8")).hexdigest() if text else "",
+            text_origin=text_origin,
+            parse_status=parse_status,
+            parse_reason=parse_reason,
+        ))
+    return records
+
+
+@dataclass(frozen=True)
+class _SearchTask:
+    provider: SearchProvider
+    backend: SearchProvider
+    query: str
+    max_results: int
+
+    @property
+    def request_key(self) -> SearchRequestKey:
+        return id(self.backend), self.query, self.max_results
+
+    @property
+    def route_key(self) -> SearchRequestKey:
+        return id(self.provider), self.query, self.max_results
+
+    def process(self, raw: list[RawDoc]) -> list[RawDoc]:
+        if isinstance(self.provider, GovDataProvider) and self.provider is not self.backend:
+            # Enrichment can mutate documents shared with the Web route.
+            docs = [doc.model_copy(deep=True) for doc in raw]
+            return self.provider.process_search_results(docs, self.max_results)
+        return raw
+
+
 class SearchCollector(SearchProvider):
     """多 Provider + 多 Query 并发协调器（支持动态检索与反思补充）。"""
 
@@ -128,15 +205,30 @@ class SearchCollector(SearchProvider):
     ) -> SearchCollector:
         return cls(settings=settings)
 
+    def _search_task(self, provider: SearchProvider, query: str) -> _SearchTask:
+        backend, limit = provider, self._max_results
+        # Only unwrap the built-in government route. Custom providers own their searches.
+        if type(provider) is GovDataProvider:
+            backend, limit = provider.search_backend(limit)
+        return _SearchTask(provider, backend, normalize_query(query), limit)
+
+    def _adaptive_task(self, query: GeneratedQuery) -> _SearchTask | None:
+        provider = self._gov if query.target_channel == "gov" and self._gov is not None else self._web
+        if provider is None or not query.query.strip():
+            return None
+        return self._search_task(provider, query.query)
+
+    def adaptive_request_keys(
+        self, query: GeneratedQuery
+    ) -> tuple[SearchRequestKey, SearchRequestKey] | None:
+        task = self._adaptive_task(query)
+        return (task.request_key, task.route_key) if task is not None else None
+
     def search(self, query: str, max_results: int = 10) -> list[RawDoc]:
         """单查询搜索接口。"""
         n = max_results or self._max_results
-        tasks: list[tuple[SearchProvider, str]] = []
-        if self._web is not None:
-            tasks.append((self._web, query))
-        if self._gov is not None:
-            tasks.append((self._gov, query))
-        docs = self._run_tasks(tasks)
+        tasks = [self._search_task(p, query) for p in (self._web, self._gov) if p is not None]
+        docs = self._collect_unranked(tasks)
         return self._dedup_and_rank(docs, top=n, keywords=[query])
 
     def collect(
@@ -149,6 +241,7 @@ class SearchCollector(SearchProvider):
         date_start: date | None = None,
         date_end: date | None = None,
         target_years: list[str] | None = None,
+        question_slots: list[QuestionSlot] | None = None,
     ) -> list[RawDoc]:
         """主业务采集接口。优先采用动态消歧与 QueryEngine。
 
@@ -157,9 +250,26 @@ class SearchCollector(SearchProvider):
         results by publication date: a 2025 bulletin may report 2024 data.
         """
         n = max_results or self._max_results
-        keywords = [kw for kw in [county, focus] if kw]
+        if question_slots:
+            spec = self._query_engine.generate_research_spec(
+                county, focus, mode, target_years=target_years, question_slots=question_slots,
+            )
+            plan = build_adaptive_query_plan(spec, self._query_engine, max_queries=None)
+            emit("retrieval.round.started", stage="collect", payload={
+                "round": 1,
+                "queries": len(plan.queries),
+                "query_texts": [query.query for query in plan.queries],
+                "query_slot_ids": [query.slot_id for query in plan.queries],
+                "supplemental": False,
+            })
+            result = self.collect_adaptive(plan, max_results=n)
+            emit("retrieval.round.completed", stage="collect", payload={
+                "round": 1, "documents": len(result.documents), "usage": result.usage,
+            })
+            return list(result.documents)
 
-        tasks: list[tuple[SearchProvider, str]] = []
+        keywords = [kw for kw in [county, focus] if kw]
+        tasks: list[_SearchTask] = []
 
         # 若调用方显式注入了自定义模板，保持历史模板逻辑
         if self._custom_templates or self._custom_gov_templates:
@@ -173,11 +283,11 @@ class SearchCollector(SearchProvider):
             if self._web is not None:
                 for tpl in web_templates:
                     q = tpl.format(county=county, focus=focus or "")
-                    tasks.append((self._web, q))
+                    tasks.append(self._search_task(self._web, q))
             if self._gov is not None:
                 for tpl in self._gov_query_templates:
                     q = tpl.format(county=county, focus=focus or "")
-                    tasks.append((self._gov, q))
+                    tasks.append(self._search_task(self._gov, q))
         else:
             # 采用动态 QueryEngine 与消歧上下文生成多角度检索词
             generated_queries: list[GeneratedQuery] = self._query_engine.generate_research_queries(
@@ -188,10 +298,9 @@ class SearchCollector(SearchProvider):
                 target_years=target_years,
             )
             for gq in generated_queries:
-                if gq.target_channel == "gov" and self._gov is not None:
-                    tasks.append((self._gov, gq.query))
-                elif self._web is not None:
-                    tasks.append((self._web, gq.query))
+                task = self._adaptive_task(gq)
+                if task is not None:
+                    tasks.append(task)
 
         if not tasks:
             if self._fail_fast:
@@ -199,7 +308,8 @@ class SearchCollector(SearchProvider):
             logger.warning("没有可用的搜索 provider,返回空结果")
             return []
 
-        docs = self._filter_region_documents(self._run_tasks(tasks), county)
+        raw_docs = self._collect_unranked(tasks)
+        docs = self._filter_region_documents(raw_docs, county)
         return self._dedup_and_rank(docs, top=n, keywords=keywords, county=county)
 
     def collect_supplemental(
@@ -210,17 +320,15 @@ class SearchCollector(SearchProvider):
         county: str = "",
     ) -> list[RawDoc]:
         """多轮反思补充检索接口。执行针对性查询。"""
-        tasks: list[tuple[SearchProvider, str]] = []
+        tasks: list[_SearchTask] = []
         for q in queries:
             if any(k in q for k in ("统计公报", "国民经济", "规划", "政策")) and self._gov is not None:
-                tasks.append((self._gov, q))
+                tasks.append(self._search_task(self._gov, q))
             elif self._web is not None:
-                tasks.append((self._web, q))
+                tasks.append(self._search_task(self._web, q))
 
-        if not tasks:
-            return []
-
-        docs = self._filter_region_documents(self._run_tasks(tasks), county)
+        raw_docs = self._collect_unranked(tasks)
+        docs = self._filter_region_documents(raw_docs, county)
         return self._dedup_and_rank(docs, top=max_results, keywords=queries)
 
     def collect_adaptive(
@@ -231,62 +339,137 @@ class SearchCollector(SearchProvider):
         max_results: int = 0,
     ) -> AdaptiveCollectionResult:
         """Execute a bounded plan while returning explicit search/fetch usage."""
-        unique_queries = {item.query.strip(): item for item in plan.queries if item.query.strip()}
-        # A controller reserves queries when it creates the plan; applying its
-        # remaining budget here would charge the same queries a second time.
-        queries = list(unique_queries.values())
-        tasks: list[tuple[SearchProvider, str]] = []
-        for generated in queries:
-            if generated.target_channel == "gov" and self._gov is not None:
-                tasks.append((self._gov, generated.query))
-            elif self._web is not None:
-                tasks.append((self._web, generated.query))
-        if not tasks:
+        history = controller.search_history if controller else (current_search_history() or SearchRequestHistory())
+        planned: list[tuple[GeneratedQuery, _SearchTask]] = []
+        skipped: list[tuple[GeneratedQuery, _SearchTask | None]] = []
+        known_requests = set(history.responses)
+        for generated in plan.queries:
+            task = self._adaptive_task(generated)
+            if task is not None and history.can_use(task.request_key, task.route_key, generated.slot_id):
+                planned.append((generated, task))
+            else:
+                skipped.append((generated, task))
+        tasks = [task for _, task in planned]
+        new_routes = {task.route_key for task in tasks} - history.route_results.keys()
+        # The planner already reserved the new backend requests.
+        try:
+            by_route, search_count = self._run_tasks(tasks, history=history)
+        finally:
+            self._record_contract_queries(plan, history, known_requests, planned, skipped)
+        if not planned:
             return AdaptiveCollectionResult(
                 documents=(),
                 usage={"search_queries": 0, "fetched_documents": 0},
-                stop_reason="no_gap_query",
+                stop_reason=RetrievalStopReason.NO_GAP_QUERY,
             )
-        raw_docs = self._run_tasks(tasks)
+        history.used_queries.update((task.route_key, query.slot_id) for query, task in planned)
+        fetched = sum(len(by_route[key]) for key in new_routes if key in by_route)
         if controller:
-            controller.record_fetches(len(raw_docs))
-        region_filter = filter_documents_for_region(raw_docs, plan.spec.region_name)
-        region_docs = list(region_filter.kept)
+            controller.record_fetches(fetched)
+        region_filter = filter_documents_for_region(
+            (doc for docs in by_route.values() for doc in docs), plan.spec.region_name,
+        )
         if region_filter.dropped:
             logger.info(
                 "区域相关性过滤 | county=%s | kept=%d | dropped=%d | dropped_urls=%s",
                 plan.spec.region_name,
-                len(region_docs),
+                len(region_filter.kept),
                 len(region_filter.dropped),
                 [doc.url for doc, _ in region_filter.dropped][:5],
             )
-        slots = {slot.slot_id: slot for slot in plan.spec.question_slots}
-        ranked_by_url: dict[str, tuple[float, RawDoc]] = {}
-        for generated in queries:
-            slot = slots.get(generated.slot_id)
-            if slot is None:
-                continue
-            for item in rank_documents_for_slot(
-                region_docs,
-                slot,
-                query=generated.query,
-            ):
-                key = normalize_url(item.document.url) or item.fingerprint or item.document.title
-                current = ranked_by_url.get(key)
-                if current is None or item.score > current[0]:
-                    ranked_by_url[key] = (item.score, item.document)
-        ranked = [item for _, item in sorted(
-            ranked_by_url.values(), key=lambda pair: (-pair[0], pair[1].url, pair[1].title)
-        )[: max_results or self._max_results]]
+        kept = {id(doc) for doc in region_filter.kept}
+        region_docs = {key: [doc for doc in docs if id(doc) in kept] for key, docs in by_route.items()}
+        limit = max_results or self._max_results
+        if plan.spec.question_slots:
+            ranked = self._rank_adaptive_documents(planned, region_docs, plan.spec.question_slots)
+        else:
+            ranked = self._dedup_and_rank(
+                list(region_filter.kept), top=limit, keywords=[query.query for query, _ in planned],
+            )
         return AdaptiveCollectionResult(
-            documents=tuple(ranked),
+            documents=tuple(ranked[:limit]),
             usage={
-                "search_queries": len(tasks),
-                "fetched_documents": len(raw_docs),
+                "search_queries": search_count,
+                "fetched_documents": fetched,
                 "region_filtered_documents": len(region_filter.dropped),
-                "returned_documents": len(ranked),
+                "returned_documents": len(ranked[:limit]),
             },
         )
+
+    @staticmethod
+    def _record_contract_queries(
+        plan: AdaptiveQueryPlan,
+        history: SearchRequestHistory,
+        known_requests: set[SearchRequestKey],
+        planned: list[tuple[GeneratedQuery, _SearchTask]],
+        skipped: list[tuple[GeneratedQuery, _SearchTask | None]],
+    ) -> None:
+        slot_ids = {slot.slot_id for slot in plan.spec.question_slots if slot.is_contract_question}
+        executions: list[SearchExecution] = []
+        for query, task in planned:
+            seen = task.request_key in known_requests
+            known_requests.add(task.request_key)
+            if query.slot_id not in slot_ids:
+                continue
+            docs = history.route_results.get(task.route_key)
+            if task.request_key not in history.responses:
+                request, status, reason = "skipped", "skipped", "request_not_recorded"
+            elif docs is None:
+                request = "reused" if seen else "executed"
+                status = "failed"
+                reason = "provider_failed" if history.responses[task.request_key] is None else "route_failed"
+            else:
+                request = "reused" if seen else "executed"
+                status, reason = ("results" if docs else "empty"), ""
+            executions.append(SearchExecution(
+                slot_id=query.slot_id, round=plan.round_number, query=task.query, provider=task.provider.name,
+                request=request, status=status, reason=reason, returned_documents=len(docs or ()),
+                documents=_document_records(docs or ()),
+            ))
+        for query, task in skipped:
+            if query.slot_id in slot_ids:
+                executions.append(SearchExecution(
+                    slot_id=query.slot_id, round=plan.round_number, query=query.query,
+                    provider=task.provider.name if task is not None else query.target_channel,
+                    request="skipped", status="skipped",
+                    reason="already_used_or_unusable" if task is not None else "no_provider_route",
+                ))
+        if executions:
+            history.executions.extend(executions)
+            emit(
+                "retrieval.queries.completed",
+                stage="collect" if plan.round_number == 1 else "analyze",
+                payload={"round": plan.round_number, "executions": [item.model_dump() for item in executions]},
+            )
+
+    @staticmethod
+    def _rank_adaptive_documents(
+        planned: list[tuple[GeneratedQuery, _SearchTask]],
+        documents_by_route: dict[SearchRequestKey, list[RawDoc]],
+        question_slots: list[QuestionSlot],
+    ) -> list[RawDoc]:
+        slots = {slot.slot_id: slot for slot in question_slots}
+        ranked_by_url: dict[str, RankedDocument] = {}
+        for query, task in planned:
+            # A period query without a slot can serve any question in the spec.
+            ranking_slots = (slots[query.slot_id],) if query.slot_id in slots else question_slots
+            for slot in ranking_slots:
+                for item in rank_documents_for_slot(
+                    documents_by_route.get(task.route_key, []), slot, query=query.query,
+                ):
+                    key = normalize_url(item.document.url) or item.fingerprint or item.document.title
+                    current = ranked_by_url.get(key)
+                    if current is None or item.score > current.score:
+                        ranked_by_url[key] = item
+        ranked = sorted(ranked_by_url.values(), key=lambda item: (-item.score, item.document.url, item.document.title))
+        seen_fingerprints: set[str] = set()
+        results: list[RawDoc] = []
+        for item in ranked:
+            if item.fingerprint and item.fingerprint in seen_fingerprints:
+                continue
+            seen_fingerprints.add(item.fingerprint)
+            results.append(item.document)
+        return results
 
     @staticmethod
     def _filter_region_documents(
@@ -321,60 +504,74 @@ class SearchCollector(SearchProvider):
             )
         return list(result.kept)
 
-    def _run_tasks(self, tasks: list[tuple[SearchProvider, str]]) -> list[RawDoc]:
-        """并发执行任务。
+    def _collect_unranked(self, tasks: list[_SearchTask]) -> list[RawDoc]:
+        history = current_search_history() or SearchRequestHistory()
+        by_route, _ = self._run_tasks(tasks, history=history)
+        history.used_queries.update((key, "") for key in by_route)
+        return [doc for docs in by_route.values() for doc in docs]
 
-        A provider that returns no documents did not necessarily fail: an
-        adaptive gap query may legitimately have no matching result. Fail the
-        batch only when every task raised, so an empty follow-up round is left
-        to the controller's zero-marginal-evidence stop instead of aborting the
-        whole research job.
-        """
-        results: list[RawDoc] = []
-        failed_tasks = 0
-        per_task_timeout = max(10.0, float(self._settings.search.timeout) * 1.5)
-
-        def _worker(t: tuple[SearchProvider, str]) -> tuple[list[RawDoc], bool]:
-            provider, query = t
-            name = provider.name
+    def _wait_for_results(
+        self, futures: dict[SearchRequestKey, Future[list[RawDoc]]], *, stage: str,
+    ) -> dict[SearchRequestKey, list[RawDoc] | None]:
+        timeout = max(10.0, float(self._settings.search.timeout) * 1.5)
+        results: dict[SearchRequestKey, list[RawDoc] | None] = {}
+        for key, future in futures.items():
             try:
-                out = provider.search(query, max_results=self._max_results)
-                return out, False
-            except Exception as e:  # noqa: BLE001
-                logger.warning(
-                    "收集失败(隔离) | provider=%s | query=%s | err=%s",
-                    name, query, e,
-                )
-                return [], True
+                results[key] = future.result(timeout=timeout)
+            except _TimeoutError:
+                logger.warning("收集超时 | stage=%s | query=%s", stage, key[1])
+                results[key] = None
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("收集异常 | stage=%s | query=%s | err=%s", stage, key[1], exc)
+                results[key] = None
+        return results
 
+    def _run_tasks(
+        self, tasks: list[_SearchTask], *, history: SearchRequestHistory,
+    ) -> tuple[dict[SearchRequestKey, list[RawDoc]], int]:
+        """Fetch each backend response once and isolate each route's processing."""
+        routes = {task.route_key: task for task in tasks if task.query}
+        if not routes:
+            return {}, 0
+        requests = {
+            task.request_key: task for task in routes.values() if task.request_key not in history.responses
+        }
         with ThreadPoolExecutor(max_workers=self._concurrency) as pool:
-            futures = {pool.submit(_worker, t): t for t in tasks}
-            for fut, (prov, query) in futures.items():
-                try:
-                    chunk, failed = fut.result(timeout=per_task_timeout)
-                except _TimeoutError:
-                    failed_tasks += 1
-                    logger.warning("收集超时 | provider=%s | query=%s", prov.name, query)
+            searches = {
+                key: pool.submit(task.backend.search, task.query, max_results=task.max_results)
+                for key, task in requests.items()
+            }
+            history.responses.update(self._wait_for_results(searches, stage="search"))
+            # Preserve successful Web results even if Gov filtering/enrichment times out.
+            processing: dict[SearchRequestKey, Future[list[RawDoc]]] = {}
+            for key, task in routes.items():
+                if key in history.route_results:
                     continue
-                except Exception as e:  # noqa: BLE001
-                    failed_tasks += 1
-                    logger.warning("收集异常 | provider=%s | query=%s | err=%s", prov.name, query, e)
-                    continue
-                if failed:
-                    failed_tasks += 1
-                    continue
-                results.extend(chunk)
+                raw = history.responses[task.request_key]
+                if raw and task.provider is not task.backend:
+                    processing[key] = pool.submit(task.process, raw)
+                else:
+                    history.route_results[key] = raw
+            history.route_results.update(self._wait_for_results(processing, stage="gov"))
 
-        if not results and self._fail_fast and failed_tasks == len(tasks):
+        # Callers may normalize URLs or clean the content in place.
+        results = {
+            key: [doc.model_copy(deep=True) for doc in docs]
+            for key in routes if (docs := history.route_results[key]) is not None
+        }
+        failed_routes = sum(history.route_results.get(key) is None for key in routes)
+        # An empty result is not a failure: only a batch where every route
+        # failed aborts the job.
+        if self._fail_fast and not results and failed_routes == len(routes):
             raise SearchError(
                 "所有搜索任务均失败",
                 context={
-                    "tasks_count": len(tasks),
-                    "failed_tasks": failed_tasks,
-                    "providers": sorted({p.name for p, _ in tasks}),
+                    "tasks_count": len(routes),
+                    "failed_tasks": failed_routes,
+                    "providers": sorted({task.provider.name for task in routes.values()}),
                 },
             )
-        return results
+        return results, len(requests)
 
     def _dedup_and_rank(
         self,
@@ -405,7 +602,7 @@ class SearchCollector(SearchProvider):
                 key = f"__no_url__{d.title or d.content[:20]}"
 
             # 跨站内容重复指纹
-            fp = calculate_content_fingerprint(d.content or d.snippet)
+            fp = calculate_content_fingerprint(d.content or d.snippet, title=d.title)
             if fp and fp in seen_fingerprints and key not in seen:
                 continue
 

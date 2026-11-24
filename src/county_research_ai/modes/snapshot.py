@@ -45,6 +45,8 @@ class SnapshotModeHandler:
                 date_end=context.request.date_end,
                 target_years=context.request.target_years,
                 time_period=context.request.time_period,
+                question_slots=context.contract_question_slots,
+                source_credibility_check=context.source_credibility_check,
             )
             return context.model_copy(
                 update={

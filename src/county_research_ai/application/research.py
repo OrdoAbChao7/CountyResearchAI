@@ -17,6 +17,7 @@ from ..ports.processing import ProcessingPort
 from ..ports.reporting import FilenameRenderer
 from ..ports.search import SearchPort
 from ..ports.storage import StoragePort
+from ..search.request_history import bind_search_history
 from .config import ResearchApplicationConfig
 from .context import ResearchContext
 from .results import ResearchRunResult
@@ -50,15 +51,19 @@ class ResearchApplication:
 
     def collect_materials(self, context: ResearchContext) -> ResearchContext:
         try:
-            docs = self.search.collect(
-                context.county.display(),
-                context.focus,
-                self.config.max_search_results,
-                mode=normalize_mode(context.request.mode),
-                date_start=context.request.date_start,
-                date_end=context.request.date_end,
-                target_years=context.request.target_years,
-            )
+            question_slots = context.contract_question_slots
+            question_args = {"question_slots": question_slots} if question_slots else {}
+            with bind_search_history(context.search_history):
+                docs = self.search.collect(
+                    context.county.display(),
+                    context.focus,
+                    self.config.max_search_results,
+                    mode=normalize_mode(context.request.mode),
+                    date_start=context.request.date_start,
+                    date_end=context.request.date_end,
+                    target_years=context.request.target_years,
+                    **question_args,
+                )
             return context.model_copy(update={"raw_docs": docs})
         except Exception as exc:  # noqa: BLE001
             self._raise_stage("collect", context, exc)
@@ -132,7 +137,7 @@ class ResearchApplication:
             mode=mode,
             target_years=target_years,
             architecture_version="evidence_first_v2",
-            required_question_slots=[
+            required_question_slots=context.contract_question_slots or [
                 QuestionSlot(
                     slot_id=f"legacy:{mode}:overview",
                     research_question=f"{context.county.name} 的 {focus} 研究概览",
@@ -143,9 +148,10 @@ class ResearchApplication:
             ],
         )
         evidence_ledger = build_evidence_ledger(processed)
-        evidence_pack = evidence_ledger.select_evidence_pack(
-            research_spec.required_question_slots[0]
-        )
+        evidence_packs = [
+            evidence_ledger.select_evidence_pack(slot) for slot in research_spec.question_slots
+        ]
+        evidence_pack = evidence_packs[0]
         processed = processed.model_copy(update={"evidence_pack": evidence_pack})
         return context.model_copy(
             update={
@@ -154,14 +160,15 @@ class ResearchApplication:
                 "research_spec": research_spec,
                 "evidence_ledger": evidence_ledger,
                 "evidence_pack": evidence_pack,
-                "evidence_packs": [evidence_pack],
+                "evidence_packs": evidence_packs,
             }
         )
 
     def analyze(self, context: ResearchContext) -> ResearchContext:
         try:
             handler = self.modes.get(normalize_mode(context.request.mode))
-            return handler.analyze(context)
+            with bind_search_history(context.search_history):
+                return handler.analyze(context)
         except Exception as exc:  # noqa: BLE001
             self._raise_stage("analyze", context, exc)
 
