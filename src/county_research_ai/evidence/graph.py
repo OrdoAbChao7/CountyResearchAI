@@ -36,9 +36,11 @@ from ..domain.research_contracts import (
     EvidenceChunk,
     SourceDocument,
 )
+from .claim_region import classify_claim_region
 from .ledger import EvidenceLedger
 from .measure import data_years, derive_measure_key, infer_period
 from .numeric_support import numeric_context_matches
+from .source_contract import meets_source_credibility_threshold
 from .source_identity import source_groups
 
 SCHEMA_VERSION = 2
@@ -104,6 +106,8 @@ class ClaimEvidenceEdgeRecord(BaseModel):
     span_id: str
     relation: EdgeRelation = EdgeRelation.CONTEXT
     rationale: str = ""
+    # A later import can be less credible than the immutable source snapshot.
+    source_credibility_eligible: bool = True
     verifier_version: str = DETERMINISTIC_VERIFIER_VERSION
 
 
@@ -132,6 +136,12 @@ class EvidenceLink(BaseModel):
     edge: ClaimEvidenceEdgeRecord
     span: EvidenceSpanRecord
     snapshot: SourceSnapshotRecord
+
+
+def _eligible_source(link: EvidenceLink) -> bool:
+    return link.edge.source_credibility_eligible and meets_source_credibility_threshold(
+        link.snapshot.metadata, allow_unscored=True,
+    )
 
 
 class ClaimChain(BaseModel):
@@ -289,8 +299,12 @@ def _claim_supported_by_quote(
     support.
     """
     evidence_text = f"{quote}\n{title}\n{url}"
-    if claim.region_id and claim.region_id not in evidence_text:
-        return False
+    if claim.region_id:
+        if claim.region_id not in evidence_text:
+            return False
+        attribution = classify_claim_region(claim.region_id, statement=claim.statement)
+        if attribution.source == "claim" and attribution.excluded_from_target and attribution.region_id != claim.region_id:
+            return False
     claim_years = set(_years(claim.period))
     if not claim_years:
         return False
@@ -303,7 +317,7 @@ def _claim_supported_by_quote(
     if claim.value:
         if not _quote_contains_value(quote, claim.value, claim.unit):
             return False
-        if not numeric_context_matches(claim, quote):
+        if not numeric_context_matches(claim, quote, title=title, url=url):
             return False
         if not claim.statement and not claim.metric_id:
             return True
@@ -1323,12 +1337,27 @@ class EvidenceGraphStore:
     def supporting_sources(self, claim_id: str, *, run_id: str = "") -> list[SourceSnapshotRecord]:
         """Only valid links that actually support this claim may satisfy API gates."""
         chain = self.get_chain(claim_id, run_id=run_id)
-        return [link.snapshot for link in chain.links
-                if link.edge.relation is not EdgeRelation.CONTRADICTS
-                and self._check_span_integrity(link.span, link.snapshot)[0]
-                and _claim_supported_by_quote(chain.claim, link.span.quote,
-                                             title=link.snapshot.title,
-                                             url=link.snapshot.canonical_url)]
+        return [link.snapshot for link in self.supporting_links(chain)]
+
+    def intact_links(self, chain: ClaimChain) -> Iterator[EvidenceLink]:
+        for link in chain.links:
+            if self._check_span_integrity(link.span, link.snapshot)[0]:
+                yield link
+
+    def supporting_links(
+        self, chain: ClaimChain, *, require_credible_source: bool = True,
+    ) -> Iterator[EvidenceLink]:
+        """Yield usable support, with an option to inspect matching candidate quotes."""
+        for link in self.intact_links(chain):
+            if (
+                link.edge.relation is not EdgeRelation.CONTRADICTS
+                and (not require_credible_source or _eligible_source(link))
+                and _claim_supported_by_quote(
+                    chain.claim, link.span.quote,
+                    title=link.snapshot.title, url=link.snapshot.canonical_url,
+                )
+            ):
+                yield link
 
     def _decide_status(
         self,

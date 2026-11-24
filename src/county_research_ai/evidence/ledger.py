@@ -4,6 +4,8 @@ from __future__ import annotations
 import hashlib
 import re
 
+from ..domain.company_names import company_names
+from ..domain.question_targets import contract_period_in_window, question_target
 from ..domain.research_contracts import (
     AtomicClaim,
     EvidenceChunk,
@@ -12,7 +14,7 @@ from ..domain.research_contracts import (
     SourceDocument,
 )
 from ..models import ProcessedData
-from .claim_region import classify_claim_region
+from ..search.disambiguation import disambiguate_region
 from .measure import derive_measure_key, infer_claim_period
 from .source_contract import serialize_source_documents
 from .store import EvidenceStore
@@ -192,15 +194,24 @@ class EvidenceLedger:
         return sorted(matches, key=lambda item: item.claim_id)
 
     def select_evidence_pack(self, slot: QuestionSlot) -> EvidencePack:
-        target_region = (slot.region or "").strip()
+        target_region = disambiguate_region(slot.region).clean_name if slot.is_contract_question else slot.region.strip()
+        target = question_target(slot) if slot.is_contract_question else None
         candidates: list[tuple[int, str, EvidenceChunk, str]] = []
         requested_years = set(
             re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", slot.research_question)
         )
-        period_matches = {
-            chunk.chunk_id: _period_match(chunk.year_hints, slot.time_period)
-            for chunk in self.chunks.values()
-        }
+        if slot.is_contract_question and slot.time_period:
+            period_matches = {
+                chunk.chunk_id: next(
+                    (year for year in chunk.year_hints if contract_period_in_window(year, slot.time_period)), "",
+                )
+                for chunk in self.chunks.values()
+            }
+        else:
+            period_matches = {
+                chunk.chunk_id: _period_match(chunk.year_hints, slot.time_period)
+                for chunk in self.chunks.values()
+            }
         has_period_matches = any(period_matches.values())
         period_excluded: list[str] = []
         claim_by_chunk: dict[str, list[AtomicClaim]] = {}
@@ -226,21 +237,44 @@ class EvidenceLedger:
                 for metric in slot.required_metrics
                 if metric in chunk.text or any(metric in claim.metric_id for claim in linked_claims)
             ]
+            source = self.sources[chunk.document_id]
+            direct_answer = target is not None and any(
+                target.matches_claim(slot, claim)
+                and target.has_factual_quote(
+                    claim, chunk.text, title=source.source_title, content=source.content,
+                )
+                for claim in linked_claims
+            )
             period_year = period_matches[chunk.chunk_id]
             matched_requested_years = sorted(requested_years.intersection(chunk.year_hints))
+            # An enterprise question also needs chunks that name companies; the industry-total
+            # question never receives this credit, so the two packs are scored on their own terms.
+            names_company = (
+                target is not None and target.kind == "enterprise"
+                and any(
+                    company_names(claim.statement) and _claim_region_allowed(claim, target_region)
+                    for claim in linked_claims
+                )
+            )
             score = (
-                100 * len(matched)
+                (400 if direct_answer else 0)
+                + (150 if names_company else 0)
+                + 100 * len(matched)
                 + 100 * len(matched_requested_years)
                 + (50 if period_year else 0)
                 + (10 if linked_claims else 0)
             )
             reasons = []
+            if names_company:
+                reasons.append("named_company")
             if period_year:
                 reasons.append(f"period:{period_year}")
             if matched_requested_years:
                 reasons.append(f"requested_year:{','.join(matched_requested_years)}")
             if matched:
                 reasons.append(f"required_metric:{','.join(matched)}")
+            if direct_answer:
+                reasons.append("contract_answer_candidate")
             reason = ";".join(reasons) if reasons else "fallback"
             candidates.append((score, chunk.chunk_id, chunk, reason))
         candidates.sort(
@@ -270,14 +304,14 @@ class EvidenceLedger:
 
         selected: list[EvidenceChunk] = []
         omitted: list[str] = list(period_excluded)
-        reasons: dict[str, str] = {}
+        selected_reasons: dict[str, str] = {}
         total_chars = 0
         for _, chunk_id, chunk, reason in candidates:
             chunk_chars = len(chunk.text)
             if total_chars + chunk_chars <= slot.budget_chars:
                 selected.append(chunk)
                 total_chars += chunk_chars
-                reasons[chunk_id] = reason
+                selected_reasons[chunk_id] = reason
             else:
                 omitted.append(chunk_id)
 
@@ -291,11 +325,6 @@ class EvidenceLedger:
             }.values(),
             key=lambda item: item.claim_id,
         )
-        selected_reasons = {
-            chunk_id: reasons[chunk_id]
-            for chunk_id in selected_ids
-            if chunk_id in reasons
-        }
         excluded_reasons = {
             chunk_id: "budget_exceeded"
             for chunk_id in omitted
@@ -315,7 +344,15 @@ class EvidenceLedger:
                 for chunk in selected
             )
         ]
-        status = "complete" if not missing and selected else ("partial" if selected else "empty")
+        # Contract answers are accepted only after the selected Claims are verified.
+        if slot.is_contract_question and not any(
+            "contract_answer_candidate" in reason for reason in selected_reasons.values()
+        ):
+            missing.append(slot.research_question)
+        if selected:
+            status = "partial" if slot.is_contract_question or missing else "complete"
+        else:
+            status = "empty"
         pack_key = f"{slot.slot_id}|{slot.budget_chars}|{','.join(chunk.chunk_id for chunk in selected)}"
         pack_id = hashlib.sha256(pack_key.encode("utf-8")).hexdigest()[:24]
         return EvidencePack(
@@ -419,25 +456,18 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
             published_at=source.publish_date if source is not None else None,
             content_prefix=source.content if source is not None else "",
             document_year=item.year or "",
+            statement_context=item.snippet,
         )
         source_ids = [source.doc_id] if source is not None else []
         for repost_url in item.corroborating_sources:
             repost = source_by_url.get(repost_url)
             if repost is not None and repost.doc_id not in source_ids:
                 source_ids.append(repost.doc_id)
-        region = classify_claim_region(
-            processed.county.name,
-            title=source.source_title if source is not None else item.title,
-            url=source.canonical_url if source is not None else item.url,
-            statement=item.claim,
-            quote=item.snippet or chunk_text,
-            scope=item.administrative_scope,
-        )
         claim = AtomicClaim(
             claim_id=item.id,
             statement=item.claim,
-            region_id=region.region_id,
-            region_source=region.source,
+            region_id=item.region_id,
+            region_source=item.region_source,
             metric_id=item.indicator_caliber or item.topic,
             measure_id=derive_measure_key(
                 item.claim, chunk_text=chunk_text, value=value

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import re
 
+from .claim_region import statistical_value_context
+
 _WS = re.compile(r"\s+")
 _MARKDOWN = re.compile(r"[*`#\[\]()（）<>|]+")
 _DIGITS = re.compile(r"[\d.,%‰]+")
@@ -21,6 +23,13 @@ _LEADING = re.compile(
 )
 _STRONG_BREAK = re.compile(r"[。；;！？!?\n]")
 _YEAR = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
+_SUBANNUAL = re.compile(
+    r"(?:19|20)\d{2}\s*年\s*"
+    r"([上下]半年|第?[一二三四1-4]季度|前[一二三四五六七八九十\d]+个?月|"
+    r"\d{1,2}(?:\s*[-—至到]\s*\d{1,2})?\s*月(?:\s*\d{1,2}\s*日)?)"
+    r"(?!\s*(?:发布|公布|更新|上传|抓取))"
+)
+_QUARTER_DIGITS = str.maketrans("一二三四", "1234")
 _VALUE_WINDOW = 40
 _ALIASES = (
     (re.compile(r"(?<!第)一产"), "第一产业"),
@@ -38,7 +47,7 @@ def _canonicalize(value: str) -> str:
 
 def normalize_measure(text: str) -> str:
     """Normalize a measure phrase while keeping the subject and predicate."""
-    value = _MARKDOWN.sub("", text or "")
+    value = _MARKDOWN.sub("", strip_subannual_period(text or ""))
     value = _UNITS.sub("", value)
     value = _DIGITS.sub("", value)
     value = _PUNCT.sub("", value)
@@ -133,6 +142,39 @@ def infer_period(
     return report_years[0] if len(set(report_years)) == 1 else ''
 
 
+def canonical_reporting_period(period: str) -> str:
+    """Give equivalent spellings of a subannual period one comparison key."""
+    period = period.strip()
+    annual = re.fullmatch(r"((?:19|20)\d{2})\s*年(?:度)?", period)
+    if annual:
+        return annual[1]
+    match = _SUBANNUAL.fullmatch(period)
+    if not match:
+        return period
+    partial = _WS.sub("", match[1])
+    if partial.endswith("季度"):
+        quarter = partial.removeprefix("第")[0].translate(_QUARTER_DIGITS)
+        partial = f"第{quarter}季度"
+    return f"{period[:4]}年{partial}"
+
+
+def local_reporting_period(statement: str, *, preceding: tuple[str, ...] = ()) -> str:
+    """Use the closest explicit period in the value's sentence."""
+    for clause in (statement, *reversed(preceding)):
+        years = sorted(set(data_years(clause)))
+        if not years:
+            continue
+        if len(years) > 1:
+            return "-".join(years)
+        partial = next((match[0] for match in _SUBANNUAL.finditer(clause) if match[0].startswith(years[0])), "")
+        return canonical_reporting_period(partial) if partial else years[0]
+    return ""
+
+
+def strip_subannual_period(text: str) -> str:
+    return _SUBANNUAL.sub("", text)
+
+
 def infer_claim_period(
     statement: str,
     *,
@@ -142,6 +184,7 @@ def infer_claim_period(
     published_at: object | None = None,
     content_prefix: str = "",
     document_year: str = "",
+    statement_context: str = "",
 ) -> str:
     """Resolve a claim's data period without borrowing the publication year.
 
@@ -151,9 +194,13 @@ def infer_claim_period(
     title, and its evidence chunk mention no year at all; if a year was named
     but could not be resolved unambiguously, the period stays empty.
     """
-    statement_years = sorted(set(data_years(statement)))
-    if len(statement_years) > 1:
-        return "-".join(statement_years)
+    preceding: tuple[str, ...] = ()
+    offset = statement_context.find(statement) if statement else -1
+    if offset >= 0:
+        context = statistical_value_context(statement_context, offset, offset + len(statement))
+        preceding = context.preceding_clauses
+    if local_period := local_reporting_period(statement, preceding=preceding):
+        return local_period
     period = infer_period(
         statement,
         chunk_text=chunk_text,
@@ -164,8 +211,6 @@ def infer_claim_period(
     )
     if period:
         return period
-    if statement_years:
-        return statement_years[0]
     # A year was named but rejected as a publication label (or left ambiguous):
     # do not replace it with the document year.
     if any(_YEAR.search(text or "") for text in (statement, title, chunk_text)):
