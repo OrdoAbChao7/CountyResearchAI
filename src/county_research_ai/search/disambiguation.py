@@ -28,7 +28,7 @@ class DisambiguationResult:
         """获取检索前缀，包含必要省市限定。"""
         parts = [p for p in [self.province, self.prefecture, self.clean_name] if p]
         # 去重（例如如果省市名字相同或已经包含）
-        unique_parts = []
+        unique_parts: list[str] = []
         for p in parts:
             if not any(p in u or u in p for u in unique_parts):
                 unique_parts.append(p)
@@ -161,6 +161,27 @@ _KNOWN_REGIONS: dict[str, dict[str, str]] = {
 }
 
 _ADMIN_SUFFIXES = ("自治县", "自治旗", "特区", "林区", "旗", "县", "市", "区")
+_PARENT_NAMES = r"(?:[一-鿿]{2,6}(?:省|自治区|市|地区|盟|自治州)){1,2}"
+_PARENT_ANNOTATION = re.compile(rf"[（(]({_PARENT_NAMES})[)）]")
+
+
+def matches_explicit_parents(region: DisambiguationResult, text: str) -> bool:
+    """Compare both prefixed and parenthesized administrative names."""
+    if not (region.province or region.prefecture) or region.clean_name not in text:
+        return True
+    text = re.sub(r"\s+", "", text)
+    name = re.escape(region.clean_name)
+    qualified_names = re.findall(rf"({_PARENT_NAMES}{name})", text)
+    qualified_names.extend(parent + region.clean_name for parent in _PARENT_ANNOTATION.findall(text))
+    for candidate in qualified_names:
+        source = disambiguate_region(candidate)
+        if source.clean_name != region.clean_name:
+            continue
+        if region.province and source.province and not source.province.endswith(region.province):
+            return False
+        if region.prefecture and source.prefecture and not source.prefecture.endswith(region.prefecture):
+            return False
+    return True
 
 
 def disambiguate_region(name: str) -> DisambiguationResult:

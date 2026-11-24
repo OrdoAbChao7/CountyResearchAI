@@ -8,6 +8,8 @@ from county_research_ai.domain.research_contracts import (
     SourceDocument,
 )
 from county_research_ai.evidence.bound_verifier import EvidenceBoundVerifier
+from county_research_ai.evidence.ledger import build_evidence_ledger
+from county_research_ai.models import CountyInfo, ProcessedData, RawDoc
 
 
 def _evidence(metric: str = "地区生产总值") -> EvidencePack:
@@ -111,6 +113,23 @@ def test_supported_claim_requires_linked_chunk_and_source_url():
     assert report.unverified_claims_count == 0
     assert "https://deqing.gov.cn/report" in annotated
     assert "原文：\"2024年德清县地区生产总值为722.5亿元。\"" in annotated
+
+
+def test_monthly_report_line_requires_a_matching_month():
+    statement = "2024年3月安吉县地区生产总值达9亿元。"
+    doc = RawDoc(title="安吉县月度统计", url="https://example.gov.cn/anji", content=statement, credibility_score=0.95)
+    ledger = build_evidence_ledger(ProcessedData(county=CountyInfo.from_name("安吉县"), focus="经济", docs=[doc]))
+    pack = ledger.select_evidence_pack(QuestionSlot(slot_id="monthly", research_question="地区生产总值", region="安吉县"))
+    verifier = EvidenceBoundVerifier()
+
+    annotated, correct = verifier.verify_markdown(statement, [pack], county="安吉县")
+    assert (correct.verified_claims_count, correct.unverified_claims_count) == (1, 0)
+    assert doc.url in annotated
+
+    for wrong in (statement.replace("3月", "4月"), statement.replace("3月", "")):
+        annotated, report = verifier.verify_markdown(wrong, [pack], county="安吉县")
+        assert (report.verified_claims_count, report.unverified_claims_count) == (0, 1)
+        assert doc.url not in annotated
 
 
 def test_same_metric_and_value_from_another_region_is_not_local_support():

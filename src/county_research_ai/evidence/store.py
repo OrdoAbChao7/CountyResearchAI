@@ -21,7 +21,11 @@ from ..models import (
     QuestionTree,
     RawDoc,
 )
-from .claim_region import classify_claim_region
+from .claim_region import (
+    classify_claim_region,
+    classify_statistical_claim_region,
+    statistical_value_context,
+)
 from .measure import data_years
 
 # 常见产业统计指标抽取正则
@@ -80,7 +84,8 @@ def _iter_evidence_segments(text: str):
     the legacy 300-character extraction limit. Overlapping windows retain
     cross-boundary indicator/value pairs.
     """
-    for raw_paragraph in re.split(r"[\n。；;]+", text):
+    # Preserve a following declaration that explicitly qualifies the preceding data.
+    for raw_paragraph in re.split(r"\n+|[。；;！!？?]+(?![ \t]*(?:以上|上述|前述))", text):
         paragraph = raw_paragraph.strip()
         if len(paragraph) < 10:
             continue
@@ -158,8 +163,15 @@ class EvidenceStore:
     ) -> list[EvidenceItem]:
         """从单篇文档中挖掘高质量事实与证据片段。"""
         full_text = f"{doc.title}\n{doc.snippet}\n{doc.content}"
-        lines = list(_iter_evidence_segments(full_text))
+        # When an amount appears in both the body and a search summary, keep
+        # the body's subject and surrounding qualifiers.
+        lines = (
+            (line, is_body)
+            for text, is_body in ((doc.content, True), (doc.snippet, False), (doc.title, False))
+            for line in _iter_evidence_segments(text)
+        )
         extracted: list[EvidenceItem] = []
+        body_scopes: dict[str, tuple[str, str]] = {}
 
         # 推断年份：只接受唯一的、非发布/抓取标签的数据年份。
         # 多个年份时保持为空，避免把文档级年份强加给每一条证据。
@@ -169,15 +181,10 @@ class EvidenceStore:
         seen_ids = set(self._items.keys())
 
         # 1. 抽取统计数值陈述
-        for line in lines:
-            if len(line) < 10 or len(line) > 300:
-                continue
-
-            extracted.extend(
-                self._extract_numerical_from_line(
-                    doc, line, year_str, seen_ids, county=county
-                )
-            )
+        for line, is_body in lines:
+            extracted.extend(self._extract_numerical_from_line(
+                doc, line, year_str, seen_ids, body_scopes, county=county, is_body=is_body,
+            ))
 
             # 2. 抽取政策文件
             for policy_match in _POLICY_NAME_PATTERN.finditer(line):
@@ -271,62 +278,44 @@ class EvidenceStore:
         line: str,
         year_str: str | None,
         seen_ids: set[str],
+        body_scopes: dict[str, tuple[str, str]],
         *,
-        county: str = "",
+        county: str,
+        is_body: bool,
     ) -> list[EvidenceItem]:
         items: list[EvidenceItem] = []
         for pattern, indicator_type in _NUMERICAL_STAT_PATTERNS:
             for match in re.finditer(pattern, line):
-                # 找到 match 前后最近的分隔标点符号获取精准子句
-                p_start = 0
-                for idx in range(match.start() - 1, -1, -1):
-                    if line[idx] in "，,。；;！!？?\n":
-                        p_start = idx + 1
-                        break
-
-                p_end = len(line)
-                for idx in range(match.end(), len(line)):
-                    if line[idx] in "，,。；;！!？?\n":
-                        p_end = idx
-                        break
-
-                clause = line[p_start:p_end].strip()
-                if not clause:
-                    clause = match.group(0)
-
-                # 判断行政范围
-                scope = "县域本级"
-                target_context = f"{doc.title}\n{line}"
-                is_national_gdp = "国内生产总值" in target_context and (
-                    not county or county not in target_context
-                )
-                if "全国" in target_context or is_national_gdp:
-                    scope = "全国范围"
-                elif "全市" in target_context or "地级市" in target_context:
-                    scope = "全市范围"
-                elif "全省" in target_context:
-                    scope = "全省范围"
+                context = statistical_value_context(line, match.start(1), match.end())
+                clause = context.statement
+                if match.group(0) not in clause:
+                    continue  # The indicator and value must occur in the same clause.
 
                 # 判断口径
                 caliber = indicator_type
-                if "规上" in clause:
+                if "规上" in clause or "规模以上" in clause:
                     caliber = f"规上工业{indicator_type}"
                 elif "全产业链" in clause or "综合" in clause:
                     caliber = f"全产业链{indicator_type}"
 
-                item_id = self._make_id(doc.url, f"{caliber}:{clause}")
-                if item_id in seen_ids:
+                identity = f"{caliber}:{clause}"
+                item_id = self._make_id(doc.url, identity)
+                if not is_body and item_id in body_scopes:
+                    continue
+                region, scope = classify_statistical_claim_region(
+                    county, title=doc.title, url=doc.url, context=context,
+                )
+                if is_body:
+                    previous = self._items.get(item_id)
+                    attribution = (region.region_id, scope)
+                    first_attribution = body_scopes.setdefault(
+                        item_id, (previous.region_id, previous.administrative_scope) if previous else attribution,
+                    )
+                    if attribution != first_attribution:
+                        item_id = self._make_id(doc.url, f"{identity}:{region.region_id}:{scope}")
+                if context.retracted or item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
-
-                region = classify_claim_region(
-                    county,
-                    title=doc.title,
-                    url=doc.url,
-                    statement=clause,
-                    quote=clause,
-                    scope=scope,
-                )
                 item = EvidenceItem(
                     id=item_id,
                     claim=clause,

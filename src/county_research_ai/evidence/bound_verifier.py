@@ -4,7 +4,11 @@ from __future__ import annotations
 import json
 import re
 
-from ..domain.research_contracts import EvidencePack
+from ..domain.research_contracts import EvidencePack, SourceDocument
+from .claim_region import statistical_value_context
+from .measure import canonical_reporting_period, local_reporting_period
+from .numeric_support import numeric_context_matches
+from .source_contract import meets_source_credibility_threshold
 from .verifier import VerificationReport
 
 _NUMBER_UNIT = re.compile(r"(?<![\d.])(\d[\d,]*(?:\.\d+)?)(\s*(?:亿元|万元|万亩|亩|万吨|吨|%|个|家|户|处|座|万人|人|平方公里|株|万株))")
@@ -46,7 +50,7 @@ class EvidenceBoundVerifier:
         }
 
         for line in markdown.splitlines():
-            values = _NUMBER_UNIT.findall(line)
+            values = list(_NUMBER_UNIT.finditer(line))
             if not values or line.lstrip().startswith("```"):
                 if not values:
                     annotated, verified, note = _audit_unquantified_line(
@@ -63,11 +67,8 @@ class EvidenceBoundVerifier:
                 continue
             matched_links: list[str] = []
             line_has_unverified = False
-            for number, unit in values:
-                normalized_number = number.replace(",", "")
-                citation = _find_numeric_citation(
-                    line, normalized_number, unit.strip(), county, claims, chunks, sources
-                )
+            for match in values:
+                citation = _find_numeric_citation(line, match, county, claims, chunks, sources)
                 if citation:
                     matched_links.append(citation)
                     report.verified_claims_count += 1
@@ -96,13 +97,8 @@ def metric_aliases(metric: str) -> set[str]:
     return _METRIC_ALIASES.get(metric, {metric})
 
 
-def _reliable_source(source) -> bool:
-    if source is None or not source.canonical_url:
-        return False
-    try:
-        return float(source.metadata["credibility_score"]) >= 0.65
-    except (KeyError, TypeError, ValueError):
-        return False
+def _reliable_source(source: SourceDocument | None) -> bool:
+    return bool(source and source.canonical_url and meets_source_credibility_threshold(source.metadata))
 
 
 def _audit_unquantified_line(line, county, claims, chunks, sources):
@@ -146,8 +142,13 @@ def _audit_unquantified_line(line, county, claims, chunks, sources):
     return f"{line} _[注: {note}]_", False, note
 
 
-def _find_numeric_citation(line, number, unit, county, claims, chunks, sources):
-    number_offset = line.find(number)
+def _find_numeric_citation(line, match: re.Match[str], county, claims, chunks, sources):
+    number, unit = match[1].replace(",", ""), match[2].strip()
+    number_offset = match.start()
+    observation = statistical_value_context(line, number_offset, match.end())
+    if observation.retracted:
+        return ""
+    period = local_reporting_period(observation.statement, preceding=observation.preceding_clauses)
     metric_alias_occurrences = []
     all_aliases = {alias for aliases in _METRIC_ALIASES.values() for alias in aliases}
     for alias in all_aliases:
@@ -163,12 +164,11 @@ def _find_numeric_citation(line, number, unit, county, claims, chunks, sources):
             default=None,
         )
         caliber_aliases = metric_aliases(claim.statistical_caliber) if claim.statistical_caliber else set()
-        preceding_years = re.findall(r"(?:19|20)\d{2}", line[: line.find(number)])
         if (
             claim.region_id != county
             or claim.value.replace(",", "") != number
             or claim.unit != unit
-            or (claim.period and (not preceding_years or preceding_years[-1] != claim.period))
+            or (claim.period and period != canonical_reporting_period(claim.period))
             or (claim.series_version and claim.series_version not in line)
             or (caliber_aliases and not any(alias in line for alias in caliber_aliases))
             or not claim.metric_id
@@ -198,7 +198,9 @@ def _find_numeric_citation(line, number, unit, county, claims, chunks, sources):
             if (number, unit) not in chunk_values:
                 continue
             source = sources.get(chunk.document_id)
-            if not _reliable_source(source):
+            if source is None or not _reliable_source(source):
+                continue
+            if not numeric_context_matches(claim, chunk.text, title=source.source_title, url=source.canonical_url):
                 continue
             quote = json.dumps(chunk.text[:160], ensure_ascii=False)
             return (

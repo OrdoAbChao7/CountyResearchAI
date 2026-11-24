@@ -184,6 +184,10 @@ class QuestionSlot(BaseModel):
     def period(self) -> str:
         return self.time_period
 
+    @property
+    def is_contract_question(self) -> bool:
+        return self.slot_id.startswith("contract:")
+
 
 class ResearchSpec(BaseModel):
     region_id: str

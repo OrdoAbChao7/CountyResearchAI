@@ -2,13 +2,32 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from ..models import RawDoc
 
+MIN_VERIFIABLE_CREDIBILITY = 0.65
 _CHUNK_SIZE = 800
 _CHUNK_OVERLAP = 120
+
+
+def meets_source_credibility_threshold(
+    metadata: Mapping[str, Any], *, allow_unscored: bool = False,
+) -> bool:
+    """Apply the source credibility floor to a stored assessment.
+
+    Legacy graph imports may predate source scoring. Search ingestion always
+    records a score, so only older and externally supplied snapshots use the
+    compatibility fallback.
+    """
+    if "credibility_score" not in metadata:
+        return allow_unscored
+    try:
+        score = float(metadata["credibility_score"])
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return MIN_VERIFIABLE_CREDIBILITY <= score <= 1.0
 
 
 def _text_chunks(content: str, doc_id: str) -> list[dict[str, Any]]:
@@ -40,17 +59,17 @@ def _text_chunks(content: str, doc_id: str) -> list[dict[str, Any]]:
 def serialize_source_documents(docs: Iterable[RawDoc]) -> list[dict[str, Any]]:
     """Serialize RawDocs with enough provenance for offline claim scoring.
 
-    The function is deliberately deterministic: document and chunk identifiers
-    depend only on source URL and content, while timestamps retain the observed
-    source metadata. Empty content is represented as ``snippet_only`` rather
-    than being silently treated as a fetched document.
+    Document and chunk identifiers depend on source URL, body, and title. A
+    revised title can change the evidence's scope even when the body is the same.
+    Timestamps retain observed metadata without changing these identifiers.
+    Empty content is represented as ``snippet_only`` when a snippet is available.
     """
     records: list[dict[str, Any]] = []
     for doc in docs:
         content = doc.content or doc.snippet
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
         doc_id = hashlib.sha256(
-            f"{doc.url}\n{content_hash}".encode()
+            f"{doc.url}\n{content_hash}\n{doc.title}".encode()
         ).hexdigest()[:24]
         provider = str(doc.source or doc.metadata.get("provider") or "unknown")
         source_type = str(doc.domain_type or doc.metadata.get("source_type") or "unknown")

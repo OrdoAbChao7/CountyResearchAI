@@ -4,6 +4,8 @@
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pytest
 
 from county_research_ai.config import QualityConfig
@@ -74,6 +76,60 @@ class TestDeduplicate:
         ]
         result = processor.deduplicate(docs)
         assert len(result) == 2
+
+    @pytest.mark.parametrize("years", [(2025, 2024), (2024, 2025)])
+    def test_keeps_bulletins_for_different_reporting_years(self, processor, years):
+        docs = [
+            _make_doc(
+                title=f"{year}年安吉县国民经济和社会发展统计公报",
+                url=f"https://www.anji.gov.cn/tjgb/{year}.html",
+                content=f"{year}年安吉县经济运行情况。全年产业结构持续调整，主要指标见附表。",
+            )
+            for year in years
+        ]
+
+        assert processor.deduplicate(docs) == docs
+
+    @pytest.mark.parametrize("years", [(2025, 2024), (2024, 2025)])
+    def test_keeps_bulletins_with_reporting_years_after_the_title(self, processor, years):
+        published_at = datetime(2026, 3, 1, tzinfo=timezone.utc)
+        docs = [
+            _make_doc(
+                title=f"安吉县国民经济和社会发展统计公报（{year}年度）",
+                url=f"https://anji.gov.cn/tjgb/{year}",
+                content=f"安吉县{year}年地区生产总值与主要经济指标见附表。",
+            ).model_copy(update={"published_at": published_at})
+            for year in years
+        ]
+
+        assert processor.deduplicate(docs) == docs
+
+    def test_undated_title_cannot_hide_identified_annual_bulletins(self, processor):
+        title = "安吉县国民经济和社会发展统计公报"
+        docs = [_make_doc(title=title, url="https://anji.gov.cn/tjgb/archive")]
+        docs.extend(
+            _make_doc(
+                title=f"{year}年{title}",
+                url=f"https://anji.gov.cn/tjgb/{year}",
+                content=f"{year}年安吉县地区生产总值与主要经济指标见年度统计附表。",
+            )
+            for year in (2024, 2025)
+        )
+
+        assert {doc.url for doc in processor.deduplicate(docs)} >= {doc.url for doc in docs[1:]}
+
+    def test_deduplicates_reposts_of_the_same_reporting_year(self, processor):
+        doc = _make_doc(
+            title="2024年安吉县国民经济和社会发展统计公报",
+            url="https://www.anji.gov.cn/tjgb/2024.html",
+        )
+        repost = _make_doc(
+            title=f"{doc.title}（转载）",
+            url="https://news.example/tjgb/2024.html",
+            content="转载时添加的导语与原文不同。",
+        )
+
+        assert processor.deduplicate([doc, repost]) == [doc]
 
     def test_content_hash_dedup(self, processor):
         """相同内容 hash 应被去重。"""
