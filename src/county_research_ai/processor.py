@@ -108,6 +108,8 @@ class DocumentProcessor:
                 continue
             is_dup = False
             len_t = len(title)
+            # ratio() is not symmetric: keep the incoming title as seq1 so the
+            # comparison follows the documented (title, seen) threshold order.
             matcher = SequenceMatcher(None, title)
             for seen in seen_titles:
                 # ⚡ Bolt: Fast exact match check
