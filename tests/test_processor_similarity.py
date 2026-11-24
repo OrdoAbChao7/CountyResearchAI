@@ -26,6 +26,17 @@ def test_disjoint_titles_skip_expensive_matching(monkeypatch):
     assert calls == []
 
 
+def test_similarity_uses_incoming_title_direction():
+    """ratio() is asymmetric; dedup must compare (incoming title, seen title)."""
+    first = "acbaaddacccbcbccbcac"
+    second = "aababddacccbcbccbcac"
+    assert SequenceMatcher(None, second, first).ratio() == 0.85
+    assert SequenceMatcher(None, first, second).ratio() == 0.9
+
+    docs = documents(first, second)
+    assert DocumentProcessor().deduplicate(docs) == docs
+
+
 @pytest.mark.parametrize("titles", [
     ("identical", "identical"),
     ("a" * 17, "a" * 17 + "b" * 6),  # Exactly 0.85 must be retained.
