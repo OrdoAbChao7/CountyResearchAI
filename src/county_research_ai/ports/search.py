@@ -4,6 +4,7 @@ from datetime import date
 from typing import Protocol
 
 from ..domain.modes import ResearchMode
+from ..domain.research_contracts import QuestionSlot
 from ..models import RawDoc
 
 
@@ -18,4 +19,5 @@ class SearchPort(Protocol):
         date_start: date | None = None,
         date_end: date | None = None,
         target_years: list[str] | None = None,
+        question_slots: list[QuestionSlot] | None = None,
     ) -> list[RawDoc]: ...

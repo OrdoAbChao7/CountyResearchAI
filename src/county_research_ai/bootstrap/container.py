@@ -77,6 +77,7 @@ def create_app_container(
     *,
     strict_real: bool = False,
     search_enabled: bool = True,
+    mock_search_scope: tuple[str, str] | None = None,
 ) -> AppContainer:
     settings = settings or get_settings()
     if not search_enabled:
@@ -94,6 +95,14 @@ def create_app_container(
             if strict_real:
                 raise SearchError("strict real container requires a search API key")
             search = ProviderSearchAdapter(MockSearchProvider())
+        if mock_search_scope is not None and isinstance(search, ProviderSearchAdapter):
+            county, focus = mock_search_scope
+            mock_settings = settings.model_copy(
+                update={"search": settings.search.model_copy(update={"fetch_detail": False})}
+            )
+            search = CollectorSearchAdapter(SearchCollector(
+                settings=mock_settings, web_provider=MockSearchProvider(county=county, focus=focus),
+            ))
 
     llm_key = settings.llm.api_key.get_secret_value() if settings.llm.api_key else ""
     if llm_key:

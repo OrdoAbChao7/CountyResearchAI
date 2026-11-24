@@ -13,6 +13,7 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
 
+from ..domain.question_targets import question_target
 from ..domain.research_contracts import QuestionSlot, ResearchSpec
 from .disambiguation import disambiguate_region
 
@@ -124,7 +125,7 @@ class QueryEngine:
         county: str,
         focus: str | None = None,
         mode: str = "snapshot",
-        max_queries: int = 12,
+        max_queries: int | None = 12,
         *,
         target_years: Iterable[str] | None = None,
     ) -> list[GeneratedQuery]:
@@ -229,6 +230,7 @@ class QueryEngine:
         budget_chars: int = 12000,
         target_years: Iterable[str] | None = None,
         time_period: str = "",
+        question_slots: list[QuestionSlot] | None = None,
     ) -> ResearchSpec:
         county_name = disambiguate_region(county).clean_name
         years = _normalize_years(target_years)
@@ -239,7 +241,7 @@ class QueryEngine:
             research_focus=(focus or "").strip(),
             target_years=years,
             architecture_version="evidence_first_v2",
-            required_question_slots=self.generate_question_slots(
+            required_question_slots=question_slots or self.generate_question_slots(
                 county_name,
                 focus,
                 mode,
@@ -250,12 +252,59 @@ class QueryEngine:
             budget=budget_chars,
         )
 
+    def generate_contract_queries(
+        self,
+        spec: ResearchSpec,
+        *,
+        slot_ids: Iterable[str] | None = None,
+        supplemental: bool = False,
+    ) -> list[GeneratedQuery]:
+        """Preserve each question's scope and try distinct publication types on follow-up."""
+        wanted = set(slot_ids) if slot_ids is not None else None
+        contract_year = _year_token(spec.target_years)
+        primary: list[GeneratedQuery] = []
+        alternatives: list[GeneratedQuery] = []
+        for slot in sorted(spec.question_slots, key=lambda item: item.priority):
+            if not slot.is_contract_question or (wanted is not None and slot.slot_id not in wanted):
+                continue
+            region = disambiguate_region(slot.region or spec.region_name).get_preferred_query_prefix()
+            target = question_target(slot)
+            label = target.label if target else slot.research_question
+            year = f"{target.year}年" if target and target.year else contract_year
+            enterprise = target is not None and target.kind == "enterprise"
+            query = GeneratedQuery(
+                query=" ".join(part for part in (region, year, label) if part),
+                intent=QueryIntent.SUPPLY_CHAIN if enterprise else QueryIntent.ECONOMIC_SCALE,
+                slot_id=slot.slot_id,
+                expected_metrics=(label,) if target else (),
+                gap_id=f"gap:{slot.slot_id}" if supplemental else "",
+                priority=slot.priority,
+                explanation=slot.research_question,
+            )
+            if not supplemental:
+                primary.append(query)
+            elif enterprise:
+                # Qualification evidence is an official publication, found through its own
+                # publication types and never through the industry-total question's queries.
+                # The two established strategies keep their order; the extra publication types
+                # follow them and are reached when the follow-up budget allows.
+                primary.append(replace(query, query=f"{query.query} 认定公布 正式名单"))
+                for hint in ("复核 监测合格 有效名单", "政府公示 认定公告", "企业名录 名单"):
+                    alternatives.append(replace(query, query=f"{query.query} {hint}"))
+            elif target:
+                primary.append(replace(query, query=f"{query.query} 年度统计 统计公报"))
+                hint = "统计局 统计年鉴" if label == "地区生产总值" else "行业协会 专项统计报告"
+                alternatives.append(replace(query, query=f"{query.query} {hint}"))
+            else:
+                primary.append(replace(query, query=f"{query.query} 公开资料"))
+        return primary + alternatives
+
     def generate_gap_queries(
         self,
         spec: ResearchSpec,
         missing_slots: list[str] | None = None,
         *,
-        max_queries: int = 5,
+        max_queries: int | None = 5,
     ) -> list[GeneratedQuery]:
         """Create follow-up queries linked to concrete missing QuestionSlots."""
         wanted = set(missing_slots or [slot.slot_id for slot in spec.question_slots])

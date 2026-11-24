@@ -28,6 +28,7 @@ from ..domain.research_contracts import ResearchContract
 from ..evidence.graph import EvidenceGraphStore, VerificationStatus
 from ..models import ResearchRequest
 from ..observability import pop_event_sink, push_event_sink
+from ..search.disambiguation import disambiguate_region
 from .event_sink import JobEventSink
 from .evidence_service import persist_run_evidence, thresholds_met
 from .jobs import JobRecord, JobStatus, JobStore
@@ -147,7 +148,8 @@ class JobRunner:
             graph = EvidenceGraphStore(self.evidence_db_path)
             graph.clear_run(job_id)
             context = ResearchContext.from_request(
-                request_from_contract(job.contract)
+                request_from_contract(job.contract),
+                research_spec=job.contract.to_research_spec(),
             )
             container = self._container(job)
             app = container.application
@@ -332,7 +334,13 @@ class JobRunner:
                 "reports_dir": job_reports_dir,
             }
         )
-        container = create_app_container(settings=settings)
+        container = create_app_container(
+            settings=settings,
+            mock_search_scope=(
+                (disambiguate_region(contract.regions[0]).clean_name, contract.research_focus)
+                if contract.required_questions else None
+            ),
+        )
         if contract.budget.max_documents:
             container.application.config = dataclasses.replace(
                 container.application.config,

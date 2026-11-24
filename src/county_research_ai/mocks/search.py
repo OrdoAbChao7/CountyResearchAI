@@ -19,11 +19,15 @@ class MockSearchProvider(SearchProvider):
 
     name = "mock"
 
+    def __init__(self, *, county: str = "", focus: str = "") -> None:
+        self.county = county
+        self.focus = focus
+
     def search(self, query: str, max_results: int = 10) -> list[RawDoc]:
         logger.debug("MockSearch.search | query=%s", query)
         parts = query.split()
-        county_hint = parts[0] if parts else "某县"
-        focus_hint = parts[1] if len(parts) > 1 else "产业"
+        county_hint = self.county or (parts[0] if parts else "某县")
+        focus_hint = self.focus or (parts[1] if len(parts) > 1 else "产业")
         now = datetime.now(timezone.utc)
         return [
             RawDoc(

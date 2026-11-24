@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import date
 
 from ..domain.modes import ResearchMode
+from ..domain.research_contracts import QuestionSlot
 from ..models import RawDoc
+from ..search.query_engine import QueryEngine
 from ..search.region_relevance import filter_documents_for_region
 
 
@@ -32,6 +34,7 @@ class CollectorSearchAdapter:
         date_start: date | None = None,
         date_end: date | None = None,
         target_years: list[str] | None = None,
+        question_slots: list[QuestionSlot] | None = None,
     ) -> list[RawDoc]:
         kwargs: dict[str, object] = {"mode": mode}
         if date_start is not None:
@@ -40,6 +43,8 @@ class CollectorSearchAdapter:
             kwargs["date_end"] = date_end
         if target_years:
             kwargs["target_years"] = target_years
+        if question_slots:
+            kwargs["question_slots"] = question_slots
         return self.collector.collect(county, focus, max_results, **kwargs)
 
     def collect_supplemental(
@@ -73,7 +78,18 @@ class ProviderSearchAdapter:
         date_start: date | None = None,
         date_end: date | None = None,
         target_years: list[str] | None = None,
+        question_slots: list[QuestionSlot] | None = None,
     ) -> list[RawDoc]:
+        if question_slots:
+            engine = QueryEngine()
+            spec = engine.generate_research_spec(
+                county, focus, mode, target_years=target_years, question_slots=question_slots,
+            )
+            queries = [item.query for item in engine.generate_contract_queries(spec)]
+            return list(filter_documents_for_region(
+                self.collect_supplemental(queries, max_results=max_results), county,
+            ).kept)
+
         year_token = _year_token(target_years)
         queries = [
             f"{county} {focus or '产业'} 产业 发展",

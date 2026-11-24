@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from ..document_period import document_year_key
 from ..models import RawDoc
 
 # 常见追踪参数黑名单
@@ -165,12 +166,13 @@ def extract_publish_date(text: str, url: str = "") -> datetime | None:
     return None
 
 
-def calculate_content_fingerprint(text: str) -> str:
-    """计算文本的标准化指纹（过滤标点空白后取 MD5），用于识别跨站转载。"""
-    cleaned = re.sub(r"[\s\W\d_]+", "", text[:1000])
-    if len(cleaned) < 30:
+def calculate_content_fingerprint(text: str, *, title: str = "") -> str:
+    """Fingerprint substantially identical text without losing dates or values."""
+    if len(re.sub(r"[\s\W\d_]+", "", text[:1000])) < 30:
         return ""
-    return hashlib.md5(cleaned.encode("utf-8"), usedforsecurity=False).hexdigest()
+    cleaned = " ".join(text.split())
+    identity = f"{document_year_key(title)}:{cleaned}"
+    return hashlib.md5(identity.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 def rerank_documents(

@@ -14,11 +14,12 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
-from ..domain.research_contracts import EvidencePack, ResearchSpec
+from ..domain.research_contracts import EvidencePack, QuestionSlot, ResearchSpec, SourceDocument
 from ..evidence.ledger import build_evidence_ledger
 from ..evidence.store import EvidenceStore
 from ..models import (
@@ -36,10 +37,12 @@ from ..observability import emit
 from ..search.adaptive_retrieval import (
     AdaptiveQueryPlan,
     AdaptiveRetrievalController,
+    ContractRetrievalProgress,
     RetrievalBudget,
     RetrievalStopReason,
 )
 from ..search.query_engine import QueryEngine
+from ..search.request_history import current_search_history
 from .critic import ResearchCritic
 from .specialized.economic import EconomicAnalysisOutput, EconomicResearchAgent
 from .specialized.industry import IndustryAnalysisOutput, IndustryResearchAgent
@@ -130,6 +133,8 @@ class DeepResearchCoordinator:
         date_end: date | None = None,
         target_years: list[str] | None = None,
         time_period: str = "",
+        question_slots: list[QuestionSlot] | None = None,
+        source_credibility_check: Callable[[SourceDocument], bool] | None = None,
     ) -> DeepResearchResult:
         c_info = CountyInfo.from_name(county)
         f_name = focus or ("兴衰规律" if mode == "rise-fall" else ("长周期兴衰史" if mode == "long-history" else "特色优势产业"))
@@ -169,10 +174,19 @@ class DeepResearchCoordinator:
                 mode,
                 target_years=years,
                 time_period=period,
+                question_slots=question_slots,
             )
             budget = RetrievalBudget(max_queries=12, max_fetches=120)
-            controller = AdaptiveRetrievalController(research_spec, budget=budget)
-            if not all_docs:
+            history = current_search_history()
+            controller = AdaptiveRetrievalController(
+                research_spec,
+                budget=budget,
+                search_history=history,
+                request_keys=getattr(self.collector, "adaptive_request_keys", None),
+                source_credibility_check=source_credibility_check,
+            )
+            initial_attempted = bool(question_slots and history and history.used_queries)
+            if not all_docs and not initial_attempted:
                 plan = controller.initial_plan()
                 emit(
                     "retrieval.round.started",
@@ -181,6 +195,7 @@ class DeepResearchCoordinator:
                         "round": 1,
                         "queries": len(plan.queries),
                         "query_texts": [query.query for query in plan.queries],
+                        "query_slot_ids": [query.slot_id for query in plan.queries],
                         "supplemental": False,
                     },
                 )
@@ -198,8 +213,14 @@ class DeepResearchCoordinator:
                     },
                 )
             seen_claim_ids: set[str] = set()
-
-            for adaptive_turn in range(1, max(1, self.max_turns) + 1):
+            contract_progress = (
+                ContractRetrievalProgress()
+                if any(slot.is_contract_question for slot in research_spec.question_slots) else None
+            )
+            max_followups = max(1, self.max_turns)
+            # Contract runs assess the last collection as well, within the same search round limit.
+            assessments = max_followups + int(contract_progress is not None)
+            for adaptive_turn in range(1, assessments + 1):
                 from ..processor import DocumentProcessor
                 processed = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
                 ledger = build_evidence_ledger(processed)
@@ -213,17 +234,24 @@ class DeepResearchCoordinator:
                     for claim in pack.selected_claims
                 }
                 marginal = len(current_ids - seen_claim_ids)
-                seen_claim_ids = current_ids
                 decision = controller.next_round(
                     evidence_packs,
                     round_number=adaptive_turn,
+                    previous_evidence_ids=seen_claim_ids,
                     previous_new_evidence=marginal if adaptive_turn > 1 else None,
+                    allow_followup=adaptive_turn <= max_followups,
                 )
                 retrieval_usage = controller._usage()
                 period_coverage = {
                     "round": adaptive_turn,
                     **decision.coverage.period_coverage_summary(),
                 }
+                if contract_progress is not None:
+                    seen_claim_ids.update(current_ids)
+                    period_coverage.update(contract_progress.observe(ledger.sources, ledger.claims, decision.coverage))
+                    period_coverage["stop_reason"] = decision.stop_reason.value if decision.stop_reason else ""
+                else:
+                    seen_claim_ids = current_ids
                 period_coverage_history.append(period_coverage)
                 emit(
                     "retrieval.period_coverage",
@@ -243,6 +271,7 @@ class DeepResearchCoordinator:
                         "round": adaptive_turn + 1,
                         "queries": len(decision.queries),
                         "query_texts": [query.query for query in decision.queries],
+                        "query_slot_ids": [query.slot_id for query in decision.queries],
                         "supplemental": True,
                     },
                 )
@@ -257,11 +286,12 @@ class DeepResearchCoordinator:
                     payload={
                         "round": adaptive_turn + 1,
                         "documents": len(followup.documents),
-                        "usage": retrieval_usage,
+                        "usage": followup.usage,
+                        "budget": retrieval_usage,
                         "stop_reason": "",
                     },
                 )
-                if not followup.documents:
+                if not followup.documents and contract_progress is None:
                     retrieval_stop_reason = RetrievalStopReason.ZERO_MARGINAL_EVIDENCE.value
                     break
                 all_docs.extend(followup.documents)
@@ -271,13 +301,14 @@ class DeepResearchCoordinator:
                     if budget.remaining_queries == 0 or budget.remaining_fetches == 0
                     else RetrievalStopReason.MAX_ROUNDS.value
                 )
-            from ..processor import DocumentProcessor
-            processed = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
-            ledger = build_evidence_ledger(processed)
-            evidence_packs = [
-                ledger.select_evidence_pack(slot)
-                for slot in research_spec.question_slots
-            ]
+            if contract_progress is None:
+                # The legacy loop can exit just after adding its last collection.
+                processed = DocumentProcessor().process(all_docs, county=c_info, focus=f_name)
+                ledger = build_evidence_ledger(processed)
+                evidence_packs = [
+                    ledger.select_evidence_pack(slot)
+                    for slot in research_spec.question_slots
+                ]
             final_ledger = ledger
             evidence_store.ingest_documents(all_docs, county=county, focus=f_name)
             _emit_evidence_ingested(evidence_store, len(all_docs), round_number=1)

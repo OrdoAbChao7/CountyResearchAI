@@ -60,6 +60,8 @@ class LongHistoryModeHandler:
                 date_end=context.request.date_end,
                 target_years=context.request.target_years,
                 time_period=context.request.time_period,
+                question_slots=context.contract_question_slots,
+                source_credibility_check=context.source_credibility_check,
             )
             research_packs = list(result.evidence_packs or context.evidence_packs)
             period_packs = (
