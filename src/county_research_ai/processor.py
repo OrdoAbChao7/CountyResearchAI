@@ -100,7 +100,7 @@ class DocumentProcessor:
                 url_deduped.append(doc)
 
         # Pass 2: 标题相似度去重(相似度 > 0.85 视为重复)
-        seen_titles: list[str] = []
+        seen_titles: list[tuple[str, int]] = []  # (title, cached length)
         title_deduped: list[RawDoc] = []
         for doc in url_deduped:
             title = doc.title.strip()
@@ -111,7 +111,7 @@ class DocumentProcessor:
             # ratio() is not symmetric: keep the incoming title as seq1 so the
             # comparison follows the documented (title, seen) threshold order.
             matcher = SequenceMatcher(None, title)
-            for seen in seen_titles:
+            for seen, len_s in seen_titles:
                 # ⚡ Bolt: Fast exact match check
                 if title == seen:
                     is_dup = True
@@ -119,7 +119,6 @@ class DocumentProcessor:
                 # ⚡ Bolt: Mathematical bound check before expensive SequenceMatcher
                 # The maximum possible ratio is 2.0 * min(len(a), len(b)) / (len(a) + len(b))
                 # If the max possible ratio <= 0.85, we can safely skip SequenceMatcher
-                len_s = len(seen)
                 max_ratio = 2.0 * min(len_t, len_s) / (len_t + len_s) if (len_t + len_s) > 0 else 0
                 if max_ratio <= 0.85:
                     continue
@@ -132,7 +131,7 @@ class DocumentProcessor:
                     is_dup = True
                     break
             if not is_dup:
-                seen_titles.append(title)
+                seen_titles.append((title, len_t))
                 title_deduped.append(doc)
 
         # Pass 3: 内容 hash 去重(仅对有实质性 content 的文档,短文本跳过)
