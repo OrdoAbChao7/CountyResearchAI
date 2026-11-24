@@ -16,6 +16,7 @@ from county_research_ai.evidence.graph import (
     EdgeRelation,
     EvidenceGraphStore,
     FindingRecord,
+    VerificationRecord,
     VerificationStatus,
     classify_claim_relation,
 )
@@ -765,3 +766,144 @@ def test_old_claim_relations_schema_is_rebuilt_with_run_id(tmp_path):
 
     assert "run_id" in columns
     assert row["run_id"] == ""
+
+
+def test_findings_persist_every_linked_slot_and_fall_back_to_section(tmp_path):
+    path = tmp_path / "graph.sqlite"
+    store = EvidenceGraphStore(path)
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.save_findings(
+        "run-1",
+        [
+            FindingRecord(
+                finding_id="finding-shared",
+                run_id="run-1",
+                claim_id="claim-1",
+                section="contract:0",
+                slot_ids=["contract:0", "contract:1"],
+                text="2024年地区生产总值722.5亿元",
+                status=VerificationStatus.SUPPORTED,
+            )
+        ],
+    )
+
+    reopened = EvidenceGraphStore(path)
+    shared = reopened.list_findings("run-1")[0].finding
+    assert shared.slot_ids == ["contract:0", "contract:1"]
+    assert shared.linked_slot_ids() == ["contract:0", "contract:1"]
+
+    store.save_findings(
+        "run-2",
+        [
+            FindingRecord(
+                finding_id="finding-legacy",
+                run_id="run-2",
+                claim_id="claim-1",
+                section="经济概况",
+                text="旧记录",
+                status=VerificationStatus.SUPPORTED,
+            )
+        ],
+    )
+    legacy = store.list_findings("run-2")[0].finding
+    assert legacy.linked_slot_ids() == ["经济概况"]
+    assert FindingRecord(
+        finding_id="in-memory", run_id="run-3", claim_id="claim-1", section="经济概况"
+    ).linked_slot_ids() == ["经济概况"]
+
+
+def test_clear_run_removes_slot_links(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "graph.sqlite"
+    store = EvidenceGraphStore(path)
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.save_findings(
+        "run-1",
+        [
+            FindingRecord(
+                finding_id="finding-shared",
+                run_id="run-1",
+                claim_id="claim-1",
+                section="contract:0",
+                slot_ids=["contract:0", "contract:1"],
+            )
+        ],
+    )
+
+    store.clear_run("run-1")
+
+    with sqlite3.connect(path) as connection:
+        remaining = connection.execute(
+            "SELECT COUNT(*) FROM finding_slots WHERE run_id = 'run-1'"
+        ).fetchone()[0]
+    assert remaining == 0
+
+
+def test_v2_database_gains_the_slot_table_on_reopen(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "graph.sqlite"
+    store = EvidenceGraphStore(path)
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    with sqlite3.connect(path) as connection:
+        connection.execute("DROP TABLE finding_slots")
+        connection.execute("PRAGMA user_version = 2")
+
+    reopened = EvidenceGraphStore(path)
+    reopened.save_findings(
+        "run-1",
+        [
+            FindingRecord(
+                finding_id="finding-shared",
+                run_id="run-1",
+                claim_id="claim-1",
+                section="contract:0",
+                slot_ids=["contract:0", "contract:1"],
+            )
+        ],
+    )
+
+    assert reopened.list_findings("run-1")[0].finding.slot_ids == ["contract:0", "contract:1"]
+    with sqlite3.connect(path) as connection:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
+
+
+def test_run_verdict_is_persisted_without_changing_the_global_claim(tmp_path):
+    path = tmp_path / "graph.sqlite"
+    store = EvidenceGraphStore(path)
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    before = store.get_claim("claim-1").verification_status
+
+    verdict = VerificationRecord(
+        record_id="verdict-run-1",
+        claim_id="claim-1",
+        status=VerificationStatus.NEEDS_REVIEW,
+        deterministic_checks={"contradicting_supported_claims": ["other"]},
+        run_id="run-1",
+        reason="conflicting_contract_evidence",
+    )
+    store.save_findings(
+        "run-1",
+        [
+            FindingRecord(
+                finding_id="finding-shared",
+                run_id="run-1",
+                claim_id="claim-1",
+                section="contract:0",
+                slot_ids=["contract:0"],
+                status=VerificationStatus.INSUFFICIENT,
+            )
+        ],
+        verifications=[verdict],
+    )
+
+    finding = store.list_findings("run-1")[0]
+    assert finding.finding.status is VerificationStatus.INSUFFICIENT
+    assert finding.chain.verification is not None
+    assert finding.chain.verification.status is VerificationStatus.NEEDS_REVIEW
+    assert finding.chain.verification.reason == "conflicting_contract_evidence"
+    assert store.get_claim("claim-1").verification_status == before
+
+
+
