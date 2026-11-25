@@ -65,7 +65,7 @@ export function StepRail({
     <aside className="step-rail" aria-label="研究工作流步骤">
       <header className="rail-brand">
         <p className="brand-kicker">EVIDENCE-NATIVE RESEARCH</p>
-        <h1>AxiomScope</h1>
+        <h1>CountyResearchAI</h1>
         <p className="brand-sub">县域产业研究 · 证据原生工作台</p>
         <div className="mode-chips">
           <span className={`chip ${capabilities?.mode_label === "LIVE" ? "chip-live" : ""}`}>

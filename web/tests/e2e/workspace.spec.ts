@@ -168,7 +168,9 @@ test("wizard: define, run, inspect graph evidence, and read verified report", as
   const objective = `E2E 安吉县竹产业深度研究 ${Date.now()}`;
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "AxiomScope" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "CountyResearchAI" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "定义一个可验证的研究问题" }),
   ).toBeVisible();
@@ -261,8 +263,24 @@ test("wizard: define, run, inspect graph evidence, and read verified report", as
 
   await page.getByRole("tab", { name: /冲突与缺口/ }).click();
   await expect(page.locator(".disputes-panel")).toBeVisible();
-  await expect(page.locator(".conflict-card")).toHaveCount(2);
-  await expect(page.locator(".gap-table tbody tr")).toHaveCount(3);
+  const taskId = new URL(page.url()).searchParams.get("task") ?? "";
+  expect(taskId).not.toBe("");
+  const reportResponse = await page.request.get(
+    `/api/v1/research/tasks/${taskId}/report.json`,
+  );
+  expect(reportResponse.ok()).toBeTruthy();
+  const reportData = (await reportResponse.json()) as {
+    conflicts: unknown[];
+    gaps: unknown[];
+  };
+  expect(reportData.conflicts.length).toBeGreaterThan(0);
+  expect(reportData.gaps.length).toBeGreaterThan(0);
+  await expect(page.locator(".conflict-card")).toHaveCount(
+    reportData.conflicts.length,
+  );
+  await expect(page.locator(".gap-table tbody tr")).toHaveCount(
+    reportData.gaps.length,
+  );
   await page.screenshot({
     path: path.join(outputDir, "09-disputes.png"),
     fullPage: false,

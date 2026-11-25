@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import type { GraphEdge, GraphNode, GraphNodeType, GraphView } from "../api";
 import { getGraph } from "../api";
+import { NODE_COLORS } from "../graphPalette";
 import { isLargeGraph } from "../graphLayout";
 import { EmptyState, ErrorState, LoadingState } from "./StateViews";
 
@@ -49,6 +50,7 @@ export function GraphPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [includeSources, setIncludeSources] = useState(true);
+  const [showLabels, setShowLabels] = useState(true);
   const [topic, setTopic] = useState("");
   const [query, setQuery] = useState("");
   const [visibleTypes, setVisibleTypes] = useState<Set<GraphNodeType>>(
@@ -249,6 +251,17 @@ export function GraphPanel({
           />
           显示来源节点
         </label>
+        {/* 大图默认就不显示标签，这里不给一个按了没反应的开关 */}
+        {!isLargeGraph(graph.nodes.length) ? (
+          <label className="checkbox-field">
+            <input
+              type="checkbox"
+              checked={showLabels}
+              onChange={(event) => setShowLabels(event.target.checked)}
+            />
+            节点标签
+          </label>
+        ) : null}
         <div className="view-switch" role="tablist" aria-label="图谱视图">
           <button
             type="button"
@@ -282,8 +295,13 @@ export function GraphPanel({
               aria-pressed={visibleTypes.has(type)}
               onClick={() => toggleType(type)}
             >
+              <span
+                className="chip-dot"
+                style={{ background: NODE_COLORS[type] }}
+                aria-hidden="true"
+              />
               {TYPE_LABELS[type]}
-              <span>{count}</span>
+              <span className="chip-count">{count}</span>
             </button>
           );
         })}
@@ -299,6 +317,7 @@ export function GraphPanel({
           <GraphCanvas
             view={displayView ?? graph}
             focusId={selectedNodeId}
+            showLabels={showLabels}
             onSelectNode={handleSelectNode}
             onSelectEdge={handleSelectEdge}
           />
