@@ -452,7 +452,7 @@ export default function App() {
       <div className="stage-shell">
         <header className="top-bar">
           <div className="breadcrumb">
-            <span>AXIOMSCOPE</span>
+            <span>CountyResearchAI</span>
             <span className="breadcrumb-sep">/</span>
             <span>{STEP_TITLES[step]}</span>
           </div>

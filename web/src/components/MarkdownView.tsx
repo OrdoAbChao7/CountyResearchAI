@@ -82,7 +82,13 @@ export function MarkdownView({
         }
         if (block.type === "divider") return <hr key={key} />;
         return (
-          <div key={key} className="markdown-table-wrap">
+          <div
+            key={key}
+            className="markdown-table-wrap"
+            role="region"
+            aria-label="可横向滚动的表格"
+            tabIndex={0}
+          >
             <table>
               <thead>
                 <tr>

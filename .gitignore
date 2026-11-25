@@ -100,8 +100,13 @@ video_template/.remotion/
 
 # ===== AxiomScope 本地 API 与前端 =====
 data/api/
+# 本地运行的作业产物（raw/processed），不是源码
+data/api_jobs/
 web/node_modules/
 web/dist/
+# 上面的 Python lib/ 规则不能误伤前端源码目录
+!web/src/lib/
+!web/src/lib/**
 
 
 # ===== Playwright / E2E =====
