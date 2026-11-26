@@ -1,5 +1,7 @@
-# Shining Stars 路线图
+# Shining Stars 路线图（实验性分析层）
 
+> **前置门禁（[ADR-005](../architecture/ADR-005-single-evidence-core.md)）**：Shining Stars 当前属于实验性模块，尚未接入权威证据图谱 `evidence/graph.py`。在重新启动功能迭代前必须满足两项前置条件：(1) `services/evidence_service` 完成只读适配器改造，仅消费 `evidence/graph.py` 中通过时间窗、地域与 0.65 来源门槛的 `SUPPORTED` Finding；(2) 企业与统计数据源补齐，使龙头企业与核心产值问题在多县样本上达到 `SUPPORTED`（避免把“检索缺失”误判为“产业链缺口”）。
+>
 > 三个「亮点」能力：A 产业链缺口雷达、B 产业数字孪生、C 时序产业智能。
 > 原则：先把领域契约、证据边界与确定性实现做对，再引入需要校准的模型。
 

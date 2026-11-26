@@ -27,6 +27,8 @@ holdout, live evaluation, semantic Judge and human labels remain unfinished.
 | Web | `web/` | React 18 + Vite 5 wizard, report studio, evidence drawer, Cytoscape graph |
 | Evaluation | `src/county_research_ai/evaluation/`, `scripts/` | offline rescoring, replay, metrics |
 
+> **Single evidence core ([ADR-005](ADR-005-single-evidence-core.md))**: the `/api/v1` job line (`api/app.py` + `evidence/graph.py`) is the sole product runtime and authoritative evidence store. The LangGraph V2 modules (`agents/`, `orchestration/`, `knowledge_graph/`, `shining_stars/`, `api/main.py`) and `web/app.py` skeleton are **experimental** and not wired to the `web/` workspace; they are frozen to bug fixes until adapted as read-only consumers of `SUPPORTED` findings from `evidence/graph.py`.
+
 ## Research path
 
 ```text

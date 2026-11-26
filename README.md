@@ -153,8 +153,10 @@ src/county_research_ai/
   modes/       snapshot / rise-fall / long-history
   observability/  ContextVar 事件总线（无 sink 时静默）
   agent/       有界 Plan-and-Execute（兼容旧 CLI）
-  api/         FastAPI、JobStore/SSE、事件适配器、图谱/报告/问题投影
+  api/         FastAPI (/api/v1 产品入口)、JobStore/SSE、事件适配器、图谱/报告/问题投影
   evaluation/  离线复算与指标
+  # 以下为实验性模块（未接入 web/ 产品路径，见 docs/architecture/ADR-005-single-evidence-core.md）：
+  agents/ orchestration/ services/ knowledge_graph/ shining_stars/ web/
 web/           React 18 + Vite 5：Wizard、Report Studio、证据抽屉、Cytoscape 图谱
 docs/           架构、ADR、Demo、评测、目标状态、面试走读
 ```

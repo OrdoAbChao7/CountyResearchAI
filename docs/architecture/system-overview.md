@@ -1,5 +1,7 @@
-# 系统总览
+# 系统总览（实验性 V2 多 Agent 线）
 
+> **状态说明（见 [ADR-005](ADR-005-single-evidence-core.md)）**：本文档描述的 `api/main.py`、`orchestration/`、`agents/`、`services/`、`knowledge_graph/`、`shining_stars/` 属于**实验性 V2 模块**，当前未接入前端 `web/` 工作台，也未接入 `evidence/graph.py` 的 0.65 来源门槛、时间窗与 Claim 地域校验。当前唯一产品入口与权威证据核心见 [OVERVIEW.md](OVERVIEW.md)（`api/app.py` `/api/v1` + `evidence/graph.py`）。在完成只读证据适配器之前，本目录仅接受缺陷修复。
+>
 > 对应代码：`src/county_research_ai/{api,bootstrap,orchestration,agents,services,knowledge_graph,shining_stars}`。
 
 ## 1. 运行拓扑
