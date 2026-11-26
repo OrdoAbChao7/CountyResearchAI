@@ -21,8 +21,10 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ..config import Settings, get_settings
+from ..evidence.graph import SCHEMA_VERSION as EVIDENCE_SCHEMA_VERSION
 from ..evidence.graph import EvidenceGraphStore
 from .brief import render_decision_brief
+from .evidence_service import load_run_evidence
 from .jobs import JobRecord, JobStatus, JobStore
 from .projections import (
     EvidenceListResponse,
@@ -52,7 +54,6 @@ logger = logging.getLogger(__name__)
 
 API_VERSION = "v1"
 JOB_SCHEMA_VERSION = 1
-EVIDENCE_SCHEMA_VERSION = 1
 ENFORCED_CAPS = ["deadline_seconds"]
 BOUNDED_PER_CALL_CAPS = ["max_tokens", "max_documents"]
 UNENFORCED_CAPS = ["max_steps", "max_search_calls", "max_cost"]
@@ -150,11 +151,20 @@ def _register_core_routes(
         )
 
 
+def _require_single_region(regions: list[str]) -> None:
+    if len(regions) != 1:
+        raise HTTPException(status_code=422, detail={"error": {
+            "code": "unsupported_multi_region",
+            "message": "county research requires exactly one region per task",
+        }})
+
+
 def _register_task_routes(
     app: FastAPI, *, job_store: JobStore, runner: JobRunner
 ) -> None:
     @app.post("/api/v1/research/tasks", status_code=202, response_model=TaskDetail)
     def create_task(payload: CreateTaskRequest) -> TaskDetail:
+        _require_single_region(payload.contract.regions)
         job = job_store.create_job(payload.contract, mode_label=runner.mode_label)
         runner.submit(job.job_id)
         return TaskDetail.from_job(job_store.get_job(job.job_id) or job)
@@ -213,6 +223,7 @@ def _register_task_routes(
                     }
                 },
             )
+        _require_single_region(job.contract.regions)
         job_store.requeue(job.job_id)
         runner.submit(job.job_id)
         job_store.append_event(job.job_id, "job.resumed", {})
@@ -343,9 +354,8 @@ def _register_evidence_routes(
     )
     def list_findings(job_id: str = PathParam(...)) -> list[FindingOut]:
         job = _job_or_404(job_store, job_id)
-        return [
-            FindingOut.from_verified(item) for item in graph.list_findings(job.job_id)
-        ]
+        evidence = load_run_evidence(graph, job)
+        return [FindingOut.from_verified(item) for item in evidence.findings]
 
     @app.get(
         "/api/v1/research/tasks/{job_id}/claims",
@@ -353,9 +363,8 @@ def _register_evidence_routes(
     )
     def list_claims(job_id: str = PathParam(...)) -> list[ClaimChainOut]:
         job = _job_or_404(job_store, job_id)
-        return [
-            ClaimChainOut.from_chain(chain) for chain in graph.list_findings(job.job_id)
-        ]
+        evidence = load_run_evidence(graph, job)
+        return [ClaimChainOut.from_verified(item) for item in evidence.findings]
 
     @app.get(
         "/api/v1/research/tasks/{job_id}/claims/{claim_id}",
@@ -367,8 +376,9 @@ def _register_evidence_routes(
     ) -> ClaimChainOut:
         job = _job_or_404(job_store, job_id)
         _safe_id(claim_id, "claim_id")
-        claim_ids = {claim.claim_id for claim in graph.list_claims(run_id=job.job_id)}
-        if claim_id not in claim_ids:
+        evidence = load_run_evidence(graph, job)
+        item = next((item for item in evidence.findings if item.finding.claim_id == claim_id), None)
+        if item is None:
             raise HTTPException(
                 status_code=404,
                 detail={
@@ -378,9 +388,7 @@ def _register_evidence_routes(
                     }
                 },
             )
-        return ClaimChainOut.from_chain(
-            graph.get_chain(claim_id, run_id=job.job_id)
-        )
+        return ClaimChainOut.from_verified(item)
 
     @app.get(
         "/api/v1/research/tasks/{job_id}/sources",
@@ -416,7 +424,7 @@ def _register_evidence_routes(
     def get_questions(job_id: str = PathParam(...)) -> QuestionsView:
         job = _job_or_404(job_store, job_id)
         try:
-            return build_questions_view(job)
+            return build_questions_view(job, graph=graph)
         except ProjectionUnavailable as exc:
             raise _projection_unavailable(exc) from exc
 
@@ -484,14 +492,17 @@ def _register_evidence_routes(
     @app.get("/api/v1/research/tasks/{job_id}/brief")
     def get_brief(job_id: str = PathParam(...)) -> PlainTextResponse:
         job = _job_or_404(job_store, job_id)
+        evidence = load_run_evidence(graph, job)
         markdown = render_decision_brief(
             job_id=job.job_id,
             contract=job.contract,
             outcome=job.outcome,
             outcome_reason=job.outcome_reason,
             mode_label=job.mode_label,
-            findings=graph.list_findings(job.job_id),
+            findings=evidence.findings,
             sources=graph.list_run_snapshots(job.job_id),
+            citation_links=evidence.citation_links,
+            contract_questions=evidence.coverage.questions,
         )
         return PlainTextResponse(
             markdown,

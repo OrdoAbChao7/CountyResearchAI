@@ -265,6 +265,137 @@ def test_baseless_contradiction_does_not_override_supported_claim(tmp_path):
     assert good.deterministic_checks["contradicting_supported_claims"] == []
 
 
+@pytest.mark.parametrize("new_series_version", ["", "revised"], ids=["conflict", "supersession"])
+def test_weak_quote_cannot_override_credible_evidence(tmp_path, new_series_version):
+    weak = _source(
+        "snap-weak", content="德清县2024年地区生产总值为700亿元。", url="https://example.com/estimate",
+        retrieved_at=datetime(2025, 2, 1, tzinfo=timezone.utc),
+    ).model_copy(update={"metadata": {"credibility_score": 0.5}})
+    strong = _source("snap-1").model_copy(update={"metadata": {"credibility_score": 0.9}})
+    claim = _claim(
+        "claim-weak", source_id="snap-weak", chunk_id="snap-weak:chunk:1", value="700",
+        statement="德清县2024年地区生产总值为700亿元", version=new_series_version,
+    )
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(strong, weak, claims=[_claim("claim-strong"), claim]), run_id="run")
+
+    current = store.get_chain("claim-strong", run_id="run").verification
+    assert current.status is VerificationStatus.SUPPORTED
+    assert not current.deterministic_checks["contradicting_supported_claims"]
+    assert store.verify_claim("claim-strong", run_id="run").status is VerificationStatus.SUPPORTED
+    candidate = store.get_chain("claim-weak", run_id="run")
+    assert candidate.verification.status is VerificationStatus.INSUFFICIENT
+    assert candidate.verification.reason == "insufficient_source_credibility"
+    assert [link.span.quote for link in store.intact_links(candidate)] == [weak.content]
+    assert list(store.supporting_links(candidate)) == []
+
+
+def test_a_low_credibility_contradiction_edge_does_not_dispute_a_fact(tmp_path):
+    main = _source("snap-1")
+    weak = _source("weak", url="https://example.com/estimate").model_copy(
+        update={"metadata": {"credibility_score": 0.5}},
+    )
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(main, weak, claims=[_claim("claim-1")]))
+    store.add_edge(ClaimEvidenceEdgeRecord(
+        claim_id="claim-1", span_id="weak:chunk:1", relation=EdgeRelation.CONTRADICTS,
+    ))
+
+    record = store.verify_claim("claim-1")
+
+    assert record.status is VerificationStatus.SUPPORTED
+    assert record.deterministic_checks["contradicting_edges"] == 0
+
+
+@pytest.mark.parametrize(
+    ("counter_score", "offset", "expected_status", "expected_reason"),
+    [
+        (0.95, 0, VerificationStatus.CONTRADICTED, "contradicting_evidence"),
+        (0.5, 0, VerificationStatus.INSUFFICIENT, "insufficient_source_credibility"),
+        (0.95, 1, VerificationStatus.INSUFFICIENT, "insufficient_source_credibility"),
+    ],
+    ids=["credible-counter", "weak-counter", "broken-counter"],
+)
+def test_weak_matching_quote_cannot_mask_an_eligible_counter_edge(
+    tmp_path, counter_score, offset, expected_status, expected_reason,
+):
+    weak = _source("snap-1").model_copy(update={"metadata": {"credibility_score": 0.5}})
+    counter = _source(
+        "snap-counter", content="德清县2024年地区生产总值为700亿元。",
+        url="https://example.gov.cn/revision", start=offset,
+    ).model_copy(update={"metadata": {"credibility_score": counter_score}})
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(weak, counter, claims=[_claim("claim-1")]))
+    store.add_edge(ClaimEvidenceEdgeRecord(
+        claim_id="claim-1", span_id="snap-counter:chunk:1", relation=EdgeRelation.CONTRADICTS,
+    ))
+
+    record = store.verify_claim("claim-1")
+
+    assert record.status is expected_status
+    assert record.reason == expected_reason
+
+
+def test_an_intact_credible_counter_edge_is_evidence_without_a_supporting_quote(tmp_path):
+    counter = _source(
+        "snap-counter", content="德清县2024年地区生产总值为700亿元。",
+    ).model_copy(update={"metadata": {"credibility_score": 0.95}})
+    claim = _claim("claim-1").model_copy(update={"source_ids": [], "evidence_chunk_ids": []})
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(counter, claims=[claim]))
+    store.add_edge(ClaimEvidenceEdgeRecord(
+        claim_id="claim-1", span_id="snap-counter:chunk:1", relation=EdgeRelation.CONTRADICTS,
+    ))
+
+    assert store.verify_claim("claim-1").status is VerificationStatus.CONTRADICTED
+
+
+def test_an_unscored_snapshot_does_not_authorize_a_later_low_credibility_import(tmp_path):
+    source = _source("snap-1")
+    claim = _claim("claim-1")
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(source, claims=[claim]), run_id="unscored")
+    weak = source.model_copy(update={"metadata": {"credibility_score": 0.5}})
+    store.save_ledger(_ledger(weak, claims=[claim]), run_id="scored")
+
+    assert store.get_chain(claim.claim_id, run_id="unscored").verification.status is VerificationStatus.SUPPORTED
+    later = store.get_chain(claim.claim_id, run_id="scored")
+    assert later.verification.status is VerificationStatus.INSUFFICIENT
+    assert later.verification.reason == "insufficient_source_credibility"
+    assert list(store.supporting_links(later)) == []
+
+
+def test_conflict_check_uses_the_persisted_source_rating(tmp_path):
+    weak = _source(
+        "snap-weak", content="德清县2024年地区生产总值为700亿元。", url="https://example.com/estimate",
+    ).model_copy(update={"metadata": {"credibility_score": 0.5}})
+    strong = _source("snap-1").model_copy(update={"metadata": {"credibility_score": 0.9}})
+    claim = _claim(
+        "claim-weak", source_id="snap-weak", chunk_id="snap-weak:chunk:1", value="700",
+        statement="德清县2024年地区生产总值为700亿元",
+    )
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(weak), run_id="earlier")
+    rerated = weak.model_copy(update={"metadata": {"credibility_score": 0.9}})
+
+    store.save_ledger(_ledger(strong, rerated, claims=[_claim("claim-strong"), claim]), run_id="later")
+
+    record = store.get_chain("claim-strong", run_id="later").verification
+    assert record.status is VerificationStatus.SUPPORTED
+    assert record.deterministic_checks["contradicting_supported_claims"] == []
+
+
+def test_missing_evidence_takes_precedence_over_low_source_credibility(tmp_path):
+    source = _source("snap-1").model_copy(update={"metadata": {"credibility_score": 0.5}})
+    claim = _claim("claim-unbound").model_copy(update={"evidence_chunk_ids": []})
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    store.save_ledger(_ledger(source, claims=[claim]), run_id="run")
+
+    record = store.get_chain("claim-unbound", run_id="run").verification
+    assert record.status is VerificationStatus.INSUFFICIENT
+    assert record.reason == "no_evidence"
+
+
 def test_two_supported_conflicting_claims_need_review(tmp_path):
     content_a = "德清县2024年地区生产总值为722.5亿元。"
     content_b = "德清县2024年地区生产总值为700亿元。"
@@ -341,6 +472,55 @@ def test_newer_series_version_supersedes_older(tmp_path):
         if relation.relation is ClaimRelationKind.SUPERSEDES
     ]
     assert supersedes[0].from_claim_id == "claim-new"
+
+
+@pytest.mark.parametrize(
+    ("repost_score", "repost_value", "offset", "archived_at"),
+    [
+        pytest.param(0.5, "130", 0, None, id="weak-quote"),
+        pytest.param(0.95, "131", 0, None, id="nonmatching-quote"),
+        pytest.param(0.95, "130", 1, None, id="broken-quote"),
+        pytest.param(0.95, "130", 0, datetime(2025, 1, 15, tzinfo=timezone.utc), id="refetched-quote"),
+    ],
+)
+def test_only_intact_eligible_matching_quotes_date_a_series_revision(
+    tmp_path, repost_score, repost_value, offset, archived_at,
+):
+    january = _source(
+        "january", content="德清县2024年地区生产总值为130亿元。",
+        retrieved_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+    ).model_copy(update={"metadata": {"credibility_score": 0.95}})
+    march = _source(
+        "march", content="德清县2024年地区生产总值为120亿元。",
+        retrieved_at=datetime(2025, 3, 1, tzinfo=timezone.utc),
+    ).model_copy(update={"metadata": {"credibility_score": 0.9}})
+    repost = _source(
+        "repost", content=f"德清县2024年地区生产总值为{repost_value}亿元。",
+        url="https://example.com/repost", start=offset,
+        retrieved_at=datetime(2025, 5, 1, tzinfo=timezone.utc),
+    ).model_copy(update={"metadata": {"credibility_score": repost_score}})
+    older = _claim(
+        "older", value="130", statement="德清县2024年地区生产总值为130亿元", version="v1",
+    ).model_copy(update={
+        "source_ids": ["january", "repost"],
+        "evidence_chunk_ids": ["january:chunk:1", "repost:chunk:1"],
+    })
+    newer = _claim(
+        "newer", source_id="march", chunk_id="march:chunk:1", value="120",
+        statement="德清县2024年地区生产总值为120亿元", version="v2",
+    )
+    store = EvidenceGraphStore(tmp_path / "graph.sqlite")
+    if archived_at is not None:
+        earlier = repost.model_copy(update={"retrieved_at": archived_at})
+        store.save_ledger(_ledger(earlier), run_id="previous-run")
+    store.save_ledger(_ledger(january, march, repost, claims=[older, newer]), run_id="run")
+
+    assert store.get_snapshot(repost.doc_id).observed_at == (archived_at or repost.retrieved_at)
+    current = store.get_chain(newer.claim_id, run_id="run")
+    assert current.verification.status is VerificationStatus.SUPPORTED
+    assert store.get_chain(older.claim_id, run_id="run").verification.status is VerificationStatus.OUTDATED
+    relation, = [relation for relation in current.relations if relation.relation is ClaimRelationKind.SUPERSEDES]
+    assert (relation.from_claim_id, relation.to_claim_id) == (newer.claim_id, older.claim_id)
 
 
 @pytest.mark.parametrize(
@@ -450,6 +630,87 @@ def test_adjacent_year_claims_stay_outside_the_2024_window(tmp_path):
     assert store.get_claim("claim-2025").verification_reason == (
         "outside_requested_window:2025"
     )
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_later_run_cannot_replace_an_earlier_claim_version(tmp_path, legacy):
+    path = tmp_path / "graph.sqlite"
+    store = EvidenceGraphStore(path)
+    first = _source("old-z")
+    old_claim = _claim("shared", source_id=first.doc_id, chunk_id=first.chunks[0].chunk_id)
+    store.save_ledger(_ledger(first, claims=[old_claim]), run_id="" if legacy else "earlier")
+    store.save_findings("earlier", [FindingRecord(
+        finding_id="earlier:shared", run_id="earlier", claim_id="shared",
+        text=old_claim.statement, status=VerificationStatus.SUPPORTED,
+    )])
+
+    second = _source("new-a", content=CONTENT.replace("2024", "2023"))
+    new_claim = _claim(
+        "shared", source_id=second.doc_id, chunk_id=second.chunks[0].chunk_id,
+        period="2023", statement=old_claim.statement.replace("2024", "2023"),
+    )
+    # The later run collected both sources. Only the new one belongs to its claim.
+    store.save_ledger(_ledger(first, second, claims=[new_claim]), run_id="later")
+    reopened = EvidenceGraphStore(path)
+
+    old_chain = reopened.list_findings("earlier")[0].chain
+    assert old_chain.claim.period == "2024"
+    assert old_chain.claim.source_ids == ["old-z"]
+    assert [link.span.span_id for link in old_chain.links] == ["old-z:chunk:1"]
+    assert reopened.list_claims(run_id="earlier")[0].period == "2024"
+    assert reopened.list_run_claims("earlier")[0].period == "2024"
+    assert old_chain.verification.status is VerificationStatus.SUPPORTED
+    new_chain = reopened.get_chain("shared", run_id="later")
+    assert new_chain.claim.period == "2023"
+    assert [link.span.span_id for link in new_chain.links] == ["new-a:chunk:1"]
+
+    reopened.clear_run("later")
+    with pytest.raises(KeyError):
+        reopened.get_chain("shared", run_id="later")
+    assert reopened.get_chain("shared", run_id="earlier") == old_chain
+
+
+@pytest.mark.parametrize("old_scope", ["unscoped", "mapped", "shared-snapshots"])
+def test_v2_migration_withholds_overwritten_claims(tmp_path, old_scope):
+    import sqlite3
+
+    path = tmp_path / "graph.sqlite"
+    store = EvidenceGraphStore(path)
+    first = _source("old-source")
+    old = _claim("shared", source_id=first.doc_id, chunk_id=first.chunks[0].chunk_id)
+    second = _source("new-source", content=CONTENT.replace("2024", "2023"))
+    new = _claim("shared", source_id=second.doc_id, chunk_id=second.chunks[0].chunk_id,
+                 period="2023", statement=old.statement.replace("2024", "2023"))
+    if old_scope == "shared-snapshots":
+        # The wrong edge predates old-run and its source was collected by old-run.
+        store.save_ledger(_ledger(second, claims=[new]), run_id="seed-run")
+        sources = (first, second)
+    else:
+        sources = (first,)
+    store.save_ledger(_ledger(*sources, claims=[old]), run_id="" if old_scope == "unscoped" else "old-run")
+    store.save_findings("old-run", [FindingRecord(
+        finding_id="old-run:shared", run_id="old-run", claim_id="shared",
+        text=old.statement, status=VerificationStatus.SUPPORTED,
+    )])
+    store.save_ledger(_ledger(first, second, claims=[new]), run_id="new-run")
+    connection = sqlite3.connect(path)
+    try:
+        connection.executescript("DROP TABLE run_claims; PRAGMA user_version = 2;")
+    finally:
+        connection.close()
+
+    migrated = EvidenceGraphStore(path)
+
+    finding, = migrated.list_findings("old-run")
+    assert finding.finding.status is VerificationStatus.INSUFFICIENT
+    assert finding.chain.claim.statement == old.statement
+    assert finding.chain.claim.verification_reason == "run_evidence_unavailable"
+    assert not finding.chain.links
+    if old_scope != "shared-snapshots":
+        assert "new-source" not in {source.snapshot_id for source in migrated.list_run_snapshots("old-run")}
+    current = migrated.get_chain("shared", run_id="new-run")
+    assert current.claim.period == "2023"
+    assert [link.snapshot.snapshot_id for link in current.links] == ["new-source"]
 
 
 def test_numeric_claim_without_unit_is_not_comparable(tmp_path):
@@ -771,7 +1032,7 @@ def test_old_claim_relations_schema_is_rebuilt_with_run_id(tmp_path):
 def test_findings_persist_every_linked_slot_and_fall_back_to_section(tmp_path):
     path = tmp_path / "graph.sqlite"
     store = EvidenceGraphStore(path)
-    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]), run_id="run-1")
     store.save_findings(
         "run-1",
         [
@@ -792,6 +1053,7 @@ def test_findings_persist_every_linked_slot_and_fall_back_to_section(tmp_path):
     assert shared.slot_ids == ["contract:0", "contract:1"]
     assert shared.linked_slot_ids() == ["contract:0", "contract:1"]
 
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]), run_id="run-2")
     store.save_findings(
         "run-2",
         [
@@ -817,7 +1079,7 @@ def test_clear_run_removes_slot_links(tmp_path):
 
     path = tmp_path / "graph.sqlite"
     store = EvidenceGraphStore(path)
-    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]), run_id="run-1")
     store.save_findings(
         "run-1",
         [
@@ -845,7 +1107,7 @@ def test_v2_database_gains_the_slot_table_on_reopen(tmp_path):
 
     path = tmp_path / "graph.sqlite"
     store = EvidenceGraphStore(path)
-    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]), run_id="run-1")
     with sqlite3.connect(path) as connection:
         connection.execute("DROP TABLE finding_slots")
         connection.execute("PRAGMA user_version = 2")
@@ -872,7 +1134,7 @@ def test_v2_database_gains_the_slot_table_on_reopen(tmp_path):
 def test_run_verdict_is_persisted_without_changing_the_global_claim(tmp_path):
     path = tmp_path / "graph.sqlite"
     store = EvidenceGraphStore(path)
-    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]))
+    store.save_ledger(_ledger(_source("snap-1"), claims=[_claim("claim-1")]), run_id="run-1")
     before = store.get_claim("claim-1").verification_status
 
     verdict = VerificationRecord(
@@ -904,6 +1166,3 @@ def test_run_verdict_is_persisted_without_changing_the_global_claim(tmp_path):
     assert finding.chain.verification.status is VerificationStatus.NEEDS_REVIEW
     assert finding.chain.verification.reason == "conflicting_contract_evidence"
     assert store.get_claim("claim-1").verification_status == before
-
-
-

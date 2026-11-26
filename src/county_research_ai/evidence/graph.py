@@ -44,7 +44,8 @@ from .source_contract import meets_source_credibility_threshold
 from .source_identity import source_groups
 
 SCHEMA_VERSION = 3
-DETERMINISTIC_VERIFIER_VERSION = "deterministic_v2_local_binding"
+_UNBOUND_EVIDENCE = "run_evidence_unavailable"
+DETERMINISTIC_VERIFIER_VERSION = "deterministic_v3_source_credibility"
 
 _YEAR_RE = re.compile(r"(?<!\d)(?:1[89]\d{2}|20\d{2})(?!\d)")
 _NUMERIC_RE = re.compile(r"(?<![\d.])(\d[\d,]*(?:\.\d+)?)\s*(亿元|万元|亿|万|%|‰|亩|万人|人)?")
@@ -106,9 +107,9 @@ class ClaimEvidenceEdgeRecord(BaseModel):
     span_id: str
     relation: EdgeRelation = EdgeRelation.CONTEXT
     rationale: str = ""
+    verifier_version: str = DETERMINISTIC_VERIFIER_VERSION
     # A later import can be less credible than the immutable source snapshot.
     source_credibility_eligible: bool = True
-    verifier_version: str = DETERMINISTIC_VERIFIER_VERSION
 
 
 class ClaimRelationRecord(BaseModel):
@@ -664,6 +665,13 @@ class EvidenceGraphStore:
                     snapshot_id TEXT NOT NULL REFERENCES source_snapshots(snapshot_id),
                     PRIMARY KEY (run_id, snapshot_id)
                 );
+                CREATE TABLE IF NOT EXISTS run_claims (
+                    run_id TEXT NOT NULL,
+                    claim_id TEXT NOT NULL REFERENCES claims(claim_id),
+                    claim_json TEXT,
+                    edges_json TEXT NOT NULL,
+                    PRIMARY KEY (run_id, claim_id)
+                );
                 CREATE INDEX IF NOT EXISTS idx_findings_run ON findings(run_id);
                 CREATE INDEX IF NOT EXISTS idx_spans_snapshot ON evidence_spans(snapshot_id);
                 CREATE INDEX IF NOT EXISTS idx_run_snapshots_run ON run_snapshots(run_id);
@@ -695,6 +703,7 @@ class EvidenceGraphStore:
                     """
                 )
                 connection.execute("PRAGMA foreign_keys = ON")
+            connection.execute("BEGIN IMMEDIATE")
             for table, column, ddl in (
                 ("claims", "measure_id", "TEXT NOT NULL DEFAULT ''"),
                 ("claims", "region_source", "TEXT NOT NULL DEFAULT ''"),
@@ -709,7 +718,106 @@ class EvidenceGraphStore:
                     connection.execute(
                         f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"
                     )
-            connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS idx_verification_claim_run"
+                " ON verification_records(claim_id, run_id, created_at DESC)"
+            )
+            if connection.execute("PRAGMA user_version").fetchone()[0] < SCHEMA_VERSION:
+                self._migrate_run_claims(connection)
+                connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+
+    def _migrate_run_claims(self, connection: sqlite3.Connection) -> None:
+        memberships = connection.execute(
+            "SELECT run_id, claim_id, MIN(created_at) AS bound_at FROM ("
+            " SELECT run_id, claim_id, created_at FROM findings"
+            " UNION ALL SELECT run_id, claim_id, created_at FROM verification_records"
+            ") WHERE run_id <> '' GROUP BY run_id, claim_id"
+        ).fetchall()
+        for row in memberships:
+            self._bind_legacy_claim(connection, row["run_id"], row["claim_id"], row["bound_at"])
+
+    @staticmethod
+    def _write_claim_version(
+        connection: sqlite3.Connection, run_id: str, claim_id: str,
+        claim: AtomicClaim | None, edges: list[ClaimEvidenceEdgeRecord],
+    ) -> None:
+        connection.execute(
+            "INSERT INTO run_claims (run_id, claim_id, claim_json, edges_json) VALUES (?, ?, ?, ?)"
+            " ON CONFLICT(run_id, claim_id) DO UPDATE SET"
+            " claim_json=excluded.claim_json, edges_json=excluded.edges_json",
+            (
+                run_id, claim_id, claim.model_dump_json() if claim is not None else None,
+                json.dumps([edge.model_dump(mode="json") for edge in edges]),
+            ),
+        )
+
+    def _bind_legacy_claim(
+        self, connection: sqlite3.Connection, run_id: str, claim_id: str, bound_at: str,
+    ) -> None:
+        """Freeze a legacy finding's chain if its original ownership is recoverable."""
+        if connection.execute(
+            "SELECT 1 FROM run_claims WHERE run_id = ? AND claim_id = ?", (run_id, claim_id),
+        ).fetchone():
+            return
+        snapshots = {row[0] for row in connection.execute(
+            "SELECT snapshot_id FROM run_snapshots WHERE run_id = ?", (run_id,),
+        )}
+        unscoped = connection.execute(
+            "SELECT claim_json, edges_json FROM run_claims WHERE run_id = '' AND claim_id = ?",
+            (claim_id,),
+        ).fetchone()
+        legacy_verification = connection.execute(
+            "SELECT * FROM verification_records WHERE run_id = '' AND claim_id = ? AND created_at <= ?"
+            " ORDER BY created_at DESC, record_id DESC LIMIT 1", (claim_id, bound_at),
+        ).fetchone()
+        has_other_run = connection.execute(
+            "SELECT 1 FROM (SELECT run_id FROM findings WHERE claim_id = ?"
+            " UNION SELECT run_id FROM verification_records WHERE claim_id = ?)"
+            " WHERE run_id NOT IN ('', ?) LIMIT 1", (claim_id, claim_id, run_id),
+        ).fetchone() is not None
+        if not snapshots and unscoped is not None and legacy_verification is not None:
+            claim = AtomicClaim.model_validate_json(unscoped["claim_json"])
+            edges = [ClaimEvidenceEdgeRecord.model_validate(edge) for edge in json.loads(unscoped["edges_json"])]
+        else:
+            row = connection.execute("SELECT * FROM claims WHERE claim_id = ?", (claim_id,)).fetchone()
+            if row is None:
+                raise KeyError(f"unknown claim: {claim_id}")
+            # An earlier edge may be present in multiple runs. A later write
+            # can still replace the global Claim while leaving that edge intact.
+            newer_foreign_verification = connection.execute(
+                "SELECT 1 FROM verification_records WHERE claim_id = ? AND run_id <> ?"
+                " AND created_at >= ? LIMIT 1", (claim_id, run_id, bound_at),
+            ).fetchone()
+            if newer_foreign_verification is not None:
+                self._write_claim_version(connection, run_id, claim_id, None, [])
+                return
+            claim = self._claim_from_row(row)
+            edge_rows = connection.execute(
+                "SELECT e.*, s.snapshot_id FROM claim_evidence_edges e"
+                " JOIN evidence_spans s ON s.span_id = e.span_id"
+                " WHERE e.claim_id = ? AND e.created_at <= ? ORDER BY e.relation, e.span_id",
+                (claim_id, bound_at),
+            ).fetchall()
+            if snapshots:
+                edge_rows = [edge for edge in edge_rows if edge["snapshot_id"] in snapshots]
+            elif has_other_run or legacy_verification is None or row["created_at"] > bound_at:
+                edge_rows = []
+            if has_other_run:
+                edge_rows = [edge for edge in edge_rows if edge["span_id"] in claim.evidence_chunk_ids]
+            authorized_spans = {edge["span_id"] for edge in edge_rows}
+            authorized_sources = snapshots or {edge["snapshot_id"] for edge in edge_rows}
+            if (not set(claim.evidence_chunk_ids) <= authorized_spans
+                    or not set(claim.source_ids) <= authorized_sources
+                    or not edge_rows):
+                self._write_claim_version(connection, run_id, claim_id, None, [])
+                return
+            edges = [self._edge_from_row(edge) for edge in edge_rows]
+        self._write_claim_version(connection, run_id, claim_id, claim, edges)
+        if not snapshots and legacy_verification is not None:
+            record = self._verification_from_row(legacy_verification)
+            record_id = _sha256(f"legacy:{run_id}:{record.record_id}")[:24]
+            record = record.model_copy(update={"run_id": run_id, "record_id": record_id})
+            self._insert_verification(connection, record, record.reason, update_global=False)
 
     # ---------------------------------------------------------------- writes
 
@@ -724,13 +832,14 @@ class EvidenceGraphStore:
     ) -> dict[str, int]:
         """Persist a ledger, classify claim relations, and record verification."""
         now = _utcnow().isoformat()
-        observed = {
-            claim.claim_id: self._claim_observed_at(ledger, claim)
-            for claim in ledger.claims.values()
-        }
+        observed: dict[str, datetime | None] = {}
+        supported_ids: set[str] = set()
         with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            credible_source_ids: set[str] = set()
             for source in ledger.sources.values():
-                self._insert_snapshot(connection, source, now)
+                if self._insert_snapshot(connection, source, now):
+                    credible_source_ids.add(source.doc_id)
                 if run_id:
                     connection.execute(
                         "INSERT OR IGNORE INTO run_snapshots (run_id, snapshot_id)"
@@ -740,21 +849,40 @@ class EvidenceGraphStore:
             for chunk in ledger.chunks.values():
                 self._insert_span(connection, chunk)
             for claim in ledger.claims.values():
-                self._insert_claim(connection, claim, observed[claim.claim_id], now)
-                for chunk_id in claim.evidence_chunk_ids:
-                    connection.execute(
-                        "INSERT OR IGNORE INTO claim_evidence_edges"
-                        " (claim_id, span_id, relation, rationale, verifier_version, created_at)"
-                        " VALUES (?, ?, ?, ?, ?, ?)",
-                        (
-                            claim.claim_id,
-                            chunk_id,
-                            EdgeRelation.CONTEXT.value,
-                            "ledger_evidence_link",
-                            "ledger_adapter_v1",
-                            now,
-                        ),
+                edges = [
+                    ClaimEvidenceEdgeRecord(
+                        claim_id=claim.claim_id, span_id=chunk_id,
+                        rationale="ledger_evidence_link", verifier_version="ledger_adapter_v1",
+                        source_credibility_eligible=ledger.chunks[chunk_id].document_id in credible_source_ids,
                     )
+                    for chunk_id in sorted(set(claim.evidence_chunk_ids))
+                    if chunk_id in ledger.chunks
+                    and ledger.chunks[chunk_id].document_id in ledger.sources
+                ]
+                # Use only observations bound to immutable, verifiable quotes.
+                links = self._links_for_edges(
+                    connection, [edge for edge in edges if edge.source_credibility_eligible],
+                )
+                supporting_dates = [
+                    link.snapshot.observed_at
+                    for link in self.supporting_links(ClaimChain(claim=claim, links=links))
+                ]
+                claim_observed = max((at for at in supporting_dates if at is not None), default=None)
+                observed[claim.claim_id] = claim_observed
+                if (
+                    supporting_dates
+                    and not self._region_issue(claim, {}, target_region)
+                    and not self._window_issue(claim, window)
+                ):
+                    supported_ids.add(claim.claim_id)
+                self._insert_claim(connection, claim, claim_observed, now)
+                connection.executemany(
+                    "INSERT OR IGNORE INTO claim_evidence_edges"
+                    " (claim_id, span_id, relation, rationale, verifier_version, created_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?)",
+                    [(e.claim_id, e.span_id, e.relation.value, e.rationale, e.verifier_version, now) for e in edges],
+                )
+                self._write_claim_version(connection, run_id, claim.claim_id, claim, edges)
             self._record_relations(
                 connection,
                 ledger,
@@ -763,41 +891,50 @@ class EvidenceGraphStore:
                 run_id=run_id,
                 use_measure_identity=use_measure_identity,
             )
-
-        counts = {
+            for claim in ledger.claims.values():
+                self._verify_claim(
+                    connection, claim.claim_id, window=window, supported_ids=supported_ids,
+                    run_id=run_id, target_region=target_region,
+                )
+        return {
             "snapshots": len(ledger.sources),
             "spans": len(ledger.chunks),
             "claims": len(ledger.claims),
         }
-        supported_ids = {
-            claim_id
-            for claim_id, claim in ledger.claims.items()
-            if self._ledger_objective_support(claim, ledger)
-        }
-        for claim in ledger.claims.values():
-            self.verify_claim(
-                claim.claim_id,
-                window=window,
-                supported_ids=supported_ids,
-                run_id=run_id,
-                target_region=target_region,
-            )
-        return counts
+
+    @staticmethod
+    def _source_credibility_row(connection: sqlite3.Connection, snapshot_id: str) -> sqlite3.Row | None:
+        return connection.execute(
+            "SELECT content_hash, metadata_json FROM source_snapshots WHERE snapshot_id = ?",
+            (snapshot_id,),
+        ).fetchone()
+
+    @staticmethod
+    def _source_assessments_eligible(source: SourceDocument, archived: sqlite3.Row | None) -> bool:
+        return meets_source_credibility_threshold(source.metadata, allow_unscored=True) and (
+            archived is None
+            or meets_source_credibility_threshold(json.loads(archived["metadata_json"]), allow_unscored=True)
+        )
+
+    def source_credibility_eligible(self, source: SourceDocument) -> bool:
+        """Check incoming and immutable ratings before persisting a candidate."""
+        with self._connect() as connection:
+            archived = self._source_credibility_row(connection, source.doc_id)
+        return self._source_assessments_eligible(source, archived)
 
     def _insert_snapshot(
         self, connection: sqlite3.Connection, source: SourceDocument, now: str
-    ) -> None:
+    ) -> bool:
+        """Save the snapshot if new and require both assessments to qualify."""
         content_hash = source.content_hash or _sha256(source.content)
-        row = connection.execute(
-            "SELECT content_hash FROM source_snapshots WHERE snapshot_id = ?",
-            (source.doc_id,),
-        ).fetchone()
+        row = self._source_credibility_row(connection, source.doc_id)
+        eligible = self._source_assessments_eligible(source, row)
         if row is not None:
             if row["content_hash"] != content_hash:
                 raise ValueError(
                     f"snapshot id collision with different content: {source.doc_id}"
                 )
-            return
+            return eligible
         connection.execute(
             "INSERT INTO source_snapshots"
             " (snapshot_id, canonical_url, title, content, content_hash, provider,"
@@ -818,6 +955,7 @@ class EvidenceGraphStore:
                 now,
             ),
         )
+        return eligible
 
     def _insert_span(
         self, connection: sqlite3.Connection, chunk: EvidenceChunk
@@ -921,17 +1059,6 @@ class EvidenceGraphStore:
             return VerificationStatus(status.upper()).value
         except ValueError:
             return VerificationStatus.INSUFFICIENT.value
-
-    @staticmethod
-    def _claim_observed_at(
-        ledger: EvidenceLedger, claim: AtomicClaim
-    ) -> datetime | None:
-        observed: list[datetime] = []
-        for source_id in claim.source_ids:
-            source = ledger.sources.get(source_id)
-            if source is not None and source.retrieved_at is not None:
-                observed.append(source.retrieved_at)
-        return max(observed) if observed else None
 
     def _record_relations(
         self,
@@ -1061,17 +1188,13 @@ class EvidenceGraphStore:
         return self._span_from_row(row) if row is not None else None
 
     def list_claims(self, *, run_id: str = "") -> list[AtomicClaim]:
+        if run_id:
+            return sorted(
+                (item.chain.claim for item in self.list_findings(run_id)),
+                key=lambda claim: claim.claim_id,
+            )
         with self._connect() as connection:
-            if run_id:
-                rows = connection.execute(
-                    "SELECT c.* FROM claims c JOIN findings f ON f.claim_id = c.claim_id"
-                    " WHERE f.run_id = ? ORDER BY c.claim_id",
-                    (run_id,),
-                ).fetchall()
-            else:
-                rows = connection.execute(
-                    "SELECT * FROM claims ORDER BY claim_id"
-                ).fetchall()
+            rows = connection.execute("SELECT * FROM claims ORDER BY claim_id").fetchall()
         return [self._claim_from_row(row) for row in rows]
 
     def list_snapshots(self) -> list[SourceSnapshotRecord]:
@@ -1084,24 +1207,33 @@ class EvidenceGraphStore:
     def list_run_snapshots(self, run_id: str) -> list[SourceSnapshotRecord]:
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT n.* FROM source_snapshots n"
-                " JOIN run_snapshots r ON r.snapshot_id = n.snapshot_id"
-                " WHERE r.run_id = ? ORDER BY n.snapshot_id",
-                (run_id,),
+                "SELECT n.* FROM source_snapshots n WHERE n.snapshot_id IN ("
+                " SELECT snapshot_id FROM run_snapshots WHERE run_id = ?"
+                " UNION SELECT s.snapshot_id FROM run_claims c JOIN json_each(c.edges_json) e"
+                " JOIN evidence_spans s ON s.span_id = json_extract(e.value, '$.span_id')"
+                " WHERE c.run_id = ?"
+                ") ORDER BY n.snapshot_id",
+                (run_id, run_id),
             ).fetchall()
         return [self._snapshot_from_row(row) for row in rows]
 
     def list_run_claims(self, run_id: str) -> list[AtomicClaim]:
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT c.* FROM claims c JOIN ("
-                "  SELECT claim_id, MAX(created_at) AS latest"
-                "  FROM verification_records WHERE run_id = ? GROUP BY claim_id"
-                ") latest ON latest.claim_id = c.claim_id"
-                " ORDER BY c.claim_id",
+                "SELECT c.claim_json, v.status, v.reason FROM run_claims c"
+                " JOIN verification_records v ON v.record_id = ("
+                "   SELECT record_id FROM verification_records"
+                "   WHERE run_id = c.run_id AND claim_id = c.claim_id"
+                "   ORDER BY created_at DESC, record_id DESC LIMIT 1"
+                " ) WHERE c.run_id = ? AND c.claim_json IS NOT NULL ORDER BY c.claim_id",
                 (run_id,),
             ).fetchall()
-        return [self._claim_from_row(row) for row in rows]
+        return [
+            AtomicClaim.model_validate_json(row["claim_json"]).model_copy(update={
+                "verification_status": row["status"].lower(), "verification_reason": row["reason"],
+            })
+            for row in rows
+        ]
 
     @staticmethod
     def _snapshot_from_row(row: sqlite3.Row) -> SourceSnapshotRecord:
@@ -1134,92 +1266,91 @@ class EvidenceGraphStore:
             content_hash=row["content_hash"],
         )
 
+    @staticmethod
+    def _edge_from_row(row: sqlite3.Row) -> ClaimEvidenceEdgeRecord:
+        return ClaimEvidenceEdgeRecord(
+            claim_id=row["claim_id"], span_id=row["span_id"],
+            relation=EdgeRelation(row["relation"]), rationale=row["rationale"],
+            verifier_version=row["verifier_version"],
+        )
+
     def get_chain(self, claim_id: str, *, run_id: str = "") -> ClaimChain:
-        claim = self.get_claim(claim_id)
-        if claim is None:
-            raise KeyError(f"unknown claim: {claim_id}")
         with self._connect() as connection:
-            edge_rows = connection.execute(
-                "SELECT * FROM claim_evidence_edges WHERE claim_id = ?"
-                " ORDER BY relation, span_id",
-                (claim_id,),
-            ).fetchall()
+            connection.execute("BEGIN")
+            return self._get_chain(connection, claim_id, run_id)
+
+    def _get_chain(self, connection: sqlite3.Connection, claim_id: str, run_id: str) -> ClaimChain:
+        version = connection.execute(
+            "SELECT claim_json, edges_json FROM run_claims WHERE run_id = ? AND claim_id = ?",
+            (run_id, claim_id),
+        ).fetchone()
+        if version is None:
             if run_id:
-                relation_rows = connection.execute(
-                    "SELECT * FROM claim_relations"
-                    " WHERE (from_claim_id = ? OR to_claim_id = ?) AND run_id = ?"
-                    " ORDER BY from_claim_id, to_claim_id, relation",
-                    (claim_id, claim_id, run_id),
-                ).fetchall()
-                verification_row = connection.execute(
-                    "SELECT * FROM verification_records"
-                    " WHERE claim_id = ? AND run_id = ?"
-                    " ORDER BY created_at DESC LIMIT 1",
-                    (claim_id, run_id),
+                raise KeyError(f"unknown claim in run {run_id}: {claim_id}")
+            row = connection.execute("SELECT * FROM claims WHERE claim_id = ?", (claim_id,)).fetchone()
+            if row is None:
+                raise KeyError(f"unknown claim: {claim_id}")
+            claim = self._claim_from_row(row)
+            edges = [self._edge_from_row(row) for row in connection.execute(
+                "SELECT * FROM claim_evidence_edges WHERE claim_id = ? ORDER BY relation, span_id",
+                (claim_id,),
+            )]
+        else:
+            if version["claim_json"] is None:
+                finding = connection.execute(
+                    "SELECT text FROM findings WHERE run_id = ? AND claim_id = ? ORDER BY finding_id LIMIT 1",
+                    (run_id, claim_id),
                 ).fetchone()
-            else:
-                relation_rows = connection.execute(
-                    "SELECT * FROM claim_relations"
-                    " WHERE from_claim_id = ? OR to_claim_id = ?"
-                    " ORDER BY from_claim_id, to_claim_id, relation",
-                    (claim_id, claim_id),
-                ).fetchall()
-                verification_row = connection.execute(
-                    "SELECT * FROM verification_records WHERE claim_id = ?"
-                    " ORDER BY created_at DESC LIMIT 1",
-                    (claim_id,),
-                ).fetchone()
-            links: list[EvidenceLink] = []
-            for edge_row in edge_rows:
-                span_row = connection.execute(
-                    "SELECT * FROM evidence_spans WHERE span_id = ?",
-                    (edge_row["span_id"],),
-                ).fetchone()
-                if span_row is None:
-                    continue
-                snapshot_row = connection.execute(
-                    "SELECT * FROM source_snapshots WHERE snapshot_id = ?",
-                    (span_row["snapshot_id"],),
-                ).fetchone()
-                if snapshot_row is None:
-                    continue
-                links.append(
-                    EvidenceLink(
-                        edge=ClaimEvidenceEdgeRecord(
-                            claim_id=edge_row["claim_id"],
-                            span_id=edge_row["span_id"],
-                            relation=EdgeRelation(edge_row["relation"]),
-                            rationale=edge_row["rationale"],
-                            verifier_version=edge_row["verifier_version"],
-                        ),
-                        span=self._span_from_row(span_row),
-                        snapshot=self._snapshot_from_row(snapshot_row),
-                    )
-                )
+                return ClaimChain(claim=AtomicClaim(
+                    claim_id=claim_id, statement=finding["text"] if finding else "",
+                    verification_status="insufficient", verification_reason=_UNBOUND_EVIDENCE,
+                ))
+            claim = AtomicClaim.model_validate_json(version["claim_json"])
+            edges = [ClaimEvidenceEdgeRecord.model_validate(edge) for edge in json.loads(version["edges_json"])]
+        relation_rows = connection.execute(
+            "SELECT * FROM claim_relations"
+            " WHERE (from_claim_id = ? OR to_claim_id = ?) AND (? OR run_id = ?)"
+            " ORDER BY from_claim_id, to_claim_id, relation",
+            (claim_id, claim_id, version is None, run_id),
+        )
+        verification_row = connection.execute(
+            "SELECT * FROM verification_records WHERE claim_id = ? AND (? OR run_id = ?)"
+            " ORDER BY created_at DESC, record_id DESC LIMIT 1",
+            (claim_id, version is None, run_id),
+        ).fetchone()
+        links = self._links_for_edges(connection, edges)
         relations = [
             ClaimRelationRecord(
-                from_claim_id=row["from_claim_id"],
-                to_claim_id=row["to_claim_id"],
-                relation=ClaimRelationKind(row["relation"]),
-                rationale=row["rationale"],
+                from_claim_id=row["from_claim_id"], to_claim_id=row["to_claim_id"],
+                relation=ClaimRelationKind(row["relation"]), rationale=row["rationale"],
             )
             for row in relation_rows
         ]
-        verification = (
-            self._verification_from_row(verification_row)
-            if verification_row is not None
-            else None
-        )
-        if verification is not None and run_id:
-            claim = claim.model_copy(
-                update={
-                    "verification_status": verification.status.value.lower(),
-                    "verification_reason": verification.reason,
-                }
-            )
-        return ClaimChain(
-            claim=claim, links=links, relations=relations, verification=verification
-        )
+        verification = self._verification_from_row(verification_row) if verification_row is not None else None
+        if verification is not None and version is not None:
+            claim = claim.model_copy(update={
+                "verification_status": verification.status.value.lower(), "verification_reason": verification.reason,
+            })
+        return ClaimChain(claim=claim, links=links, relations=relations, verification=verification)
+
+    def _links_for_edges(
+        self, connection: sqlite3.Connection, edges: list[ClaimEvidenceEdgeRecord],
+    ) -> list[EvidenceLink]:
+        links: list[EvidenceLink] = []
+        for edge in edges:
+            span_row = connection.execute(
+                "SELECT * FROM evidence_spans WHERE span_id = ?", (edge.span_id,),
+            ).fetchone()
+            if span_row is None:
+                continue
+            snapshot_row = connection.execute(
+                "SELECT * FROM source_snapshots WHERE snapshot_id = ?", (span_row["snapshot_id"],),
+            ).fetchone()
+            if snapshot_row is not None:
+                links.append(EvidenceLink(
+                    edge=edge, span=self._span_from_row(span_row), snapshot=self._snapshot_from_row(snapshot_row),
+                ))
+        return links
 
     def relations_for(self, claim_id: str) -> list[ClaimRelationRecord]:
         return self.get_chain(claim_id).relations
@@ -1241,6 +1372,18 @@ class EvidenceGraphStore:
                     _utcnow().isoformat(),
                 ),
             )
+            version = connection.execute(
+                "SELECT claim_json, edges_json FROM run_claims WHERE run_id = '' AND claim_id = ?",
+                (edge.claim_id,),
+            ).fetchone()
+            if version is not None:
+                edges = [ClaimEvidenceEdgeRecord.model_validate(e) for e in json.loads(version["edges_json"])]
+                if not any(e.span_id == edge.span_id and e.relation is edge.relation for e in edges):
+                    edges.append(edge)
+                    edges.sort(key=lambda item: (item.relation, item.span_id))
+                    self._write_claim_version(
+                        connection, "", edge.claim_id, AtomicClaim.model_validate_json(version["claim_json"]), edges,
+                    )
 
     def verify_claim(
         self,
@@ -1252,7 +1395,50 @@ class EvidenceGraphStore:
         run_id: str = "",
         target_region: str = "",
     ) -> VerificationRecord:
-        chain = self.get_chain(claim_id, run_id=run_id)
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            return self._verify_claim(
+                connection, claim_id, verifier_version=verifier_version, window=window,
+                supported_ids=supported_ids, run_id=run_id, target_region=target_region,
+            )
+
+    def _verify_claim(
+        self,
+        connection: sqlite3.Connection,
+        claim_id: str,
+        *,
+        verifier_version: str = DETERMINISTIC_VERIFIER_VERSION,
+        window: tuple[date | None, date | None] | None = None,
+        supported_ids: set[str] | None = None,
+        run_id: str = "",
+        target_region: str = "",
+    ) -> VerificationRecord:
+        chain = self._get_chain(connection, claim_id, run_id)
+        if supported_ids is None:
+            supported_ids = self._related_support_ids(
+                connection, [chain], run_id=run_id, window=window, target_region=target_region,
+            )
+        status, reason, checks = self._evaluate_claim(
+            chain, window=window, supported_ids=supported_ids, target_region=target_region,
+        )
+        record = VerificationRecord(
+            record_id=hashlib.sha256(
+                f"{run_id}|{claim_id}|{verifier_version}|{_utcnow().isoformat()}".encode()
+            ).hexdigest()[:24],
+            claim_id=claim_id,
+            status=status,
+            deterministic_checks=checks,
+            verifier_version=verifier_version,
+            run_id=run_id,
+            reason=reason,
+        )
+        self._insert_verification(connection, record, reason)
+        return record
+
+    def _evaluate_claim(
+        self, chain: ClaimChain, *, window: tuple[date | None, date | None] | None,
+        supported_ids: set[str], target_region: str,
+    ) -> tuple[VerificationStatus, str, dict[str, Any]]:
         claim = chain.claim
         checks: dict[str, Any] = {"edges": len(chain.links)}
         if window is not None:
@@ -1276,16 +1462,19 @@ class EvidenceGraphStore:
             if link.edge.relation is not EdgeRelation.CONTRADICTS
         ]
         contradicting = [
-            link
-            for link in integrity_ok
-            if link.edge.relation is EdgeRelation.CONTRADICTS
+            link for link in integrity_ok
+            if link.edge.relation is EdgeRelation.CONTRADICTS and _eligible_source(link)
         ]
-        valid_support = [link for link in supporting
-                         if _claim_supported_by_quote(claim, link.span.quote,
-                                                      title=link.snapshot.title,
-                                                      url=link.snapshot.canonical_url)]
-        checks["independent_support"] = self._independent_source_count(valid_support)
-        checks["source_groups"] = source_groups(link.snapshot for link in valid_support)
+        valid_support = [
+            link for link in supporting
+            if _claim_supported_by_quote(claim, link.span.quote,
+                                         title=link.snapshot.title, url=link.snapshot.canonical_url)
+        ]
+        eligible_support = [link for link in valid_support if _eligible_source(link)]
+        checks["independent_support"] = self._independent_source_count(eligible_support)
+        checks["source_groups"] = source_groups(link.snapshot for link in eligible_support)
+        checks["quote_supporting_edges"] = len(valid_support)
+        checks["eligible_supporting_edges"] = len(eligible_support)
         checks["supporting_edges"] = len(supporting)
         checks["contradicting_edges"] = len(contradicting)
         checks["claim_region"] = claim.region_id
@@ -1330,27 +1519,9 @@ class EvidenceGraphStore:
             )
 
         status, reason = self._decide_status(
-            claim,
-            chain,
-            checks,
-            window=window,
-            supported_ids=supported_ids,
-            run_id=run_id,
-            target_region=target_region,
+            claim, chain, checks, window=window, supported_ids=supported_ids, target_region=target_region,
         )
-        record = VerificationRecord(
-            record_id=hashlib.sha256(
-                f"{claim_id}|{verifier_version}|{_utcnow().isoformat()}".encode()
-            ).hexdigest()[:24],
-            claim_id=claim_id,
-            status=status,
-            deterministic_checks=checks,
-            verifier_version=verifier_version,
-            run_id=run_id,
-            reason=reason,
-        )
-        self.save_verification(record, reason=reason)
-        return record
+        return status, reason, checks
 
     def _check_span_integrity(
         self, span: EvidenceSpanRecord, snapshot: SourceSnapshotRecord
@@ -1399,16 +1570,10 @@ class EvidenceGraphStore:
         chain: ClaimChain,
         checks: dict[str, Any],
         *,
-        window: tuple[date | None, date | None] | None = None,
-        supported_ids: set[str] | None = None,
-        run_id: str = "",
-        target_region: str = "",
+        window: tuple[date | None, date | None] | None,
+        supported_ids: set[str],
+        target_region: str,
     ) -> tuple[VerificationStatus, str]:
-        superseded = self._has_supported_superseder(
-            claim, chain, supported_ids=supported_ids, run_id=run_id
-        )
-        if superseded:
-            return VerificationStatus.OUTDATED, "superseded_by_newer_claim"
         region_issue = self._region_issue(claim, checks, target_region)
         if region_issue:
             status = (
@@ -1422,7 +1587,7 @@ class EvidenceGraphStore:
             return VerificationStatus.NOT_COMPARABLE, window_issue
         supports = int(checks.get("supporting_edges") or 0)
         contradicts = int(checks.get("contradicting_edges") or 0)
-        if not supports:
+        if not supports and not contradicts:
             if checks.get("span_integrity_failures"):
                 return VerificationStatus.INSUFFICIENT, "false_or_broken_reference"
             return VerificationStatus.INSUFFICIENT, "no_evidence"
@@ -1430,22 +1595,31 @@ class EvidenceGraphStore:
             return VerificationStatus.NOT_COMPARABLE, "numeric_value_without_unit"
         if claim.value and not claim.period:
             return VerificationStatus.NOT_COMPARABLE, "numeric_value_without_period"
-        supported_conflicts = self._supported_claim_conflicts(
-            claim, chain, supported_ids=supported_ids, run_id=run_id
-        )
+        own_support = bool(checks["eligible_supporting_edges"])
+        supported_conflicts = self._supported_claim_conflicts(chain, supported_ids) if own_support else []
         checks["contradicting_supported_claims"] = supported_conflicts
-        own_support = self._has_objective_support(chain)
-        if own_support and (supported_conflicts or contradicts):
-            return VerificationStatus.NEEDS_REVIEW, "conflicting_supported_evidence"
-        if contradicts and not own_support:
-            return VerificationStatus.CONTRADICTED, "contradicting_evidence"
         if own_support:
+            if any(
+                relation.relation is ClaimRelationKind.SUPERSEDES
+                and relation.to_claim_id == claim.claim_id
+                and relation.from_claim_id in supported_ids
+                for relation in chain.relations
+            ):
+                return VerificationStatus.OUTDATED, "superseded_by_newer_claim"
+            if supported_conflicts or contradicts:
+                return VerificationStatus.NEEDS_REVIEW, "conflicting_supported_evidence"
             if claim.value:
                 return VerificationStatus.SUPPORTED, "value_and_span_verified"
             return VerificationStatus.SUPPORTED, "statement_exact_in_span"
-        if checks.get("value_present") is False:
-            return VerificationStatus.INSUFFICIENT, "value_not_in_quote"
-        return VerificationStatus.INSUFFICIENT, "statement_not_in_span"
+        if contradicts:
+            return VerificationStatus.CONTRADICTED, "contradicting_evidence"
+        if checks["quote_supporting_edges"]:
+            reason = "insufficient_source_credibility"
+        elif checks.get("value_present") is False:
+            reason = "value_not_in_quote"
+        else:
+            reason = "statement_not_in_span"
+        return VerificationStatus.INSUFFICIENT, reason
 
     @staticmethod
     def _region_issue(
@@ -1515,112 +1689,44 @@ class EvidenceGraphStore:
             return f"outside_requested_window:{min(outside)}"
         return ""
 
-    def _has_supported_superseder(
-        self,
-        claim: AtomicClaim,
-        chain: ClaimChain,
-        *,
-        supported_ids: set[str] | None = None,
-        run_id: str = "",
-    ) -> bool:
-        for relation in chain.relations:
-            if (
-                relation.relation is not ClaimRelationKind.SUPERSEDES
-                or relation.to_claim_id != claim.claim_id
-            ):
-                continue
-            superseder = relation.from_claim_id
-            if supported_ids is not None:
-                if superseder in supported_ids:
-                    return True
-                continue
+    def _related_support_ids(
+        self, connection: sqlite3.Connection, chains: list[ClaimChain], *, run_id: str,
+        window: tuple[date | None, date | None] | None, target_region: str,
+    ) -> set[str]:
+        """Check peers in the same transaction and run as the selected claims."""
+        known = {chain.claim.claim_id: chain for chain in chains}
+        related_ids = {
+            claim_id for chain in chains for relation in chain.relations
+            if relation.relation in (ClaimRelationKind.CONTRADICTS, ClaimRelationKind.SUPERSEDES)
+            for claim_id in (relation.from_claim_id, relation.to_claim_id)
+        }
+        supported = set()
+        for claim_id in related_ids:
             try:
-                other_chain = self.get_chain(superseder, run_id=run_id)
+                chain = known.get(claim_id) or self._get_chain(connection, claim_id, run_id)
             except KeyError:
-                continue
-            if self._has_objective_support(other_chain):
-                return True
-        return False
-
-    def _supported_claim_conflicts(
-        self,
-        claim: AtomicClaim,
-        chain: ClaimChain,
-        *,
-        supported_ids: set[str] | None = None,
-        run_id: str = "",
-    ) -> list[str]:
-        """Claim ids that contradict this claim *and* have objective support.
-
-        A claim whose value cannot be found in its own quote must not override a
-        supported claim. Symmetry is required: both sides are evaluated with the
-        same deterministic support test, independent of stored status. When
-        ``supported_ids`` is supplied (batch persistence), no per-claim chain
-        reload is needed.
-        """
-        conflicts: list[str] = []
-        for relation in chain.relations:
-            if relation.relation is not ClaimRelationKind.CONTRADICTS:
-                continue
-            other_id = (
-                relation.to_claim_id
-                if relation.from_claim_id == claim.claim_id
-                else relation.from_claim_id
-            )
-            if other_id == claim.claim_id:
-                continue
-            if supported_ids is not None:
-                if other_id in supported_ids:
-                    conflicts.append(other_id)
-                continue
-            other_chain = self.get_chain(other_id, run_id=run_id)
-            if self._has_objective_support(other_chain):
-                conflicts.append(other_id)
-        return sorted(set(conflicts))
+                continue  # A legacy relation can point to a claim outside this run.
+            if (
+                not self._region_issue(chain.claim, {}, target_region)
+                and not self._window_issue(chain.claim, window)
+                and next(self.supporting_links(chain), None) is not None
+            ):
+                supported.add(claim_id)
+        return supported
 
     @staticmethod
-    def _ledger_objective_support(
-        claim: AtomicClaim, ledger: EvidenceLedger
-    ) -> bool:
-        """Pure support test over an in-memory ledger (no database round-trips)."""
-        for chunk_id in claim.evidence_chunk_ids:
-            chunk = ledger.chunks.get(chunk_id)
-            if chunk is None:
-                continue
-            source = ledger.sources.get(chunk.document_id)
-            if source is None:
-                continue
-            ok, _ = _integrity_check(
-                quote=chunk.text,
-                start_offset=chunk.start_offset,
-                end_offset=chunk.end_offset,
-                span_hash=chunk.content_hash,
-                content=source.content,
-                content_hash=source.content_hash,
-            )
-            if ok and _claim_supported_by_quote(
-                claim,
-                chunk.text,
-                title=source.source_title,
-                url=source.canonical_url,
-            ):
-                return True
-        return False
+    def _supported_claim_conflicts(chain: ClaimChain, supported_ids: set[str]) -> list[str]:
+        peer_ids = {
+            claim_id for relation in chain.relations if relation.relation is ClaimRelationKind.CONTRADICTS
+            for claim_id in (relation.from_claim_id, relation.to_claim_id)
+        }
+        return sorted((peer_ids & supported_ids) - {chain.claim.claim_id})
 
-    def _has_objective_support(self, chain: ClaimChain) -> bool:
-        claim = chain.claim
-        for link in chain.links:
-            if link.edge.relation is EdgeRelation.CONTRADICTS:
-                continue
-            ok, _ = self._check_span_integrity(link.span, link.snapshot)
-            if ok and _claim_supported_by_quote(
-                claim,
-                link.span.quote,
-                title=link.snapshot.title,
-                url=link.snapshot.canonical_url,
-            ):
-                return True
-        return False
+    def save_verification(
+        self, record: VerificationRecord, *, reason: str = ""
+    ) -> None:
+        with self._connect() as connection:
+            self._insert_verification(connection, record, reason or record.reason)
 
     @staticmethod
     def _insert_verification(
@@ -1657,41 +1763,6 @@ class EvidenceGraphStore:
                 (record.status.value, reason, record.claim_id),
             )
 
-    def save_verification(
-        self, record: VerificationRecord, *, reason: str = ""
-    ) -> None:
-        effective_reason = reason or record.reason
-        with self._connect() as connection:
-            connection.execute(
-                "INSERT OR REPLACE INTO verification_records"
-                " (record_id, claim_id, status, deterministic_checks_json,"
-                " judge_assessment_json, uncertainty, human_review_json,"
-                " verifier_version, run_id, reason, created_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    record.record_id,
-                    record.claim_id,
-                    record.status.value,
-                    json.dumps(record.deterministic_checks, ensure_ascii=False, default=str),
-                    json.dumps(record.judge_assessment, ensure_ascii=False)
-                    if record.judge_assessment is not None
-                    else None,
-                    record.uncertainty,
-                    json.dumps(record.human_review, ensure_ascii=False)
-                    if record.human_review is not None
-                    else None,
-                    record.verifier_version,
-                    record.run_id,
-                    effective_reason,
-                    record.created_at.isoformat(),
-                ),
-            )
-            connection.execute(
-                "UPDATE claims SET verification_status = ?, verification_reason = ?"
-                " WHERE claim_id = ?",
-                (record.status.value, effective_reason, record.claim_id),
-            )
-
     @staticmethod
     def _verification_from_row(row: sqlite3.Row) -> VerificationRecord:
         return VerificationRecord(
@@ -1719,6 +1790,12 @@ class EvidenceGraphStore:
         verifications: list[VerificationRecord] | None = None,
     ) -> None:
         with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            for finding in findings:
+                if finding.run_id != run_id:
+                    raise ValueError("finding belongs to another run")
+                if run_id:
+                    self._bind_legacy_claim(connection, run_id, finding.claim_id, finding.created_at.isoformat())
             for record in verifications or ():
                 if record.run_id != run_id:
                     raise ValueError("finding verification belongs to another run")
@@ -1726,10 +1803,8 @@ class EvidenceGraphStore:
             connection.execute("DELETE FROM findings WHERE run_id = ?", (run_id,))
             connection.execute("DELETE FROM finding_slots WHERE run_id = ?", (run_id,))
             for finding in findings:
-                if finding.run_id != run_id:
-                    raise ValueError("finding belongs to another run")
                 connection.execute(
-                    "INSERT OR REPLACE INTO findings"
+                    "INSERT INTO findings"
                     " (finding_id, run_id, claim_id, section, text, status, created_at)"
                     " VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (
@@ -1749,39 +1824,69 @@ class EvidenceGraphStore:
                         (finding.finding_id, run_id, slot_id, position),
                     )
 
-    def list_findings(self, run_id: str) -> list[VerifiedFinding]:
+    def list_findings(
+        self, run_id: str, *, recheck_legacy: bool = False,
+        window: tuple[date | None, date | None] | None = None, target_region: str = "",
+    ) -> list[VerifiedFinding]:
         with self._connect() as connection:
+            connection.execute("BEGIN")
             rows = connection.execute(
-                "SELECT * FROM findings WHERE run_id = ? ORDER BY finding_id",
-                (run_id,),
+                "SELECT * FROM findings WHERE run_id = ? ORDER BY finding_id", (run_id,),
             ).fetchall()
             slots_by_finding: dict[str, list[str]] = {}
             for link in connection.execute(
-                "SELECT finding_id, slot_id FROM finding_slots WHERE run_id = ?"
-                " ORDER BY finding_id, position",
+                "SELECT finding_id, slot_id FROM finding_slots WHERE run_id = ? ORDER BY finding_id, position",
                 (run_id,),
             ):
                 slots_by_finding.setdefault(link["finding_id"], []).append(link["slot_id"])
-        findings: list[VerifiedFinding] = []
-        for row in rows:
-            legacy_slots = [row["section"]] if row["section"] else []
-            finding = FindingRecord(
-                finding_id=row["finding_id"],
-                run_id=row["run_id"],
-                claim_id=row["claim_id"],
-                section=row["section"],
-                slot_ids=slots_by_finding.get(row["finding_id"], legacy_slots),
-                text=row["text"],
-                status=VerificationStatus(row["status"]),
-                created_at=_parse_datetime(row["created_at"]) or _utcnow(),
-            )
-            findings.append(
-                VerifiedFinding(
-                    finding=finding,
-                    chain=self.get_chain(row["claim_id"], run_id=run_id),
+            findings: list[VerifiedFinding] = []
+            for row in rows:
+                chain = self._get_chain(connection, row["claim_id"], run_id)
+                status = VerificationStatus(
+                    "INSUFFICIENT" if chain.claim.verification_reason == _UNBOUND_EVIDENCE else row["status"]
                 )
-            )
+                legacy_slots = [row["section"]] if row["section"] else []
+                finding = FindingRecord(
+                    finding_id=row["finding_id"], run_id=row["run_id"], claim_id=row["claim_id"],
+                    section=row["section"], text=row["text"], status=status,
+                    slot_ids=slots_by_finding.get(row["finding_id"], legacy_slots),
+                    created_at=_parse_datetime(row["created_at"]) or _utcnow(),
+                )
+                findings.append(VerifiedFinding(finding=finding, chain=chain))
+            if recheck_legacy:
+                self._recheck_legacy_findings(connection, findings, run_id, window=window, target_region=target_region)
         return findings
+
+    def _recheck_legacy_findings(
+        self, connection: sqlite3.Connection, findings: list[VerifiedFinding], run_id: str, *,
+        window: tuple[date | None, date | None] | None, target_region: str,
+    ) -> None:
+        """Refresh prior positive and adverse deterministic decisions in memory."""
+        indexes = []
+        for index, item in enumerate(findings):
+            record = item.chain.verification
+            if (
+                record is not None and record.verifier_version != DETERMINISTIC_VERIFIER_VERSION
+                and record.judge_assessment is None and record.human_review is None
+                and record.status is item.finding.status
+                and record.status in {
+                    VerificationStatus.SUPPORTED, VerificationStatus.NEEDS_REVIEW,
+                    VerificationStatus.OUTDATED, VerificationStatus.CONTRADICTED,
+                }
+            ):
+                indexes.append(index)
+        if not indexes:
+            return
+        supported_ids = self._related_support_ids(
+            connection, [findings[index].chain for index in indexes],
+            run_id=run_id, window=window, target_region=target_region,
+        )
+        for index in indexes:
+            item = findings[index]
+            status, reason, checks = self._evaluate_claim(
+                item.chain, window=window, supported_ids=supported_ids, target_region=target_region,
+            )
+            findings[index] = item.with_verification_status(status, reason, checks=checks)
 
     def clear_run(self, run_id: str) -> None:
         """Remove findings, run-source links, relations and verification for a run.
@@ -1791,8 +1896,9 @@ class EvidenceGraphStore:
         """
         with self._connect() as connection:
             for table in (
-                "findings",
                 "finding_slots",
+                "findings",
+                "run_claims",
                 "run_snapshots",
                 "claim_relations",
                 "verification_records",

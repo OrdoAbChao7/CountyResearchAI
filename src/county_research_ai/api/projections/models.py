@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from ..contract_coverage import ContractQuestionResult
+
 
 class GraphNode(BaseModel):
     id: str
@@ -73,6 +75,7 @@ class QuestionsView(BaseModel):
     mode: str
     coverage_rate: float | None = None
     questions: list[QuestionView] = Field(default_factory=list)
+    contract_questions: list[ContractQuestionResult] = Field(default_factory=list)
     gaps: list[dict[str, Any]] = Field(default_factory=list)
     conflicts: list[dict[str, Any]] = Field(default_factory=list)
     reflection_turns: int = 0
@@ -83,6 +86,8 @@ class CitationView(BaseModel):
     n: int
     evidence_id: str
     claim_id: str
+    snapshot_id: str = ""
+    span_id: str = ""
     statement: str
     value: str = ""
     unit: str = ""
@@ -141,6 +146,7 @@ class ReportView(BaseModel):
     conflicts: list[dict[str, Any]] = Field(default_factory=list)
     claim_conflicts: list[dict[str, Any]] = Field(default_factory=list)
     gaps: list[dict[str, Any]] = Field(default_factory=list)
+    contract_questions: list[ContractQuestionResult] = Field(default_factory=list)
     verification: VerificationView
     narrative: NarrativeView
     markdown_available: bool = True

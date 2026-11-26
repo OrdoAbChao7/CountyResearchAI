@@ -130,6 +130,21 @@ def test_resume_requeues_and_resubmits(tmp_path):
     assert runner.submitted.count(job["job_id"]) == 2
 
 
+def test_resume_rejects_legacy_multi_region_contract(tmp_path):
+    client, store, runner = _client(tmp_path)
+    contract = ResearchContract(objective="核验产业产值", regions=["安吉县", "德清县"])
+    job = store.create_job(contract, mode_label="MOCK")
+    store.mark_terminal(job.job_id, JobStatus.INTERRUPTED, outcome=ResearchOutcome.FAILED)
+
+    with client:
+        response = client.post(f"/api/v1/research/tasks/{job.job_id}/resume")
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "unsupported_multi_region"
+    assert store.get_job(job.job_id).status is JobStatus.INTERRUPTED
+    assert runner.submitted == []
+
+
 def test_resume_rejects_succeeded_job(tmp_path):
     client, store, _ = _client(tmp_path)
 

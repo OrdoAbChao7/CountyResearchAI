@@ -3,19 +3,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from ...evidence.graph import EvidenceGraphStore
+from ...evidence.graph import EvidenceGraphStore, VerificationStatus
+from ..evidence_service import load_run_evidence
 from ..jobs import JobRecord
 from .common import (
     dedupe,
     deep_projection,
     find_item,
     item_index,
+    matches_legacy_conflict_member,
     normalize_url,
     question_ids_by_item,
     sha,
     source_credibility,
     status_weight,
     truncate,
+    visible_conflicts,
 )
 from .models import GraphEdge, GraphMeta, GraphNode, GraphView
 
@@ -44,10 +47,10 @@ def build_graph_view(  # noqa: C901
     deep = deep_projection(job)
     question_tree = deep.get("question_tree") or {}
     items = deep.get("items") or []
-    conflicts = deep.get("conflicts") or []
     gaps = deep.get("gaps") or []
-    findings = graph.list_findings(job.job_id)
+    findings = load_run_evidence(graph, job).findings
     snapshots = graph.list_run_snapshots(job.job_id)
+    conflicts = visible_conflicts(deep, findings, snapshots)
     snapshot_by_id = {snapshot.snapshot_id: snapshot for snapshot in snapshots}
     item_lookup = item_index(items)
     item_questions = question_ids_by_item(question_tree)
@@ -131,18 +134,20 @@ def build_graph_view(  # noqa: C901
         add_edge(county_id, node_id, "has_question", weight=1.0)
 
     evidence_nodes: dict[str, GraphNode] = {}
+    claims_by_node = {}
     item_to_claims: dict[str, list[str]] = {}
     url_to_evidence: dict[str, list[str]] = {}
     for finding in findings:
         chain = finding.chain
         claim = chain.claim
         node_id = f"ev:{claim.claim_id}"
+        claims_by_node[node_id] = claim
         urls = [
             link.snapshot.canonical_url
             for link in chain.links
             if link.snapshot.canonical_url
         ]
-        item = find_item(item_lookup, claim.statement, urls)
+        item = find_item(item_lookup, claim.statement, urls, claim_id=claim.claim_id)
         item_id = str(item.get("id", "")) if item is not None else ""
         if item_id:
             item_to_claims.setdefault(item_id, []).append(claim.claim_id)
@@ -185,7 +190,7 @@ def build_graph_view(  # noqa: C901
                 "caliber": claim.statistical_caliber,
                 "series_version": claim.series_version,
                 "status": finding.finding.status.value,
-                "reason": chain.verification.reason if chain.verification else "",
+                "reason": claim.verification_reason,
                 "evidence_item_id": item_id,
                 "topic": topic,
                 "year": item.get("year") if item is not None else None,
@@ -207,15 +212,14 @@ def build_graph_view(  # noqa: C901
         for url in urls:
             url_to_evidence.setdefault(normalize_url(url), []).append(node_id)
 
-    # question -> evidence, only where a persisted EvidenceStore item maps to a
-    # verified claim. Unmatched question evidence ids stay visible in data.
+    # Topic coverage can include candidate items. A support edge requires a verified claim.
     for question in question_tree.get("questions", []) or []:
         question_node = f"q:{question.get('id', '')}"
         for item_id in question.get("evidence_ids", []) or []:
             for claim_id in item_to_claims.get(str(item_id), []):
-                evidence_node = f"ev:{claim_id}"
-                if evidence_node in nodes:
-                    add_edge(question_node, evidence_node, "supported_by")
+                evidence_node = evidence_nodes[f"ev:{claim_id}"]
+                if evidence_node.data["status"] == VerificationStatus.SUPPORTED.value:
+                    add_edge(question_node, evidence_node.id, "supported_by")
 
     source_nodes: dict[str, GraphNode] = {}
     for evidence_node in evidence_nodes.values():
@@ -332,7 +336,7 @@ def build_graph_view(  # noqa: C901
                 str(conflict.get("indicator", "")),
                 str(conflict.get("conflict_type", "")),
                 *[
-                    f"{claim.get('value', '')}@{claim.get('year', '')}"
+                    str(claim.get("item_id") or f"{claim.get('value', '')}@{claim.get('year', '')}")
                     for claim in conflict.get("claims", []) or []
                 ],
             ]
@@ -341,12 +345,22 @@ def build_graph_view(  # noqa: C901
         matched: dict[str, None] = {}
         unmatched_claims: list[dict[str, Any]] = []
         for claim in conflict.get("claims", []) or []:
-            evidence_ids = url_to_evidence.get(normalize_url(str(claim.get("url", ""))), [])
-            if not evidence_ids:
+            item_id = claim.get("item_id")
+            exact_id = f"ev:{item_id}"
+            if item_id and exact_id in evidence_nodes:
+                evidence_ids = [exact_id]
+            elif item_id:
+                evidence_ids = [f"ev:{claim_id}" for claim_id in item_to_claims.get(str(item_id), [])]
+            else:
+                source_url = normalize_url(str(claim.get("url", "")))
+                evidence_ids = [
+                    evidence_id for evidence_id in dedupe(url_to_evidence.get(source_url, []))
+                    if matches_legacy_conflict_member(claim, claims_by_node[evidence_id])
+                ]
+            if len(evidence_ids) != 1:
                 unmatched_claims.append(dict(claim))
                 continue
-            for evidence_id in evidence_ids:
-                matched[evidence_id] = None
+            matched[evidence_ids[0]] = None
         nodes[conflict_id] = GraphNode(
             id=conflict_id,
             type="conflict",

@@ -12,11 +12,11 @@ from tests.projection_helpers import (
 )
 
 
-def _two_source_graph(tmp_path):
+def _two_source_graph(tmp_path, *, first_value="120"):
     source_a = make_source(
         "snap-a",
         url="https://Example.GOV.cn/stats/?utm_source=news#top",
-        content="安吉县2024年竹产业产值为120亿元。",
+        content=f"安吉县2024年竹产业产值为{first_value}亿元。",
         extra_chunks=("全县竹林面积80万亩。",),
     )
     source_b = make_source(
@@ -28,7 +28,7 @@ def _two_source_graph(tmp_path):
         "claim-a",
         source_id="snap-a",
         chunk_ids=["snap-a:chunk:1", "snap-a:chunk:2"],
-        value="120",
+        value=first_value,
     )
     claim_b = make_claim("claim-b", source_id="snap-b", value="130")
     graph = seed_graph(
@@ -66,7 +66,8 @@ def test_graph_projection_is_stable_and_dedupes_normalized_urls(tmp_path):
 
 
 def test_graph_question_edges_require_a_persisted_evidence_item(tmp_path):
-    graph, source_a, _, claim_a, _ = _two_source_graph(tmp_path)
+    _, source_a, _, claim_a, _ = _two_source_graph(tmp_path)
+    graph = seed_graph(tmp_path / "supported.sqlite", RUN_ID, sources=[source_a], claims=[claim_a])
     question = {
         "id": "q-output",
         "title": "竹产业产值是多少？",
@@ -92,8 +93,54 @@ def test_graph_question_edges_require_a_persisted_evidence_item(tmp_path):
     assert question_node.data["is_satisfied"] is True
 
 
+def test_graph_uses_persisted_claim_identity_when_a_source_item_shares_its_text(tmp_path):
+    graph, source_a, source_b, claim_a, claim_b = _two_source_graph(tmp_path)
+    members = [
+        {"item_id": claim_a.claim_id, "value": "120亿元", "year": "2024", "url": source_a.canonical_url},
+        {"item_id": claim_b.claim_id, "value": "130亿元", "year": "2024", "url": source_b.canonical_url},
+    ]
+    job = make_job(result=deep_result(conflicts=[{"indicator": "竹产业产值", "claims": members}], items=[
+        make_item(claim_a.claim_id, claim_a, source_a),
+        make_item(claim_b.claim_id, claim_b, source_b),
+        make_item("other-item", claim_a, source_a),
+    ]))
+
+    view = build_graph_view(job=job, graph=graph)
+
+    assert {edge.target for edge in view.edges if edge.type == "conflicts_with"} == {"ev:claim-a", "ev:claim-b"}
+
+
+def test_graph_links_new_conflict_members_by_item_identity(tmp_path):
+    _, source_a, source_b, claim_a, claim_b = _two_source_graph(tmp_path)
+    other_claim = make_claim(
+        "claim-area", source_id="snap-a", chunk_ids=["snap-a:chunk:2"], value="80", unit="万亩",
+        metric="竹林面积", statement="全县竹林面积80万亩",
+    )
+    graph = seed_graph(
+        tmp_path / "conflict.sqlite", RUN_ID,
+        sources=[source_a, source_b], claims=[claim_a, claim_b, other_claim],
+    )
+    conflict = {
+        "indicator": "竹产业产值",
+        "conflict_type": "contradiction",
+        "claims": [
+            {"item_id": "item-a", "value": "120亿元", "year": "2024", "url": source_a.canonical_url},
+            {"item_id": "item-b", "value": "130亿元", "year": "2024", "url": source_b.canonical_url},
+        ],
+    }
+    job = make_job(result=deep_result(conflicts=[conflict], items=[
+        make_item("item-a", claim_a, source_a), make_item("item-b", claim_b, source_b),
+        make_item("item-area", other_claim, source_a),
+    ]))
+
+    view = build_graph_view(job=job, graph=graph)
+
+    matched = {edge.target for edge in view.edges if edge.type == "conflicts_with"}
+    assert matched == {"ev:claim-a", "ev:claim-b"}
+
+
 def test_graph_matches_conflicts_only_when_two_evidence_nodes_match(tmp_path):
-    graph, source_a, source_b, _, _ = _two_source_graph(tmp_path)
+    graph, source_a, source_b, _, _ = _two_source_graph(tmp_path, first_value="120.00")
     conflict = {
         "indicator": "竹产业产值",
         "conflict_type": "value_discrepancy",
@@ -114,6 +161,23 @@ def test_graph_matches_conflicts_only_when_two_evidence_nodes_match(tmp_path):
     assert len(conflict_edges) == 2
     assert all(edge.directed is False for edge in conflict_edges)
     assert view.meta.unmatched_conflicts == 0
+
+
+def test_legacy_conflict_members_do_not_attach_to_unrelated_values_at_the_same_url(tmp_path):
+    _, source_a, source_b, claim_a, claim_b = _two_source_graph(tmp_path)
+    other = make_claim(
+        "claim-area", source_id="snap-a", chunk_ids=["snap-a:chunk:2"],
+        value="80", unit="万亩", metric="竹林面积", statement="全县竹林面积80万亩",
+    )
+    graph = seed_graph(tmp_path / "conflict.sqlite", RUN_ID, sources=[source_a, source_b], claims=[claim_a, claim_b, other])
+    conflict = {"indicator": "竹产业产值", "claims": [
+        {"value": "120亿元", "year": "2024", "url": source_a.canonical_url},
+        {"value": "130亿元", "year": "2024", "url": source_b.canonical_url},
+    ]}
+
+    view = build_graph_view(job=make_job(result=deep_result(conflicts=[conflict])), graph=graph)
+
+    assert {edge.target for edge in view.edges if edge.type == "conflicts_with"} == {"ev:claim-a", "ev:claim-b"}
 
 
 def test_graph_keeps_unmatched_conflict_visible_without_fabricated_edges(tmp_path):

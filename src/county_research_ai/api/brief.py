@@ -4,10 +4,13 @@ from __future__ import annotations
 from ..domain.outcomes import ResearchOutcome
 from ..domain.research_contracts import ResearchContract
 from ..evidence.graph import (
+    EvidenceLink,
     SourceSnapshotRecord,
     VerificationStatus,
     VerifiedFinding,
 )
+from .contract_coverage import ContractQuestionResult
+from .projections.questions import contract_question_lines
 
 
 def _quote(text: str, limit: int = 240) -> str:
@@ -15,10 +18,10 @@ def _quote(text: str, limit: int = 240) -> str:
     return collapsed if len(collapsed) <= limit else collapsed[: limit - 1] + "…"
 
 
-def _finding_line(finding: VerifiedFinding) -> str:
+def _finding_line(finding: VerifiedFinding, citation: EvidenceLink | None = None) -> str:
     claim = finding.chain.claim
     lines = [f"- `{claim.claim_id}` {claim.statement}"]
-    for link in finding.chain.links:
+    for link in [citation] if citation is not None else finding.chain.links:
         source = link.snapshot
         origin = source.canonical_url or source.snapshot_id
         observed = source.observed_at.isoformat() if source.observed_at else "未知时间"
@@ -38,6 +41,8 @@ def render_decision_brief(
     mode_label: str,
     findings: list[VerifiedFinding],
     sources: list[SourceSnapshotRecord],
+    citation_links: dict[str, EvidenceLink] | None = None,
+    contract_questions: list[ContractQuestionResult] | None = None,
 ) -> str:
     grouped: dict[VerificationStatus, list[VerifiedFinding]] = {}
     for item in findings:
@@ -47,8 +52,9 @@ def render_decision_brief(
         items = grouped.get(status, [])
         if not items:
             return []
+        links = citation_links or {}
         return [f"## {title}（{len(items)}）", "", body, ""] + [
-            _finding_line(item) for item in items
+            _finding_line(item, links.get(item.finding.claim_id)) for item in items
         ] + [""]
 
     lines: list[str] = [
@@ -72,6 +78,9 @@ def render_decision_brief(
         f"支持率 ≥ {contract.evidence_thresholds.min_supported_ratio:.0%}",
         "",
     ]
+
+    if contract_questions:
+        lines.extend(["## 合同逐问证据", "", *contract_question_lines(contract_questions), ""])
 
     if not findings:
         lines += ["## 未生成可采信结论", "", "本次运行没有产生可验证的结构化结论。", ""]

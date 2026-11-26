@@ -26,6 +26,7 @@ from ..config import Settings, get_settings
 from ..domain.outcomes import ResearchOutcome
 from ..domain.research_contracts import ResearchContract
 from ..evidence.graph import EvidenceGraphStore, VerificationStatus
+from ..evidence.ledger import EvidenceLedger
 from ..models import ResearchRequest
 from ..observability import pop_event_sink, push_event_sink
 from ..search.disambiguation import disambiguate_region
@@ -59,18 +60,13 @@ def force_mock_settings(settings: Settings) -> Settings:
 
 
 def request_from_contract(contract: ResearchContract) -> ResearchRequest:
-    """Build the execution request from the validated contract and its spec.
-
-    This is the single hand-off from the contract boundary into the application:
-    the target years come from ``to_research_spec()`` and the inclusive dates
-    come from ``date_window``. An empty contract window remains unbounded and
-    keeps the legacy behaviour.
-    """
-    spec = contract.to_research_spec()
+    """Build the legacy workflow inputs from a single-region contract."""
+    if len(contract.regions) != 1:
+        raise ValueError("county research requires exactly one region per task")
     return ResearchRequest(
-        county=spec.region_name,
+        county=contract.regions[0],
         focus=contract.research_focus or None,
-        mode=spec.mode,
+        mode=contract.mode,
         options={**contract.options, "no_cache": True},
         date_start=contract.date_window.start,
         date_end=contract.date_window.end,
@@ -148,8 +144,10 @@ class JobRunner:
             graph = EvidenceGraphStore(self.evidence_db_path)
             graph.clear_run(job_id)
             context = ResearchContext.from_request(
-                request_from_contract(job.contract),
-                research_spec=job.contract.to_research_spec(),
+                request_from_contract(job.contract), research_spec=job.contract.to_research_spec(),
+                source_credibility_check=(
+                    graph.source_credibility_eligible if job.contract.required_questions else None
+                ),
             )
             container = self._container(job)
             app = container.application
@@ -334,13 +332,11 @@ class JobRunner:
                 "reports_dir": job_reports_dir,
             }
         )
-        container = create_app_container(
-            settings=settings,
-            mock_search_scope=(
-                (disambiguate_region(contract.regions[0]).clean_name, contract.research_focus)
-                if contract.required_questions else None
-            ),
+        mock_search_scope = (
+            (disambiguate_region(contract.regions[0]).clean_name, contract.research_focus)
+            if contract.required_questions else None
         )
+        container = create_app_container(settings=settings, mock_search_scope=mock_search_scope)
         if contract.budget.max_documents:
             container.application.config = dataclasses.replace(
                 container.application.config,
@@ -364,20 +360,14 @@ class JobRunner:
         packs = deep_packs or context.evidence_packs or (
             [context.evidence_pack] if context.evidence_pack is not None else []
         )
-        if ledger is None:
-            return {
-                "claims": 0,
-                "supported_claims": 0,
-                "independent_sources": 0,
-                "supported_ratio": 0.0,
-                "status_counts": {},
-                "snapshots": 0,
-                "spans": 0,
-                "skipped": "no_evidence_ledger",
-            }
-        return persist_run_evidence(
-            graph, ledger, packs, run_id=job.job_id, contract=job.contract
+        summary = persist_run_evidence(
+            graph, ledger if ledger is not None else EvidenceLedger(),
+            packs if ledger is not None else [], run_id=job.job_id, contract=job.contract,
+            executions=context.search_history.executions,
         )
+        if ledger is None:
+            summary["skipped"] = "no_evidence_ledger"
+        return summary
 
     @staticmethod
     def _deep_projection(deep: Any | None) -> dict[str, Any]:
@@ -497,8 +487,16 @@ class JobRunner:
     ) -> tuple[ResearchOutcome, str]:
         if summary.get("claims", 0) == 0:
             return ResearchOutcome.NO_PROGRESS, "no_structured_claims"
-        status_counts = summary.get("status_counts", {})
-        if status_counts.get(VerificationStatus.NEEDS_REVIEW.value, 0):
+        if job.contract.required_questions:
+            questions = summary.get("contract_questions") or []
+            if any(question["status"] == "CONFLICT_UNRESOLVED" for question in questions):
+                return ResearchOutcome.CONFLICT_UNRESOLVED, "conflicting_contract_evidence"
+            if len(questions) != len(job.contract.required_questions) or any(
+                question["status"] != "SUPPORTED" for question in questions
+            ):
+                return ResearchOutcome.NEEDS_HUMAN_REVIEW, "required_questions_unanswered"
+            summary = summary.get("contract_evidence") or {}
+        elif summary.get("status_counts", {}).get(VerificationStatus.NEEDS_REVIEW.value, 0):
             return ResearchOutcome.CONFLICT_UNRESOLVED, "conflicting_supported_evidence"
         met, failures = thresholds_met(job.contract, summary)
         supported = int(summary.get("supported_claims", 0))

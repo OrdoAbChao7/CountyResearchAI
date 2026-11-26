@@ -180,6 +180,10 @@ class ClaimChainOut(BaseModel):
         verified = VerifiedFinding(
             finding=_finding_from_chain(chain), chain=chain
         )
+        return cls.from_verified(verified)
+
+    @classmethod
+    def from_verified(cls, verified: VerifiedFinding) -> ClaimChainOut:
         return cls(
             finding=FindingOut.from_verified(verified),
             relations=[
@@ -189,7 +193,7 @@ class ClaimChainOut(BaseModel):
                     "relation": relation.relation.value,
                     "rationale": relation.rationale,
                 }
-                for relation in chain.relations
+                for relation in verified.chain.relations
             ],
         )
 

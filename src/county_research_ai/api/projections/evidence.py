@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ...evidence.graph import EvidenceGraphStore
+from ..evidence_service import load_run_evidence
 from ..jobs import JobRecord
 from .citations import build_citations, citation_numbers
 from .common import find_item, item_index, question_ids_by_item
@@ -19,12 +20,15 @@ def build_evidence_list(
     limit: int = 50,
     offset: int = 0,
 ) -> EvidenceListResponse:
-    findings = graph.list_findings(job.job_id)
+    evidence = load_run_evidence(graph, job)
+    findings = evidence.findings
     deep = (job.result or {}).get("deep_research") or {}
     items = deep.get("items") or []
     item_lookup = item_index(items)
     item_questions = question_ids_by_item(deep.get("question_tree") or {})
-    numbers = citation_numbers(build_citations(findings))
+    citations = build_citations(findings, preferred_links=evidence.citation_links)
+    numbers = citation_numbers(citations)
+    spans = {citation.claim_id: citation.span_id for citation in citations}
     needle = query.strip().lower()
 
     views: list[EvidenceItemView] = []
@@ -36,7 +40,7 @@ def build_evidence_list(
             for link in chain.links
             if link.snapshot.canonical_url
         ]
-        item = find_item(item_lookup, claim.statement, urls)
+        item = find_item(item_lookup, claim.statement, urls, claim_id=claim.claim_id)
         item_id = str(item.get("id", "")) if item is not None else ""
         credibility = (
             float(item.get("credibility_score", 0.5))
@@ -70,10 +74,9 @@ def build_evidence_list(
             )
             for link in chain.links
         ]
-        primary = next(
-            (link for link in links if link.relation != "contradicts"),
-            links[0] if links else None,
-        )
+        citation_span = spans.get(claim.claim_id)
+        links.sort(key=lambda link: link.span_id != citation_span)
+        primary = links[0] if links else None
         views.append(
             EvidenceItemView(
                 id=claim.claim_id,
@@ -87,7 +90,7 @@ def build_evidence_list(
                 scope=claim.administrative_scope,
                 caliber=claim.statistical_caliber,
                 status=finding.finding.status.value,
-                reason=chain.verification.reason if chain.verification else "",
+                reason=claim.verification_reason,
                 topic=item_topic,
                 year=item.get("year") if item is not None else None,
                 credibility=credibility,

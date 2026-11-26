@@ -5,10 +5,12 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlsplit
 
-from ...evidence.graph import EvidenceGraphStore, VerificationStatus, VerifiedFinding
+from ...evidence.graph import EvidenceGraphStore, EvidenceLink, VerificationStatus, VerifiedFinding
+from ..contract_coverage import ContractQuestionResult
+from ..evidence_service import load_run_evidence
 from ..jobs import JobRecord
 from .citations import build_citations, citation_numbers
-from .common import truncate
+from .common import truncate, visible_conflicts
 from .models import (
     NarrativeSectionView,
     NarrativeView,
@@ -16,6 +18,7 @@ from .models import (
     ReportView,
     VerificationView,
 )
+from .questions import CONTRACT_STATUS_LABELS, contract_question_lines
 
 _DISPUTE_STATUSES = {
     VerificationStatus.NEEDS_REVIEW,
@@ -32,19 +35,31 @@ _STATUS_LABELS = {
     "INSUFFICIENT": "证据不足",
 }
 
-
 def build_report_view(
     *,
     job: JobRecord,
     graph: EvidenceGraphStore,
     legacy_markdown: str | None = None,
 ) -> ReportView:
-    findings = graph.list_findings(job.job_id)
-    citations = build_citations(findings)
+    evidence = load_run_evidence(graph, job)
+    findings, coverage = evidence.findings, evidence.coverage
+    preferred_links = evidence.citation_links
+    citations = build_citations(findings, preferred_links=preferred_links)
     numbers = citation_numbers(citations)
     deep = (job.result or {}).get("deep_research") or {}
     gaps = list(deep.get("gaps") or [])
-    conflicts = list(deep.get("conflicts") or [])
+    gaps.extend(
+        {
+            "question_id": question.question_id,
+            "description": question.question,
+            "missing_aspect": "、".join(question.missing_metrics) or CONTRACT_STATUS_LABELS[question.status],
+            "severity": "high",
+        }
+        for question in coverage.questions
+        if question.status != "SUPPORTED"
+    )
+    snapshots = graph.list_run_snapshots(job.job_id)
+    conflicts = visible_conflicts(deep, findings, snapshots)
     supported = [
         finding
         for finding in findings
@@ -76,17 +91,19 @@ def build_report_view(
     ]
 
     sections: list[ReportSectionView] = []
-    summary_content = _summary_content(job, deep, findings)
+    summary_content = _summary_content(job, deep, findings, coverage.questions, numbers)
     sections.append(
         ReportSectionView(
             id="summary",
             order=1,
             title="研究结论摘要",
             content=summary_content,
-            citation_ids=[],
+            citation_ids=list(dict.fromkeys(
+                claim_id for question in coverage.questions for claim_id in question.claim_ids
+            )),
         )
     )
-    verified_content, verified_ids = _verified_content(supported, numbers)
+    verified_content, verified_ids = _verified_content(supported, numbers, preferred_links)
     sections.append(
         ReportSectionView(
             id="verified-facts",
@@ -117,7 +134,6 @@ def build_report_view(
             citation_ids=[],
         )
     )
-    snapshots = graph.list_run_snapshots(job.job_id)
     sections.append(
         ReportSectionView(
             id="sources",
@@ -151,6 +167,7 @@ def build_report_view(
         conflicts=conflicts,
         claim_conflicts=claim_conflicts,
         gaps=gaps,
+        contract_questions=coverage.questions,
         verification=VerificationView(
             verified=len(supported),
             unverified=len(findings) - len(supported),
@@ -169,7 +186,11 @@ def build_report_view(
 
 
 def _summary_content(
-    job: JobRecord, deep: dict[str, Any], findings: list[VerifiedFinding]
+    job: JobRecord,
+    deep: dict[str, Any],
+    findings: list[VerifiedFinding],
+    questions: list[ContractQuestionResult],
+    citation_numbers: dict[str, int],
 ) -> str:
     counts: dict[str, int] = {}
     for finding in findings:
@@ -188,11 +209,16 @@ def _summary_content(
         f"- 问题覆盖率：{coverage:.0%}" if isinstance(coverage, (int, float)) else "- 问题覆盖率：未记录",
         "- 本报告由程序根据本次运行的结构化事实生成；未通过确定性校验的结论不进入事实表。",
     ]
+    if questions:
+        stored_evidence = job.result.get("evidence") or {}
+        title = "合同逐问验收" if "contract_questions" in stored_evidence else "合同逐问复核"
+        lines.extend(["", f"### {title}", ""])
+        lines.extend(contract_question_lines(questions, citation_numbers=citation_numbers))
     return "\n".join(lines)
 
 
 def _verified_content(
-    supported: list[VerifiedFinding], numbers: dict[str, int]
+    supported: list[VerifiedFinding], numbers: dict[str, int], preferred_links: dict[str, EvidenceLink],
 ) -> tuple[str, list[str]]:
     if not supported:
         return (
@@ -206,14 +232,7 @@ def _verified_content(
     citation_ids: list[str] = []
     for finding in supported:
         claim = finding.chain.claim
-        link = next(
-            (
-                item
-                for item in finding.chain.links
-                if item.edge.relation.value != "contradicts"
-            ),
-            None,
-        )
+        link = preferred_links.get(claim.claim_id)
         if link is None:
             continue
         number = numbers.get(claim.claim_id)

@@ -2,18 +2,23 @@
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import dataclass
 from typing import Any
 
 from ..domain.research_contracts import EvidencePack, ResearchContract
 from ..evidence.graph import (
     EvidenceGraphStore,
+    EvidenceLink,
     FindingRecord,
     VerificationStatus,
     VerifiedFinding,
 )
 from ..evidence.ledger import EvidenceLedger
 from ..evidence.source_identity import source_groups
-from ..search.disambiguation import disambiguate_region
+from ..search.disambiguation import disambiguate_region, matches_explicit_parents
+from ..search.request_history import SearchExecution
+from .contract_coverage import ContractCoverage, assess_contract_coverage
+from .jobs import JobRecord
 
 
 def persist_run_evidence(
@@ -23,6 +28,7 @@ def persist_run_evidence(
     *,
     run_id: str,
     contract: ResearchContract | None = None,
+    executions: list[SearchExecution] | None = None,
 ) -> dict[str, Any]:
     """Persist the run graph and structured findings, then summarize support."""
     window = None
@@ -37,7 +43,7 @@ def persist_run_evidence(
         window=window,
         target_region=target_region,
     )
-    findings: list[FindingRecord] = []
+    findings: list[VerifiedFinding] = []
     # A Claim is stored once per run, yet every question whose pack selected it stays linked.
     slots_by_claim: dict[str, list[str]] = {}
     for pack in packs:
@@ -57,27 +63,37 @@ def persist_run_evidence(
                 if chain.verification is not None
                 else VerificationStatus.INSUFFICIENT
             )
-            findings.append(
-                FindingRecord(
-                    finding_id=f"{run_id}:{claim.claim_id}",
-                    run_id=run_id,
-                    claim_id=claim.claim_id,
-                    section=pack.slot_id,
-                    slot_ids=slots_by_claim[claim.claim_id],
-                    text=claim.statement,
-                    status=status,
-                )
+            finding = FindingRecord(
+                finding_id=f"{run_id}:{claim.claim_id}",
+                run_id=run_id,
+                claim_id=claim.claim_id,
+                section=pack.slot_id,
+                slot_ids=slots_by_claim[claim.claim_id],
+                text=claim.statement,
+                status=status,
             )
-    graph.save_findings(run_id, findings)
+            findings.append(VerifiedFinding(finding=finding, chain=chain))
+    coverage = None
+    verifications = []
+    if contract is not None and contract.required_questions:
+        coverage = assess_contract_coverage(contract, graph, findings, run_id=run_id, executions=executions)
+        adjusted = coverage.apply_verdicts(findings)
+        verifications = [
+            item.chain.verification for item, original in zip(adjusted, findings, strict=True)
+            if item is not original and item.chain.verification is not None
+        ]
+        findings = adjusted
+    graph.save_findings(run_id, [item.finding for item in findings], verifications=verifications)
 
-    status_counts = Counter(finding.status.value for finding in findings)
+    status_counts = Counter(item.finding.status.value for item in findings)
     supported = status_counts.get(VerificationStatus.SUPPORTED.value, 0)
-    sources = [source for finding in findings
-               if finding.status is VerificationStatus.SUPPORTED
-               for source in graph.supporting_sources(finding.claim_id, run_id=run_id)]
-    groups = source_groups(sources)
+    groups = source_groups(
+        link.snapshot for item in findings
+        if item.finding.status is VerificationStatus.SUPPORTED
+        for link in graph.supporting_links(item.chain)
+    )
     total = len(findings)
-    return {
+    summary: dict[str, Any] = {
         "claims": total,
         "supported_claims": supported,
         "independent_sources": len(groups),
@@ -87,6 +103,10 @@ def persist_run_evidence(
         "snapshots": len(ledger.sources),
         "spans": len(ledger.chunks),
     }
+    if coverage is not None:
+        summary["contract_questions"] = [question.model_dump() for question in coverage.questions]
+        summary["contract_evidence"] = coverage.evidence_summary()
+    return summary
 
 
 def thresholds_met(contract: ResearchContract, summary: dict[str, Any]) -> tuple[bool, list[str]]:
@@ -110,7 +130,62 @@ def thresholds_met(contract: ResearchContract, summary: dict[str, Any]) -> tuple
     return (not failures, failures)
 
 
-def load_findings(
-    graph: EvidenceGraphStore, run_id: str
-) -> list[VerifiedFinding]:
-    return graph.list_findings(run_id)
+@dataclass
+class RunEvidence:
+    findings: list[VerifiedFinding]
+    coverage: ContractCoverage
+    citation_links: dict[str, EvidenceLink]
+
+
+def load_run_evidence(graph: EvidenceGraphStore, job: JobRecord) -> RunEvidence:
+    """Recheck supporting links and apply the contract consistently on reads."""
+    region = disambiguate_region(job.contract.regions[0])
+    findings = []
+    citation_links = {}
+    date_window = job.contract.date_window
+    window = (date_window.start, date_window.end) if date_window.is_set else None
+    for original in graph.list_findings(
+        job.job_id, recheck_legacy=True, window=window, target_region=region.clean_name,
+    ):
+        item = original
+        chain = item.chain
+        intact = list(graph.intact_links(chain))
+        if len(intact) != len(chain.links):
+            item = item.model_copy(update={"chain": chain.model_copy(update={"links": intact})})
+        if item.finding.status is VerificationStatus.SUPPORTED:
+            record = chain.verification
+            if record is not None and record.status is not VerificationStatus.SUPPORTED:
+                item = item.with_verification_status(record.status, record.reason)
+            else:
+                support = next((link for link in graph.supporting_links(item.chain)
+                                if matches_explicit_parents(region, link.snapshot.title)), None) if record else None
+                if support is None:
+                    reason = "false_or_broken_reference" if not intact else "no_verified_supporting_span"
+                    if record and any(
+                        matches_explicit_parents(region, link.snapshot.title)
+                        for link in graph.supporting_links(item.chain, require_credible_source=False)
+                    ):
+                        reason = "insufficient_source_credibility"
+                    item = item.with_verification_status(VerificationStatus.INSUFFICIENT, reason)
+                else:
+                    citation_links[chain.claim.claim_id] = support
+        if item.chain.claim.verification_reason == "insufficient_source_credibility":
+            candidate = next((
+                link for link in graph.supporting_links(item.chain, require_credible_source=False)
+                if matches_explicit_parents(region, link.snapshot.title)
+            ), None)
+            if candidate is not None:
+                citation_links[chain.claim.claim_id] = candidate
+        findings.append(item)
+    stored = (job.result.get("evidence") or {}).get("contract_questions") or []
+    executions = [
+        SearchExecution.model_validate(entry)
+        for question in stored for entry in question.get("query_executions") or []
+    ] if any(question.get("query_executions") is not None for question in stored) else None
+    coverage = assess_contract_coverage(
+        job.contract, graph, findings, run_id=job.job_id, executions=executions,
+    )
+    return RunEvidence(
+        findings=coverage.apply_verdicts(findings), coverage=coverage,
+        citation_links=citation_links | coverage.citation_links,
+    )
