@@ -9,8 +9,15 @@ import json
 import logging
 import threading
 from collections.abc import Iterable
+from datetime import date
 from pathlib import Path
 
+from ..evidence.graph import (
+    EvidenceGraphStore,
+    VerificationStatus,
+    VerifiedFinding,
+)
+from ..evidence.source_contract import meets_source_credibility_threshold
 from ..evidence.store import EvidenceStore
 from ..models import (
     EvidenceConflict,
@@ -23,17 +30,121 @@ from ..models import (
 logger = logging.getLogger(__name__)
 
 
-class EvidenceService:
-    """线程安全的证据读写与审计服务。"""
+class ReadOnlyEvidenceAdapterError(RuntimeError):
+    """Raised when attempting to mutate a read-only EvidenceGraphStore adapter."""
 
-    def __init__(self, store: EvidenceStore | None = None) -> None:
+
+def _finding_to_evidence_item(
+    graph: EvidenceGraphStore,
+    item: VerifiedFinding,
+) -> EvidenceItem | None:
+    """Convert an authoritative SUPPORTED finding into an EvidenceItem.
+
+    Any finding whose status is not ``SUPPORTED`` (either at the finding row or
+    at the underlying run verification record) or that lacks an intact eligible
+    supporting link is withheld.
+    """
+    if item.finding.status is not VerificationStatus.SUPPORTED:
+        return None
+    verification = item.chain.verification
+    if verification is not None and verification.status is not VerificationStatus.SUPPORTED:
+        return None
+    links = list(graph.supporting_links(item.chain))
+    if not links:
+        return None
+    primary = links[0]
+    if not meets_source_credibility_threshold(primary.snapshot.metadata, allow_unscored=True):
+        return None
+    claim = item.chain.claim
+    raw_score = primary.snapshot.metadata.get("credibility_score")
+    try:
+        credibility = float(raw_score) if raw_score is not None else 0.8
+    except (TypeError, ValueError):
+        credibility = 0.8
+    corroborating = sorted(
+        {
+            link.snapshot.canonical_url
+            for link in links[1:]
+            if link.snapshot.canonical_url
+            and link.snapshot.canonical_url != primary.snapshot.canonical_url
+        }
+    )
+    section = (item.finding.section or "").strip()
+    topic = section.split(":", 1)[-1] if ":" in section else (section or "general")
+    return EvidenceItem(
+        id=claim.claim_id,
+        claim=claim.statement or item.finding.text,
+        snippet=primary.span.quote,
+        url=primary.snapshot.canonical_url,
+        title=primary.snapshot.title,
+        source_name=primary.snapshot.provider,
+        domain_type=primary.snapshot.source_type,
+        credibility_score=credibility,
+        year=claim.period or None,
+        administrative_scope=claim.administrative_scope,
+        region_id=claim.region_id,
+        region_source=claim.region_source,
+        indicator_caliber=claim.statistical_caliber,
+        verification_status=VerificationStatus.SUPPORTED.value,
+        corroborating_sources=corroborating,
+        topic=topic,
+    )
+
+
+class EvidenceService:
+    """线程安全的证据读写与审计服务（支持对 ``EvidenceGraphStore`` 的只读适配）。"""
+
+    def __init__(
+        self,
+        store: EvidenceStore | None = None,
+        *,
+        read_only: bool = False,
+    ) -> None:
         self._store = store or EvidenceStore()
         self._lock = threading.RLock()
+        self._read_only = read_only
+
+    @classmethod
+    def from_verified_graph(
+        cls,
+        graph: EvidenceGraphStore,
+        run_id: str,
+        *,
+        window: tuple[date | None, date | None] | None = None,
+        target_region: str = "",
+    ) -> EvidenceService:
+        """Build a read-only EvidenceService over ``EvidenceGraphStore`` (ADR-005).
+
+        Only ``SUPPORTED`` findings that pass legacy re-verification under
+        ``window`` and ``target_region`` with intact credible supporting quotes
+        are exposed; ``INSUFFICIENT``, ``NOT_COMPARABLE``, ``CONTRADICTED``,
+        ``OUTDATED``, and ``NEEDS_REVIEW`` findings are strictly excluded.
+        """
+        backing = EvidenceStore()
+        findings = graph.list_findings(
+            run_id,
+            recheck_legacy=True,
+            window=window,
+            target_region=target_region,
+        )
+        for verified in findings:
+            converted = _finding_to_evidence_item(graph, verified)
+            if converted is not None:
+                backing.add_evidence(converted)
+        return cls(store=backing, read_only=True)
+
+    @property
+    def is_read_only(self) -> bool:
+        return self._read_only
 
     # ---- 写入 ----
 
     def ingest(self, docs: Iterable[RawDoc], *, county: str, focus: str = "") -> list[EvidenceItem]:
         """摄入原始文档并抽取结构化证据，返回新增证据项。"""
+        if self._read_only:
+            raise ReadOnlyEvidenceAdapterError(
+                "EvidenceService is bound as a read-only adapter over EvidenceGraphStore"
+            )
         doc_list = list(docs)
         if not doc_list:
             return []
@@ -41,6 +152,10 @@ class EvidenceService:
             return self._store.ingest_documents(doc_list, county=county, focus=focus)
 
     def add(self, item: EvidenceItem) -> EvidenceItem:
+        if self._read_only:
+            raise ReadOnlyEvidenceAdapterError(
+                "EvidenceService is bound as a read-only adapter over EvidenceGraphStore"
+            )
         with self._lock:
             self._store.add_evidence(item)
         return item
@@ -147,12 +262,13 @@ class EvidenceService:
 
     def stats(self) -> dict[str, int]:
         items = self.all()
+        verified_labels = {"verified", VerificationStatus.SUPPORTED.value}
         return {
             "total": len(items),
-            "verified": sum(1 for i in items if i.verification_status == "verified"),
-            "unverified": sum(1 for i in items if i.verification_status != "verified"),
+            "verified": sum(1 for i in items if i.verification_status in verified_labels),
+            "unverified": sum(1 for i in items if i.verification_status not in verified_labels),
             "conflicts": len(self.conflicts()),
         }
 
 
-__all__ = ["EvidenceService"]
+__all__ = ["EvidenceService", "ReadOnlyEvidenceAdapterError"]

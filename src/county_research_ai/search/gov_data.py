@@ -38,6 +38,7 @@ from ..config import Settings, get_settings
 from ..exceptions import SearchError
 from ..models import RawDoc
 from .base import SearchProvider
+from .pdf_extractor import extract_pdf_text_bytes, is_pdf_document
 from .web_search import create_provider
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,11 @@ def _load_gov_domains_from_sources(s: Settings) -> list[GovDomain]:
         GovDomain(
             name="省政府(通用)",
             pattern="*.gov.cn",
-            path_keywords=("tjgb", "fzgh", "cyfz", "zmhd", "zhengce", "jihua"),
+            path_keywords=(
+                "tjgb", "tjj", "tongji", "fzgh", "cyfz", "zmhd",
+                "zhengce", "jihua", "zfxxgk", "xxgk", "zwgk",
+                "gongbao", "gongshi", "art/", ".pdf",
+            ),
             priority=3,
         ),
     ]
@@ -179,16 +184,7 @@ class GovDataProvider(SearchProvider):
     # ---- 详情页抓取 ----
 
     def _enrich_with_detail(self, doc: RawDoc) -> RawDoc:
-        """抓取详情页 HTML,用 BeautifulSoup 提取正文。"""
-        # 延迟导入 BeautifulSoup(用户可能还没装 bs4)
-        try:
-            from bs4 import BeautifulSoup
-        except ImportError as e:
-            raise SearchError(
-                "抓取详情页需要 beautifulsoup4,当前未安装",
-                context={"hint": "pip install beautifulsoup4", "error": str(e)},
-            ) from e
-
+        """抓取详情页 HTML 或 PDF 附件并提取正文。"""
         @retry(
             stop=stop_after_attempt(self._retry_cfg.max_attempts),
             wait=wait_exponential(
@@ -199,10 +195,10 @@ class GovDataProvider(SearchProvider):
             retry=retry_if_exception_type(SearchError),
             reraise=True,
         )
-        def _fetch(url: str) -> str:
+        def _fetch(url: str) -> tuple[bytes, str, str]:
             try:
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (CountyResearchAI/0.1 bot)",
+                    "User-Agent": "Mozilla/5.0 (CountyResearchAI/0.2 bot)",
                     "Accept-Language": "zh-CN,zh;q=0.9",
                 }
                 with httpx.Client(timeout=self._timeout, follow_redirects=True) as client:
@@ -212,7 +208,8 @@ class GovDataProvider(SearchProvider):
                             f"HTTP {resp.status_code} 抓取政府页面失败",
                             context={"url": url},
                         )
-                    return resp.text
+                    ctype = resp.headers.get("content-type", "")
+                    return resp.content, resp.text, ctype
             except SearchError:
                 raise
             except httpx.HTTPError as e:
@@ -222,11 +219,62 @@ class GovDataProvider(SearchProvider):
                 ) from e
 
         try:
-            html = _fetch(doc.url)
+            raw_bytes, html, content_type = _fetch(doc.url)
         except RetryError as e:
             raise SearchError(
                 "抓取政府页面重试耗尽",
                 context={"url": doc.url, "attempts": self._retry_cfg.max_attempts, "last_error": str(e)},
+            ) from e
+
+        effective_ctype = content_type or str(doc.metadata.get("content_type") or "")
+        if is_pdf_document(doc.url, effective_ctype) or raw_bytes.lstrip().startswith(b"%PDF-"):
+            try:
+                pdf_text, page_count = extract_pdf_text_bytes(
+                    raw_bytes, max_chars=self._detail_max_chars
+                )
+            except ValueError as e:
+                raise SearchError(
+                    f"PDF 解析失败: {e}",
+                    context={"url": doc.url},
+                ) from e
+            if not pdf_text:
+                return RawDoc(
+                    title=doc.title,
+                    url=doc.url,
+                    snippet=doc.snippet,
+                    content=doc.content,
+                    source=self.name,
+                    fetched_at=datetime.now(timezone.utc),
+                    metadata={
+                        **doc.metadata,
+                        "content_type": effective_ctype or "application/pdf",
+                        "pdf_pages": page_count,
+                        "pdf_parse_reason": "pdf_empty_or_scanned",
+                    },
+                )
+            return RawDoc(
+                title=doc.title,
+                url=doc.url,
+                snippet=doc.snippet,
+                content=pdf_text,
+                source=self.name,
+                fetched_at=datetime.now(timezone.utc),
+                metadata={
+                    **doc.metadata,
+                    "content_type": effective_ctype or "application/pdf",
+                    "detail_fetched": True,
+                    "pdf_parsed_by_app": True,
+                    "pdf_pages": page_count,
+                },
+            )
+
+        # 延迟导入 BeautifulSoup(用户可能还没装 bs4)
+        try:
+            from bs4 import BeautifulSoup
+        except ImportError as e:
+            raise SearchError(
+                "抓取详情页需要 beautifulsoup4,当前未安装",
+                context={"hint": "pip install beautifulsoup4", "error": str(e)},
             ) from e
 
         soup = BeautifulSoup(html, "html.parser")

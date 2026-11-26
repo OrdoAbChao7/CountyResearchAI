@@ -25,6 +25,8 @@ class SearchDocumentRecord(BaseModel):
     application did with the result:
 
     - ``text``: a non-PDF result whose body text was saved;
+    - ``pdf_parsed``: a PDF result whose bytes were fetched and parsed by the
+      application into body text;
     - ``pdf_text_from_provider``: a PDF result that came with provider body
       text; the app did not parse the PDF bytes, but the provider text is
       available and may enter the evidence pipeline;
@@ -44,7 +46,7 @@ class SearchDocumentRecord(BaseModel):
     text_sha256: str = ""
     text_origin: Literal["content", "snippet", "none"] = "none"
     parse_status: Literal[
-        "text", "pdf_text_from_provider", "pdf_not_parsed", "no_text"
+        "text", "pdf_parsed", "pdf_text_from_provider", "pdf_not_parsed", "no_text"
     ] = "no_text"
     parse_reason: str = ""
 

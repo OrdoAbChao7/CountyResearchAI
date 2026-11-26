@@ -44,6 +44,7 @@ from .content_extractor import (
     rerank_documents,
 )
 from .gov_data import GovDataProvider
+from .pdf_extractor import extract_pdf_text_bytes, fetch_pdf_bytes, is_pdf_document
 from .query_engine import GeneratedQuery, QueryEngine
 from .region_relevance import filter_documents_for_region
 from .request_history import (
@@ -111,16 +112,18 @@ def _document_records(docs: Iterable[RawDoc]) -> list[SearchDocumentRecord]:
             "content" if content else ("snippet" if snippet else "none")
         )
         content_type = str(doc.metadata.get("content_type") or "").strip()
-        url_without_query = doc.url.lower().split("?", 1)[0]
-        is_pdf = "pdf" in content_type.lower() or url_without_query.endswith(".pdf")
+        is_pdf = is_pdf_document(doc.url, content_type)
         parse_status: Literal[
-            "text", "pdf_text_from_provider", "pdf_not_parsed", "no_text"
+            "text", "pdf_parsed", "pdf_text_from_provider", "pdf_not_parsed", "no_text"
         ]
-        if is_pdf and content:
+        if is_pdf and doc.metadata.get("pdf_parsed_by_app") and content:
+            parse_status, parse_reason = "pdf_parsed", ""
+        elif is_pdf and content:
             # Provider body text exists, but the app did not parse the PDF bytes.
             parse_status, parse_reason = "pdf_text_from_provider", "pdf_body_not_parsed_by_app"
         elif is_pdf:
-            parse_status, parse_reason = "pdf_not_parsed", "pdf_content_not_supported"
+            reason = str(doc.metadata.get("pdf_parse_reason") or "pdf_content_not_supported")
+            parse_status, parse_reason = "pdf_not_parsed", reason
         elif content:
             parse_status, parse_reason = "text", ""
         else:
@@ -541,7 +544,13 @@ class SearchCollector(SearchProvider):
                 key: pool.submit(task.backend.search, task.query, max_results=task.max_results)
                 for key, task in requests.items()
             }
-            history.responses.update(self._wait_for_results(searches, stage="search"))
+            fetched = self._wait_for_results(searches, stage="search")
+            if self._settings.search.fetch_detail:
+                fetched = {
+                    key: self._enrich_pdf_documents(docs) if docs is not None else None
+                    for key, docs in fetched.items()
+                }
+            history.responses.update(fetched)
             # Preserve successful Web results even if Gov filtering/enrichment times out.
             processing: dict[SearchRequestKey, Future[list[RawDoc]]] = {}
             for key, task in routes.items():
@@ -572,6 +581,62 @@ class SearchCollector(SearchProvider):
                 },
             )
         return results, len(requests)
+
+    def _enrich_pdf_documents(self, docs: list[RawDoc]) -> list[RawDoc]:
+        """Fetch and parse bodyless PDF results when ``search.fetch_detail`` is enabled."""
+        max_chars = int(self._settings.search.detail_max_chars or 0)
+        timeout = float(self._settings.search.timeout or 20.0)
+        enriched: list[RawDoc] = []
+        for doc in docs:
+            ctype = str(doc.metadata.get("content_type") or "")
+            if doc.content or not is_pdf_document(doc.url, ctype):
+                enriched.append(doc)
+                continue
+            try:
+                raw_bytes, resp_ctype = fetch_pdf_bytes(doc.url, timeout=timeout)
+                text, pages = extract_pdf_text_bytes(raw_bytes, max_chars=max_chars)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("PDF 正文抓取/解析失败 | url=%s | err=%s", doc.url, exc)
+                enriched.append(
+                    doc.model_copy(
+                        update={
+                            "metadata": {
+                                **doc.metadata,
+                                "pdf_parse_reason": "pdf_fetch_or_parse_failed",
+                            }
+                        }
+                    )
+                )
+                continue
+            if not text:
+                enriched.append(
+                    doc.model_copy(
+                        update={
+                            "metadata": {
+                                **doc.metadata,
+                                "content_type": ctype or resp_ctype or "application/pdf",
+                                "pdf_pages": pages,
+                                "pdf_parse_reason": "pdf_empty_or_scanned",
+                            }
+                        }
+                    )
+                )
+                continue
+            enriched.append(
+                doc.model_copy(
+                    update={
+                        "content": text,
+                        "metadata": {
+                            **doc.metadata,
+                            "content_type": ctype or resp_ctype or "application/pdf",
+                            "detail_fetched": True,
+                            "pdf_parsed_by_app": True,
+                            "pdf_pages": pages,
+                        },
+                    }
+                )
+            )
+        return enriched
 
     def _dedup_and_rank(
         self,
