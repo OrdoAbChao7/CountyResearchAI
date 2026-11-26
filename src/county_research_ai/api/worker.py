@@ -15,6 +15,7 @@ import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -42,11 +43,145 @@ class _Cancelled(Exception):
 
 
 class _BudgetExceeded(Exception):
-    pass
+    def __init__(self, reason: str = "deadline_exceeded") -> None:
+        super().__init__(reason)
+        self.reason = reason
 
 
 class _LeaseLost(Exception):
     pass
+
+
+_EST_PROMPT_COST_PER_1K_USD = 0.0005
+_EST_COMPLETION_COST_PER_1K_USD = 0.0020
+_EST_SEARCH_COST_PER_CALL_USD = 0.0050
+
+
+@dataclass
+class _RunBudgetTracker:
+    """Thread-safe cumulative search-call and cost circuit breaker for one job."""
+
+    max_search_calls: int = 0
+    max_cost: float = 0.0
+    lock: threading.Lock = dataclasses.field(default_factory=threading.Lock)
+    search_calls: int = 0
+    llm_calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    estimated_cost_usd: float = 0.0
+    exhausted_reason: str = ""
+
+    def _trip(self, reason: str) -> None:
+        if not self.exhausted_reason:
+            self.exhausted_reason = reason
+        raise _BudgetExceeded(self.exhausted_reason)
+
+    def raise_if_exhausted(self) -> None:
+        with self.lock:
+            if self.exhausted_reason:
+                raise _BudgetExceeded(self.exhausted_reason)
+
+    def before_search(self) -> None:
+        with self.lock:
+            if self.exhausted_reason:
+                raise _BudgetExceeded(self.exhausted_reason)
+            next_calls = self.search_calls + 1
+            next_cost = self.estimated_cost_usd + _EST_SEARCH_COST_USD_STEP()
+            if self.max_search_calls > 0 and next_calls > self.max_search_calls:
+                self._trip("max_search_calls_exceeded")
+            if self.max_cost > 0.0 and next_cost > self.max_cost + 1e-9:
+                self._trip("max_cost_exceeded")
+            self.search_calls = next_calls
+            self.estimated_cost_usd = next_cost
+
+    def before_llm(self) -> None:
+        with self.lock:
+            if self.exhausted_reason:
+                raise _BudgetExceeded(self.exhausted_reason)
+            if self.max_cost > 0.0 and self.estimated_cost_usd >= self.max_cost:
+                self._trip("max_cost_exceeded")
+            self.llm_calls += 1
+
+    def record_llm(self, response: Any) -> None:
+        prompt = int(getattr(response, "prompt_tokens", 0) or 0)
+        completion = int(getattr(response, "completion_tokens", 0) or 0)
+        delta = (
+            (prompt / 1000.0) * _EST_PROMPT_COST_PER_1K_USD
+            + (completion / 1000.0) * _EST_COMPLETION_COST_PER_1K_USD
+        )
+        with self.lock:
+            self.prompt_tokens += prompt
+            self.completion_tokens += completion
+            self.estimated_cost_usd += delta
+            if self.max_cost > 0.0 and self.estimated_cost_usd > self.max_cost + 1e-9:
+                self._trip("max_cost_exceeded")
+
+    def snapshot(self) -> dict[str, Any]:
+        with self.lock:
+            return {
+                "search_calls": self.search_calls,
+                "llm_calls": self.llm_calls,
+                "prompt_tokens": self.prompt_tokens,
+                "completion_tokens": self.completion_tokens,
+                "estimated_cost_usd": round(self.estimated_cost_usd, 6),
+            }
+
+
+def _EST_SEARCH_COST_USD_STEP() -> float:
+    return _EST_SEARCH_COST_PER_CALL_USD
+
+
+class _GuardedSearchProvider:
+    """Wrap a backend SearchProvider so every uncached query checks the job budget."""
+
+    def __init__(self, inner: Any, tracker: _RunBudgetTracker) -> None:
+        self._inner = inner
+        self._tracker = tracker
+
+    @property
+    def name(self) -> str:
+        return getattr(self._inner, "name", "guarded")
+
+    def search(self, query: str, max_results: int = 10) -> Any:
+        self._tracker.before_search()
+        return self._inner.search(query, max_results=max_results)
+
+    def __getattr__(self, item: str) -> Any:
+        return getattr(self._inner, item)
+
+
+def _install_budget_guards(container: Any, tracker: _RunBudgetTracker) -> None:
+    """Instrument backend search providers and LLM clients on the container."""
+    search_port = container.search
+    if hasattr(search_port, "provider"):
+        search_port.provider = _GuardedSearchProvider(search_port.provider, tracker)
+    elif hasattr(search_port, "collector"):
+        collector = search_port.collector
+        shared_map: dict[int, _GuardedSearchProvider] = {}
+        if getattr(collector, "_web", None) is not None:
+            raw_web = collector._web
+            wrapped = _GuardedSearchProvider(raw_web, tracker)
+            shared_map[id(raw_web)] = wrapped
+            collector._web = wrapped
+        gov = getattr(collector, "_gov", None)
+        if gov is not None:
+            if hasattr(gov, "_web") and gov._web is not None:
+                key = id(gov._web)
+                gov._web = shared_map.get(key) or _GuardedSearchProvider(gov._web, tracker)
+            else:
+                collector._gov = _GuardedSearchProvider(gov, tracker)
+
+    llm = container.llm
+    if hasattr(llm, "chat"):
+        original_chat = llm.chat
+
+        def _guarded_chat(*args: Any, **kwargs: Any) -> Any:
+            tracker.before_llm()
+            response = original_chat(*args, **kwargs)
+            tracker.record_llm(response)
+            return response
+
+        llm.chat = _guarded_chat
 
 
 def force_mock_settings(settings: Settings) -> Settings:
@@ -137,6 +272,10 @@ class JobRunner:
         )
         heartbeat.start()
         sink_token = push_event_sink(JobEventSink(self.store, job_id))
+        tracker = _RunBudgetTracker(
+            max_search_calls=job.contract.budget.max_search_calls,
+            max_cost=job.contract.budget.max_cost,
+        )
         try:
             self.store.append_event(
                 job_id, "job.started", {"mode_label": job.mode_label}
@@ -149,30 +288,30 @@ class JobRunner:
                     graph.source_credibility_eligible if job.contract.required_questions else None
                 ),
             )
-            container = self._container(job)
+            container = self._container(job, tracker=tracker)
             app = container.application
-            self._demo_delay(job, started, lost)
+            self._demo_delay(job, started, lost, tracker)
             context = self._stage(
                 job, "collect", context, app.collect_materials, started, lost, lambda ctx: {
                     "documents": len(ctx.raw_docs)
-                }
+                }, tracker=tracker,
             )
             context = self._stage(
                 job, "discover", context, app.discover_focus, started, lost, lambda ctx: {
                     "focus": ctx.focus
-                }
+                }, tracker=tracker,
             )
             context = self._stage(
                 job, "evidence", context, app.build_evidence, started, lost, lambda ctx: {
                     "packs": len(ctx.evidence_packs),
                     "chunks": len(ctx.evidence_ledger.chunks) if ctx.evidence_ledger else 0,
-                }
+                }, tracker=tracker,
             )
             context = self._stage(
                 job, "analyze", context, app.analyze, started, lost, lambda ctx: {
                     "sections": len(ctx.report.sections) if ctx.report else 0,
                     "deep_research": ctx.deep_research is not None,
-                }
+                }, tracker=tracker,
             )
             deep = getattr(context, "deep_research", None)
             summary = self._persist(job, graph, context, deep=deep)
@@ -183,7 +322,7 @@ class JobRunner:
             result = self._stage(
                 job, "report", context, app.render_report, started, lost, lambda res: {
                     "report_path": str(res.report_path)
-                }
+                }, tracker=tracker,
             )
             self.store.append_event(
                 job_id,
@@ -198,8 +337,8 @@ class JobRunner:
                     ),
                 },
             )
-            self._ensure_active(job_id, started, lost)
-            enforcement = self._budget_enforcement(job, started)
+            self._ensure_active(job_id, started, lost, tracker)
+            enforcement = self._budget_enforcement(job, started, tracker)
             outcome, reason = self._outcome(job, summary)
             finished = self.store.finish_job(
                 job_id,
@@ -235,15 +374,15 @@ class JobRunner:
                 owner=owner,
                 fencing_token=fencing_token,
             )
-        except _BudgetExceeded:
+        except _BudgetExceeded as exc:
             self._finish_lease(
                 job_id,
                 JobStatus.BUDGET_EXHAUSTED,
                 outcome=ResearchOutcome.BUDGET_EXHAUSTED,
-                outcome_reason="deadline_exceeded",
+                outcome_reason=exc.reason,
                 event_type="budget.exhausted",
-                event_payload={"reason": "deadline_exceeded"},
-                budget_enforcement=self._budget_enforcement(job, started),
+                event_payload={"reason": exc.reason, **tracker.snapshot()},
+                budget_enforcement=self._budget_enforcement(job, started, tracker),
                 owner=owner,
                 fencing_token=fencing_token,
             )
@@ -258,7 +397,7 @@ class JobRunner:
                 event_payload={"code": type(exc).__name__},
                 error_code=type(exc).__name__,
                 error_message=str(exc)[:500],
-                budget_enforcement=self._budget_enforcement(job, started),
+                budget_enforcement=self._budget_enforcement(job, started, tracker),
                 owner=owner,
                 fencing_token=fencing_token,
             )
@@ -268,7 +407,11 @@ class JobRunner:
             pop_event_sink(sink_token)
 
     def _demo_delay(
-        self, job: JobRecord, started: float, lost: threading.Event
+        self,
+        job: JobRecord,
+        started: float,
+        lost: threading.Event,
+        tracker: _RunBudgetTracker | None = None,
     ) -> None:
         """Optional MOCK-only stage delay for deterministic browser cancel tests."""
         raw = os.getenv("AXIOMSCOPE_MOCK_STAGE_DELAY_SECONDS", "0")
@@ -280,7 +423,7 @@ class JobRunner:
             return
         end = time.monotonic() + delay
         while time.monotonic() < end:
-            self._ensure_active(job.job_id, started, lost)
+            self._ensure_active(job.job_id, started, lost, tracker)
             time.sleep(0.1)
 
     def _heartbeat(
@@ -306,7 +449,7 @@ class JobRunner:
         if not self.store.finish_job(job_id, status, **kwargs):
             logger.warning("stale worker terminal write ignored for job %s", job_id)
 
-    def _container(self, job: JobRecord):
+    def _container(self, job: JobRecord, *, tracker: _RunBudgetTracker | None = None):
         contract = job.contract
         settings = self.settings
         if not self.live_enabled:
@@ -345,6 +488,8 @@ class JobRunner:
                     contract.budget.max_documents,
                 ),
             )
+        if tracker is not None:
+            _install_budget_guards(container, tracker)
         return container
 
     def _persist(
@@ -430,11 +575,20 @@ class JobRunner:
         started: float,
         lost: threading.Event,
         summarize,
+        *,
+        tracker: _RunBudgetTracker | None = None,
     ):
-        self._ensure_active(job.job_id, started, lost)
+        self._ensure_active(job.job_id, started, lost, tracker)
         self.store.append_event(job.job_id, f"stage.{name}.started", {})
         began = time.monotonic()
-        value = function(context)
+        try:
+            value = function(context)
+        except Exception:
+            if tracker is not None:
+                tracker.raise_if_exhausted()
+            raise
+        if tracker is not None:
+            tracker.raise_if_exhausted()
         elapsed_ms = int((time.monotonic() - began) * 1000)
         self.store.append_event(
             job.job_id,
@@ -448,37 +602,51 @@ class JobRunner:
         job_id: str,
         started: float,
         lost: threading.Event | None = None,
+        tracker: _RunBudgetTracker | None = None,
     ) -> None:
         if lost is not None and lost.is_set():
             raise _LeaseLost
         if self.store.is_cancel_requested(job_id):
             raise _Cancelled
+        if tracker is not None:
+            tracker.raise_if_exhausted()
         job = self.store.get_job(job_id)
         if job is None:
             raise _Cancelled
         deadline = job.contract.budget.deadline_seconds
         if deadline and time.monotonic() - started > deadline:
-            raise _BudgetExceeded
+            raise _BudgetExceeded("deadline_exceeded")
 
     def _budget_enforcement(
-        self, job: JobRecord, started: float
+        self,
+        job: JobRecord,
+        started: float,
+        tracker: _RunBudgetTracker | None = None,
     ) -> dict[str, Any]:
         budget = job.contract.budget
         enforced: list[str] = []
         bounded_per_call: list[str] = []
-        not_enforced: list[str] = ["max_steps", "max_search_calls", "max_cost"]
+        not_enforced: list[str] = ["max_steps"]
         if budget.deadline_seconds:
             enforced.append("deadline_seconds")
+        if budget.max_search_calls:
+            enforced.append("max_search_calls")
+        if budget.max_cost:
+            enforced.append("max_cost")
         if budget.max_tokens:
             bounded_per_call.append("max_tokens")
         if budget.max_documents:
             bounded_per_call.append("max_documents")
+        usage = tracker.snapshot() if tracker is not None else {}
         return {
             "enforced": enforced,
             "bounded_per_call": bounded_per_call,
             "not_enforced_on_workflow_path": not_enforced,
             "elapsed_seconds": round(time.monotonic() - started, 3),
             "deadline_seconds": budget.deadline_seconds,
+            "max_search_calls": budget.max_search_calls,
+            "max_cost": budget.max_cost,
+            "usage": usage,
         }
 
     @staticmethod

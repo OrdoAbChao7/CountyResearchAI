@@ -48,7 +48,7 @@ CONTRACT = {
     },
     "budget": {
         "max_steps": 8,
-        "max_search_calls": 3,
+        "max_search_calls": 16,
         "deadline_seconds": 300,
         "max_documents": 10,
     },

@@ -30,7 +30,7 @@ def test_contract_defaults_and_json_round_trip():
 
     assert restored == contract
     assert contract.budget.max_steps == 8
-    assert contract.budget.max_search_calls == 3
+    assert contract.budget.max_search_calls == 0
     assert contract.evidence_thresholds.min_supported_claims == 1
     assert contract.requested_output.format == "decision_brief"
     assert contract.domain_adapter == "county_industry"

@@ -276,7 +276,7 @@ class BudgetCaps(BaseModel):
     """Hard caps. Zero means "not set" except max_steps, which must be positive."""
 
     max_steps: int = Field(default=8, ge=1, le=50)
-    max_search_calls: int = Field(default=3, ge=0, le=100)
+    max_search_calls: int = Field(default=0, ge=0, le=100)
     max_tokens: int = Field(default=0, ge=0, le=1_000_000)
     max_cost: float = Field(default=0.0, ge=0.0, le=10_000.0)
     deadline_seconds: float = Field(default=0.0, ge=0.0, le=86_400.0)

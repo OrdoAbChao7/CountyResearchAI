@@ -302,3 +302,37 @@ def test_official_stat_without_year_is_not_verified():
     economic = [item for item in items if item.topic == "economic"]
     assert economic
     assert all(item.verification_status != "verified" for item in economic)
+
+
+def test_extracts_long_qualifier_table_rows_and_general_companies():
+    """支持长修饰语、表格分隔行和一般行业有限公司/合作社抽取，且保持精确原句溯源。"""
+    from county_research_ai.evidence.ledger import build_evidence_ledger
+    from county_research_ai.models import CountyInfo, ProcessedData
+
+    doc = RawDoc(
+        title="德清县2024年地理信息与现代农业公报",
+        url="https://www.deqing.gov.cn/tjgb/2024",
+        content=(
+            "2024年德清县地理信息产业全产业链实现总产值较上年稳步提升达到 350 亿元。\n"
+            "| 竹林面积 | 101万亩 |\n"
+            "浙江中测新图地理信息有限公司与德清县莫干山竹业专业合作社入选年度重点名录。"
+        ),
+        domain_type="government",
+        credibility_score=0.95,
+    )
+    store = EvidenceStore()
+    items = store.ingest_documents([doc], county="德清县", focus="地理信息")
+
+    claims = [item.claim for item in items]
+    assert any("350 亿元" in c for c in claims)
+    assert any("101万亩" in c for c in claims)
+    enterprises = [item for item in items if item.indicator_caliber == "骨干企业"]
+    assert len(enterprises) >= 1
+    assert any("浙江中测新图地理信息有限公司" in item.claim for item in enterprises)
+    assert all(item.claim in doc.content for item in items)
+
+    ledger = build_evidence_ledger(
+        ProcessedData(county=CountyInfo(name="德清县"), focus="地理信息", docs=[doc])
+    )
+    area_claims = [c for c in ledger.claims.values() if c.value == "101"]
+    assert area_claims and area_claims[0].unit == "万亩"

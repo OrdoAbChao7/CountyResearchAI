@@ -34,7 +34,7 @@ def _contract_payload() -> dict:
             "objective": "评估德清县 2024 年产业与财政",
             "regions": ["德清县"],
             "required_questions": ["2024 年地区生产总值是多少？"],
-            "budget": {"max_steps": 5, "max_search_calls": 2},
+            "budget": {"max_steps": 5, "max_search_calls": 8},
         }
     }
 
@@ -84,9 +84,9 @@ def test_health_and_capabilities(tmp_path):
     body = capabilities.json()
     assert body["mode_label"] == "MOCK"
     assert body["live_enabled"] is False
-    assert body["enforced_caps"] == ["deadline_seconds"]
+    assert body["enforced_caps"] == ["deadline_seconds", "max_search_calls", "max_cost"]
     assert body["bounded_per_call_caps"] == ["max_tokens", "max_documents"]
-    assert "max_cost" in body["unenforced_caps"]
+    assert body["unenforced_caps"] == ["max_steps"]
 
 
 def test_create_list_get_and_cancel(tmp_path):
@@ -303,6 +303,47 @@ def test_deadline_exhaustion_is_not_reported_as_sufficient(tmp_path):
     assert detail["outcome"] == "BUDGET_EXHAUSTED"
     assert detail["outcome"] != "SUFFICIENT"
     assert "BUDGET_EXHAUSTED" in brief
+
+
+def test_max_search_calls_cap_stops_job_as_budget_exhausted(tmp_path):
+    app = create_app(
+        settings=_settings(tmp_path),
+        live_enabled=False,
+        data_dir=tmp_path / "data",
+        reports_dir=tmp_path / "reports",
+        evidence_db_path=tmp_path / "evidence.sqlite",
+    )
+    payload = _deep_contract_payload()
+    payload["contract"]["budget"]["max_search_calls"] = 1
+    with TestClient(app) as client:
+        job_id = client.post("/api/v1/research/tasks", json=payload).json()["job_id"]
+        detail = _wait_for_terminal(client, job_id)
+
+    assert detail["status"] == "BUDGET_EXHAUSTED"
+    assert detail["outcome"] == "BUDGET_EXHAUSTED"
+    assert detail["outcome_reason"] == "max_search_calls_exceeded"
+    assert "max_search_calls" in detail["budget_enforcement"]["enforced"]
+    assert detail["budget_enforcement"]["usage"]["search_calls"] == 1
+
+
+def test_max_cost_cap_stops_job_as_budget_exhausted(tmp_path):
+    app = create_app(
+        settings=_settings(tmp_path),
+        live_enabled=False,
+        data_dir=tmp_path / "data",
+        reports_dir=tmp_path / "reports",
+        evidence_db_path=tmp_path / "evidence.sqlite",
+    )
+    payload = _contract_payload()
+    payload["contract"]["budget"]["max_cost"] = 0.001
+    with TestClient(app) as client:
+        job_id = client.post("/api/v1/research/tasks", json=payload).json()["job_id"]
+        detail = _wait_for_terminal(client, job_id)
+
+    assert detail["status"] == "BUDGET_EXHAUSTED"
+    assert detail["outcome"] == "BUDGET_EXHAUSTED"
+    assert detail["outcome_reason"] == "max_cost_exceeded"
+    assert "max_cost" in detail["budget_enforcement"]["enforced"]
 
 
 def test_deep_mock_pipeline_emits_fine_grained_events(tmp_path):

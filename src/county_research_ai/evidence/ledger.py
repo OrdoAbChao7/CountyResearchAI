@@ -19,6 +19,10 @@ from .measure import derive_measure_key, infer_claim_period
 from .source_contract import serialize_source_documents
 from .store import EvidenceStore
 
+_LEDGER_VALUE_RE = re.compile(
+    r"(\d+(?:\.\d+)?)(\s*(?:亿元|万元|万亩|千亩|亩|平方公里|万吨|千吨|吨|万件|万斤|万人|人|家|个|户|万|亿|%))"
+)
+
 
 def _period_match(year_hints: list[str], period: str) -> str:
     years = [int(value) for value in re.findall(r"(?<!\d)(?:1\d{3}|20\d{2})(?!\d)", period)]
@@ -438,7 +442,7 @@ def build_evidence_ledger(processed: ProcessedData) -> EvidenceLedger:
                 if (item.snippet and item.snippet in chunk.text)
                 or (item.claim and item.claim in chunk.text)
             ]
-        value_match = re.search(r"(\d+(?:\.\d+)?)(\s*(?:亿元|万元|万人|亩|%))", item.claim)
+        value_match = _LEDGER_VALUE_RE.search(item.claim)
         value = value_match.group(1) if value_match else ""
         unit = value_match.group(2).strip() if value_match else ""
         chunk_text = "\n".join(

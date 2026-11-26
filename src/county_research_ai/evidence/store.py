@@ -28,33 +28,35 @@ from .claim_region import (
 )
 from .measure import data_years
 
-# 常见产业统计指标抽取正则
+# 常见产业统计指标抽取正则（支持长定语、冒号与 PDF/Markdown 表格分隔符，不贪婪吞掉重复指标词）
+_STAT_GAP = r"[^\d\n，,。；;！!？?]{0,28}?"
 _NUMERICAL_STAT_PATTERNS = [
-    # 产值/销售额/收入：如 280亿元、30.5亿元、5000万元
-    (r"(?:产值|总产值|规上产值|销售额|综合产值|营业收入|增加值)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(亿元|万元|万|亿)", "产值与收入"),
+    # 产值/销售额/收入：如 280亿元、30.5亿元、5000万元，或表格 `| 总产值 | 280亿元 |`
+    (rf"(?:总产值|规上产值|综合产值|产值|销售额|营业收入|增加值){_STAT_GAP}(\d+(?:\.\d+)?)\s*(亿元|万元|万|亿)", "产值与收入"),
     # 面积：如 101万亩、25万亩、3000亩
-    (r"(?:面积|竹林面积|种植面积|果园面积|开采面积)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(万亩|千亩|亩|平方公里)", "面积与规模"),
+    (rf"(?:竹林面积|种植面积|果园面积|开采面积|面积){_STAT_GAP}(\d+(?:\.\d+)?)\s*(万亩|千亩|亩|平方公里)", "面积与规模"),
     # 产量：如 50万吨、1000万斤、20万件
-    (r"(?:产量|总产量|鲜果产量|原竹产量|开采量)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(万吨|吨|万件|万斤|千吨)", "产量与产能"),
+    (rf"(?:鲜果产量|原竹产量|总产量|产量|开采量){_STAT_GAP}(\d+(?:\.\d+)?)\s*(万吨|吨|万件|万斤|千吨)", "产量与产能"),
     # 宏观GDP / 生产总值
-    (r"(?:地区生产总值|生产总值|GDP)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(亿元|万元|万|亿)", "宏观GDP"),
+    (rf"(?:地区生产总值|生产总值|GDP){_STAT_GAP}(\d+(?:\.\d+)?)\s*(亿元|万元|万|亿)", "宏观GDP"),
     # 人口与劳动力
-    (r"(?:常住人口|户籍人口|从业人员|总人口)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(万人|人)", "人口规模"),
+    (rf"(?:常住人口|户籍人口|从业人员|总人口){_STAT_GAP}(\d+(?:\.\d+)?)\s*(万人|人)", "人口规模"),
     # 财政与投资
-    (r"(?:一般公共预算收入|地方财政收入|固定资产投资)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(亿元|万元)", "财政与投资"),
+    (rf"(?:一般公共预算收入|地方财政收入|固定资产投资){_STAT_GAP}(\d+(?:\.\d+)?)\s*(亿元|万元)", "财政与投资"),
     # 骨干与规上企业数量
-    (r"(?:规上企业|经营主体|骨干企业|加工企业)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*(家|个|户)", "企业数量"),
+    (rf"(?:规上企业|经营主体|骨干企业|加工企业){_STAT_GAP}(\d+(?:\.\d+)?)\s*(家|个|户)", "企业数量"),
     # 增速/占比：如 增长8.5%、占GDP比重15.2%
-    (r"(?:增长|增加|下降|比重|占比|增幅)[^\d\n]{0,8}(\d+(?:\.\d+)?)\s*%", "增速与比重"),
+    (rf"(?:增长|增加|下降|比重|占比|增幅){_STAT_GAP}(\d+(?:\.\d+)?)\s*%", "增速与比重"),
 ]
 
 # 政策与规划命名正则，如《关于印发...的通知》
 _POLICY_NAME_PATTERN = re.compile(r"《([^》]{4,50}(?:规划|意见|方案|通知|办法|行动计划|决定))》")
 
-# 龙头企业标识
+# 龙头企业标识（覆盖一般工商主体、专业合作社与显式龙头后缀）
 _ENTERPRISE_PATTERN = re.compile(
-    r"([\u4e00-\u9fa5]{3,20}(?:股份|有限|集团|果业|竹木|木业|纸业|石墨|能源|生物|科技))"
-    r"(?:公司|龙头企业|链主企业)"
+    r"([\u4e00-\u9fa5]{2,28}(?:股份有限公司|有限责任公司|有限公司|专业合作社|合作社|"
+    r"(?:股份|集团|果业|竹木|木业|纸业|石墨|能源|生物|科技|家居|实业|新材料|电子|机械|药业|茶业|食品)"
+    r"(?:公司|龙头企业|链主企业)))"
 )
 
 _ENTITY_NEGATION = re.compile(
@@ -285,11 +287,27 @@ class EvidenceStore:
     ) -> list[EvidenceItem]:
         items: list[EvidenceItem] = []
         for pattern, indicator_type in _NUMERICAL_STAT_PATTERNS:
-            for match in re.finditer(pattern, line):
-                context = statistical_value_context(line, match.start(1), match.end())
+            pos = 0
+            while pos < len(line):
+                match = re.search(pattern, line[pos:])
+                if match is None:
+                    break
+                val_start = pos + match.start(1)
+                val_end = pos + match.end()
+                full_start = pos + match.start(0)
+                # Advance past the indicator keyword only, so a second indicator
+                # inside the gap (e.g. "仅为全国竹产业总产值800亿元") is not skipped.
+                next_pos = full_start + max(1, len(match.group(0)) - len(line[val_start:val_end]))
+                inner_retry = re.search(pattern, line[full_start + 1 : val_end])
+                if inner_retry is not None and (full_start + 1 + inner_retry.end()) == val_end:
+                    pos = full_start + 1
+                    continue
+                pos = val_end
+                context = statistical_value_context(line, val_start, val_end)
                 clause = context.statement
-                if match.group(0) not in clause:
-                    continue  # The indicator and value must occur in the same clause.
+                if match.group(1) not in clause:
+                    pos = max(pos, next_pos)
+                    continue  # The value must remain inside the resolved clause.
 
                 # 判断口径
                 caliber = indicator_type

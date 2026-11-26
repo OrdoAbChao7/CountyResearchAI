@@ -54,9 +54,9 @@ logger = logging.getLogger(__name__)
 
 API_VERSION = "v1"
 JOB_SCHEMA_VERSION = 1
-ENFORCED_CAPS = ["deadline_seconds"]
+ENFORCED_CAPS = ["deadline_seconds", "max_search_calls", "max_cost"]
 BOUNDED_PER_CALL_CAPS = ["max_tokens", "max_documents"]
-UNENFORCED_CAPS = ["max_steps", "max_search_calls", "max_cost"]
+UNENFORCED_CAPS = ["max_steps"]
 _ID_RE = re.compile(r"^[A-Za-z0-9_:.\-]{1,200}$")
 
 

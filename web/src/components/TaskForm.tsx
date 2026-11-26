@@ -21,7 +21,7 @@ export function TaskForm({ busy, error, onCreate }: Props) {
   const [start, setStart] = useState("2024-01-01");
   const [end, setEnd] = useState("2024-12-31");
   const [maxSteps, setMaxSteps] = useState(8);
-  const [maxSearch, setMaxSearch] = useState(3);
+  const [maxSearch, setMaxSearch] = useState(12);
   const [deadline, setDeadline] = useState(300);
   const [maxDocuments, setMaxDocuments] = useState(10);
   const [minSources, setMinSources] = useState(1);
